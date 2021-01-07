@@ -32,11 +32,19 @@ Some other tricks can be found in [the HtmlFrame documentation](/tkinterweb/docs
 
 &nbsp;
 &nbsp;
+## Installation
+**To install TkinterWeb, simply type `pip install tkinterweb` in the command prompt or terminal.**
+That's it.
+
+
+&nbsp;
+&nbsp;
 ## Dependencies
 **In order to load webpages and show images, TkinterWeb requires the following packages:**
 * Tkinter (which is automatically installed on most Python versions)
 * PIL (can be installed via `pip install pillow`)
 * Requests (can be installed via `pip install requests`)
+Pip will automatically install PIL and Requests when installing TkinterWeb.
 
 &nbsp;
 &nbsp;

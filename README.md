@@ -78,7 +78,7 @@ Documentation and additional information for these classes can be found in the c
 ## Contributing
 **To contribute to this project, go to the [issues tab](https://github.com/Andereoo/TkinterWeb/issues).**
 
-If TkinterWeb seems to be not working property, submit a bug report.
+If TkinterWeb is not working property, submit a bug report.
 If you need more functionality, feel free to submit a feature request. Your idea will be implemented as soon as possible. 
 
 **Another way to contribute is to create a [pull request](https://github.com/Andereoo/TkinterWeb/pulls).**

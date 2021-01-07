@@ -106,7 +106,6 @@ class TkinterWeb(tk.Widget):
         # handle image loading        
         img=Image.open((os.path.dirname(__file__)+'/images/broken_image.png'))
         self._broken_image = img.resize((25,30))
-        
         if "imagecmd" not in kw:
             kw["imagecmd"] = master.register(self._fetch_image)
             

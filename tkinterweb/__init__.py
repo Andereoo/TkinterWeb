@@ -4,6 +4,9 @@ TkinterWeb v1.9
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, which displays styled HTML documents in Tkinter.
 """
 
+import os, sys
+sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+
 from html_frame import HtmlFrame
 from tkhtml_bindings import TkinterWeb
     

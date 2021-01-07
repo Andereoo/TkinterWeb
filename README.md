@@ -44,6 +44,7 @@ That's it.
 * Tkinter (which is automatically installed on most Python versions)
 * PIL (can be installed via `pip install pillow`)
 * Requests (can be installed via `pip install requests`)
+
 Pip will automatically install PIL and Requests when installing TkinterWeb.
 
 &nbsp;

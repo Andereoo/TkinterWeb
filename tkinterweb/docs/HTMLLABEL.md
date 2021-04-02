@@ -25,7 +25,7 @@ myhtmllabel.pack() #attach the HtmlLabel widget to the parent window
 
 root.mainloop()
 ```
-HTML can also be loaded using the `myhtmlframe.load_html("insert your html here")` to dynamically change the content of the Label.
+HTML can also be loaded using the `load_html` command to dynamically change the content of the Label.
 
 
 ## Class API 

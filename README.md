@@ -78,7 +78,7 @@ Documentation and additional information for these classes can be found in the c
 ## Contributing
 **TkinterWeb happily accepts contributions.**
 
-The best way to contribute to this project is to go to the [issues tab](https://github.com/Andereoo/TkinterWeb/issues) and report bugs or submit a feature request. This helps TkinterWeb become both more stable and more powerful.
+The best way to contribute to this project is to go to the [issues tab](https://github.com/Andereoo/TkinterWeb/issues) and report bugs or submit a feature request. This helps TkinterWeb become more stable and more full-featured.
 
 &nbsp;
 &nbsp;

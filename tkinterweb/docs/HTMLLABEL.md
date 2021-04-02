@@ -42,7 +42,7 @@ HTML can also be loaded using the `load_html` command to dynamically change the 
 
 ---
 #### **load_html**(html_source, base_url="")
-Parses the supplied HTML code. If the 
+Parses the supplied HTML code.
 
 Parameters
 * **html_source** *(string)* - Specifies the HTML code

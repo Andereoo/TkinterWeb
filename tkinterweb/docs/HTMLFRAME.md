@@ -3,6 +3,7 @@
 
 ## Overview
 **The `HtmlFrame` class is a Tkinter frame that provides additional functionality to the [TkinterWeb widget](TKINTERWEB.md).**
+
 It combines the TkinterWeb browser, automatic scrollbars, cursor handling capability, and many convenience methods into one embeddable and easy to use widget. The HtmlFrame widget is also capable of holding Tkinter widgets, which provides the ability to combine Tkinter widgets and HTML elements.
 
 ## Usage

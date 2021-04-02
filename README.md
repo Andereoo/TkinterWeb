@@ -1,5 +1,5 @@
 # TkinterWeb 
-**A fast and simple cross-platform webbrowser for Tkinter.**
+**A fast and lightweight cross-platform webbrowser for Tkinter.**
 
 &nbsp;
 &nbsp;
@@ -43,9 +43,8 @@ That's it.
 **In order to load webpages and show images, TkinterWeb requires the following packages:**
 * Tkinter (which is automatically installed on most Python versions)
 * PIL (can be installed via `pip install pillow`)
-* Requests (can be installed via `pip install requests`)
 
-Pip will automatically install PIL and Requests when installing TkinterWeb.
+Pip will automatically install PIL when installing TkinterWeb.
 
 &nbsp;
 &nbsp;
@@ -54,6 +53,7 @@ Pip will automatically install PIL and Requests when installing TkinterWeb.
 
 Documentation and additional information for these classes can be found in the corresponding API refrence pages:
 * [`TkinterWeb.HtmlFrame`](/tkinterweb/docs/HTMLFRAME.md)
+* [`TkinterWeb.HtmlLabel`](/tkinterweb/docs/HTMLLABEL.md)
 * [`TkinterWeb.Demo`](/tkinterweb/docs/DEMO.md)
 * [`TkinterWeb.TkinterWeb`](/tkinterweb/docs/TKINTERWEB.md)
 
@@ -69,7 +69,7 @@ Documentation and additional information for these classes can be found in the c
 
 **Images:**
 * TkinterWeb supports nearly 50 different image types through PIL. Scalable Vector Graphic support is not as straightforward, though. In order to load SVG images:
-    * PyCairo must be installed. 
+    * PyCairo or PyGObject must be installed. 
     * Either Rsvg, PyGObject, or CairoSVG must also be installed. 
 * Without these packages, TkinterWeb will still function properly, but SVG files will not be shown.
 

@@ -6,7 +6,7 @@
 ## Overview
 **TkinterWeb offers bindings for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, which enables loading HTML and CSS code into Tkinter applications.**
 
-Both Python 2 and Python 3, as well as MacOS, Windows, and Linux are supported. 
+MacOS, Windows, and Linux with either Python 2.6+ or Python 3+ are supported. 
 
 &nbsp;
 &nbsp;

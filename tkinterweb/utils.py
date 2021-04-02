@@ -8,12 +8,9 @@ except ImportError:
     import ttk
 
 class _AutoScrollbar(ttk.Scrollbar):
-    """http://effbot.org/zone/tkinter-autoscrollbar.htm
-    A scrollbar that hides itself if it"s not needed.  Only
-    works if you use the grid geometry manager."""
     def set(self, lo, hi):
         if float(lo) <= 0.0 and float(hi) >= 1.0:
-            self.tk.call("grid", "remove", self) #because self.grid_remove() is missing from some older tkinter versions
+            self.tk.call("grid", "remove", self)
         else:
             self.grid()
         ttk.Scrollbar.set(self, lo, hi)
@@ -24,10 +21,14 @@ class _AutoScrollbar(ttk.Scrollbar):
     def place(self, **kw):
         raise tk.TclError("cannot use place with this widget")
 
-def notifier(main, sub):
+def notifier(main, sub, cap=True):
     "Notifications printer."
     try:
         sys.stderr.write(("UserNotification: "+str(main))+"\n")
+        sub = str(sub)
+        if cap:
+            if len(sub) > 200:
+                sub = sub[:200] + "..."
         sys.stdout.write(str(sub)+"\n\n")
     except Exception:
         "sys.stderr.write doesn't work in .pyw files."

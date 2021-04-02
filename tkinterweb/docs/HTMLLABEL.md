@@ -34,7 +34,7 @@ HTML can also be loaded using the `load_html` command to dynamically change the 
 ### HtmlFrame constructors:
 * `master` Parent (tkinter widget)
 * `text` Set the content of the widget (string) **Default: ""**
-* `messages_enabled` Enable messages (boolean) **Default: True**
+* `messages_enabled` Enable messages (boolean) **Default: False**
 * `**kw` Other optional `ttk.Frame` arguments
 
 

@@ -1,3 +1,4 @@
+
 ## *`TkinterWeb.HtmlFrame` Documentation*
 
 ## Overview
@@ -52,18 +53,25 @@ def load_new_page(url):
 myhtmlframe.on_link_click(load_new_page)
 ```
 ---
+*Zooming*
+
+Setting the zoom of the HtmlFrame widget is very easy. This can be used to add accessibility features to your application. To set the zoom to 2x magnification the following can be used: 
+```
+myhtmlframe.set_zoom(2)
+```
+To zoom only the text, use `set_fontscale()` instead.
+
+---
 *Bindings*
 
 Like any other Tkinter widget, mouse and keyboard events can be bound to the HtmlFrame widget.
-
-> **Note: Because the HtmlFrame class combines multiple Tkinter widgets into one, the `bind` command does not work. Use `bind_all` instead**
 
 An example of the usage of bingings with the HtmlFrame widget can be seen below:
 ```
 def on_right_click(event):
     "Do stuff"
     
-myhtmlframe.bind_all("<Button-3>", on_right_click)
+myhtmlframe.bind("<Button-3>", on_right_click)
 ```
 The above code will call `on_right_click` every time the user right-clicks on the HtmlFrame widget.
 This can be extended with the following:
@@ -86,8 +94,6 @@ Putting the above code inside the `on_right_click` function will make a popup sh
 ### HtmlFrame constructors:
 * `master` Parent (tkinter widget)
 * `messages_enabled` Enable messages (boolean) **Default: True**
-* `fontscale` Font size multiplier (float) **Default: 1.0**
-* `zoom` Zoom ratio (float) **Default: 1.0**
 * `vertical_scrollbar` Show the vertical scrollbar (True, False, or "auto") **Default: "auto"**
 * `horizontal_scrollbar` Show the horizontal scrollbar (True, False, or "auto)" **Default: False**
 * `**kw` Other optional `ttk.Frame` arguments
@@ -95,20 +101,32 @@ Putting the above code inside the `on_right_click` function will make a popup sh
 ### Useful Methods:
 
 ---
-#### **load_website**(website_url, base_url=None)
+#### **load_website**(website_url, base_url=None, decode=None)
 Loads and parses a website.
 
 Parameters
 * **website_url** *(string)* - Specifies the url to load
 * **base_url** *(string)* - Specifies the base url to use when parsing stylesheets and images. If `base_url` is not supplied, it will be automatically generated.
+* **decode** *(string)* - Specifies the decoding to use when loading the website
 
 ---
-#### **load_file**(file_url, base_url=None)
+
+#### **load_file**(file_url, base_url=None, decode=None)
 Loads and parses a local HTML file.
 
 Parameters
 * **file_url** *(string)* - Specifies the file to load
 * **base_url** *(string)* - Specifies the base url to use when parsing stylesheets and images. If `base_url` is not supplied, it will be automatically generated.
+* **decode** *(string)* - Specifies the decoding to use when loading the file
+
+---
+#### **load_url**(url, base_url=None, decode=None)
+Loads and parses html from the given url. A local file will be loaded if the url begins with "file://". If the url begins with "https://" or "http://", a website will be loaded. 
+
+Parameters
+* **url** *(string)* - Specifies the url to load
+* **base_url** *(string)* - Specifies the base url to use when parsing stylesheets and images. If `base_url` is not supplied, it will be automatically generated.
+* **decode** *(string)* - Specifies the decoding to use when loading the website
 
 ---
 #### **load_html**(html_source, base_url="")
@@ -136,7 +154,7 @@ Parameters
 
 ---
 #### **on_link_click**(function)
-Set TkinterHtml to call the specified python function whenever a link is clicked.
+Set TkinterWeb to call the specified python function whenever a link is clicked.
 When a link is clicked on a webpage, a variable containing the url of the clicked link will be passed to the specified function.
 
 Parameters
@@ -144,15 +162,43 @@ Parameters
 
 ---
 #### **on_title_change**(function)
-Set TkinterHtml to call the specified python function whenever the title of a website or file has changed.
+Set TkinterWeb to call the specified python function whenever the title of a website or file has changed.
 When the title of a webpage changes, a variable containing the new title will be passed to the specified function.
 
 Parameters
 * **function** *(python function)* - Specifies the function to call when a title changes.
 
 ---
+#### **set_zoom**(multiplier)
+Set the zoom multiplier of the document.
+
+Parameters
+* **multiplier** *(float or integer)* - Specifies the zoom multiplier.
+
+---
+#### **get_zoom**()
+Return the zoom multiplier of the document.
+
+Return type
+* *float*
+
+---
+#### **set_fontscale**(multiplier)
+Set the zoom multiplier of the document's text.
+
+Parameters
+* **multiplier** *(float or integer)* - Specifies the fontscale multiplier.
+
+---
+#### **get_fontscale**()
+Return the zoom multiplier of the document's text.
+
+Return type
+* *float*
+
+---
 #### **set_message_func**(function)
-Set TkinterHtml to call the specified python function whenever a new message is released.
+Set TkinterWeb to call the specified python function whenever a new message is released.
 By default, unless `messages_enabled` was set to `False` when calling `HtmlFrame()`, messages will be printed to the console.
 After calling `set_message_func`, whenever a new message is released, a variable containing the main message and a second variable containing more information will be passed to the specified function.
 
@@ -176,7 +222,7 @@ Parameters
 ---
 #### **set_recursive_hover_depth**(depth)
 When a mouse hovers over an element in a webpage, the element under the mouse is flagged as hovered.
-TkinterWeb then marks the parent of that element repeatedly, up to the 15th degree. This works fine for most websites, but may cause a few websites to lag slightly. If this is the case, simply call `set_recursive_hover_depth` and set the *depth* to a smaller integer.
+TkinterWeb then marks the parent of that element repeatedly, up to the 15th degree. This works fine for most websites, but may cause a few websites to lag slightly. If this is becoming an issue, simply call `set_recursive_hover_depth` and set the *depth* to a smaller integer.
 
 Parameters
 * **depth** *(integer)* - Specifies the number of recursions to apply the hover flag to.
@@ -243,3 +289,4 @@ Return type
 * *string*
 
 ---
+

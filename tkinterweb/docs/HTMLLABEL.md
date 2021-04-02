@@ -51,7 +51,7 @@ Parameters
 ---
 #### **add_html**(html_source)
 Send HTML code to the parser.
-Unlike `load_html`, `add_html` parses the specified HTML code and adds it to the end of the webpage without clearing the original document.
+Unlike `load_html`, `add_html` parses the specified HTML code and adds it to the widget without clearing the original document.
 
 Parameters
 * **html_source** *(string)* - Specifies the code to parse and add to the end of the document. Must be valid HTML code.

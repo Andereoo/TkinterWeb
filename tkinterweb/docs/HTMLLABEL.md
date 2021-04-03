@@ -20,7 +20,7 @@ except ImportError:
 root = tk.Tk() #create the Tkinter window
 
 ### The important part: create the html widget and attach it to the window
-myhtmllabel = HtmlLabel(root, text="<b style="color:blue">Wow! Tkinter Labels can actually show HTML!</b>") #create the label
+myhtmllabel = HtmlLabel(root, text='<b style="color:blue'>Wow! Tkinter Labels can actually show HTML!</b>") #create the label
 
 myhtmllabel.pack() #attach the HtmlLabel widget to the parent window
 

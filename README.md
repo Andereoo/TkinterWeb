@@ -12,6 +12,11 @@ MacOS, Windows, and Linux with either Python 2.6+ or Python 3+ are supported.
 &nbsp;
 ## Usage
 
+**TkinterWeb provides:**
+* [a webbrowser frame to display websites in Tkinter](/tkinterweb/docs/HTMLFRAME.md)
+* [a label that can display styled text, tables, and images](/tkinterweb/docs/HTMLLABEL.md)
+* [a geometry manager to display Tkinter widgets *and HTML elements* together in a Tkinter application](/tkinterweb/docs/GEOMETRY.md)
+
 **TkinterWeb can be used in any Tkinter application. Here is an example:**
 ```
 from tkinterweb import HtmlFrame #import the HTML browser
@@ -21,14 +26,14 @@ except ImportError:
   import Tkinter as tk #python2
 
 root = tk.Tk() #create the tkinter window
-frame = HtmlFrame(root) #create HTML browser
+frame = HtmlFrame(root) #create the HTML browser
 frame.load_website("http://tkhtml.tcl.tk/tkhtml.html") #load a website
 frame.pack(fill="both", expand=True) #attach the HtmlFrame widget to the parent window
 root.mainloop()
 ```
 ![TkinterWeb](/tkinterweb/images/screenshot.png)
 
-Some other tricks can be found in [the HtmlFrame documentation](/tkinterweb/docs/HTMLFRAME.md#tips-and-tricks)
+Some other tricks, such as handling link clicks, can be found in [the HtmlFrame documentation](/tkinterweb/docs/HTMLFRAME.md#tips-and-tricks)
 
 &nbsp;
 &nbsp;

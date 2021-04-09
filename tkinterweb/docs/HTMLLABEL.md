@@ -102,3 +102,19 @@ Return type
 
 ---
 
+#### **replace_widget**(oldwidget, newwidget)
+Removes the `oldwidget` from the document, and replaces it with the `newwidget`. Note that if both `oldwidget` and `newwidget` are currently shown in the document, their locations will be swapped.See the [geometry management docs](GEOMETRY.md) for more information.
+
+Parameters
+* **oldwidget** *(tkinter.Widget)* - Specifies the Tkinter widget to replace. This must be a valid Tkinter widget that is currently managed by TkinterWeb.
+* **newwidget** *(tkinter.Widget)* - Specifies the new Tkinter widget to show. This may be any Tkinter widget.
+
+---
+
+#### **remove_widget**(oldwidget)
+Removes the `oldwidget` from the document. 
+This method is experimental and may cause issues. If you encounter any issues, please [report them](https://github.com/Andereoo/TkinterWeb/issues). See the [geometry management docs](GEOMETRY.md) for more information.
+
+Parameters
+* **oldwidget** *(tkinter.Widget)* - Specifies the Tkinter widget to remove. This must be a valid Tkinter widget that is currently managed by TkinterWeb.
+

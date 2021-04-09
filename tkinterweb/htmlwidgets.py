@@ -56,29 +56,36 @@ class HtmlFrame(ttk.Frame):
         else:
             self.message_func = message_func = lambda a, b: None
             
-        html = self.html = TkinterWeb(self, message_func)
+        self.html = html = TkinterWeb(self, message_func)
         html.grid(row=0, column=0, sticky=tk.NSEW)
 
         html._cursor_change_func = self.change_cursor
             
         if vertical_scrollbar:
             if vertical_scrollbar == "auto":
-                vsb = _AutoScrollbar(self, orient=tk.VERTICAL, command=html.yview)
+                self.vsb = vsb = _AutoScrollbar(self, orient=tk.VERTICAL, command=html.yview)
             else:
-                vsb = ttk.Scrollbar(self, orient=tk.VERTICAL, command=html.yview)
+                self.vsb = vsb = ttk.Scrollbar(self, orient=tk.VERTICAL, command=html.yview)
             html.configure(yscrollcommand=vsb.set)
             vsb.grid(row=0, column=1, sticky=tk.NSEW)
-            html.bind_all("<MouseWheel>", self.scroll)
+            vsb.bind("<MouseWheel>", self.scroll)
+            vsb.bind("<Button-4>", self.scroll_x11)
+            vsb.bind("<Button-5>", self.scroll_x11)
+            self.bind_class("{0}.document".format(html), "<MouseWheel>", self.scroll)
+            self.bind_class("bc{0}.scrollableembeddednodes".format(html), "<MouseWheel>", self.scroll)
+            self.bind_class("bc{0}.scrollableembeddednodes".format(html), "<Button-4>", self.scroll_x11)
+            self.bind_class("bc{0}.scrollableembeddednodes".format(html), "<Button-5>", self.scroll_x11)
+            vsb.bind("<Enter>", html._on_leave)
         if horizontal_scrollbar:
             if horizontal_scrollbar == "auto":
-                hsb = _AutoScrollbar(self, orient=tk.HORIZONTAL, command=html.xview)
+                self.hsb = hsb = _AutoScrollbar(self, orient=tk.HORIZONTAL, command=html.xview)
             else:
-                hsb = ttk.Scrollbar(self, orient=tk.HORIZONTAL, command=html.xview)
+                self.hsb = hsb = ttk.Scrollbar(self, orient=tk.HORIZONTAL, command=html.xview)
             html.configure(xscrollcommand=hsb.set)
             hsb.grid(row=1, column=0, sticky=tk.NSEW)
+            hsb.bind("<Enter>", html._on_leave)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
-
 
     def load_website(self, website_url, base_url=None, decode=None):
         "Load a website from the specified URL"
@@ -269,6 +276,14 @@ class HtmlFrame(ttk.Frame):
                 text = ""
         return text
 
+    def replace_widget(self, oldwidget, newwidget):
+        "Replace a stored widget"
+        self.html._replace_widget(oldwidget, newwidget)
+
+    def remove_widget(self, widget):
+        "Remove a stored widget"
+        self.html._remove_widget(widget)
+
     def get_currently_selected_text(self):
         "Get the text that is currently highlighted/selected."
         return self.html._get_selected_text()
@@ -279,6 +294,12 @@ class HtmlFrame(ttk.Frame):
             self.html.yview_scroll(int(-1*(event.delta)), "units")
         else:
             self.html.yview_scroll(int(-1*(event.delta)/40), "units")
+
+    def scroll_x11(self, event):
+        if event.num == 4:
+            self.html.yview_scroll(-4, "units")
+        else:
+            self.html.yview_scroll(4, "units")
 
     def load_html(self, html_source, base_url=None):
         "Reset parser and send html code to it"
@@ -316,7 +337,7 @@ class HtmlLabel(ttk.Frame):
         else:
             self.message_func = message_func = lambda a, b: None
             
-        html = self.html = TkinterWeb(self, message_func)
+        self.html = html = TkinterWeb(self, message_func)
         html.pack(expand=True, fill="both")
 
         html._cursor_change_func = self.change_cursor
@@ -352,6 +373,14 @@ class HtmlLabel(ttk.Frame):
         if self.cursor != cursor:
             self.config(cursor=cursor)
             self.cursor = cursor
+            
+    def replace_widget(self, oldwidget, newwidget):
+        "Replace a stored widget"
+        self.html._replace_widget(oldwidget, newwidget)
+
+    def remove_widget(self, widget):
+        "Remove a stored widget"
+        self.html._remove_widget(widget)
 
     def load_html(self, html_source, base_url=None):
         "Reset parser and send html code to it"
@@ -365,7 +394,7 @@ class HtmlLabel(ttk.Frame):
         self.html._base_url = base_url
         self.html._images = set()
         self.add_html(html_source)
-
+        
     def add_html(self, html_source):
         "Parse HTML and add it to the end of the current document."
         self.html.parse(html_source)
@@ -373,4 +402,3 @@ class HtmlLabel(ttk.Frame):
     def add_css(self, css_source):
         "Parse CSS code"
         self.html.parse_css(css_source)
-       

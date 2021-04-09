@@ -78,7 +78,7 @@ myhtmlframe.load_html("""<html><body>
 myhtmlframe.pack(fill="both", expand=True)
 root.mainloop()
 ```
-The equivelent code in pure Tkinter is much longer:
+The equivelent code in pure Tkinter is much less straightfoward:
 
 ```
 try:

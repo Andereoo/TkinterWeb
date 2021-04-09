@@ -11,7 +11,7 @@ from htmlwidgets import HtmlFrame, HtmlLabel
 from bindings import TkinterWeb
     
 __title__ = 'TkinterWeb'
-__version__ = '3.0'
+__version__ = '3.2'
 __all__ = ['HtmlFrame', 'HtmlLabel', 'TkinterWeb', 'Demo']
 
 class Demo():

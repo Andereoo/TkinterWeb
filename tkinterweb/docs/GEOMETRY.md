@@ -89,8 +89,11 @@ try:
     from urllib.request import Request, urlopen
 except ImportError: # Python 2
     from urllib2 import urlopen, Request
+try:
+    from io import BytesIO
+except ImportError: # Python 2
+    import BytesIO
 from PIL import Image, ImageTk
-from io import BytesIO
 
 root = tk.Tk()
 container = tk.Frame(root, bg="white")

@@ -1,5 +1,4 @@
 import sys
-import requests
 import os
 
 from utils import _AutoScrollbar, notifier
@@ -54,12 +53,15 @@ class HtmlFrame(ttk.Frame):
         if messages_enabled:
             self.message_func = message_func = notifier
         else:
-            self.message_func = message_func = lambda a, b: None
+            self.message_func = message_func = lambda a, b, cap=None: None
             
         self.html = html = TkinterWeb(self, message_func)
         html.grid(row=0, column=0, sticky=tk.NSEW)
 
         html._cursor_change_func = self.change_cursor
+        
+        self.on_link_click(self.load_url)
+        self.on_form_submit(self.load_form_data)
             
         if vertical_scrollbar:
             if vertical_scrollbar == "auto":
@@ -118,8 +120,23 @@ class HtmlFrame(ttk.Frame):
     def bind(self, *args, **kwargs):
         self.html.bind(*args, **kwargs)
 
+    def load_form_data(self, url, data=None, method="GET", decode=None):
+        if method == "GET":
+            req = urlopen(Request(url, headers={'User-Agent': 'Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha'}))
+        elif method == "POST":
+            req = urlopen(Request(url, data, headers={'User-Agent': 'Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha'}))
+        data = req.read()
+        req.close()
+        if decode:
+            data = data.decode(decode, errors="ignore")
+        else:
+            data = data.decode(errors="ignore")
+        self.load_html(data, url)
+        self.current_url = url
+
     def continue_loading(self, url, base_url=None, decode=None):
         "Finish loading urls and handle URI fragments"
+
         parsed = urlparse(url)
         parsed2 = urlparse(self.current_url)
 
@@ -133,7 +150,7 @@ class HtmlFrame(ttk.Frame):
             netloc2 = parsed2.netloc
 
         #if url is different than the current one, load the new site.
-        if not ((netloc == netloc2) and (parsed.path == parsed2.path)):
+        if not ((netloc == netloc2) and (parsed.path == parsed2.path) and (parsed.query == parsed2.query)):
             if parsed.scheme == "file":
                 self.message_func("Opening {0}.".format(netloc), "")
                 if base_url is not None:
@@ -145,15 +162,13 @@ class HtmlFrame(ttk.Frame):
                 self.message_func("Connecting to {0}.".format(netloc), "")
                 base_url = (base_url if base_url else url)
                 
-            with urlopen(Request(url, headers={'User-Agent': 'Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha'})) as handle:
-                data = handle.read()
-                if decode:
-                    data = data.decode(decode)
-                else:
-                    try:
-                        data = data.decode()
-                    except UnicodeDecodeError:
-                        data = data.decode("iso-8859-1")
+            req = urlopen(Request(url, headers={'User-Agent': 'Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha'}))
+            data = req.read()
+            req.close()
+            if decode:
+                data = data.decode(decode, errors="ignore")
+            else:
+                data = data.decode(errors="ignore")
             self.load_html(data, base_url)
             self.current_url = url
 
@@ -203,6 +218,10 @@ class HtmlFrame(ttk.Frame):
     def on_link_click(self, function):
         "Allows for handling link clicks"
         self.html._link_click_func = function
+
+    def on_form_submit(self, function):
+        "Allows for handling form submissions"
+        self.html._form_submit_func = function
 
     def on_title_change(self, function):
         "Allows for handling title changes"
@@ -306,7 +325,6 @@ class HtmlFrame(ttk.Frame):
         self.current_url = ""
         self.html.reset()
         self.html._base_url = base_url
-        self.html._images = set()
         # This a modification that deals with the <title> element in 64-bit Tkhtml becuse that can cause some trouble
         if "<title>" in html_source:
             if sys.platform == "win64":
@@ -368,6 +386,10 @@ class HtmlLabel(ttk.Frame):
         "Allows for handling link clicks"
         self.html._link_click_func = function
 
+    def on_form_submit(self, function):
+        "Allows for handling form submissions"
+        self.html._form_submit_func = function
+
     def change_cursor(self, cursor):
         "Handle cursor changes"
         if self.cursor != cursor:
@@ -392,7 +414,6 @@ class HtmlLabel(ttk.Frame):
             
         self.html.reset()
         self.html._base_url = base_url
-        self.html._images = set()
         self.add_html(html_source)
         
     def add_html(self, html_source):

@@ -29,7 +29,7 @@ root.mainloop()
 ```
 To load a website, call `myhtmlframe.load_website("www.yourwebsite.com")`
 
-The HtmlFrame widget can also load files and custom HTML code. It also supports clicking on links and handling website titles. In order to use these features, refer to the API refrence below.
+The HtmlFrame widget can also load files and custom HTML code. It also supports clicking on links, submitting forms, and handling website titles. In order to use these features, refer to the API refrence below.
 
 ## Tips and Tricks
 *Changing the title*
@@ -45,14 +45,17 @@ myhtmlframe.on_title_change(self.change_title)
 ---
 *Link clicks*
 
-Link clicks can also be easily handled.
-To follow a link every time it is clicked, use the following: 
+Link clicks can also be easily handled. By default, when a link is clicked, it will be automatically loaded.
+To run some code before loading the new website, use the following: 
 ```
 def load_new_page(url):
-    myhtmlframe.load_website(url) #load the new website
+    ## Do stuff - insert code here
+    myhtmlframe.load_url(url) #load the new website
     
 myhtmlframe.on_link_click(load_new_page)
 ```
+Similarily, `on_form_submit` can be used to override the default form submission handlers. Refer to the API reference below.
+
 ---
 *Zooming*
 
@@ -154,12 +157,30 @@ Parameters
 * **css_source** *(string)* - Specifies the code to parse. Must be valid CSS code.
 
 ---
+#### **load_form_data**(url, data, method="GET", decode=None)
+Submit the form data to a server.
+
+Parameters
+* **url** *(string)* - Specifies the url to load.
+* **data** *(string)* - Specifies the data to pass to the server. 
+* **method** *(string)* - Specifies the form submission method. This may be either `"GET"` or `"POST"`.
+* **decode** *(string)* - Specifies the decoding to use when loading the website
+
+---
 #### **on_link_click**(function)
 Set TkinterWeb to call the specified python function whenever a link is clicked.
 When a link is clicked on a webpage, a variable containing the url of the clicked link will be passed to the specified function.
 
 Parameters
 * **function** *(python function)* - Specifies the function to call when a link is clicked.
+
+---
+#### **on_form_submit**(function)
+Set TkinterWeb to call the specified python function whenever a form is submitted.
+When an HTML form is submitted, three variables, one containing the url, a second containing the submission data, and a third containing the submission method (GET or POST) will be passed to the specified function.
+
+Parameters
+* **function** *(python function)* - Specifies the function to call when a form is submitted.
 
 ---
 #### **on_title_change**(function)

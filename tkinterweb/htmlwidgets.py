@@ -247,6 +247,10 @@ class HtmlFrame(ttk.Frame):
         "Clear the list of visited links"
         self.html.visited_links = []
 
+    def ignore_invalid_images(self, value):
+        "Choose to ignore broken images"
+        self.html._ignore_invalid_images = value
+
     def set_message_func(self, function):
         "Change the message output function"
         self.message_func = function

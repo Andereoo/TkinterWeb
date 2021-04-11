@@ -496,11 +496,10 @@ class TkinterWeb(tk.Widget):
                 url = urlunparse(url)
             else:
                 url = urljoin(self._base_url, action)
-                    
+
+            self._message_func("Form submitted.", "Url: {0}.".format(url))  
             if method == "GET":          
-                url += "?" + data[1:]
-                self._message_func("Form submitted.", "Url: {0}.".format(url))
-                self._form_submit_func(url, None, "GET")
+                self._form_submit_func(url, "?" + data[1:], "GET")
             else:
                 self._message_func("Form submitted.", "Url: {0}.".format(url))
                 self._form_submit_func(url, data[1:].encode(), "POST")

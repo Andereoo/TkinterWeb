@@ -392,6 +392,12 @@ class _ScrolledText(tk.Frame):
     def configure(self, *args, **kwargs):
         self.tbox.configure(*args, **kwargs)
 
+    def get(self, *args, **kwargs):
+        return self.tbox.get(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        self.tbox.delete(*args, **kwargs)
+
 
 def notifier(main, sub, cap=True):
     "Notifications printer."

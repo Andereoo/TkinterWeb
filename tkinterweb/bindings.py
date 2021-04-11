@@ -6,11 +6,11 @@ from PIL import ImageTk, Image
 
 try:
     from urllib.request import Request, urlopen
-    from urllib.parse import urlparse, urljoin
+    from urllib.parse import urlparse, urljoin, urlunparse
     import tkinter as tk
 except ImportError: # Python 2
     from urllib2 import urlopen, Request
-    from urlparse import urlparse, urljoin
+    from urlparse import urlparse, urljoin, urlunparse
     import Tkinter as tk
 
 from utils import _ScrolledText, DEFAULTSTYLE
@@ -88,10 +88,19 @@ class Combobox(tk.Widget):
                                takefocus=0, selectbackground="#6eb9ff",
                                relief="flat", elementborderwidth=0,
                                buttonbackground="white")
+        self.data = [""]
+        
     def insert(self, data):
         for elem in reversed(data):
             self.tk.call(self._w, "list", "insert", 0, elem)
         self.tk.call(self._w, "select", 0)
+        self.data = data
+
+    def reset(self):
+        self.tk.call(self._w, "select", 0)
+
+    def get(self):
+        return self.data[self.tk.call(self._w, "curselection")[0]]
 
 
 class TkinterWeb(tk.Widget):
@@ -109,6 +118,7 @@ class TkinterWeb(tk.Widget):
         self._title_change_func = lambda title:None
         self._cursor_change_func = lambda url:None
         self._link_click_func = lambda url:None
+        self._form_submit_func = lambda url, data, method: None
         
         self.cursors = {
           "crosshair": "crosshair",
@@ -171,6 +181,12 @@ class TkinterWeb(tk.Widget):
         self.bind_class("bc{0}.embeddednodes".format(self), "<ButtonRelease-1>", self._embedded_mouse_release, True)
         self._image_name_prefix = str(id(self)) + "_img_"
         self._images = set() # to avoid python garbage collector from stealing images
+
+        # enable form resetting and submission
+        self._form_get_commands = {}
+        self._form_reset_commands = {}
+        self._form_elements = {}
+        self._forms = {}
         
         # handle tags
         self.tk.call(self._w, "handler", "script", "script", self.register(self._on_script))
@@ -183,6 +199,7 @@ class TkinterWeb(tk.Widget):
         self.tk.call(self._w, "handler", "node", "textarea", self.register(self._on_input))
         self.tk.call(self._w, "handler", "node", "select", self.register(self._on_input))
         self.tk.call(self._w, "handler", "node", "button", self.register(self._on_input))
+        self.tk.call(self._w, "handler", "node", "form", self.register(self._on_form))
 
     def node(self, *arguments):
         """Retrieve one or more document
@@ -202,6 +219,12 @@ class TkinterWeb(tk.Widget):
     def reset(self):
         """Reset the widget"""
         self._link_ids = {}
+        self._images = set()
+        self._form_get_commands = {}
+        self._form_elements = {}
+        self._forms = {}
+        self._on_embedded_node = None
+        self._radio_buttons = {}
         return self.tk.call(self._w, "reset")
 
     def tag(self, subcommand, tag_name, *arguments):
@@ -330,13 +353,21 @@ class TkinterWeb(tk.Widget):
         except tk.TclError:
             pass
 
+    def _on_form(self, node):
+        html = self.tk.call(node, "html")
+        inputs = self.tk.call(html, "search", "INPUT,SELECT,TEXTAREA,BUTTON")
+        for i in inputs:
+            self._form_elements[i] = node
+        self._forms[node] = inputs
+
     def _on_input(self, node):
         """Handle <input>, <textarea>, and <button> elements"""
         self.tk.eval('set type ""')
         nodetag = self.tk.eval("set tag [string tolower [%s tag]]" % node)
         nodetype = self.tk.eval("set nodetype [string tolower [%s attr -default {} type]]" % node)
         nodename = "{0}.{1}".format(nodetag, nodetype).lower()
-        nodevalue = self.tk.call(node, "attr", "-default", "", "value")
+        nodevalue = self._get_node_attr(node, "value")
+        
         if nodetag == "select":
             text = []
             for child in self._get_node_children(node):
@@ -346,9 +377,13 @@ class TkinterWeb(tk.Widget):
 
             widgetid = Combobox(self)
             widgetid.insert(text)
+            self._form_get_commands[node] = lambda: widgetid.get()
+            self._form_reset_commands[node] = lambda: widgetid.reset()
             self._replace_node(node, widgetid, lambda widgetid=widgetid: self._delete_node(widgetid), lambda node=node, widgetid=widgetid, widgettype="text": self._style_node(node, widgetid, widgettype))
         elif nodetag == "textarea":
             widgetid = _ScrolledText(self, borderwidth=0, selectborderwidth=0, highlightthickness=0)
+            self._form_get_commands[node] = lambda: widgetid.get("1.0",'end-1c')
+            self._form_reset_commands[node] = lambda: widgetid.delete("0.0", "end")
             self._replace_node(node, widgetid, lambda widgetid=widgetid: self._delete_node(widgetid), lambda node=node, widgetid=widgetid, widgettype="text": self._style_node(node, widgetid, widgettype))
         elif nodetag == "button":
             children = self._get_node_children(node)
@@ -363,17 +398,25 @@ class TkinterWeb(tk.Widget):
             if nodevalue == "":
                 nodevalue = "Submit"
             widgetid = tk.Button(self, text=nodevalue, borderwidth=1, padx=3, pady=2, highlightthickness=0)
+            widgetid.config(command=lambda node=node: self._submit_form(node))
             self._replace_node(node, widgetid, lambda widgetid=widgetid: self._delete_node(widgetid), lambda node=node, widgetid=widgetid: self._style_node(node, widgetid))
         elif nodename == "input.reset":
+            if nodevalue == "":
+                nodevalue = "Reset"
             widgetid = tk.Button(self, text=nodevalue, borderwidth=1, padx=3, pady=2, highlightthickness=0)
+            widgetid.config(command=lambda node=node: self._reset_form(node))
             self._replace_node(node, widgetid, lambda widgetid=widgetid: self._delete_node(widgetid), lambda node=node, widgetid=widgetid: self._style_node(node, widgetid))
         elif nodename == "input.button":
             widgetid = tk.Button(self, text=nodevalue, borderwidth=1, padx=3, pady=2, highlightthickness=0)
             self._replace_node(node, widgetid, lambda widgetid=widgetid: self._delete_node(widgetid), lambda node=node, widgetid=widgetid: self._style_node(node, widgetid))
         elif nodename == "input.hidden":
-            pass
+            self._form_get_commands[node] = lambda node=node: self._get_node_attr(node, "value")
+            self._form_reset_commands[node] = lambda: None
         elif nodename == "input.checkbox":
-            widgetid = tk.Checkbutton(self, borderwidth=0, padx=0, pady=0, highlightthickness=0)
+            variable = tk.IntVar()
+            widgetid = tk.Checkbutton(self, borderwidth=0, padx=0, pady=0, highlightthickness=0, variable=variable)
+            self._form_get_commands[node] = lambda: variable.get()
+            self._form_reset_commands[node] = lambda: variable.set(0)
             self._replace_node(node, widgetid, lambda widgetid=widgetid: self._delete_node(widgetid), lambda node=node, widgetid=widgetid: self._style_node(node, widgetid))
         elif nodename == "input.radio":
             name = self.tk.call(node, "attr", "-default", "", "name")
@@ -383,6 +426,8 @@ class TkinterWeb(tk.Widget):
                 variable = tk.StringVar(self, value=nodevalue)
                 self._radio_buttons[name] = variable   
             widgetid = tk.Radiobutton(self, value=nodevalue, variable=variable, borderwidth=0, padx=0, pady=0, highlightthickness=0)
+            self._form_get_commands[node] = lambda: variable.get()
+            self._form_reset_commands[node] = lambda: variable.set("")
             self._replace_node(node, widgetid, lambda widgetid=widgetid: self._delete_node(widgetid), lambda node=node, widgetid=widgetid: self._style_node(node, widgetid))
         elif nodename == "input.file":
             pass
@@ -390,8 +435,76 @@ class TkinterWeb(tk.Widget):
             widgetid = tk.Entry(self, borderwidth=0, highlightthickness=0)
             widgetid.insert(0, nodevalue)
             if nodetype == "password":
-                widgetid.configure(show='•')
+                widgetid.configure(show='*')
+            self._form_get_commands[node] = lambda: widgetid.get()
+            widgetid.bind("<Return>", lambda event, node=node: self._submit_form(node=node))
+            self._form_reset_commands[node] = lambda widgetid=widgetid, content=nodevalue: self._clear_and_set(widgetid, content)
             self._replace_node(node, widgetid, lambda widgetid=widgetid: self._delete_node(widgetid), lambda node=node, widgetid=widgetid, widgettype="text": self._style_node(node, widgetid, widgettype))
+
+    def _clear_and_set(self, widgetid, content):
+        widgetid.delete(0, "end")
+        widgetid.insert(0, content)
+
+    def _reset_form(self, node):
+        if node not in self._form_elements:
+            return
+        
+        form = self._form_elements[node]
+        action = self._get_node_attr(form, "action")
+        
+        for formelement in self._forms[form]:
+            nodetag = self._get_node_tag(formelement)
+            nodetype = self._get_node_attr(formelement, "type")
+            nodename = "{0}.{1}".format(nodetag, nodetype).lower()
+
+            if any([nodename == "input.image", nodename == "input.submit",
+                     nodename == "input.reset", nodename == "input.button",
+                     nodetag == "button"]):
+                continue
+            else:
+                self._form_reset_commands[formelement]()
+
+    def _submit_form(self, node, event=None):
+        if node not in self._form_elements:
+            return
+        
+        data = ""
+        form = self._form_elements[node]
+        action = self._get_node_attr(form, "action")
+        method = self.tk.call(form, "attribute", "-default", "GET", "method").upper()
+        
+        for formelement in self._forms[form]:
+            nodeattrname = self._get_node_attr(formelement, "name")
+            if nodeattrname != "":
+                nodetag = self._get_node_tag(formelement)
+                nodetype = self._get_node_attr(formelement, "type")
+                nodename = "{0}.{1}".format(nodetag, nodetype).lower()
+
+                if any([nodename == "input.image", nodename == "input.submit",
+                         nodename == "input.reset", nodename == "input.button",
+                         nodetag == "button"]):
+                    continue
+                else:
+                    value = self._form_get_commands[formelement]()
+                    data += "&{0}={1}".format(nodeattrname, value)
+                    
+        if data != "":
+            if action == "":
+                url = list(urlparse(self._base_url))
+                url = url[:-3]
+                url.extend(['','',''])
+                url = urlunparse(url)
+            else:
+                url = urljoin(self._base_url, action)
+                    
+            if method == "GET":          
+                url += "?" + data[1:]
+                self._message_func("Form submitted.", "Url: {0}.".format(url))
+                self._form_submit_func(url, None, "GET")
+            else:
+                self._message_func("Form submitted.", "Url: {0}.".format(url))
+                self._form_submit_func(url, data[1:].encode(), "POST")
+
 
     def _replace_node(self, node, widgetid, deletecmd, stylecmd=None, allowscrolling=True, handledelete=True):
         """Replace a Tkhtml3 node with a Tkinter widget"""
@@ -477,8 +590,9 @@ class TkinterWeb(tk.Widget):
                 self._attach_broken_image(name)
         else:
             try:
-                with urlopen(Request(url, headers={"User-Agent": "Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha"})) as handle:
-                    data = handle.read()
+                req = urlopen(Request(url, headers={'User-Agent': 'Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha'}))
+                data = req.read()
+                req.close()
                 self._images.add(ImageTk.PhotoImage(name=name, data=data))
             except Exception:
                 self._attach_broken_image(name)

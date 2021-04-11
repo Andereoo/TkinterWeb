@@ -278,6 +278,13 @@ Parameters
 * **isenabled** *(boolean)* - Specifies whether images should or should not be loaded.
 
 ---
+#### **ignore_invalid_images**(value)
+Enable or disable showing a broken image icon whenever an image can't be loaded.
+
+Parameters
+* **value** *(boolean)* - Specifies whether invalid images should or should not be ignored.
+
+---
 #### **get_currently_hovered_node_tag**()
 Get the tag of the HTML element the mouse is currently over.
 For example, if the mouse is hovering over a heading, `get_currently_hovered_node_tag()` would return "h1".

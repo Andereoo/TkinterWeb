@@ -73,6 +73,14 @@ Parameters
 * **function** *(python function)* - Specifies the function to call when a link is clicked.
 
 ---
+#### **on_form_submit**(function)
+Set TkinterWeb to call the specified python function whenever a form is submitted.
+When an HTML form is submitted, three variables, one containing the url, a second containing the submission data, and a third containing the submission method (GET or POST) will be passed to the specified function.
+
+Parameters
+* **function** *(python function)* - Specifies the function to call when a form is submitted.
+
+---
 #### **set_zoom**(multiplier)
 Set the zoom multiplier of the document.
 

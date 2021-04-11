@@ -120,9 +120,9 @@ class HtmlFrame(ttk.Frame):
     def bind(self, *args, **kwargs):
         self.html.bind(*args, **kwargs)
 
-    def load_form_data(self, url, data=None, method="GET", decode=None):
+    def load_form_data(self, url, data, method="GET", decode=None):
         if method == "GET":
-            req = urlopen(Request(url, headers={'User-Agent': 'Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha'}))
+            req = urlopen(Request(url+data, headers={'User-Agent': 'Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha'}))
         elif method == "POST":
             req = urlopen(Request(url, data, headers={'User-Agent': 'Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha'}))
         data = req.read()

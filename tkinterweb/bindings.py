@@ -914,6 +914,12 @@ class TkinterWeb(tk.Widget):
         """Remove a stored widget"""
         self.tk.call(self._stored_widgets[widgetid], "replace", "<p></p>")
         del self._stored_widgets[widgetid]
+
+    def _replace_html(self, selector, widgetid):
+        """Replace an HTML element with a widget"""
+        node = self.search(selector)[0]
+        self.tk.call(node, "replace", widgetid)
+        self._stored_widgets[widgetid] = node
         
     def _get_selected_text(self):
         """Return the currently selected text"""

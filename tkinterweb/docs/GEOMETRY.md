@@ -17,7 +17,7 @@ The above code will replace the `<div>` element with the `mybutton` Button. This
 Add the attribute `allowscrolling="yes"` to allow scrolling the document when the mouse is over the button. Note that this has no effect on the HtmlLabel widget.
 
 ## Widget Handling
-Currently, the [HtmlFrame](HTMLFRAME.md) and [HtmlLabel](HTMLLABEL.md) widgets provide three commands to dynamically change the location of Tkinter widgets inside the HTML document after it has been loaded:
+Currently, the [HtmlFrame](HTMLFRAME.md) and [HtmlLabel](HTMLLABEL.md) widgets provide four commands to dynamically change the location of Tkinter widgets inside the HTML document after it has been loaded:
 
 ---
 

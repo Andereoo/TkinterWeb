@@ -1,5 +1,5 @@
 """
-TkinterWeb v3.3
+TkinterWeb v3.4
 
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
@@ -14,7 +14,7 @@ from htmlwidgets import HtmlFrame, HtmlLabel
 
 
 __title__ = 'TkinterWeb'
-__version__ = '3.3'
+__version__ = '3.4'
 __all__ = ['HtmlFrame', 'HtmlLabel', 'TkinterWeb', 'Demo']
 
 
@@ -30,7 +30,7 @@ class Demo():
 
         self.root = root = tk.Tk()
 
-        self.frame = frame = HtmlFrame(root)
+        frame = HtmlFrame(root)
 
         frame.on_title_change(self.change_title)
         frame.load_website("http://tkhtml.tcl.tk")

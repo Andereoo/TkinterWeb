@@ -329,7 +329,7 @@ Parameters
 ---
 
 #### **replace_element**(cssselector, newwidget)
-Replaces the content of the element matching the `cssselector` with the `newwidget`. See the [geometry management docs](GEOMETRY.md) for more information.
+Replaces the content of the element matching the specified CSS selector with the `newwidget`. See the [geometry management docs](GEOMETRY.md) for more information.
 
 Parameters
 * **cssselector** *(string)* - Specifies the CSS selector to search for.

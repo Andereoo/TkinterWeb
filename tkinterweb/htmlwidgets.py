@@ -303,6 +303,10 @@ class HtmlFrame(ttk.Frame):
         "Replace a stored widget"
         self.html._replace_widget(oldwidget, newwidget)
 
+    def replace_element(self, cssselector, newwidget):
+        "Replace an HTML element with a widget"
+        self.html._replace_html(cssselector, newwidget)
+
     def remove_widget(self, widget):
         "Remove a stored widget"
         self.html._remove_widget(widget)
@@ -404,6 +408,10 @@ class HtmlLabel(ttk.Frame):
         "Replace a stored widget"
         self.html._replace_widget(oldwidget, newwidget)
 
+    def replace_element(self, cssselector, newwidget):
+        "Replace an HTML element with a widget"
+        self.html._replace_html(cssselector, newwidget)
+        
     def remove_widget(self, widget):
         "Remove a stored widget"
         self.html._remove_widget(widget)

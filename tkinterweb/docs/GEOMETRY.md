@@ -30,6 +30,19 @@ Parameters
 
 ---
 
+#### **replace_element**(cssselector, newwidget)
+Replaces the content of the element matching the specified CSS selector with the `newwidget`. This command will scan the document for any elements that match the specified CSS selector. If multiple elements match the specified selector, only the first element will be replaced. For example, the following code will replace the 'myparagraph' HTML element with a button. 
+```
+mybutton = tkinter.Button(myframe)
+myframe.load_html("<p id='myparagraph'>some text</p>")
+myframe.replace_element("#myparagraph", mybutton)
+```
+Parameters
+* **cssselector** *(string)* - Specifies the CSS selector to search for.
+* **newwidget** *(tkinter.Widget)* - Specifies the new Tkinter widget to show. This may be any Tkinter widget.
+
+---
+
 #### **remove_widget**(oldwidget)
 Removes the `oldwidget` from the document. 
 This method is experimental and may cause issues. If you encounter any issues, please [report them](https://github.com/Andereoo/TkinterWeb/issues).

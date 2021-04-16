@@ -49,10 +49,10 @@ _tkhtml_loaded = False
 _combobox_loaded = False
 
 
-def load_tkhtml(master, location=None):
+def load_tkhtml(master, location=None, force=False):
     """Load nessessary Tkhtml files"""
     global _tkhtml_loaded
-    if not _tkhtml_loaded:
+    if (not _tkhtml_loaded) or force:
         if location:
             master.tk.eval("global auto_path; lappend auto_path {%s}" % location)
         master.tk.eval("package require Tkhtml")
@@ -167,7 +167,11 @@ class TkinterWeb(tk.Widget):
                 str(sys.version_info[0:3]).replace(", ", ".").replace(")", "").replace("(", "")),
             "Tkhtml3 found in {0}.".format(folder))
         load_tkhtml(master, folder)
-        tk.Widget.__init__(self, master, "html", cfg, kw)
+        try:
+            tk.Widget.__init__(self, master, "html", cfg, kw)
+        except tk.TclError:
+            load_tkhtml(master, folder, force=True)
+            tk.Widget.__init__(self, master, "html", cfg, kw)
         self.bindtags(self.bindtags() + ("bc{0}.nodes".format(self),))
         
         # enable text selection, image loading, and pseudo-element flagging

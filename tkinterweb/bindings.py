@@ -59,10 +59,10 @@ def load_tkhtml(master, location=None, force=False):
         _tkhtml_loaded = True
 
 
-def load_combobox(master):
+def load_combobox(master, force=False):
     """Load combobox.tcl"""
     global _combobox_loaded
-    if not _combobox_loaded:
+    if not (_combobox_loaded) or force:
         path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                             "tkhtml",
                             "combobox.tcl")
@@ -83,7 +83,11 @@ class Combobox(tk.Widget):
     """Bindings for Bryan Oakley's combobox widget"""
     def __init__(self, master):
         load_combobox(master)
-        tk.Widget.__init__(self, master, "::combobox::combobox")
+        try:
+            tk.Widget.__init__(self, master, "::combobox::combobox")
+        except tk.TclError:
+            load_combobox(master, force=True)
+            tk.Widget.__init__(self, master, "::combobox::combobox")
         self.configure(highlightthickness=0, borderwidth=0, editable=False,
                                takefocus=0, selectbackground="#6eb9ff",
                                relief="flat", elementborderwidth=0,
@@ -508,7 +512,7 @@ class TkinterWeb(tk.Widget):
 
             self._message_func("Form submitted.", "Url: {0}.".format(url))  
             if method == "GET":
-                self._form_submit_func(url, "?" + data[1:], "GET")
+                self._form_submit_func(url, "?" + data[1:].replace(" ", "+"), "GET")
             else:
                 self._form_submit_func(url, data[1:].encode(), "POST")
 

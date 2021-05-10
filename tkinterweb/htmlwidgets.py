@@ -58,6 +58,14 @@ class HtmlFrame(ttk.Frame):
         self.html = html = TkinterWeb(self, message_func)
         html.grid(row=0, column=0, sticky=tk.NSEW)
 
+        self.message_func(
+            "Welcome to TkinterWeb 3.5!",
+            "https://github.com/Andereoo/TkinterWeb")
+
+        self.message_func(
+            "Debugging messages are enabled.",
+            "Use the parameter `messages_enabled = False` when calling HtmlFrame() to disable these messages.")
+
         html._cursor_change_func = self.change_cursor
         
         self.on_link_click(self.load_url)

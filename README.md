@@ -90,6 +90,6 @@ The best way to contribute to this project is to go to the [issues tab](https://
 ## Credits
 **TkinterWeb is powered by the [Tkhtml project](http://tkhtml.tcl.tk/index.html).**
 
-Thanks to the TkinterHtml package for providing the bindings which this project is based on.
+Thanks to the [TkinterHtml package](https://bitbucket.org/aivarannamaa/tkinterhtml) for providing the bindings which this project is based on.
 
 Thanks to the [BRL-CAD project](https://github.com/BRL-CAD/brlcad) for providing 64-bit Windows modifications.

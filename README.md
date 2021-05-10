@@ -70,7 +70,7 @@ Documentation and additional information for these classes can be found in the c
 * Most CSS Pseudo-elements, such as `:hover` and `:active` are also supported. 
 
 **JavaScript:**
-* Javascript is currently not supported
+* Javascript is not supported at the moment.
 
 **Images:**
 * TkinterWeb supports nearly 50 different image types through PIL. Scalable Vector Graphic support is not as straightforward, though. In order to load SVG images:
@@ -83,7 +83,7 @@ Documentation and additional information for these classes can be found in the c
 ## Contributing
 **TkinterWeb happily accepts contributions.**
 
-The best way to contribute to this project is to go to the [issues tab](https://github.com/Andereoo/TkinterWeb/issues) and report bugs or submit a feature request. This helps TkinterWeb become more stable and more full-featured.
+The best way to contribute to this project is to go to the [issues tab](https://github.com/Andereoo/TkinterWeb/issues) and report bugs or submit a feature request. This helps TkinterWeb become more stable and full-featured.
 
 &nbsp;
 &nbsp;

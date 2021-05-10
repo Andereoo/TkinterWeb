@@ -31,7 +31,7 @@ frame.load_website("http://tkhtml.tcl.tk/tkhtml.html") #load a website
 frame.pack(fill="both", expand=True) #attach the HtmlFrame widget to the parent window
 root.mainloop()
 ```
-![TkinterWeb](/tkinterweb/images/screenshot.png)
+![TkinterWeb](/tkinterweb/images/tkinterweb.png)
 
 Some other tricks, such as handling link clicks, can be found in [the HtmlFrame documentation](/tkinterweb/docs/HTMLFRAME.md#tips-and-tricks)
 

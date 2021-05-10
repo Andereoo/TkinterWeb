@@ -33,7 +33,7 @@ root.mainloop()
 ```
 ![TkinterWeb](/tkinterweb/images/tkinterweb.png)
 
-Some other tricks, such as handling link clicks, can be found in [the HtmlFrame documentation](/tkinterweb/docs/HTMLFRAME.md#tips-and-tricks)
+Some other tricks, such as handling page title changes or link clicks, can be found in [the HtmlFrame documentation](/tkinterweb/docs/HTMLFRAME.md#tips-and-tricks)
 
 &nbsp;
 &nbsp;

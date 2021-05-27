@@ -302,7 +302,7 @@ By deafult, TkinterWeb uses threading to improve page load times and to prevent 
 
 Parameters
 * **maximum** *(integer)* - Specifies the maximum number of threads that can run at the same time.
-* 
+
 ---
 #### **set_recursive_hover_depth**(depth)
 When a mouse hovers over an element in a webpage, the element under the mouse is flagged as hovered.

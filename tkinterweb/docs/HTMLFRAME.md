@@ -67,7 +67,7 @@ When using `on_done_loading` to, for example, change the 'stop' button to a 'ref
 ---
 *Stop loading*
 
-The method `stop()` can be used to stop loading a webpage. Likewise, the `force` can be used to mimic a page refresh. Refer to the API refrence below for more information.
+The method `stop()` can be used to stop loading a webpage. Likewise, the `force=True` parameter can be passed to `load_url`, `load_website`, or `load_file` to mimic a page refresh. Refer to the API refrence below for more information.
 
 ---
 *Link clicks*

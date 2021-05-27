@@ -1,14 +1,44 @@
 import sys
+import threading
+
+try:
+    from urllib.request import Request, urlopen
+except ImportError:
+    from urllib2 import Request, urlopen
 
 try:
     import tkinter as tk
-    from tkinter import ttk
+    from tkinter import filedialog, ttk
 except ImportError:
     import Tkinter as tk
+    import tkFileDialog as filedialog
     import ttk
 
 
+try:
+    from functools import lru_cache
+except ImportError:
+    # On Python 2 and Python 3.0 - 3.1, functools.lru_cache does not yet exist
+    # We simply replace functools' lru_cache with a fake lru_cache function that does nothing
+    # We also write some extremely annoying messages to persuade users to not use a version of Python that is no longer supported
+    sys.stderr.write(
+        "Warning: Caching has been disabled because you are using an outdated Python installation.\n")
+    sys.stderr.write(
+        "Consider installing Python 3.2+ for improved performance.\n\n")
+
+    def lru_cache():
+        def decorator(func):
+            def wrapper(*args, **kwargs):
+                return func(*args, **kwargs)
+            return wrapper
+        return decorator
+
+
+HEADER = {'User-Agent': 'Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha'}
 DEFAULTSTYLE = """
+/* Default stylesheet to be loaded whenever HTML is parsed. */
+/* This is a modified version of the stylesheet that comes bundled with Tkhtml. */
+
 /* Display types for non-table items. */
   ADDRESS, BLOCKQUOTE, BODY, DD, DIV, DL, DT, FIELDSET, 
   FRAME, H1, H2, H3, H4, H5, H6, NOFRAMES, 
@@ -101,17 +131,13 @@ HR {
 /* Basic table tag rules. */
 TABLE { 
   display: table;
-  border-spacing: 2px;
+  border-spacing: 0px;
 
   border-bottom-color: grey25;
   border-right-color: grey25;
   border-top-color: grey60;
   border-left-color: grey60;
 
-  /* <table> elements do not inherit text-align by default. Strictly
-   * speaking, this rule should not be used with documents that
-   * use the "strict" DTD. Or something.
-   */
   text-align: left;
 }
 
@@ -167,6 +193,11 @@ PRE, PLAINTEXT, XMP {
 :link    { color: darkblue; text-decoration: underline ; cursor: pointer }
 :visited { color: purple; text-decoration: underline ; cursor: pointer }
 
+A:active {
+    color:red;
+    cursor:pointer;
+}
+
 /* Deal with the "nowrap" HTML attribute on table cells. */
 TD[nowrap] ,     TH[nowrap]     { white-space: nowrap; }
 TD[nowrap="0"] , TH[nowrap="0"] { white-space: normal; }
@@ -180,49 +211,63 @@ BR {
  * Default decorations for form items. 
  */
 INPUT[type="hidden"] { display: none }
-INPUT[type] { border: none }
-INPUT, INPUT[type="file"], INPUT[type="text"], INPUT[type="password"], 
-TEXTAREA, SELECT { 
+
+INPUT, TEXTAREA, SELECT, BUTTON { 
   border: 1px solid;
   border-color: #6eb9ff;
   background-color: white;
   line-height: normal;
+  vertical-align: middle;
 }
 
-INPUT[type="image"][src] { -tkhtml-replacement-image: attr(src) }
+INPUT[type="image"][src] {
+  -tkhtml-replacement-image: attr(src)
+}
 
-/*
- * Default style for buttons created using <input> elements.
- */
-INPUT[type="submit"],INPUT[type="button"] {
-  /*display: -tkhtml-inline-button;*/
-  border: 0px solid;
+INPUT[type="checkbox"], INPUT[type="radio"], input[type="file"] {
+  background-color: transparent;
+  border: none;
+}
+
+INPUT[type="submit"],INPUT[type="button"], INPUT[type="reset"], BUTTON {
+  display: -tkhtml-inline-button;
+  position: relative;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1px solid;
+  border-top-color:    tcl(::tkhtml::if_disabled #828282 #e7e9eb);
+  border-left-color:   tcl(::tkhtml::if_disabled #828282 #e7e9eb);
+  border-right-color:  tcl(::tkhtml::if_disabled #e7e9eb #828282);
+  border-bottom-color: tcl(::tkhtml::if_disabled #e7e9eb #828282);
+  padding-top: 3px;
+  padding-left: 8px;
+  padding-right: 8px;
+  padding-bottom: 3px;
   background-color: #d9d9d9;
   color: #000000;
-  /* padding: 3px 10px 1px 10px; */
-  padding: 0px;
-  white-space: nowrap;
-  color:               tcl(::tkhtml::if_disabled #666666 #000000);
-}
-INPUT[type="submit"]:after,INPUT[type="button"]:after {
-  content: attr(value);
-  position: relative;
+  color: tcl(::tkhtml::if_disabled #666666 #000000);
 }
 
-INPUT[type="submit"]:hover:active,INPUT[type="button"]:hover:active {
-  border-top-color:    tcl(::tkhtml::if_disabled #ffffff #828282);
-  border-left-color:   tcl(::tkhtml::if_disabled #ffffff #828282);
-  border-right-color:  tcl(::tkhtml::if_disabled #828282 #ffffff);
-  border-bottom-color: tcl(::tkhtml::if_disabled #828282 #ffffff);
+INPUT[type="submit"]:after {
+  content: "Submit";
+}
+
+INPUT[type="reset"]:after {
+  content: "Reset";
+}
+
+INPUT[type="submit"][value]:after,INPUT[type="button"][value]:after, INPUT[type="reset"][value]:after {
+  content: attr(value);
+}
+
+INPUT[type="submit"]:hover:active, INPUT[type="reset"]:hover:active,INPUT[type="button"]:hover:active, BUTTON:hover:active {
+  border-top-color:    tcl(::tkhtml::if_disabled #e7e9eb #828282);
+  border-left-color:   tcl(::tkhtml::if_disabled #e7e9eb #828282);
+  border-right-color:  tcl(::tkhtml::if_disabled #828282 #e7e9eb);
+  border-bottom-color: tcl(::tkhtml::if_disabled #828282 #e7e9eb);
 }
 
 INPUT[size] { width: tcl(::tkhtml::inputsize_to_css) }
-
-BUTTON {
-  white-space:nowrap;
-  border: 0px solid;
-  background-color: #d9d9d9;
-}
 
 /* Handle "cols" and "rows" on a <textarea> element. By default, use
  * a fixed width font in <textarea> elements.
@@ -242,7 +287,6 @@ IFRAME {
   width: 300px;
   height: 200px;
 }
-
 
 /*
  *************************************************************************
@@ -350,32 +394,29 @@ BODY[marginwidth] {
 SPAN[spancontent]:after {
   content: attr(spancontent);
 }
-
-A:active {
-    color:red;
-    cursor:pointer;
-}
 """
 
 
-class _AutoScrollbar(ttk.Scrollbar):
-    "Scrollbar that hides itself when not needed"
+class AutoScrollbar(ttk.Scrollbar):
+    "Scrollbar that hides itself when not needed."
+
     def set(self, lo, hi):
         if float(lo) <= 0.0 and float(hi) >= 1.0:
             self.tk.call("grid", "remove", self)
         else:
             self.grid()
         ttk.Scrollbar.set(self, lo, hi)
-        
+
     def pack(self, **kw):
         raise tk.TclError("cannot use pack with this widget")
-    
+
     def place(self, **kw):
         raise tk.TclError("cannot use place with this widget")
 
 
-class _ScrolledText(tk.Frame):
+class ScrolledTextBox(tk.Frame):
     "Text widget with a scrollbar."
+
     def __init__(self, parent, **kwargs):
 
         tk.Frame.__init__(self, parent)
@@ -384,10 +425,23 @@ class _ScrolledText(tk.Frame):
         self.grid_columnconfigure(0, weight=1)
         self.tbox = tbox = tk.Text(self, **kwargs)
         tbox.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
-        
-        vsb = _AutoScrollbar(self, command=tbox.yview)
+
+        self.vsb = vsb = AutoScrollbar(self, command=tbox.yview)
         vsb.grid(row=0, column=1, sticky='nsew')
-        tbox['yscrollcommand'] = vsb.set
+        tbox['yscrollcommand'] = self.check
+
+    def check(self, *args):
+        self.vsb.set(*args)
+        if self.vsb.winfo_ismapped():
+            self.event_generate("<<ScrollbarShown>>")
+        else:
+            self.event_generate("<<ScrollbarHidden>>")
+
+    def bindtags(self, *args):
+        return self.tbox.bindtags(*args)
+
+    def reset_bindtags(self, event=None):
+        self.tbox.bindtags((self.tbox, 'Text', '.', 'all'))
 
     def configure(self, *args, **kwargs):
         self.tbox.configure(*args, **kwargs)
@@ -399,15 +453,126 @@ class _ScrolledText(tk.Frame):
         self.tbox.delete(*args, **kwargs)
 
 
-def notifier(main, sub, cap=True):
+class FileSelector(tk.Frame):
+    "File selector widget."
+
+    def __init__(self, parent, **kwargs):
+        tk.Frame.__init__(self, parent)
+        self.selector = selector = tk.Button(
+            self, text="Browse", command=self.select_file)
+        self.label = label = tk.Label(self, text="No files selected.")
+
+        selector.pack(side="left")
+        label.pack(side="right", fill="both")
+
+    def select_file(self):
+        name = filedialog.askopenfilename()
+        if name:
+            name = name.replace("\\", "/").split("/")[-1]
+            self.label.config(text=name)
+        else:
+            self.label.config(text="No files selected.")
+
+    def reset(self):
+        self.label.config(text="No files selected.")
+
+    def get_value(self):
+        text = self.label["text"]
+        if text == "No files selected.":
+            return ""
+        else:
+            return text
+
+    def configure(self, *args, **kwargs):
+        self.selector.config(*args, **kwargs)
+        if "activebackground" in kwargs:
+            del kwargs["activebackground"]
+        self.label.config(*args, **kwargs)
+        self.config(*args, **kwargs)
+
+
+class StoppableThread(threading.Thread):
+    "A thread that stores a state flag that can be set and used to check if the thread is supposed to be running."
+
+    def __init__(self,  *args, **kwargs):
+        threading.Thread.__init__(self, *args, **kwargs)
+        self.setDaemon(True)
+        self.running = True
+
+    def stop(self):
+        self.running = False
+
+    def isrunning(self):
+        return self.running
+
+
+class PlaceholderThread:
+    "Fake StoppableThread. The only purpose of this is to provide fake methods that mirror the StoppableThread class."
+    "This means that if a download is running in the MainThread, the stop flags can still be set without raising errors, though they won't do anything."
+
+    def stop(self):
+        return
+
+    def isrunning(self):
+        return True
+
+
+def download(url, data=None, method="GET", decode=None):
+    "Fetch files."
+    "Technically this isn't thread-safe (even though it is being used inside threads by Tkinterweb, "
+    "but as long as install_opener() is not called and a string is used as the url parameter we are okay."
+    thread = threadname()
+    if data and (method == "POST"):
+        req = urlopen(Request(url, data, headers=HEADER))
+    else:
+        req = urlopen(Request(url, headers=HEADER))
+    if not thread.isrunning():
+        return None, url, None
+    data = req.read()
+    url = req.geturl()
+    info = req.info()
+    try:
+        maintype = info.get_content_maintype()
+        filetype = info.get_content_type()
+    except AttributeError:
+        maintype = info.maintype
+        filetype = info.type
+    if (maintype != "image") or ("svg" in filetype):
+        if decode:
+            data = data.decode(decode, errors="ignore")
+        else:
+            data = data.decode(errors="ignore")
+    if not thread.isrunning():
+        return None, url, None
+    else:
+        return data, url, filetype
+
+
+@lru_cache()
+def cachedownload(*args, **kwargs):
+    "Fetch files and add them to the lru cache."
+    return download(*args, **kwargs)
+
+
+def shorten(string):
+    "Shorten text to avoid overloading the terminal."
+    if (len(string) > 100):
+        string = string[:100] + "..."
+    return string
+
+
+def threadname():
+    "Return the currently running thread."
+    thread = threading.current_thread()
+    if thread.name == 'MainThread':
+        thread = PlaceholderThread()
+    return thread
+
+
+def notifier(text):
     "Notifications printer."
     try:
-        sys.stderr.write(("UserNotification: "+str(main))+"\n")
-        sub = str(sub)
-        if cap:
-            if len(sub) > 200:
-                sub = sub[:200] + "..."
-        sys.stdout.write(str(sub)+"\n\n")
+        sys.stdout.write(("UserNotification: "+str(text))+"\n\n")
     except Exception:
-        "sys.stderr.write doesn't work in .pyw files."
+        "sys.stdout.write doesn't work in .pyw files."
         "Since .pyw files have no console, we can simply not bother printing messages."

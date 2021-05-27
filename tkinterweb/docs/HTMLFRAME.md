@@ -55,14 +55,19 @@ def url_changed(title):
     
 myhtmlframe.on_url_change(url_changed)
 ```
+It is highly recomended to use this method to change the text in a url-bar, for example, instead of changing the text when a page is loaded at first. This method will handle page redirects, and url changes when stopping loading page.
+
 ---
 *Done loading?*
 
 The method `on_done_loading` can be used to do something when the document is done loading. 
 
-When using `on_done_loading` to, for example, change the 'stop' button to a 'refresh' button, it is generally a good idea to use `on_downloading_resource` to do the opposite.
+When using `on_done_loading` to, for example, change the 'stop' button to a 'refresh' button, it is generally a good idea to use `on_downloading_resource` to do the opposite. Otherwise, the document may show that is is done loading while it is still loading.
 
-See the API refrence below for more information.
+---
+*Stop loading*
+
+The method `stop()` can be used to stop loading a webpage. Likewise, the `force` can be used to mimic a page refresh. Refer to the API refrence below for more information.
 
 ---
 *Link clicks*
@@ -127,32 +132,35 @@ Putting the above code inside the `on_right_click` function will make a popup sh
 ### Useful Methods:
 
 ---
-#### **load_website**(website_url, base_url=None, decode=None)
+#### **load_website**(website_url, base_url=None, decode=None, force=False)
 Loads and parses a website.
 
 Parameters
 * **website_url** *(string)* - Specifies the url to load
 * **base_url** *(string)* - Specifies the base url to use when parsing stylesheets and images. If `base_url` is not supplied, it will be automatically generated.
 * **decode** *(string)* - Specifies the decoding to use when loading the website
+* **force** *(boolean)* - Force the page to reload all elements.
 
 ---
 
-#### **load_file**(file_url, base_url=None, decode=None)
+#### **load_file**(file_url, base_url=None, decode=None, force=False)
 Loads and parses a local HTML file.
 
 Parameters
 * **file_url** *(string)* - Specifies the file to load
 * **base_url** *(string)* - Specifies the base url to use when parsing stylesheets and images. If `base_url` is not supplied, it will be automatically generated.
 * **decode** *(string)* - Specifies the decoding to use when loading the file
+* **force** *(boolean)* - Force the page to reload all elements.
 
 ---
-#### **load_url**(url, base_url=None, decode=None)
+#### **load_url**(url, base_url=None, decode=None, force=False)
 Loads and parses html from the given url. A local file will be loaded if the url begins with "file://". If the url begins with "https://" or "http://", a website will be loaded. 
 
 Parameters
 * **url** *(string)* - Specifies the url to load
 * **base_url** *(string)* - Specifies the base url to use when parsing stylesheets and images. If `base_url` is not supplied, it will be automatically generated.
 * **decode** *(string)* - Specifies the decoding to use when loading the website
+* **force** *(boolean)* - Force the page to reload all elements.
 
 ---
 #### **load_html**(html_source, base_url="")
@@ -189,6 +197,11 @@ Parameters
 * **css_source** *(string)* - Specifies the code to parse. Must be valid CSS code.
 
 ---
+#### **stop**()
+Stop loading this page.
+This will abandon all pending requests and show the document as it is.
+
+---
 #### **on_link_click**(function)
 Set TkinterWeb to call the specified python function whenever a link is clicked.
 When a link is clicked on a webpage, a variable containing the url of the clicked link will be passed to the specified function.
@@ -211,6 +224,36 @@ When the title of a webpage changes, a variable containing the new title will be
 
 Parameters
 * **function** *(python function)* - Specifies the function to call when a title changes.
+
+---
+#### **on_icon_change**(function)
+Set TkinterWeb to call the specified python function whenever the icon of a website or file has changed.
+When the icon of a webpage changes, a variable containing the url of the new icon will be passed to the specified function.
+
+Parameters
+* **function** *(python function)* - Specifies the function to call when the icon changes.
+
+---
+#### **on_url_change**(function)
+Set TkinterWeb to call the specified python function whenever the HtmlFrame widget is navigating to a new url.
+When an new url is navigated to, a variable containing the new url will be passed to the specified function.
+
+Parameters
+* **function** *(python function)* - Specifies the function to call when a url changes.
+
+---
+#### **on_done_loading**(function)
+Set TkinterWeb to call the specified python function whenever all outstanding resources have been downloaded. This is generally a good indicator as to when the website is done loading. The specified function may be called multiple times while loading a page.
+
+Parameters
+* **function** *(python function)* - Specifies the function to call when a webpage is expected to be done loading.
+
+---
+#### **on_downloading_resource**(function)
+Set TkinterWeb to call the specified python function whenever a new resource is being downloaded.
+
+Parameters
+* **function** *(python function)* - Specifies the function to call when a resource is downloaded.
 
 ---
 #### **set_zoom**(multiplier)
@@ -257,18 +300,11 @@ Parameters
 * **html** *(string)* - Specifies the HTML to be parsed when an invalid url is requested. Must be valid HTML code.
 
 ---
-#### **set_broken_file_message**(html)
-Set the HTML code to be displayed when a file cannot be reached.
-
-Parameters
-* **html** *(string)* - Specifies the HTML to be parsed when an invalid file is requested. Must be valid HTML code.
-
----
 #### **set_maximum_thread_count**(maximum)
 By deafult, TkinterWeb uses threading to improve page load times and to prevent Tkinter from freezing when loading HTML. TkinterWeb allows up to 15 threads to run at once. Increasing this value can improve speed and responsiveness, at the cost of CPU and memory usage while a page is loading. To disable threading altogether, call `set_maximum_thread_count` with a value of 0.
 
 Parameters
-* **maximum** *(integer)* - Specifies the number of recursions to apply the hover flag to.
+* **maximum** *(integer)* - Specifies the maximum number of threads that can run at the same time.
 * 
 ---
 #### **set_recursive_hover_depth**(depth)

@@ -132,33 +132,30 @@ Putting the above code inside the `on_right_click` function will make a popup sh
 ### Useful Methods:
 
 ---
-#### **load_website**(website_url, base_url=None, decode=None, force=False)
+#### **load_website**(website_url, decode=None, force=False)
 Loads and parses a website.
 
 Parameters
 * **website_url** *(string)* - Specifies the url to load
-* **base_url** *(string)* - Specifies the base url to use when parsing stylesheets and images. If `base_url` is not supplied, it will be automatically generated.
 * **decode** *(string)* - Specifies the decoding to use when loading the website
 * **force** *(boolean)* - Force the page to reload all elements.
 
 ---
 
-#### **load_file**(file_url, base_url=None, decode=None, force=False)
+#### **load_file**(file_url, decode=None, force=False)
 Loads and parses a local HTML file.
 
 Parameters
 * **file_url** *(string)* - Specifies the file to load
-* **base_url** *(string)* - Specifies the base url to use when parsing stylesheets and images. If `base_url` is not supplied, it will be automatically generated.
 * **decode** *(string)* - Specifies the decoding to use when loading the file
 * **force** *(boolean)* - Force the page to reload all elements.
 
 ---
-#### **load_url**(url, base_url=None, decode=None, force=False)
+#### **load_url**(url, decode=None, force=False)
 Loads and parses html from the given url. A local file will be loaded if the url begins with "file://". If the url begins with "https://" or "http://", a website will be loaded. 
 
 Parameters
 * **url** *(string)* - Specifies the url to load
-* **base_url** *(string)* - Specifies the base url to use when parsing stylesheets and images. If `base_url` is not supplied, it will be automatically generated.
 * **decode** *(string)* - Specifies the decoding to use when loading the website
 * **force** *(boolean)* - Force the page to reload all elements.
 

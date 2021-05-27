@@ -40,8 +40,30 @@ To change the title of `root`(see example above) every time the title of a websi
 def change_title(title):
     root.title(title) # change the title
     
-myhtmlframe.on_title_change(self.change_title)
+myhtmlframe.on_title_change(change_title)
 ```
+Similarily, `on_icon_change` can be used to get the website's icon when it is loaded.
+
+---
+*Url changes*
+
+Normally, a website's url may change when it is loaded. For example, `www.github.com` will redirect to `https://github.com`. This can be handled with `on_url_change`:
+
+```
+def url_changed(title):
+    # do something, such as change the text an a url-bar
+    
+myhtmlframe.on_url_change(url_changed)
+```
+---
+*Done loading?*
+
+The method `on_done_loading` can be used to do something when the document is done loading. 
+
+When using `on_done_loading` to, for example, change the 'stop' button to a 'refresh' button, it is generally a good idea to use `on_downloading_resource` to do the opposite.
+
+See the API refrence below for more information.
+
 ---
 *Link clicks*
 
@@ -141,6 +163,16 @@ Parameters
 * **base_url** *(string)* - Specifies the base url to use when parsing stylesheets and images.
 
 ---
+#### **load_form_data**(url, data, method="GET", decode=None)
+Submit the form data to a server.
+
+Parameters
+* **url** *(string)* - Specifies the url to load.
+* **data** *(string)* - Specifies the data to pass to the server. 
+* **method** *(string)* - Specifies the form submission method. This may be either `"GET"` or `"POST"`.
+* **decode** *(string)* - Specifies the decoding to use when loading the website
+
+---
 #### **add_html**(html_source)
 Send HTML code to the parser.
 Unlike `load_html`, `add_html` parses the specified HTML code and adds it to the end of the webpage without clearing the original document.
@@ -155,16 +187,6 @@ This can be used to remotely alter the appearance of websites.
 
 Parameters
 * **css_source** *(string)* - Specifies the code to parse. Must be valid CSS code.
-
----
-#### **load_form_data**(url, data, method="GET", decode=None)
-Submit the form data to a server.
-
-Parameters
-* **url** *(string)* - Specifies the url to load.
-* **data** *(string)* - Specifies the data to pass to the server. 
-* **method** *(string)* - Specifies the form submission method. This may be either `"GET"` or `"POST"`.
-* **decode** *(string)* - Specifies the decoding to use when loading the website
 
 ---
 #### **on_link_click**(function)
@@ -242,6 +264,13 @@ Parameters
 * **html** *(string)* - Specifies the HTML to be parsed when an invalid file is requested. Must be valid HTML code.
 
 ---
+#### **set_maximum_thread_count**(maximum)
+By deafult, TkinterWeb uses threading to improve page load times and to prevent Tkinter from freezing when loading HTML. TkinterWeb allows up to 15 threads to run at once. Increasing this value can improve speed and responsiveness, at the cost of CPU and memory usage while a page is loading. To disable threading altogether, call `set_maximum_thread_count` with a value of 0.
+
+Parameters
+* **maximum** *(integer)* - Specifies the number of recursions to apply the hover flag to.
+* 
+---
 #### **set_recursive_hover_depth**(depth)
 When a mouse hovers over an element in a webpage, the element under the mouse is flagged as hovered.
 TkinterWeb then marks the parent of that element repeatedly, up to the 15th degree. This works fine for most websites, but may cause a few websites to lag slightly. If this is becoming an issue, simply call `set_recursive_hover_depth` and set the *depth* to a smaller integer.
@@ -276,6 +305,23 @@ This method must be invoked *before* loading a webpage to take effect.
 
 Parameters
 * **isenabled** *(boolean)* - Specifies whether images should or should not be loaded.
+
+---
+#### **enable_forms**(isenabled=True)
+Enable or disable form-filling capabilities. 
+This method must be invoked *before* loading a webpage to take effect.
+
+Parameters
+* **isenabled** *(boolean)* - Specifies whether forms are handled or not.
+
+---
+#### **enable_caches**(isenabled=True)
+Enable or disable webpage caches.
+Disabling this option will conserve memory, but will also result in longer page load times.
+This method must be invoked *before* loading a webpage to take effect.
+
+Parameters
+* **isenabled** *(boolean)* - Specifies whether caches can be used or not.
 
 ---
 #### **ignore_invalid_images**(value)

@@ -99,7 +99,7 @@ class HtmlFrame(ttk.Frame):
     def load_website(self, website_url, decode=None, force=False):
         "Load a website from the specified URL"
         if (not website_url.startswith("https://")) and (not website_url.startswith("http://")):
-            website_url = "https://" + str(website_url)
+            website_url = "http://" + str(website_url)
         self.load_url(website_url, decode, force)
 
     def load_file(self, file_url, decode=None, force=False):
@@ -384,7 +384,7 @@ class HtmlFrame(ttk.Frame):
         self.current_url = ""
         self.html.reset()
         self.html.base_url = base_url
-        self.add_html(html_source)
+        self.html.parse(html_source)
 
     def add_html(self, html_source):
         "Parse HTML and add it to the end of the current document."

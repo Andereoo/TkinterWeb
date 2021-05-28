@@ -5,9 +5,9 @@ import sys
 from PIL import Image, ImageTk
 
 try:
-    from urllib.parse import urljoin, urlparse, urlunparse
+    from urllib.parse import urljoin, urlparse, urlunparse, urlencode
 except ImportError:
-    from urlparse import urljoin, urlparse, urlunparse
+    from urlparse import urljoin, urlparse, urlunparse, urlencode
 
 try:
     import tkinter as tk
@@ -910,7 +910,7 @@ class TkinterWeb(tk.Widget):
         if (node not in self.form_elements) or (not self.forms_enabled):
             return
 
-        data = ""
+        data = {}
         form = self.form_elements[node]
         action = self.get_node_attribute(form, "action")
         method = self.tk.call(form, "attribute", "-default", "GET", "method").upper()
@@ -920,8 +920,10 @@ class TkinterWeb(tk.Widget):
             if nodeattrname != "":
                 value = self.form_get_commands[formelement]()
                 if value:
-                    data += "&{0}={1}".format(nodeattrname, value)
+                    data[nodeattrname] = value
 
+        data = urlencode(data)
+        
         if action == "":
             url = list(urlparse(self.base_url))
             url = url[:-3]
@@ -931,9 +933,10 @@ class TkinterWeb(tk.Widget):
             url = urljoin(self.base_url, action)
 
         if method == "GET":
-            data = "?" + data[1:].replace(" ", "+")
+            data = "?" + data
         else:
-            data = data[1:].encode()
+            data = data.encode()
+            
         self.message_func(
             "A form has been submitted to {}.".format(shorten(url)))
         self.form_submit_func(url, data, method)

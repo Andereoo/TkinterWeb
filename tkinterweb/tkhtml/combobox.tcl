@@ -539,7 +539,7 @@ proc ::combobox::Build {w args } {
 	    -borderwidth $options(-elementborderwidth) \
 	    -relief solid \
 	    -highlightthickness 1 \
-	    -highlightbackground "#6eb9ff"
+	    -highlightbackground "black"
 
     $widgets(listbox) configure \
 	    -selectmode browse \
@@ -1042,7 +1042,7 @@ proc ::combobox::ComputeGeometry {w} {
     set height [expr {[winfo reqheight $widgets(dropdown)] + $bd + $bd}]
     if {[string length $options(-dropdownwidth)] == 0 || 
         $options(-dropdownwidth) == 0} {
-        set width [winfo width $widgets(this)]
+        set width [expr [winfo width $widgets(this)] + 2]
     } else {
         set m [font measure [$widgets(listbox) cget -font] "m"]
         set width [expr {$options(-dropdownwidth) * $m}]
@@ -1064,7 +1064,7 @@ proc ::combobox::ComputeGeometry {w} {
     # screen, so will the list. If you want to change the behavior,
     # simply change the if statement... (and be sure to update this
     # comment!)
-    set x  [expr {$rootx + $vrootx}]
+    set x  [expr [expr {$rootx + $vrootx}] - 1]
     if {0} { 
 	set rightEdge [expr {$x + $width}]
 	if {$rightEdge > $screenWidth} {
@@ -1076,7 +1076,7 @@ proc ::combobox::ComputeGeometry {w} {
     # the y coordinate is the rooty plus vrooty offset plus 
     # the height of the static part of the widget plus 1 for a 
     # tiny bit of visual separation...
-    set y [expr {$rooty + $vrooty + [winfo reqheight $widgets(this)] + 1}]
+    set y [expr {$rooty + $vrooty + [winfo reqheight $widgets(this)]}]
     set bottomEdge [expr {$y + $height}]
 
     if {$bottomEdge >= $screenHeight} {
@@ -2189,4 +2189,3 @@ foreach command {TabToWindow CancelRepeat ListboxUpDown} {
 }
 
 # end of combobox.tcl
-

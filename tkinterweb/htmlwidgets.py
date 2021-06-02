@@ -1,9 +1,11 @@
-import os
 import sys
+import platform
+
 
 from bindings import TkinterWeb
-from utils import (AutoScrollbar, StoppableThread, cachedownload, download,
-                   notifier, threadname)
+from utilities import (AutoScrollbar, StoppableThread, cachedownload, download,
+                   notifier, currentpath, threadname)
+from imageutils import newimage
 
 try:
     from urllib.parse import urlparse
@@ -27,8 +29,15 @@ class HtmlFrame(ttk.Frame):
         else:
             self.message_func = message_func = lambda message: None
 
+        # provide OS information for troubleshooting
+        self.message_func(
+            "Starting TkinterWeb for {} {} with Python {}.".format(
+                "64-bit" if sys.maxsize > 2**32 else "32-bit",
+                platform.system(),
+                str(sys.version_info[0:3]).replace(", ", ".").replace(")", "").replace("(", "")))
+
         # setup scrollbars and HTML widget
-        self.html = html = TkinterWeb(self, message_func)
+        self.html = html = TkinterWeb(self, message_func, HtmlFrame)
         html.grid(row=0, column=0, sticky=tk.NSEW)
 
         if vertical_scrollbar:
@@ -72,6 +81,8 @@ class HtmlFrame(ttk.Frame):
         self.master = master
         self.current_url = ""
         self.cursor = ""
+        self.image_count = 0
+        self.image = None
         self.thread_in_progress = None
         self.broken_page_msg = """<html>
                                     <head><title>Error 404</title></head>
@@ -168,12 +179,10 @@ class HtmlFrame(ttk.Frame):
                 if threadname().isrunning():
                     self.url_change_func(newurl)
                     if "image" in filetype:
-                        try:
-                            self.load_html(
-                                """<img src="heximagedata:{}">""".format(data.hex()), newurl)
-                        except AttributeError:
-                            self.load_html(
-                                """<img src="{}">""".format(newurl), newurl)
+                        image, error = newimage(data, "_htmlframe_img_{}_{}_".format(id(self), self.image_count), filetype)
+                        self.load_html("<img style='max-width:100%' src='replace:{}'></img".format(image))
+                        self.image_count += 1
+                        self.image = image
                     else:
                         self.load_html(data, newurl)
                     self.current_url = newurl
@@ -302,6 +311,10 @@ class HtmlFrame(ttk.Frame):
         "Enable or disable form-filling"
         self.html.forms_enabled = isenabled
 
+    def enable_objects(self, isenabled=True):
+        "Enable or disable <iframe> and <object> elements"
+        self.html.objects_enabled = isenabled
+
     def enable_caches(self, isenabled=True):
         "Enable or disable file caches"
         self.html.caches_enabled = isenabled
@@ -368,7 +381,7 @@ class HtmlFrame(ttk.Frame):
 
     def scroll(self, event):
         "Handle mouse/touchpad scrolling"
-        if sys.platform == "darwin":
+        if platform.system() == "Darwin":
             self.html.yview_scroll(int(-1*(event.delta)), "units")
         else:
             self.html.yview_scroll(int(-1*(event.delta)/40), "units")
@@ -383,93 +396,13 @@ class HtmlFrame(ttk.Frame):
         "Reset parser and send html code to it"
         self.current_url = ""
         self.html.reset()
-        self.html.base_url = base_url
-        self.html.parse(html_source)
-
-    def add_html(self, html_source):
-        "Parse HTML and add it to the end of the current document."
-        self.html.parse(html_source)
-
-    def add_css(self, css_source):
-        "Parse CSS code"
-        self.html.parse_css(css_source)
-
-
-class HtmlLabel(ttk.Frame):
-    def __init__(self, master, text="", messages_enabled=False, **kw):
-        ttk.Frame.__init__(self, master, **kw)
-
-        self.master = master
-        self.cursor = ""
-
-        if messages_enabled:
-            self.message_func = message_func = notifier
-        else:
-            self.message_func = message_func = lambda message: None
-
-        self.html = html = TkinterWeb(self, message_func)
-        html.pack(expand=True, fill="both")
-
-        html.cursor_change_func = self.change_cursor
-
-        html.bindtags([html])
-        html.shrink(True)
-
-        self.load_html(text)
-
-    def set_zoom(self, multiplier):
-        "Set the zoom multiplier"
-        self.html.zoom(float(multiplier))
-
-    def get_zoom(self):
-        "Get the zoom multiplier"
-        return self.html.zoom(None)
-
-    def set_fontscale(self, multiplier):
-        "Set the fontsize multiplier"
-        self.html.fontscale(float(multiplier))
-
-    def get_fontscale(self):
-        "Get the fontsize multiplier"
-        return self.html.fontscale(None)
-
-    def on_link_click(self, function):
-        "Allows for handling link clicks"
-        self.html.link_click_func = function
-
-    def on_form_submit(self, function):
-        "Allows for handling form submissions"
-        self.html.form_submit_func = function
-
-    def change_cursor(self, cursor):
-        "Handle cursor changes"
-        if self.cursor != cursor:
-            self.config(cursor=cursor)
-            self.cursor = cursor
-
-    def replace_widget(self, oldwidget, newwidget):
-        "Replace a stored widget"
-        self.html.replace_widget(oldwidget, newwidget)
-
-    def replace_element(self, cssselector, newwidget):
-        "Replace an HTML element with a widget"
-        self.html.replace_html(cssselector, newwidget)
-
-    def remove_widget(self, widget):
-        "Remove a stored widget"
-        self.html.remove_widget(widget)
-
-    def load_html(self, html_source, base_url=None):
-        "Reset parser and send html code to it"
         if not base_url:
-            path = os.getcwd()
+            path = currentpath()
             if not path.startswith("/"):
                 path = "/{0}".format(path)
             base_url = "file://{0}/".format(path)
-
-        self.html.reset()
         self.html.base_url = base_url
-        self.add_html(html_source)
+        self.html.parse(html_source)
 
     def add_html(self, html_source):
         "Parse HTML and add it to the end of the current document."
@@ -478,3 +411,16 @@ class HtmlLabel(ttk.Frame):
     def add_css(self, css_source):
         "Parse CSS code"
         self.html.parse_css(css_source)
+
+
+class HtmlLabel(HtmlFrame):
+    def __init__(self, master, text="", messages_enabled=False, **kw):
+        HtmlFrame.__init__(self, master, messages_enabled=messages_enabled, vertical_scrollbar=False, horizontal_scrollbar=False, **kw)
+
+        tags = list(self.html.bindtags())
+        tags.remove("Html")
+        self.html.bindtags(tags)
+        
+        self.html.shrink(True)
+
+        self.load_html(text)

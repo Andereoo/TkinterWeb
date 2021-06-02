@@ -31,11 +31,11 @@ HTML can also be loaded using the `load_html` command to dynamically change the 
 
 ## Class API 
 
-### HtmlFrame constructors:
+### HtmlLabel constructors:
 * `master` Parent (tkinter widget)
 * `text` Set the content of the widget (string) **Default: ""**
 * `messages_enabled` Enable messages (boolean) **Default: False**
-* `**kw` Other optional `ttk.Frame` arguments
+* `**kw` Other optional `HtmlFrame` arguments
 
 
 ### Useful Methods:
@@ -46,23 +46,7 @@ Parses the supplied HTML code.
 
 Parameters
 * **html_source** *(string)* - Specifies the HTML code
-* **base_url** *(string)* - Specifies the base url to use when parsing stylesheets and images. If this argument is not supplied, it will be set as the location of your script. 
-
----
-#### **add_html**(html_source)
-Send HTML code to the parser.
-Unlike `load_html`, `add_html` parses the specified HTML code and adds it to the widget without clearing the original document.
-
-Parameters
-* **html_source** *(string)* - Specifies the code to parse and add to the end of the document. Must be valid HTML code.
-
----
-#### **add_css**(css_source)
-Send CSS stylesheets to the parser.
-This can be used to remotely alter the appearance of websites.
-
-Parameters
-* **css_source** *(string)* - Specifies the code to parse. Must be valid CSS code.
+* **base_url** *(string)* - Specifies the base url to use when parsing stylesheets and images. If this argument is not supplied, it will be set as the location of TkinterWeb. 
 
 ---
 #### **on_link_click**(function)
@@ -73,14 +57,6 @@ Parameters
 * **function** *(python function)* - Specifies the function to call when a link is clicked.
 
 ---
-#### **on_form_submit**(function)
-Set TkinterWeb to call the specified python function whenever a form is submitted.
-When an HTML form is submitted, three variables, one containing the url, a second containing the submission data, and a third containing the submission method (GET or POST) will be passed to the specified function.
-
-Parameters
-* **function** *(python function)* - Specifies the function to call when a form is submitted.
-
----
 #### **set_zoom**(multiplier)
 Set the zoom multiplier of the document.
 
@@ -88,51 +64,6 @@ Parameters
 * **multiplier** *(float or integer)* - Specifies the zoom multiplier.
 
 ---
-#### **get_zoom**()
-Return the zoom multiplier of the document.
 
-Return type
-* *float*
-
----
-#### **set_fontscale**(multiplier)
-Set the zoom multiplier of the document's text.
-
-Parameters
-* **multiplier** *(float or integer)* - Specifies the fontscale multiplier.
-
----
-#### **get_fontscale**()
-Return the zoom multiplier of the document's text.
-
-Return type
-* *float*
-
----
-
-#### **replace_widget**(oldwidget, newwidget)
-Removes the `oldwidget` from the document, and replaces it with the `newwidget`. Note that if both `oldwidget` and `newwidget` are currently shown in the document, their locations will be swapped. See the [geometry management docs](GEOMETRY.md) for more information.
-
-Parameters
-* **oldwidget** *(tkinter.Widget)* - Specifies the Tkinter widget to replace. This must be a valid Tkinter widget that is currently managed by TkinterWeb.
-* **newwidget** *(tkinter.Widget)* - Specifies the new Tkinter widget to show. This may be any Tkinter widget.
-
----
-
-
-#### **replace_element**(cssselector, newwidget)
-Replaces the content of the element matching the specified CSS selector with the `newwidget`. See the [geometry management docs](GEOMETRY.md) for more information.
-
-Parameters
-* **cssselector** *(string)* - Specifies the CSS selector to search for.
-* **newwidget** *(tkinter.Widget)* - Specifies the new Tkinter widget to show. This may be any Tkinter widget.
-
----
-
-#### **remove_widget**(oldwidget)
-Removes the `oldwidget` from the document. 
-This method is experimental and may cause issues. If you encounter any issues, please [report them](https://github.com/Andereoo/TkinterWeb/issues). See the [geometry management docs](GEOMETRY.md) for more information.
-
-Parameters
-* **oldwidget** *(tkinter.Widget)* - Specifies the Tkinter widget to remove. This must be a valid Tkinter widget that is currently managed by TkinterWeb.
-
+#### Any other HtmlFrame commands can also be used for the HtmlLabel widget.
+#### For a complete list of avaliable commands, see the [HtmlFrame docs](HTMLFRAME.md#useful-methods)

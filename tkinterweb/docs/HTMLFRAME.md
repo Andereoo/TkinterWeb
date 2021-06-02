@@ -165,8 +165,7 @@ Parses the supplied HTML code.
 
 Parameters
 * **html_source** *(string)* - Specifies the HTML code
-* **base_url** *(string)* - Specifies the base url to use when parsing stylesheets and images. If no base url is supplied, it will be automatically set to the directory TkinterWeb is in.
-
+* **base_url** *(string)* - Specifies the base url to use when parsing stylesheets and images. If this argument is not supplied, it will be set as the location of TkinterWeb.
 ---
 #### **load_form_data**(url, data, method="GET", decode=None)
 Submit the form data to a server.

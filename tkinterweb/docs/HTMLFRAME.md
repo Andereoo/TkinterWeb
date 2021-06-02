@@ -339,20 +339,20 @@ Parameters
 * **isenabled** *(boolean)* - Specifies whether images should or should not be loaded.
 
 ---
-#### **enable_object**(isenabled=True)
-Enable or disable `<object>` and `<iframe>` embedded elements.
-This method must be invoked *before* loading a webpage to take effect.
-
-Parameters
-* **isenabled** *(boolean)* - Specifies whether objects should or should not be loaded.
-
----
 #### **enable_forms**(isenabled=True)
 Enable or disable form-filling capabilities. 
 This method must be invoked *before* loading a webpage to take effect.
 
 Parameters
 * **isenabled** *(boolean)* - Specifies whether forms are handled or not.
+
+---
+#### **enable_objects**(isenabled=True)
+Enable or disable `<object>` and `<iframe>` embedded elements.
+This method must be invoked *before* loading a webpage to take effect.
+
+Parameters
+* **isenabled** *(boolean)* - Specifies whether objects should or should not be loaded.
 
 ---
 #### **enable_caches**(isenabled=True)

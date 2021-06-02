@@ -297,7 +297,7 @@ Parameters
 
 ---
 #### **set_maximum_thread_count**(maximum)
-By deafult, TkinterWeb uses threading to improve page load times and to prevent Tkinter from freezing when loading HTML. TkinterWeb allows up to 15 threads to run at once. Increasing this value can improve speed and responsiveness, at the cost of CPU and memory usage while a page is loading. To disable threading altogether, call `set_maximum_thread_count` with a value of 0.
+By deafult, TkinterWeb uses threading to improve page load times and to prevent Tkinter from freezing when loading HTML. TkinterWeb allows up to 20 threads to run at once. Increasing this value can improve speed and responsiveness, at the cost of CPU and memory usage while a page is loading. To disable threading altogether, call `set_maximum_thread_count` with a value of 0.
 
 Parameters
 * **maximum** *(integer)* - Specifies the maximum number of threads that can run at the same time.
@@ -305,7 +305,7 @@ Parameters
 ---
 #### **set_recursive_hover_depth**(depth)
 When a mouse hovers over an element in a webpage, the element under the mouse is flagged as hovered.
-TkinterWeb then marks the parent of that element repeatedly, up to the 15th degree. This works fine for most websites, but may cause a few websites to lag slightly. If this is becoming an issue, simply call `set_recursive_hover_depth` and set the *depth* to a smaller integer.
+TkinterWeb then marks the parent of that element repeatedly, up to the 5th degree. This works fine for most websites, but may cause a few websites to lag slightly. If this is becoming an issue, simply call `set_recursive_hover_depth` and set the *depth* to a smaller integer.
 
 Parameters
 * **depth** *(integer)* - Specifies the number of recursions to apply the hover flag to.

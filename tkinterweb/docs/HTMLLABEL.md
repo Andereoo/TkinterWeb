@@ -46,7 +46,7 @@ Parses the supplied HTML code.
 
 Parameters
 * **html_source** *(string)* - Specifies the HTML code
-* **base_url** *(string)* - Specifies the base url to use when parsing stylesheets and images. If this argument is not supplied, it will be set as the location of TkinterWeb. 
+* **base_url** *(string)* - Specifies the base url to use when parsing stylesheets and images. If this argument is not supplied, it will be set to the current working directory.
 
 ---
 #### **on_link_click**(function)

@@ -572,8 +572,11 @@ def threadname():
     return thread
 
 
-def currentpath():
-    return os.path.abspath(os.path.dirname(__file__))
+def currentpath(use_file=True):
+    if use_file:
+        return os.path.abspath(os.path.dirname(__file__))
+    else:
+        return os.getcwd()
 
 def strip_css_url(url):
     return url[4:-1].replace("'", "").replace('"', '')

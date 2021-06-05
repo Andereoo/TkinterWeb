@@ -397,7 +397,7 @@ class HtmlFrame(ttk.Frame):
         self.current_url = ""
         self.html.reset()
         if not base_url:
-            path = currentpath()
+            path = currentpath(False)
             if not path.startswith("/"):
                 path = "/{0}".format(path)
             base_url = "file://{0}/".format(path)

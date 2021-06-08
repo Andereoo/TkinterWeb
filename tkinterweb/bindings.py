@@ -176,19 +176,24 @@ class TkinterWeb(tk.Widget):
         """Blank placeholder function. The only purpose of this is to
         improve readability by avoiding `lambda a, b, c: None` statements."""
 
-    def parse(self, *args):
+    def parse(self, html):
         """Parse HTML code"""
         self.downloads_have_occured = False
         self.unstoppable = True
-        self.tk.call(self._w, "parse", *args)
+        html = self.crash_prevention(html)
+        self.tk.call(self._w, "parse", html)
         self.setup_widgets()
         # We assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
         if not self.downloads_have_occured:
             self.done_loading_func()
 
-    def parse_css(self, *args):
+    def parse_css(self, sheetid=None, importcmd=None, data=""):
         """Parse CSS code"""
-        self.tk.call(self._w, "style", *args)
+        data = self.crash_prevention(data)
+        if sheetid and importcmd:
+            self.tk.call(self._w, "style", "-id", sheetid, "-importcmd", importcmd, data)
+        else:
+            self.tk.call(self._w, "style", data)
 
     def reset(self):
         """Reset the widget"""
@@ -426,9 +431,9 @@ class TkinterWeb(tk.Widget):
             # Ideally threading would be used here, but at the moment threading <object> elements breaks some images
             # It doesn't really matter though, since very few webpages use <object> elements anyway
             if url.startswith("file://") or (not self.caches_enabled):
-                data, newurl, filetype = download(url, del_emojis=self.prevent_crashes)
+                data, newurl, filetype = download(url)
             elif url:
-                data, newurl, filetype = cachedownload(url, del_emojis=self.prevent_crashes)
+                data, newurl, filetype = cachedownload(url)
             else:
                 return
                 
@@ -743,6 +748,13 @@ class TkinterWeb(tk.Widget):
 
         widgetid.bindtags(widgetid.bindtags() + tags)
 
+    def crash_prevention(self, data):
+        if self.prevent_crashes:
+            data = ''.join(c for c in data if c <= u'\uFFFF')
+            data = re.sub("font-family:(.*)noto color emoji(.*?)(;|\})", self.remove_noto_emoji, data, flags=re.IGNORECASE | re.DOTALL)
+            data = re.sub("rgb\([^0-9](.*?)\)", "inherit", data, flags=re.IGNORECASE)
+        return data
+
     def begin_download(self):
         thread = threadname()
         self.active_threads.append(thread)
@@ -793,9 +805,9 @@ class TkinterWeb(tk.Widget):
         if url and self.unstoppable:
             try:
                 if url.startswith("file://") or (not self.caches_enabled):
-                    data = download(url, del_emojis=self.prevent_crashes)[0]
+                    data = download(url)[0]
                 else:
-                    data = cachedownload(url, del_emojis=self.prevent_crashes)[0]
+                    data = cachedownload(url)[0]
 
                 matcher = lambda match, url=url: self.fix_css_urls(match, url)
                 data = re.sub("url\((.*?)\)", matcher, data)
@@ -805,11 +817,7 @@ class TkinterWeb(tk.Widget):
                     "Error reading stylesheet {}: {}.".format(errorurl, error))
         if data and self.unstoppable:
 
-            if self.prevent_crashes:
-                data = re.sub("font-family:(.*)noto color emoji(.*?)(;|\})", self.remove_noto_emoji, data, flags=re.IGNORECASE | re.DOTALL)
-                data = re.sub("rgb\([^0-9](.*?)\)", "inherit", data, flags=re.IGNORECASE)
-            
-            self.parse_css("-id", "{}.9999".format(sheetid), "-importcmd", handler, data)
+            self.parse_css("{}.9999".format(sheetid), handler, data)
 
         self.finish_download(thread)
 
@@ -822,9 +830,9 @@ class TkinterWeb(tk.Widget):
 
         try:
             if url.startswith("file://") or (not self.caches_enabled):
-                data, newurl, filetype = download(url, del_emojis=self.prevent_crashes)
+                data, newurl, filetype = download(url)
             else:
-                data, newurl, filetype = cachedownload(url, del_emojis=self.prevent_crashes)
+                data, newurl, filetype = cachedownload(url)
 
             if self.unstoppable and data:
                 image, error = newimage(data, name, filetype)

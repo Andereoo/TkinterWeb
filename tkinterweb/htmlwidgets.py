@@ -172,10 +172,10 @@ class HtmlFrame(ttk.Frame):
                 self.message_func("Connecting to {0}.".format(netloc))
                 if (parsed.scheme == "file") or (not self.html.caches_enabled):
                     data, newurl, filetype = download(
-                        url, data, method, decode)
+                        url, data, method, decode, self.html.prevent_crashes)
                 else:
                     data, newurl, filetype = cachedownload(
-                        url, data, method, decode)
+                        url, data, method, decode, self.html.prevent_crashes)
                 if threadname().isrunning():
                     self.url_change_func(newurl)
                     if "image" in filetype:
@@ -318,6 +318,11 @@ class HtmlFrame(ttk.Frame):
     def enable_caches(self, isenabled=True):
         "Enable or disable file caches"
         self.html.caches_enabled = isenabled
+
+    def enable_crash_prevention(self, isenabled=True):
+        "Enable or disable extra crash prevention measures"
+        "Disabling this will remove all emojis, the noto color emoji font, and invalid rgb functions"
+        self.html.prevent_crashes = isenabled
 
     def change_cursor(self, cursor):
         "Handle cursor changes"

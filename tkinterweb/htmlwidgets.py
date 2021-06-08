@@ -172,10 +172,10 @@ class HtmlFrame(ttk.Frame):
                 self.message_func("Connecting to {0}.".format(netloc))
                 if (parsed.scheme == "file") or (not self.html.caches_enabled):
                     data, newurl, filetype = download(
-                        url, data, method, decode, self.html.prevent_crashes)
+                        url, data, method, decode)
                 else:
                     data, newurl, filetype = cachedownload(
-                        url, data, method, decode, self.html.prevent_crashes)
+                        url, data, method, decode)
                 if threadname().isrunning():
                     self.url_change_func(newurl)
                     if "image" in filetype:
@@ -415,7 +415,7 @@ class HtmlFrame(ttk.Frame):
 
     def add_css(self, css_source):
         "Parse CSS code"
-        self.html.parse_css(css_source)
+        self.html.parse_css(data=css_source)
 
 
 class HtmlLabel(HtmlFrame):

@@ -1,5 +1,3 @@
-import re
-
 try:
     from urllib.parse import urljoin, urlparse, urlunparse, urlencode
 except ImportError:
@@ -13,6 +11,8 @@ except ImportError:
 
 from utilities import *
 from imageutils import *
+
+import re
 
 
 class Combobox(tk.Widget):
@@ -80,6 +80,7 @@ class TkinterWeb(tk.Widget):
         self.caches_enabled = True
         self.objects_enabled = True
         self.ignore_invalid_images = True
+        self.prevent_crashes = True
         self.base_url = ""
         self.currently_hovered_node = ""
         self.recursive_hovering_count = 5
@@ -413,9 +414,7 @@ class TkinterWeb(tk.Widget):
         url = self.get_node_attribute(node, "data")
             
         try:
-            
             url = urljoin(self.base_url, url)
-
             if url == self.base_url:
                 # Don't load the object if it is the same as the current file
                 # Otherwise the page will load the same object indefinitely and freeze the GUI forever
@@ -426,11 +425,10 @@ class TkinterWeb(tk.Widget):
             # Download the data and display it if it is an image or html file
             # Ideally threading would be used here, but at the moment threading <object> elements breaks some images
             # It doesn't really matter though, since very few webpages use <object> elements anyway
-            
             if url.startswith("file://") or (not self.caches_enabled):
-                data, newurl, filetype = download(url)
+                data, newurl, filetype = download(url, del_emojis=self.prevent_crashes)
             elif url:
-                data, newurl, filetype = cachedownload(url)
+                data, newurl, filetype = cachedownload(url, del_emojis=self.prevent_crashes)
             else:
                 return
                 
@@ -640,6 +638,8 @@ class TkinterWeb(tk.Widget):
                 self.handle_form_reset(node_handle)
             elif node_tag == "input" and node_type == "submit":
                 self.handle_form_submission(node_handle)
+            elif node_tag == "input" and node_type == "image":
+                self.handle_form_submission(node_handle)
             elif node_tag == "button" and node_type == "submit":
                 self.handle_form_submission(node_handle)
             elif node_tag == "a":
@@ -648,6 +648,8 @@ class TkinterWeb(tk.Widget):
             elif parent_tag == "input" and parent_type == "reset":
                 self.handle_form_submission(parent)
             elif parent_tag == "input" and parent_type == "submit":
+                self.handle_form_submission(parent)
+            elif parent_tag == "input" and parent_type == "image":
                 self.handle_form_submission(parent)
             elif parent_tag == "button" and parent_type == "submit":
                 self.handle_form_submission(parent)
@@ -753,11 +755,18 @@ class TkinterWeb(tk.Widget):
             self.done_loading_func()
 
     def fix_css_urls(self, match, url):
+        """Make relative uris in CSS files absolute"""
         newurl = match.group()
         newurl = strip_css_url(newurl)
         newurl = urljoin(url, newurl)
         newurl = "url('{}')".format(newurl)
         return newurl
+
+    def remove_noto_emoji(self, match):
+        """Remove noto color emoji font, which causes Tkinter to crash"""
+        match = match.group().lower()
+        match = match.replace("noto color emoji", "arial")
+        return match
 
     def style_thread_check(self, **kwargs):
         if self.max_thread_count == 0:
@@ -784,9 +793,9 @@ class TkinterWeb(tk.Widget):
         if url and self.unstoppable:
             try:
                 if url.startswith("file://") or (not self.caches_enabled):
-                    data = download(url)[0]
+                    data = download(url, del_emojis=self.prevent_crashes)[0]
                 else:
-                    data = cachedownload(url)[0]
+                    data = cachedownload(url, del_emojis=self.prevent_crashes)[0]
 
                 matcher = lambda match, url=url: self.fix_css_urls(match, url)
                 data = re.sub("url\((.*?)\)", matcher, data)
@@ -795,6 +804,11 @@ class TkinterWeb(tk.Widget):
                 self.message_func(
                     "Error reading stylesheet {}: {}.".format(errorurl, error))
         if data and self.unstoppable:
+
+            if self.prevent_crashes:
+                data = re.sub("font-family:(.*)noto color emoji(.*?)(;|\})", self.remove_noto_emoji, data, flags=re.IGNORECASE | re.DOTALL)
+                data = re.sub("rgb\([^0-9](.*?)\)", "inherit", data, flags=re.IGNORECASE)
+            
             self.parse_css("-id", "{}.9999".format(sheetid), "-importcmd", handler, data)
 
         self.finish_download(thread)
@@ -808,9 +822,9 @@ class TkinterWeb(tk.Widget):
 
         try:
             if url.startswith("file://") or (not self.caches_enabled):
-                data, newurl, filetype = download(url)
+                data, newurl, filetype = download(url, del_emojis=self.prevent_crashes)
             else:
-                data, newurl, filetype = cachedownload(url)
+                data, newurl, filetype = cachedownload(url, del_emojis=self.prevent_crashes)
 
             if self.unstoppable and data:
                 image, error = newimage(data, name, filetype)

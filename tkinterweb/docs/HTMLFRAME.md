@@ -325,6 +325,7 @@ Clear the list of visited websites.
 ---
 #### **enable_stylesheets**(isenabled=True)
 Enable or disable CSS styling.
+This is enabled by default.
 This method must be invoked *before* loading a webpage to take effect.
 
 Parameters
@@ -333,6 +334,7 @@ Parameters
 ---
 #### **enable_images**(isenabled=True)
 Enable or disable image loading.
+This is enabled by default.
 This method must be invoked *before* loading a webpage to take effect.
 
 Parameters
@@ -340,7 +342,8 @@ Parameters
 
 ---
 #### **enable_forms**(isenabled=True)
-Enable or disable form-filling capabilities. 
+Enable or disable form-filling capabilities.
+This is enabled by default.
 This method must be invoked *before* loading a webpage to take effect.
 
 Parameters
@@ -349,6 +352,7 @@ Parameters
 ---
 #### **enable_objects**(isenabled=True)
 Enable or disable `<object>` and `<iframe>` embedded elements.
+This is enabled by default.
 This method must be invoked *before* loading a webpage to take effect.
 
 Parameters
@@ -357,7 +361,18 @@ Parameters
 ---
 #### **enable_caches**(isenabled=True)
 Enable or disable webpage caches.
+This is enabled by default.
 Disabling this option will conserve memory, but will also result in longer page load times.
+This method must be invoked *before* loading a webpage to take effect.
+
+Parameters
+* **isenabled** *(boolean)* - Specifies whether caches can be used or not.
+
+---
+#### **enable_crash_prevention**(isenabled=True)
+Enable or disable crash prevention.
+This is enabled by default.
+If crash prevention is enabled, most emojis will not be shown. The `noto color emoji` font will be replaced with the `arial` font, and invalid CSS `rgb` commands will be removed. This helps prevent Tkinter crashes. This is nessessary to load some websites on certain operating systems.
 This method must be invoked *before* loading a webpage to take effect.
 
 Parameters

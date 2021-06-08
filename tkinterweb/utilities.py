@@ -521,7 +521,7 @@ class PlaceholderThread:
         return True
 
 
-def download(url, data=None, method="GET", decode=None, del_emojis=True):
+def download(url, data=None, method="GET", decode=None):
     "Fetch files."
     "Technically this isn't thread-safe (even though it is being used inside threads by Tkinterweb, "
     "but as long as install_opener() is not called and a string is used as the url parameter we are okay."
@@ -546,8 +546,6 @@ def download(url, data=None, method="GET", decode=None, del_emojis=True):
             data = data.decode(decode, errors="ignore")
         else:
             data = data.decode(errors="ignore")
-        if del_emojis:
-            data = ''.join(c for c in data if c <= u'\uFFFF')
     if not thread.isrunning():
         return None, url, ""
     else:

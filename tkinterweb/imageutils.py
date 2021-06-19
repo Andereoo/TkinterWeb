@@ -20,7 +20,7 @@ else:
         try:
             import cairosvg
             rsvgimport = "cairosvg"
-        except ImportError:
+        except (ImportError, FileNotFoundError):
             try:
                 import gi
                 try:

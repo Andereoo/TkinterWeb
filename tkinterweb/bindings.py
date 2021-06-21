@@ -379,7 +379,7 @@ class TkinterWeb(tk.Widget):
         """Handle <base> elements"""
         try:
             href = self.get_node_attribute(node, "href")
-            self.base_url = href
+            self.base_url = urljoin(self.base_url, href)
         except Exception:
             self.message_func(
                 "Error setting base url: a <base> element has been found without an href attribute.")

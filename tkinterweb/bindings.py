@@ -13,6 +13,8 @@ from utilities import *
 from imageutils import *
 
 import re
+import sys
+import platform
 
 
 class Combobox(tk.Widget):
@@ -54,14 +56,26 @@ class TkinterWeb(tk.Widget):
     """Bindings for the Tkhtml3 HTML widget"""
 
     def __init__(self, master, message_func, embed_obj, cfg={}, **kwargs):
-        folder = get_tkhtml_folder()
         self.message_func = message_func
+        folder = get_tkhtml_folder()
+
+        # provide OS information for troubleshooting
+        self.message_func(
+            "Starting TkinterWeb for {} {} with Python {}.".format(
+                "64-bit" if sys.maxsize > 2**32 else "32-bit",
+                platform.system(),
+                str(sys.version_info[0:3]).replace(", ", ".").replace(")", "").replace("(", "")))
 
         # pre-load custom stylesheet and register the image loading infrastructure
         if "imagecmd" not in kwargs:
             kwargs["imagecmd"] = master.register(self.on_image)
         if "defaultstyle" not in kwargs:
             kwargs["defaultstyle"] = DEFAULTSTYLE
+
+        # catch htmldrawcleanup crashes on supported platforms
+        if (platform.system() == "Windows") or (platform.system() == "Linux" and sys.maxsize > 2**32):
+            if "drawcleanupcrashcmd" not in kwargs:
+                kwargs["drawcleanupcrashcmd"] = master.register(self.on_drawcleanupcrash)
 
         # load the Tkhtml3 widget
         try:
@@ -445,6 +459,12 @@ class TkinterWeb(tk.Widget):
                 self.create_iframe(node, newurl, data)
         except Exception as error:
             self.message_func("An error has been encountered while loading an <object> element: {}.".format(error))
+
+    def on_drawcleanupcrash(self):
+        if self.prevent_crashes:
+            self.message_func("HtmlDrawCleanup has encountered a critical error. This is being ignored because crash prevention is enabled.")
+        else:
+            self.destroy()
 
     def on_image(self, url):
         """Handle images"""

@@ -1,11 +1,8 @@
-import sys
-import platform
-
-
 from bindings import TkinterWeb
 from utilities import (AutoScrollbar, StoppableThread, cachedownload, download,
                    notifier, currentpath, threadname)
 from imageutils import newimage
+import platform
 
 try:
     from urllib.parse import urlparse
@@ -28,13 +25,6 @@ class HtmlFrame(ttk.Frame):
             self.message_func = message_func = notifier
         else:
             self.message_func = message_func = lambda message: None
-
-        # provide OS information for troubleshooting
-        self.message_func(
-            "Starting TkinterWeb for {} {} with Python {}.".format(
-                "64-bit" if sys.maxsize > 2**32 else "32-bit",
-                platform.system(),
-                str(sys.version_info[0:3]).replace(", ", ".").replace(")", "").replace("(", "")))
 
         # setup scrollbars and HTML widget
         self.html = html = TkinterWeb(self, message_func, HtmlFrame)

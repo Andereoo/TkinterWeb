@@ -603,12 +603,10 @@ def load_combobox(master, force=False):
     """Load combobox.tcl"""
     global combobox_loaded
     if not (combobox_loaded) or force:
-        path = os.path.join(currentpath(),
-                            "tkhtml",
-                            "combobox.tcl")
-        if platform.system() == "Windows":
-            path = path.replace("\\", "/")
-        master.tk.eval("source {0}".format(path))
+        path = os.path.join(currentpath(), "tkhtml")
+        master.tk.eval(
+                "global auto_path; lappend auto_path {%s}" % path)
+        master.tk.eval("package require combobox")
         combobox_loaded = True
 
 

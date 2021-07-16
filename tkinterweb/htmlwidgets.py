@@ -89,7 +89,7 @@ class HtmlFrame(ttk.Frame):
         self.html.done_loading_func = self.done_loading
 
         self.message_func(
-            "Welcome to TkinterWeb 3.9! \nhttps://github.com/Andereoo/TkinterWeb")
+            "Welcome to TkinterWeb 3.10! \nhttps://github.com/Andereoo/TkinterWeb")
 
         self.message_func(
             "Debugging messages are enabled. \nUse the parameter `messages_enabled = False` when calling HtmlFrame() to disable these messages.")

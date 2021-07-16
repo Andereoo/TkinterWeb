@@ -5,9 +5,9 @@ from imageutils import newimage
 import platform
 
 try:
-    from urllib.parse import urlparse
+    from urllib.parse import urlparse, urldefrag
 except ImportError:
-    from urlparse import urlparse
+    from urlparse import urlparse, urldefrag
 
 try:
     import tkinter as tk
@@ -89,7 +89,7 @@ class HtmlFrame(ttk.Frame):
         self.html.done_loading_func = self.done_loading
 
         self.message_func(
-            "Welcome to TkinterWeb 3.5! \nhttps://github.com/Andereoo/TkinterWeb")
+            "Welcome to TkinterWeb 3.9! \nhttps://github.com/Andereoo/TkinterWeb")
 
         self.message_func(
             "Debugging messages are enabled. \nUse the parameter `messages_enabled = False` when calling HtmlFrame() to disable these messages.")
@@ -144,22 +144,12 @@ class HtmlFrame(ttk.Frame):
         try:
             method = method.upper()
             parsed = urlparse(url)
-            parsed2 = urlparse(self.current_url)
 
-            if parsed.scheme == "file":
-                netloc = parsed.path
-            else:
-                netloc = parsed.netloc
-            if parsed2.scheme == "file":
-                netloc2 = parsed2.path
-            else:
-                netloc2 = parsed2.netloc
             if method == "GET":
                 url = str(url) + str(data)
-
             # if url is different than the current one, load the new site.
-            if force or (method == "POST") or not ((netloc == netloc2) and (parsed.path == parsed2.path) and (parsed.query == parsed2.query)):
-                self.message_func("Connecting to {0}.".format(netloc))
+            if force or (method == "POST") or (urldefrag(url)[0] != urldefrag(self.current_url)[0]):
+                self.message_func("Connecting to {0}.".format(parsed.netloc))
                 if (parsed.scheme == "file") or (not self.html.caches_enabled):
                     data, newurl, filetype = download(
                         url, data, method, decode)
@@ -313,6 +303,10 @@ class HtmlFrame(ttk.Frame):
         "Enable or disable extra crash prevention measures"
         "Disabling this will remove all emojis, the noto color emoji font, and invalid rgb functions"
         self.html.prevent_crashes = isenabled
+
+    def find_text(self, searchtext, select=1, ignore_case=True, highlight_all=True):
+        "Search for and highlight specific text"
+        return self.html.find_text(searchtext, select, ignore_case, highlight_all)
 
     def change_cursor(self, cursor):
         "Handle cursor changes"

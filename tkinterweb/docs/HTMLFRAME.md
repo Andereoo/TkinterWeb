@@ -212,7 +212,7 @@ Search the document for text and highlight matches.
 This will return the number of matches found.
 
 Parameters
-* **searchtext** *(string)* - Specifies the Regex expression to use to find text.
+* **searchtext** *(string)* - Specifies the Regex expression to use to find text. If this is set to a blank string (`""`), all highlighted text will be cleared.
 * **select** *(integer)* - Specifies the index of the match to select and scroll to. 
 * **ignore_case** *(boolean)* - Specifies whether or not uppercase and lowercase letters whould be treated as different characters.
 * **highlight_all** *(boolean)* - Specifies whether or not all matches should be highlighted.

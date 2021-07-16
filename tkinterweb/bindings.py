@@ -273,10 +273,7 @@ class TkinterWeb(tk.Widget):
 
     def yview(self, *args):
         """Used to control the vertical position of the document."""
-        if args:
-            return self.tk.call(self._w, "yview", *args)
-        coords = map(float, self.tk.call(self._w, "yview").split())
-        return tuple(coords)
+        return self.tk.call(self._w, "yview", *args)
 
     def yview_scroll(self, number, what):
         """Shifts the view in the window up or down, according to number and
@@ -510,11 +507,14 @@ class TkinterWeb(tk.Widget):
         """Handle <form> elements"""
         if not self.forms_enabled:
             return
-        html = self.tk.call(node, "html")
-        inputs = self.tk.call(html, "search", "INPUT,SELECT,TEXTAREA,BUTTON")
+        inputs = list(self.tk.call(self, "search", "INPUT,SELECT,TEXTAREA,BUTTON"))
         for i in inputs:
-            self.form_elements[i] = node
+            if i in self.form_elements:
+                inputs.remove(i)
+            else:
+                self.form_elements[i] = node
         self.loaded_forms[node] = inputs
+        
         self.message_func("Successfully setup <form> element.")
 
     def on_select(self, node):
@@ -608,7 +608,7 @@ class TkinterWeb(tk.Widget):
             widgetid.insert(0, nodevalue)
             if nodetype == "password":
                 widgetid.configure(show='*')
-            widgetid.bind("<Return>", lambda event, node=node: self.handle_form_submission(node=node))
+            widgetid.bind("<Return>", lambda event, node=node: self.handle_form_submission(node=node, event=event))
             self.form_get_commands[node] = lambda: widgetid.get()
             self.form_reset_commands[node] = lambda widgetid=widgetid, content=nodevalue: self.handle_entry_reset(widgetid, content)
             self.handle_node_replacement(node, widgetid, 
@@ -934,14 +934,19 @@ class TkinterWeb(tk.Widget):
         data = {}
         form = self.form_elements[node]
         action = self.get_node_attribute(form, "action")
-        method = self.tk.call(form, "attribute", "-default", "GET", "method").upper()
+        method = self.get_node_attribute(form, "method", "GET").upper()
 
         for formelement in self.loaded_forms[form]:
             nodeattrname = self.get_node_attribute(formelement, "name")
-            if nodeattrname != "":
-                value = self.form_get_commands[formelement]()
-                if value:
-                    data[nodeattrname] = value
+            if nodeattrname:
+                nodevalue = self.form_get_commands[formelement]()
+                if nodevalue:
+                    data[nodeattrname] = nodevalue
+        if not event:
+            nodeattrname = self.get_node_attribute(node, "name")
+            nodevalue = self.get_node_attribute(node, "value")
+            if nodeattrname and nodevalue:
+                data[nodeattrname] = nodevalue
 
         data = urlencode(data)
         
@@ -952,12 +957,12 @@ class TkinterWeb(tk.Widget):
             url = urlunparse(url)
         else:
             url = urljoin(self.base_url, action)
-
+	
         if method == "GET":
             data = "?" + data
         else:
             data = data.encode()
-            
+
         self.message_func(
             "A form has been submitted to {}.".format(shorten(url)))
         self.form_submit_func(url, data, method)
@@ -1061,6 +1066,73 @@ class TkinterWeb(tk.Widget):
         node = self.search(selector)[0]
         self.tk.call(node, "replace", widgetid)
         self.stored_widgets[widgetid] = node
+
+    def find_text(self, searchtext, select, ignore_case, highlight_all):
+        """Search for and highlight specific text in the document"""
+        nmatches = 0
+        matches = []
+        selected = []
+        match_indexes = []
+
+        self.tag("delete", "findtext")
+        self.tag("delete", "findtextselected")
+
+        if len(searchtext) == 0 or select <= 0:
+            return 0
+
+        doctext = self.text("text")
+
+        try:
+            #find matches
+            if ignore_case:
+                rmatches = re.finditer(searchtext, doctext, flags=re.IGNORECASE)
+            else:
+                rmatches = re.finditer(searchtext, doctext)
+                
+            for match in rmatches:
+                match_indexes.append((match.start(0), match.end(0),))
+                nmatches += 1
+
+            if len(match_indexes) > 0:
+                #highlight matches
+                self.message_func("{} results for the search key '{}' have been found.".format(nmatches, searchtext))
+                if highlight_all:
+                    for num, match in enumerate(match_indexes):
+                        match = self.text("index", match_indexes[num][0])
+                        match += self.text("index", match_indexes[num][1])
+                        matches.append(match)   
+                
+                selected = self.text("index", match_indexes[select-1][0])
+                selected += self.text("index", match_indexes[select-1][1])
+
+                for match in matches:
+                    node1, index1, node2, index2 = match
+                    self.tag("add", "findtext", node1, index1, node2, index2)
+                    self.tag("configure", "findtext", "-bg", "#ef0fff", "-fg", "white")
+                    
+                node1, index1, node2, index2 = selected
+                self.tag("add", "findtextselected", node1, index1, node2, index2)
+                self.tag("configure", "findtextselected", "-bg", "#38d878", "-fg", "white")
+
+                #scroll to node if selected match is not visible
+                nodebox = self.text("bbox", node1, index1, node2, index2)
+                docheight = float(self.tk.call(self._w, "bbox")[3])
+                
+                view_top = docheight * self.yview()[0]
+                view_bottom = view_top + self.winfo_height()
+                node_top = float(nodebox[1])
+                node_bottom = float(nodebox[3])
+
+                if (node_top < view_top) or (node_bottom > view_bottom):
+                    self.yview("moveto", node_top/docheight)
+            else:
+                self.message_func("No results for the search key '{}' could be found.".format(searchtext))            
+
+            return nmatches
+        except Exception as error:
+            self.message_func(
+            "An error has been encountered while searching the document for {}: {}.".format(searchtext, error))
+            return 0
 
     def create_iframe(self, node, url, html=None):
         widgetid = self.embed_obj(self, False)

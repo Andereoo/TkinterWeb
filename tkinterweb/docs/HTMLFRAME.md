@@ -45,6 +45,15 @@ myhtmlframe.on_title_change(change_title)
 Similarily, `on_icon_change` can be used to get the website's icon when it is loaded.
 
 ---
+*Search the page*
+
+Searching the page for specific text is very straightfoward. To search the document for the word 'python', for example, the following may be used:
+```
+number_of_matches = myhtmlframe.find_text("python")
+```
+See the API refrence for more information.
+
+---
 *Url changes*
 
 Normally, a website's url may change when it is loaded. For example, `www.github.com` will redirect to `https://github.com`. This can be handled with `on_url_change`:
@@ -196,6 +205,20 @@ Parameters
 #### **stop**()
 Stop loading this page.
 This will abandon all pending requests and show the document as it is.
+
+---
+#### **find_text**(searchtext, select=1, ignore_case=True, highlight_all=True):
+Search the document for text and highlight matches. 
+This will return the number of matches found.
+
+Parameters
+* **searchtext** *(string)* - Specifies the Regex expression to use to find text.
+* **select** *(integer)* - Specifies the index of the match to select and scroll to. 
+* **ignore_case** *(boolean)* - Specifies whether or not uppercase and lowercase letters whould be treated as different characters.
+* **highlight_all** *(boolean)* - Specifies whether or not all matches should be highlighted.
+
+Return type
+* *integer*
 
 ---
 #### **on_link_click**(function)

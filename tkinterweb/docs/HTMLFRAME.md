@@ -51,7 +51,7 @@ Searching the page for specific text is very straightfoward. To search the docum
 ```
 number_of_matches = myhtmlframe.find_text("python")
 ```
-See the API refrence for more information.
+Refer to the API reference for more information and [Bug 16](https://github.com/Andereoo/TkinterWeb/issues/18#issuecomment-881649007) for sample code.
 
 ---
 *Url changes*

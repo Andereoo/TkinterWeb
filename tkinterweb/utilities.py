@@ -614,7 +614,7 @@ def load_combobox(master, force=False):
 def notifier(text):
     "Notifications printer."
     try:
-        sys.stdout.write(("UserNotification: "+str(text))+"\n\n")
+        sys.stdout.write(str(text)+"\n\n")
     except Exception:
         "sys.stdout.write doesn't work in .pyw files."
         "Since .pyw files have no console, we can simply not bother printing messages."

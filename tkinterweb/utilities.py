@@ -526,6 +526,7 @@ def download(url, data=None, method="GET", decode=None):
     "Technically this isn't thread-safe (even though it is being used inside threads by Tkinterweb, "
     "but as long as install_opener() is not called and a string is used as the url parameter we are okay."
     thread = threadname()
+    url = url.replace(" ", "%20")
     if data and (method == "POST"):
         req = urlopen(Request(url, data, headers=HEADER))
     else:

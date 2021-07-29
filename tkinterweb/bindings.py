@@ -771,7 +771,7 @@ class TkinterWeb(tk.Widget):
     def crash_prevention(self, data):
         if self.prevent_crashes:
             data = ''.join(c for c in data if c <= u'\uFFFF')
-            data = re.sub("font-family:(.*)noto color emoji(.*?)(;|\})", self.remove_noto_emoji, data, flags=re.IGNORECASE | re.DOTALL)
+            data = re.sub("font-family:[^;']*(;)?", self.remove_noto_emoji, data, flags=re.IGNORECASE)
             data = re.sub("rgb\([^0-9](.*?)\)", "inherit", data, flags=re.IGNORECASE)
         return data
 

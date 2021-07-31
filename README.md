@@ -1,5 +1,5 @@
 # TkinterWeb 
-**A fast and lightweight cross-platform webbrowser for Tkinter.**
+**A fast and lightweight cross-platform webbrowser widget for Tkinter.**
 
 &nbsp;
 &nbsp;

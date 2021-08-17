@@ -145,8 +145,8 @@ Putting the above code inside the `on_right_click` function will make a popup sh
 Loads and parses a website.
 
 Parameters
-* **website_url** *(string)* - Specifies the url to load
-* **decode** *(string)* - Specifies the decoding to use when loading the website
+* **website_url** *(string)* - Specifies the url to load.
+* **decode** *(string)* - Specifies the decoding to use when loading the website.
 * **force** *(boolean)* - Force the page to reload all elements.
 
 ---
@@ -155,8 +155,8 @@ Parameters
 Loads and parses a local HTML file.
 
 Parameters
-* **file_url** *(string)* - Specifies the file to load
-* **decode** *(string)* - Specifies the decoding to use when loading the file
+* **file_url** *(string)* - Specifies the file to load.
+* **decode** *(string)* - Specifies the decoding to use when loading the file.
 * **force** *(boolean)* - Force the page to reload all elements.
 
 ---
@@ -164,8 +164,8 @@ Parameters
 Loads and parses html from the given url. A local file will be loaded if the url begins with "file://". If the url begins with "https://" or "http://", a website will be loaded. 
 
 Parameters
-* **url** *(string)* - Specifies the url to load
-* **decode** *(string)* - Specifies the decoding to use when loading the website
+* **url** *(string)* - Specifies the url to load.
+* **decode** *(string)* - Specifies the decoding to use when loading the website.
 * **force** *(boolean)* - Force the page to reload all elements.
 
 ---
@@ -183,7 +183,7 @@ Parameters
 * **url** *(string)* - Specifies the url to load.
 * **data** *(string)* - Specifies the data to pass to the server. 
 * **method** *(string)* - Specifies the form submission method. This may be either `"GET"` or `"POST"`.
-* **decode** *(string)* - Specifies the decoding to use when loading the website
+* **decode** *(string)* - Specifies the decoding to use when loading the website.
 
 ---
 #### **add_html**(html_source)

@@ -27,8 +27,27 @@ SOFTWARE.
 import sys, os
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
-from bindings import TkinterWeb
-from htmlwidgets import HtmlFrame, HtmlLabel
+try:
+    from bindings import TkinterWeb
+    from htmlwidgets import HtmlFrame, HtmlLabel
+    from utilities import Notebook
+except (ImportError, ModuleNotFoundError):
+    # Give useful troubleshooting information as a popup, as most bundled applications don't have a visible console
+    # Also print the message in case something is wrong with the Tkinter installation as well
+    error_message = "ModuleNotFoundError: The files required to run TkinterWeb could not be found. \
+This usually occurs when bundling TkinterWeb into an app without forcing the application maker to include all nessessary files. \
+See https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/docs/FAQ.md for more information."
+    sys.stdout.write(error_message+"\n\n")
+    try:
+        import tkinter as tk
+        from tkinter import messagebox
+    except ImportError as e:
+        import Tkinter as tk
+        import tkMessageBox as messagebox
+    root = tk.Tk()
+    root.withdraw()
+    message = messagebox.showerror("Fatal Error Encountered", error_message)
+    sys.exit()
 
 
 __title__ = 'TkinterWeb'

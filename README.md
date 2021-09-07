@@ -41,7 +41,6 @@ Some other tricks, such as handling page title changes or link clicks, can be fo
 **To install TkinterWeb, simply type `pip install tkinterweb` in the command prompt or terminal.**
 That's it.
 
-
 &nbsp;
 &nbsp;
 ## Dependencies
@@ -64,6 +63,11 @@ Documentation and additional information for these classes can be found in the c
 
 &nbsp;
 &nbsp;
+## FAQs
+See https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/docs/FAQ.md.
+
+&nbsp;
+&nbsp;
 ## Webpage Compatability
 **HTML/CSS:**
 * TkinterWeb supports HTML 4.01 and CSS 2.1. A full list of supported CSS declarations can be found at http://tkhtml.tcl.tk/support.html. 
@@ -83,7 +87,7 @@ Documentation and additional information for these classes can be found in the c
 ## Contributing
 **TkinterWeb happily accepts contributions.**
 
-The best way to contribute to this project is to go to the [issues tab](https://github.com/Andereoo/TkinterWeb/issues) and report bugs or submit a feature request. This helps TkinterWeb become more stable and full-featured.
+The best way to contribute to this project is to go to the [issues tab](https://github.com/Andereoo/TkinterWeb/issues) and report bugs or submit a feature request. This helps TkinterWeb become more stable and full-featured. Please check the [FAQs](https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/docs/FAQ.md) and [closed bugs](https://github.com/Andereoo/TkinterWeb/issues?q=is%3Aissue+is%3Aclosed) before submitting a bug report to see if your question as already been answered.
 
 &nbsp;
 &nbsp;

@@ -399,7 +399,7 @@ If crash prevention is enabled, most emojis will not be shown. The `noto color e
 This method must be invoked *before* loading a webpage to take effect.
 
 Parameters
-* **isenabled** *(boolean)* - Specifies whether caches can be used or not.
+* **isenabled** *(boolean)* - Specifies whether crash protection can be used or not.
 
 ---
 #### **ignore_invalid_images**(value)

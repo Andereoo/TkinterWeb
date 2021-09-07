@@ -15,6 +15,7 @@
 * Tkhtml (which powers TkinterWeb) and the ttk.Notebook widget aren't compatable on some platforms, namely 64-bit Windows, causing crashes.
 * This is a known issue with an easy fix.
 * Instead of using ttk.Notebook, use tkinterweb.Notebook. This is a wrapper around ttk.Notebook that is designed to be a drop-in replacement for the ttk.Notebook widget. It should look and behave exactly like a ttk.Notebook widget, but without the crashes. See [Bug #19](https://github.com/Andereoo/TkinterWeb/issues/19) for more information.
+* Please note that after adding a widget to the Notebook (eg. `mynotebook.add(mywidget)`) there is no need to `pack` or `grid` the widget. This may raise errors. TkinterWeb's Notebook widget handles all this on its own.
 * If TkinterWeb's Notebook widget isn't working properly, [file a bug report](https://github.com/Andereoo/TkinterWeb/issues/new) so that it can be fixed!
 
 **I get a ModuleNotFoundError after compiling my code.**

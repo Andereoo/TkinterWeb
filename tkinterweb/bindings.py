@@ -590,6 +590,17 @@ class TkinterWeb(tk.Widget):
             self.handle_node_replacement(node, widgetid, 
                 lambda widgetid=widgetid: self.handle_node_removal(widgetid), 
                 lambda node=node, widgetid=widgetid: self.handle_node_style(node, widgetid))
+        elif nodetype == "range":
+            variable = tk.IntVar()
+            variable.set(nodevalue)
+            from_ = self.get_node_attribute(node, "min", 0)
+            to = self.get_node_attribute(node, "max", 100)
+            widgetid = ttk.Scale(self, variable=variable, from_=from_, to=to)
+            self.form_get_commands[node] = lambda: variable.get()
+            self.form_reset_commands[node] = lambda: variable.set(0)
+            self.handle_node_replacement(node, widgetid, 
+                lambda widgetid=widgetid: self.handle_node_removal(widgetid),
+                lambda node=node, widgetid=widgetid, widgettype="range": self.handle_node_style(node, widgetid, widgettype))
         elif nodetype == "radio":
             name = self.tk.call(node, "attr", "-default", "", "name")
             if name in self.radio_buttons:
@@ -940,8 +951,10 @@ class TkinterWeb(tk.Widget):
             nodeattrname = self.get_node_attribute(formelement, "name")
             if nodeattrname:
                 nodevalue = self.form_get_commands[formelement]()
-                if nodevalue:
-                    data[nodeattrname] = nodevalue
+                if not nodevalue and self.get_node_attribute(formelement, "type") == "hidden":
+                    continue #not ideal, but necessary for compatibility for some websites
+                data[nodeattrname] = nodevalue
+
         if not event:
             nodeattrname = self.get_node_attribute(node, "name")
             nodevalue = self.get_node_attribute(node, "value")
@@ -1005,7 +1018,18 @@ class TkinterWeb(tk.Widget):
                 bg = "white"
             widgetid.configure(background=bg, highlightbackground=bg,
                                highlightcolor=bg, activebackground=bg)
-        else:
+        elif widgettype == "range":
+            bg = "transparent"
+            while (bg == "transparent" and node != ""):
+                bg = self.get_node_property(node, "background-color")
+                node = self.get_node_parent(node)
+            if bg == "transparent":
+                bg = "white"
+            style = ttk.Style()
+            stylename = "Scale{}.Horizontal.TScale".format(widgetid)
+            style.configure(stylename, background=bg)
+            widgetid.configure(style=stylename)
+        elif widgettype == "text":
             bg = self.get_node_property(node, "background-color")
             fg = self.get_node_property(node, "color")
             font = self.get_node_property(node, "font")

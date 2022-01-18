@@ -225,7 +225,7 @@ INPUT[type="image"][src] {
   cursor: pointer;
 }
 
-INPUT[type="checkbox"], INPUT[type="radio"], input[type="file"] {
+INPUT[type="checkbox"], INPUT[type="radio"], input[type="file"], input[type="range"] {
   background-color: transparent;
   border: none;
 }

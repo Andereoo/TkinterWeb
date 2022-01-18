@@ -951,9 +951,7 @@ class TkinterWeb(tk.Widget):
             nodeattrname = self.get_node_attribute(formelement, "name")
             if nodeattrname:
                 nodevalue = self.form_get_commands[formelement]()
-                if not nodevalue and self.get_node_attribute(formelement, "type") == "hidden":
-                    continue #not ideal, but necessary for compatibility for some websites
-                elif self.get_node_attribute(formelement, "type") == "submit":
+                if self.get_node_attribute(formelement, "type") == "submit":
                     continue
                 else:
                     data[nodeattrname] = nodevalue

@@ -9,10 +9,11 @@ except ImportError:
 
 try:
     import tkinter as tk
-    from tkinter import filedialog, ttk
+    from tkinter import filedialog, ttk, colorchooser
 except ImportError:
     import Tkinter as tk
     import tkFileDialog as filedialog
+    import tkColorChooser as colorchooser
     import ttk
 
 try:
@@ -225,7 +226,7 @@ INPUT[type="image"][src] {
   cursor: pointer;
 }
 
-INPUT[type="checkbox"], INPUT[type="radio"], input[type="file"], input[type="range"] {
+INPUT[type="checkbox"], INPUT[type="radio"], input[type="file"], input[type="range"], input[type="color"] {
   background-color: transparent;
   border: none;
 }
@@ -493,6 +494,31 @@ class FileSelector(tk.Frame):
             del kwargs["activebackground"]
         self.label.config(*args, **kwargs)
         self.config(*args, **kwargs)
+
+class ColourSelector(tk.Frame):
+    "Colour selector widget."
+
+    def __init__(self, parent, colour, **kwargs):
+        tk.Button.__init__(self, parent, command=self.select_colour, bg="#ccc", activebackground="#aaa", width=5, highlightthickness=0, borderwidth=0)
+        colour = colour if colour else "#000000"
+        self.selector = tk.Button(self, bg=colour, command=self.select_colour, activebackground=colour, width=5, highlightthickness=0, borderwidth=0)
+        self.selector.pack(expand=True, fill="both", padx=5, pady=5)
+        self.selector.bind("<Button-1>", lambda event: self.config(bg="#aaa"))
+        self.selector.bind("<ButtonRelease-1>", lambda event: self.config(bg="#ccc"))
+        self.colour = colour
+        self.default_colour = colour
+
+    def select_colour(self):
+        colour = colorchooser.askcolor(title = "Choose color")[1]
+        self.colour = colour if colour else self.colour
+        self.selector.config(bg=self.colour, activebackground=self.colour)
+
+    def reset(self):
+        self.colour = self.default_colour
+        self.selector.config(bg=self.colour, activebackground=self.colour)
+
+    def get_value(self):
+        return self.colour
 
 class Notebook(ttk.Frame):
     """Drop-in replacement for the ttk.Notebook widget,

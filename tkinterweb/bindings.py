@@ -578,6 +578,13 @@ class TkinterWeb(tk.Widget):
             self.handle_node_replacement(node, widgetid, 
                 lambda widgetid=widgetid: self.handle_node_removal(widgetid), 
                 lambda node=node, widgetid=widgetid: self.handle_node_style(node, widgetid))
+        elif nodetype == "color":
+            widgetid = ColourSelector(self, nodevalue)
+            self.form_get_commands[node] = widgetid.get_value
+            self.form_reset_commands[node] = widgetid.reset
+            self.handle_node_replacement(node, widgetid, 
+                lambda widgetid=widgetid: self.handle_node_removal(widgetid), 
+                self.placeholder)
         elif nodetype == "hidden":
             self.form_get_commands[node] = lambda node=node: self.get_node_attribute(
                 node, "value")
@@ -951,7 +958,7 @@ class TkinterWeb(tk.Widget):
             nodeattrname = self.get_node_attribute(formelement, "name")
             if nodeattrname:
                 nodevalue = self.form_get_commands[formelement]()
-                if self.get_node_attribute(formelement, "type") == "submit":
+                if self.get_node_attribute(formelement, "type") == "submit" or self.get_node_attribute(formelement, "type") == "reset":
                     continue
                 else:
                     data[nodeattrname] = nodevalue

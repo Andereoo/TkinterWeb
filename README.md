@@ -98,3 +98,5 @@ The best way to contribute to this project is to go to the [issues tab](https://
 Thanks to the [TkinterHtml package](https://bitbucket.org/aivarannamaa/tkinterhtml) for providing the bindings which this project is based on.
 
 Thanks to the [BRL-CAD project](https://github.com/BRL-CAD/brlcad) for providing modifications for Tkhtml on 64-bit Windows platforms.
+
+A special thanks to everyone else who helped this project by reporting bugs and providing suggestions!

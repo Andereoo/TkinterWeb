@@ -52,18 +52,24 @@ BODY {
   margin:8px;
 }
 
-/* Rules for unordered-lists */
+/* Rules for lists */
 LI                   { display: list-item }
+
+
+OL, UL, DIR, MENU, DD  { padding-left: 40px ; margin-left: 1em }
+
+OL[type]         { list-style-type : tcl(::tkhtml::ol_liststyletype) }
+
+UL>LI { list-style-type : disc }
+UL>UL>LI { list-style-type : circle }
+UL>UL UL>LI { list-style-type : square }
+
 UL[type="square"]>LI { list-style-type : square } 
 UL[type="disc"]>LI   { list-style-type : disc   } 
 UL[type="circle"]>LI { list-style-type : circle } 
 LI[type="circle"]    { list-style-type : circle }
 LI[type="square"]    { list-style-type : square }
 LI[type="disc"]      { list-style-type : disc   }
-
-OL, UL, DIR, MENU, DD  { padding-left: 40px ; margin-left: 1em }
-
-OL[type]         { list-style-type : tcl(::tkhtml::ol_liststyletype) }
 
 NOBR {
   white-space: nowrap;

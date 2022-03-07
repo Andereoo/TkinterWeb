@@ -8,5 +8,5 @@
 **Do not use this widget unless absolutely nessessary. Instead use the [HtmlFrame widget](HTMLFRAME.md).**
 
 ## Class API
-*Please refer to the [source code](../tkhtml_bindings.py) of this class.*
+*Please refer to the [source code](../bindings.py) of this class.*
 

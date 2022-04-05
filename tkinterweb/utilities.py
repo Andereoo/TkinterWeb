@@ -629,6 +629,7 @@ def download(url, data=None, method="GET", decode=None):
     "Fetch files."
     "Technically this isn't thread-safe (even though it is being used inside threads by Tkinterweb, "
     "but as long as install_opener() is not called and a string is used as the url parameter we are okay."
+    if url == 'about:blank': return '<html><head><title>about:blank</title></head><body /></html>', url, 'html'
     thread = threadname()
     url = url.replace(" ", "%20")
     if data and (method == "POST"):

@@ -99,7 +99,7 @@ class HtmlFrame(ttk.Frame):
 
     def load_website(self, website_url, decode=None, force=False):
         "Load a website from the specified URL"
-        if (not website_url.startswith("https://")) and (not website_url.startswith("http://")):
+        if (not website_url.startswith("https://")) and (not website_url.startswith("http://")) and (not website_url.startswith("about:")):
             website_url = "http://" + str(website_url)
         self.load_url(website_url, decode, force)
 

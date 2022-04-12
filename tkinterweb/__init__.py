@@ -1,5 +1,5 @@
 """
-TkinterWeb v3.12
+TkinterWeb v3.13
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
 
@@ -54,7 +54,7 @@ See https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/docs/FAQ.md for 
 
 __title__ = 'TkinterWeb'
 ___author__ = "Andereoo"
-__version__ = '3.12'
+__version__ = '3.13'
 __all__ = ['HtmlFrame', 'HtmlLabel', 'TkinterWeb', 'Demo']
 
 

@@ -2,7 +2,7 @@
 
 **How do I load websites or files?**
 
-* Use the `load_website` or `load_file` commands. As always, check out [the docs](https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/docs/HTMLFRAME.md) for more information
+* Use the `load_website` or `load_file` commands. Alternatively, use the `load_url` command to load any generic url, but keep in mind that the url must be properly formatted, because the url scheme will not be automatically applied. As always, check out [the docs](https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/docs/HTMLFRAME.md) for more information
 
 **TkinterWeb is crashing. Help?**
 

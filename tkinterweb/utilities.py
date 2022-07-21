@@ -39,6 +39,7 @@ except (ImportError, SyntaxError, ):
 HEADER = {'User-Agent': 'Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha'}
 BUILTINPAGES = {"about:blank": "<html><body></body></html>",
                  "about:tkinterweb": "<html><head><title>about:tkinterweb</title></head><body>Maybe someday this page will become something interesting. For now it's totally useless. Good job finding it though.</body></html>"}
+DEFAULTPARSEMODE = "xml"
 DEFAULTSTYLE = """
 /* Default stylesheet to be loaded whenever HTML is parsed. */
 /* This is a modified version of the stylesheet that comes bundled with Tkhtml. */
@@ -176,6 +177,10 @@ PRE, PLAINTEXT, XMP {
   white-space: pre;
   margin: 1em 0;
   font-family: courier;
+}
+/* Formatting for <mark> */
+MARK {
+    background: yellow;
 }
 /* Display properties for hyperlinks */
 :link    { color: darkblue; text-decoration: underline ; cursor: pointer }

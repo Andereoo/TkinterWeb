@@ -222,6 +222,14 @@ class HtmlFrame(ttk.Frame):
         "Get the fontsize multiplier"
         return self.html.fontscale(None)
 
+    def set_parsemode(self, mode):
+        "Set the page render mode"
+        self.html.parsemode(mode)
+
+    def get_parsemode(self):
+        "Get the page render mode"
+        return self.html.parsemode(None)
+
     def on_link_click(self, function):
         "Allows for handling link clicks"
         self.html.link_click_func = function

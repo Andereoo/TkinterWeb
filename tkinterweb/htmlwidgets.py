@@ -78,7 +78,7 @@ class HtmlFrame(ttk.Frame):
                                     <head><title>Error 404</title></head>
                                     <body style="text-align:center;">
                                         <h2>Oops.</h2><p></p>
-                                        <h3>The page you've requested could not be found.<h3>
+                                        <h3>The page you've requested could not be found.</h3>
                                     </body>
                                   </html>"""
         html.cursor_change_func = self.change_cursor

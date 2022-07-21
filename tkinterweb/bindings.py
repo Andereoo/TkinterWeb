@@ -71,6 +71,8 @@ class TkinterWeb(tk.Widget):
             kwargs["imagecmd"] = master.register(self.on_image)
         if "defaultstyle" not in kwargs:
             kwargs["defaultstyle"] = DEFAULTSTYLE
+        if "parsemode" not in kwargs:
+            kwargs["parsemode"] = DEFAULTPARSEMODE
 
         # catch htmldrawcleanup crashes on supported platforms
         if (platform.system() == "Windows") or (platform.system() == "Linux" and sys.maxsize > 2**32):
@@ -252,6 +254,13 @@ class TkinterWeb(tk.Widget):
             self.tk.call(self._w, "configure", "-zoom", multiplier)
         else:
             return self.tk.call(self._w, "cget", "-zoom")
+
+    def parsemode(self, mode):
+        """Set and get the page render mode"""
+        if mode:
+            self.tk.call(self._w, "configure", "-parsemode", mode)
+        else:
+            return self.tk.call(self._w, "cget", "-parsemode")
 
     def shrink(self, value):
         """Set shrink value for html widget"""

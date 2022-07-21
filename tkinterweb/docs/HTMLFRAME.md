@@ -303,6 +303,20 @@ Return type
 * *float*
 
 ---
+#### **set_parsemode**(mode)
+Set the parser mode. The three availiable options are `html`, `xhtml`, and `xhtml`. In `html` mode, explicit XML-style self-closing tags are not handled specially and unknown tags are ignored. `xhtml` mode is similar to `html` mode except that explicit self-closing tags are recognized. `xml` mode is similar to `xhtml` mode except that XML CDATA sections and unknown tag names are recognized. This is the default value.
+
+Parameters
+* **mode** *(string)* - Specifies the parse mode.
+
+---
+#### **get_parsemode**()
+Return the parser mode.
+
+Return type
+* *string*
+
+---
 #### **set_message_func**(function)
 Set TkinterWeb to call the specified python function whenever a new message is released.
 By default, unless `messages_enabled` was set to `False` when calling `HtmlFrame()`, messages will be printed to the console.

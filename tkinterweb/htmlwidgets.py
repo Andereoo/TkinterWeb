@@ -117,6 +117,10 @@ class HtmlFrame(ttk.Frame):
         Technically Tkinter isn't threadsafe and will crash when doing this, but under certain circumstances we can get away with it.
         As long as we do not use the .join() method and no errors are raised in the mainthread, we should be okay.
         """
+        #Workaround for Bug #40, where urllib.urljoin constructs improperly formatted urls on Linux when url starts with file:///
+        if not url.startswith("file://///"):
+            url = url.replace("file:////", "file:///")
+                
         if self.thread_in_progress:
             self.thread_in_progress.stop()
         if self.html.max_thread_count >= 1:
@@ -149,6 +153,7 @@ class HtmlFrame(ttk.Frame):
 
             if method == "GET":
                 url = str(url) + str(data)
+
             # if url is different than the current one, load the new site.
             if force or (method == "POST") or (urldefrag(url)[0] != urldefrag(self.current_url)[0]):
                 self.message_func("Connecting to {0}.".format(parsed.netloc))

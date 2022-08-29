@@ -105,8 +105,10 @@ class HtmlFrame(ttk.Frame):
 
     def load_file(self, file_url, decode=None, force=False):
         "Load a locally stored file from the specified path"
-        if not file_url.startswith("file://"):
-            file_url = "file://" + str(file_url)
+        file_url = str(file_url).split("/", 1)[1]
+        if not file_url.startswith("/"):
+            file_url = "/" + file_url
+        file_url = "file://" + file_url
         self.load_url(file_url, decode, force)
 
     def load_url(self, url, decode=None, force=False):
@@ -391,13 +393,13 @@ class HtmlFrame(ttk.Frame):
 
     def load_html(self, html_source, base_url=None):
         "Reset parser and send html code to it"
-        self.current_url = ""
         self.html.reset()
         if not base_url:
             path = currentpath(False)
             if not path.startswith("/"):
                 path = "/{0}".format(path)
             base_url = "file://{0}/".format(path)
+        self.current_url = base_url
         self.html.base_url = base_url
         self.html.parse(html_source)
 

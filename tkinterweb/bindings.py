@@ -348,9 +348,9 @@ class TkinterWeb(tk.Widget):
 
         if ("stylesheet" in rel) and ("all" in media or "screen" in media) and self.stylesheets_enabled and self.unstoppable:
             self.downloads_have_occured = True
+            href = self.get_node_attribute(node, "href")
             try:
-                href = self.get_node_attribute(node, "href")
-                url = urljoin(self.base_url, href)
+                url = self.resolve_url(href)
                 self.message_func(
                     "Loading stylesheet from {0}.".format(shorten(url)))
                 self.style_count += 1
@@ -362,10 +362,10 @@ class TkinterWeb(tk.Widget):
                                              )
                 self.style_thread_check(sheetid=ids, handler=handler_proc, errorurl=href, url=url)
             except Exception as error:
-                self.message_func("Error reading stylesheet {}: {}.".format(
-                    self.get_node_attribute(node, "href"), error))
+                self.message_func("Error reading stylesheet {}: {}.".format(href, error))
         elif "icon" in rel:
-            url = urljoin(self.base_url, self.get_node_attribute(node, "href"))
+            href = self.get_node_attribute(node, "href")
+            url = self.resolve_url(href)
             self.icon_change_func(url)
 
     def on_atimport(self, parent_url, new_url):
@@ -399,7 +399,7 @@ class TkinterWeb(tk.Widget):
         """Handle <base> elements"""
         try:
             href = self.get_node_attribute(node, "href")
-            self.base_url = urljoin(self.base_url, href)
+            self.base_url = self.resolve_url(href)
         except Exception:
             self.message_func(
                 "Error setting base url: a <base> element has been found without an href attribute.")
@@ -409,7 +409,7 @@ class TkinterWeb(tk.Widget):
         self.tk.call(node, "dynamic", "set", "link")
         try:
             href = self.get_node_attribute(node, "href")
-            url = urljoin(self.base_url, href)
+            url = self.resolve_url(href)
             if url in self.visited_links:
                 self.tk.call(node, "dynamic", "set", "visited")
         except tk.TclError:
@@ -427,7 +427,7 @@ class TkinterWeb(tk.Widget):
         if srcdoc:
             self.create_iframe(node, None, srcdoc)
         elif src and (src != self.base_url):
-            src = urljoin(self.base_url, src)
+            src = self.resolve_url(src)
             self.create_iframe(node, src)
 
     def on_object(self, node):
@@ -439,7 +439,7 @@ class TkinterWeb(tk.Widget):
         url = self.get_node_attribute(node, "data")
             
         try:
-            url = urljoin(self.base_url, url)
+            url = self.resolve_url(url)
             if url == self.base_url:
                 # Don't load the object if it is the same as the current file
                 # Otherwise the page will load the same object indefinitely and freeze the GUI forever
@@ -501,14 +501,14 @@ class TkinterWeb(tk.Widget):
             for image in url.split(","):
                 if image.startswith("url("):
                     image = strip_css_url(image)
-                    url = urljoin(self.base_url, image)
+                    url = self.resolve_url(image)
                     self.image_thread_check(url, name)
                     done = True
             if not done:
                 self.message_func(
                     "The image {} could not be shown because it is not supported yet".format(shorten(url)))
         else:
-            url = urljoin(self.base_url, url)
+            url = self.resolve_url(url)
             self.image_thread_check(url, name)
         return name
 
@@ -905,7 +905,7 @@ class TkinterWeb(tk.Widget):
     def handle_link_click(self, node_handle):
         """Handle link clicks"""
         href = self.get_node_attribute(node_handle, "href")
-        url = urljoin(self.base_url, href)
+        url = self.resolve_url(href)
         self.message_func(
             "A link to '{}' has been clicked.".format(shorten(url)))
         self.visited_links.append(url)
@@ -985,7 +985,7 @@ class TkinterWeb(tk.Widget):
             url.extend(['', '', ''])
             url = urlunparse(url)
         else:
-            url = urljoin(self.base_url, action)
+            url = self.resolve_url(action)
 	
         if method == "GET":
             data = "?" + data
@@ -1196,6 +1196,10 @@ class TkinterWeb(tk.Widget):
             widgetid.load_url(url)
             
         self.handle_node_replacement(node, widgetid, lambda widgetid=widgetid: self.handle_node_removal(widgetid))  
+
+    def resolve_url(self, href):
+        """Get full url from partial url"""
+        return urljoin(self.base_url, href)
 
     def start_selection(self, event):
         """Make selection possible"""

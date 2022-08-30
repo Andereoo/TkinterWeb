@@ -116,13 +116,19 @@ myhtmlframe.bind("<Button-3>", on_right_click)
 The above code will call `on_right_click` every time the user right-clicks on the HtmlFrame widget.
 This can be extended with the following:
 ```
-if myhtmlframe.get_currently_hovered_node_tag() == "a": #if the mouse is over a link
-    link = myhtmlframe.get_currently_hovered_node_attribute("href") #get the link's url
-    menu = tk.Menu(root, tearoff=0) #create the menu
-    menu.add_command(label=link) #add a button to the menu showing the url
-    menu.tk_popup(event.x_root, event.y_root, 0) #show the menu
+def open_in_new_tab(url):
+    myhtmlframe.load_website(url)
+   
+def on_right_click(event):
+  if myhtmlframe.get_currently_hovered_node_tag() == "a": #if the mouse is over a link
+      link = myhtmlframe.get_currently_hovered_node_attribute("href") #get the link's url
+      url = myhtmlframe.resolve_url(link) #get a full url from the link
+      menu = tk.Menu(root, tearoff=0) #create the menu
+      menu.add_command(label="Open %s" % url, command=lambda url=url: myhtmlframe.load_url(url)) #add a button to the menu showing the url
+      menu.tk_popup(event.x_root, event.y_root, 0) #show the menu
+myhtmlframe.bind("<Button-3>", on_right_click)
 ```
-Putting the above code inside the `on_right_click` function will make a popup show if the user right-clicked on a link. 
+This will make a popup show if the user right-clicked on a link. Clicking link shown in the popup would load the website.
 
 ---
 *Other methods can be found in the [useful methods section](#useful-methods) below.*
@@ -312,6 +318,16 @@ Parameters
 ---
 #### **get_parsemode**()
 Return the parser mode.
+
+Return type
+* *string*
+
+---
+#### **resolve_url**(url)
+Generate a full url from the specified url. This can be used to generate proper links when given a relative url.
+
+Parameters
+* **url** *(string)* - Specifies the url to modify.
 
 Return type
 * *string*

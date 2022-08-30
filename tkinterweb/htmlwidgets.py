@@ -236,6 +236,10 @@ class HtmlFrame(ttk.Frame):
     def get_parsemode(self):
         "Get the page render mode"
         return self.html.parsemode(None)
+     
+    def resolve_url(self, url):
+        "Get full url from partial url"
+        return self.html.resolve_url(url)
 
     def on_link_click(self, function):
         "Allows for handling link clicks"

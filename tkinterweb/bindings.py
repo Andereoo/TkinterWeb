@@ -506,7 +506,7 @@ class TkinterWeb(tk.Widget):
                     done = True
             if not done:
                 self.message_func(
-                    "The image {} could not be shown because it is not supported yet".format(shorten(url)))
+                    "The image {} could not be shown because it is not supported yet.".format(shorten(url)))
         else:
             url = self.resolve_url(url)
             self.image_thread_check(url, name)

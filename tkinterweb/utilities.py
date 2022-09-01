@@ -657,8 +657,8 @@ def load_tkhtml(master, location=None, force=False):
     global tkhtml_loaded
     if (not tkhtml_loaded) or force:
         if location:
-            master.tk.eval(
-                "global auto_path; lappend auto_path {%s}" % location)
+            path = ["linsert", "$auto_path", 0, location]
+            master.tk.call("set", "auto_path", path)
         master.tk.eval("package require Tkhtml")
         tkhtml_loaded = True
 
@@ -668,8 +668,7 @@ def load_combobox(master, force=False):
     global combobox_loaded
     if not (combobox_loaded) or force:
         path = os.path.join(currentpath(), "tkhtml")
-        master.tk.eval(
-                "global auto_path; lappend auto_path {%s}" % path)
+        master.tk.call("lappend", "auto_path", path)
         master.tk.eval("package require combobox")
         combobox_loaded = True
 

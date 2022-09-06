@@ -504,13 +504,16 @@ class Notebook(ttk.Frame):
 
     def on_tab_change(self, event):
         self.event_generate("<<NotebookTabChanged>>")
-        tabId = self.notebook.index(self.notebook.select())
-        newpage = self.pages[tabId]
-        if self.previous_page:
-            self.previous_page.grid_forget()
-        newpage.grid(row=1, column=0, sticky="nsew")
-        self.previous_page = newpage
-        
+        try:
+            tabId = self.notebook.index(self.notebook.select())
+            newpage = self.pages[tabId]
+            if self.previous_page:
+                self.previous_page.grid_forget()
+            newpage.grid(row=1, column=0, sticky="nsew")
+            self.previous_page = newpage
+        except tk.TclError:
+            pass
+            
     def add(self, child, **kwargs):
         if child in self.pages:
             raise ValueError("{} is already managed by {}.".format(child, self))
@@ -537,12 +540,13 @@ class Notebook(ttk.Frame):
         self.notebook.tab(tabId, option, **kwargs)
 
     def forget(self, tabId):
-        if not isinstance(tabId, int):
-            tabId = self.pages.index(tabId)
-            self.pages.remove(child)
-        else:
+        if isinstance(tabId, int):
             del self.pages[tabId]
-        self.notebook.forget(self.pages.index(child))
+            self.notebook.forget(tabId)
+        else:
+            index = self.pages.index(tabId)
+            self.pages.remove(tabId)
+            self.notebook.forget(index)
 
     def index(self, child):
         try:

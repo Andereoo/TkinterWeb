@@ -40,6 +40,155 @@ HEADER = {'User-Agent': 'Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gec
 BUILTINPAGES = {"about:blank": "<html><body></body></html>",
                  "about:tkinterweb": "<html><head><title>about:tkinterweb</title></head><body>Maybe someday this page will become something interesting. For now it's totally useless. Good job finding it though.</body></html>"}
 DEFAULTPARSEMODE = "xml"
+COLORMAPPINGS = {
+    'black': '#f0f0f0',
+    'silver': '#303030',
+    'lime': '#f001f0',
+    'gray': '#707070',
+    'olive': '#7070f0',
+    'white': '#010101',
+    'yellow': '#0101f0',
+    'maroon': '#70f0f0',
+    'navy': '#f0f070',
+    'red': '#01f0f0',
+    'blue': '#f0f001',
+    'purple': '#70f070',
+    'teal': '#f07070',
+    'fuchsia': '#01f001',
+    'aqua': '#f00101',
+    'green': '#f070f0',
+    'aliceblue': '#010101',
+    'antiquewhite': '#010519',
+    'aquamarine': '#71011c',
+    'azure': '#010101',
+    'beige': '#010114',
+    'bisque': '#010c2c',
+    'blanchedalmond': '#010523',
+    'blueviolet': '#66c50e',
+    'brown': '#4bc6c6',
+    'burlywood': '#123869',
+    'cadetblue': '#915250',
+    'chartreuse': '#7101f0',
+    'chocolate': '#1e87d2',
+    'coral': '#0171a0',
+    'cornflowerblue': '#8c5b03',
+    'cornsilk': '#010114',
+    'crimson': '#14dcb4',
+    'cyan': '#f00101',
+    'darkblue': '#f0f065',
+    'darkcyan': '#f06565',
+    'darkgoldenrod': '#386ae5',
+    'darkgray': '#474747',
+    'darkgreen': '#f08cf0',
+    'darkgrey': '#474747',
+    'darkkhaki': '#333985',
+    'darkmagenta': '#65f065',
+    'darkolivegreen': '#9b85c1',
+    'darkorange': '#0164f0',
+    'darkorchid': '#57be24',
+    'darkred': '#65f0f0',
+    'darksalmon': '#075a76',
+    'darkseagreen': '#613461',
+    'darkslateblue': '#a8b365',
+    'darkslategray': '#c1a1a1',
+    'darkslategrey': '#c1a1a1',
+    'darkturquoise': '#f0221f',
+    'darkviolet': '#5cf01d',
+    'deeppink': '#01dc5d',
+    'deepskyblue': '#f03101',
+    'dimgray': '#878787',
+    'dimgrey': '#878787',
+    'dodgerblue': '#d26001',
+    'firebrick': '#3ecece',
+    'floralwhite': '#010101',
+    'forestgreen': '#ce65ce',
+    'gainsboro': '#141414',
+    'ghostwhite': '#010101',
+    'gold': '#0119f0',
+    'goldenrod': '#164bd0',
+    'grey': '#707070',
+    'greenyellow': '#4301c1',
+    'honeydew': '#010101',
+    'hotpink': '#01873c',
+    'indianred': '#239494',
+    'indigo': '#a5f06e',
+    'ivory': '#010101',
+    'khaki': '#010a64',
+    'lavender': '#0a0a01',
+    'lavenderblush': '#010101',
+    'lawngreen': '#7401f0',
+    'lemonchiffon': '#010123',
+    'lightblue': '#43180a',
+    'lightcoral': '#017070',
+    'lightcyan': '#100101',
+    'lightgoldenrodyellow': '#01011e',
+    'lightgray': '#1d1d1d',
+    'lightgreen': '#600260',
+    'lightgrey': '#1d1d1d',
+    'lightpink': '#013a2f',
+    'lightsalmon': '#015076',
+    'lightseagreen': '#d03e46',
+    'lightskyblue': '#692201',
+    'lightslategray': '#796857',
+    'lightslategrey': '#796857',
+    'lightsteelblue': '#402c12',
+    'lightyellow': '#010110',
+    'limegreen': '#be23be',
+    'linen': '#01010a',
+    'magenta': '#01f001',
+    'mediumaquamarine': '#8a2346',
+    'mediumblue': '#f0f023',
+    'mediumorchid': '#369b1d',
+    'mediumpurple': '#5d8015',
+    'mediumseagreen': '#b43d7f',
+    'mediumslateblue': '#758802',
+    'mediumspringgreen': '#f00156',
+    'mediumturquoise': '#a81f24',
+    'mediumvioletred': '#29db6b',
+    'midnightblue': '#d7d780',
+    'mintcream': '#010101',
+    'mistyrose': '#010c0f',
+    'moccasin': '#010c3b',
+    'navajowhite': '#011243',
+    'oldlace': '#01010a',
+    'olivedrab': '#8562cd',
+    'orange': '#014bf0',
+    'orangered': '#01abf0',
+    'orchid': '#16801a',
+    'palegoldenrod': '#020846',
+    'palegreen': '#580158',
+    'paleturquoise': '#410202',
+    'palevioletred': '#15805d',
+    'papayawhip': '#01011b',
+    'peachpuff': '#011637',
+    'peru': '#236bb1',
+    'pink': '#013025',
+    'plum': '#135013',
+    'powderblue': '#40100a',
+    'rosybrown': '#346161',
+    'royalblue': '#af870f',
+    'saddlebrown': '#65abdd',
+    'salmon': '#01707e',
+    'sandybrown': '#014c90',
+    'seagreen': '#c26599',
+    'seashell': '#010102',
+    'sienna': '#509ec3',
+    'skyblue': '#692205',
+    'slateblue': '#869623',
+    'slategray': '#807060',
+    'slategrey': '#807060',
+    'snow': '#010101',
+    'springgreen': '#f00171',
+    'steelblue': '#aa6e3c',
+    'tan': '#1e3c64',
+    'thistle': '#183118',
+    'tomato': '#018da9',
+    'turquoise': '#b01020',
+    'violet': '#026e02',
+    'wheat': '#01123d',
+    'whitesmoke': '#010101',
+    'yellowgreen': '#5623be',
+}
 DEFAULTSTYLE = """
 /* Default stylesheet to be loaded whenever HTML is parsed. */
 /* This is a modified version of the stylesheet that comes bundled with Tkhtml. */
@@ -359,6 +508,29 @@ SPAN[spancontent]:after {
   content: attr(spancontent);
 }
 """
+
+DARKSTYLE = """
+/* Additional stylesheet to be loaded whenever dark mode is enabled. */
+/* Display properties document body. */
+BODY {
+  background-color: #0d0b1a;
+  color: #ffffff;
+}
+/* Display properties for hyperlinks */
+:link    { color: #7768d9; }
+:visited { color: #5245a8; }
+
+/* Display properties for form items. */
+INPUT, TEXTAREA, SELECT, BUTTON { 
+  background-color: #171524;
+  color: #ffffff;
+}
+INPUT[type="submit"],INPUT[type="button"], INPUT[type="reset"], BUTTON {
+  background-color: #171524;
+  color: #ffffff;
+  color: tcl(::tkhtml::if_disabled #666666 #ffffff);
+}
+"""
 tkhtml_loaded = False
 combobox_loaded = False
 
@@ -490,7 +662,7 @@ class Notebook(ttk.Frame):
     def __init__(self, master, takefocus=True, **kwargs):
         ttk.Frame.__init__(self, master, **kwargs)
         self.notebook = notebook = ttk.Notebook(self, takefocus=takefocus)
-        self.blankframe = lambda: tk.Frame(self.notebook, height=0, bd=0, highlightthickness=0)
+        self.blankframe = lambda: tk.Frame(notebook, height=0, bd=0, highlightthickness=0)
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
@@ -517,27 +689,34 @@ class Notebook(ttk.Frame):
     def add(self, child, **kwargs):
         if child in self.pages:
             raise ValueError("{} is already managed by {}.".format(child, self))
-        self.notebook.add(self.blankframe(), **kwargs)
+        frame = self.blankframe()
+        self.notebook.add(frame, **kwargs)
         self.pages.append(child)
 
     def insert(self, where, child, **kwargs):
         if child in self.pages:
             raise ValueError("{} is already managed by {}.".format(child, self))
-        self.notebook.insert(where, self.blankframe(), **kwargs)
+        frame = self.blankframe()
+        self.notebook.insert(where, frame, **kwargs)
         self.pages.insert(where, child)
         
     def enable_traversal(self):
         self.notebook.enable_traversal()
 
-    def select(self, tabId):
-        if not isinstance(tabId, int) and tabId in self.pages:
+    def select(self, tabId=None):
+        if tabId in self.pages:
             tabId = self.pages.index(tabId)
-        self.notebook.select(tabId)
-    
+            return self.notebook.select(tabId)
+        else:
+            return self.transcribe(self.notebook.select(tabId))
+
+    def transcribe(self, item, reverse=False):
+        return self.pages[self.notebook.index(item)]
+        
     def tab(self, tabId, option=None, **kwargs):
         if not isinstance(tabId, int) and tabId in self.pages:
             tabId = self.pages.index(tabId)
-        self.notebook.tab(tabId, option, **kwargs)
+        return self.notebook.tab(tabId, option, **kwargs)
 
     def forget(self, tabId):
         if isinstance(tabId, int):
@@ -551,8 +730,8 @@ class Notebook(ttk.Frame):
     def index(self, child):
         try:
             return self.pages.index(child)
-        except IndexError:
-            return self.notebook.index(child)
+        except (IndexError, ValueError):
+            return self.transcribe(self.notebook.index(child))
     
     def tabs(self):
         return self.pages

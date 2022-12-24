@@ -89,7 +89,7 @@ class HtmlFrame(ttk.Frame):
         self.html.done_loading_func = self.done_loading
 
         self.message_func(
-            "Welcome to TkinterWeb 3.10! \nhttps://github.com/Andereoo/TkinterWeb")
+            "Welcome to TkinterWeb 3.16! \nhttps://github.com/Andereoo/TkinterWeb")
 
         self.message_func(
             "Debugging messages are enabled. \nUse the parameter `messages_enabled = False` when calling HtmlFrame() to disable these messages.")
@@ -179,14 +179,15 @@ class HtmlFrame(ttk.Frame):
             # handle URI fragments
             frag = parsed.fragment
             if frag:
-                self.html.tk.call(self.html._w, "_force")
+                #self.html.tk.call(self.html._w, "_force")
                 try:
-                    node = self.html.search("[name=%s]" % frag)
-                    node2 = self.html.search("#"+str(frag))
+                    node = self.html.search("[id=%s]" % frag)
                     if node:
                         self.html.yview(node)
-                    elif node2:
-                        self.html.yview(node2)
+                    else:
+                        node = self.html.search("[name=%s]" % frag)
+                        if node:
+                            self.html.yview(node)
                 except Exception:
                     pass
         except Exception as error:
@@ -298,30 +299,40 @@ class HtmlFrame(ttk.Frame):
         self.message_func = function
         self.html.message_func = function
 
-    def enable_stylesheets(self, isenabled=True):
+    def enable_stylesheets(self, enabled=True):
         "Enable or disable stylesheet loading"
-        self.html.stylesheets_enabled = isenabled
+        self.html.stylesheets_enabled = enabled
 
-    def enable_images(self, isenabled=True):
+    def enable_images(self, enabled=True):
         "Enable or disable image loading"
-        self.html.images_enabled = isenabled
+        self.html.images_enabled = enabled
 
-    def enable_forms(self, isenabled=True):
+    def enable_forms(self, enabled=True):
         "Enable or disable form-filling"
-        self.html.forms_enabled = isenabled
+        self.html.forms_enabled = enabled
 
-    def enable_objects(self, isenabled=True):
+    def enable_objects(self, enabled=True):
         "Enable or disable <iframe> and <object> elements"
-        self.html.objects_enabled = isenabled
+        self.html.objects_enabled = enabled
 
-    def enable_caches(self, isenabled=True):
+    def enable_caches(self, enabled=True):
         "Enable or disable file caches"
-        self.html.caches_enabled = isenabled
+        self.html.caches_enabled = enabled
 
-    def enable_crash_prevention(self, isenabled=True):
+    def enable_crash_prevention(self, enabled=True):
         "Enable or disable extra crash prevention measures"
         "Disabling this will remove all emojis, the noto color emoji font, and invalid rgb functions"
-        self.html.prevent_crashes = isenabled
+        self.html.prevent_crashes = enabled
+
+    def enable_dark_theme(self, enabled=True, invert_images=True):
+        "Enable or disable dark theme"
+        "This will cause page colours to be 'inverted' if enabled is set to True"
+        "This will also cause images to be inverted if 'invert_images' is also set to True"
+        if (enabled or invert_images): 
+            self.message_func("Warning: dark theme has been enabled. This feature is highly experimental and may cause freezes or crashes.")
+        self.html.dark_theme_enabled = enabled
+        self.html.image_inversion_enabled = invert_images
+        self.html.update_default_style()
 
     def find_text(self, searchtext, select=1, ignore_case=True, highlight_all=True):
         "Search for and highlight specific text"

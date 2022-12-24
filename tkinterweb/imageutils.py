@@ -1,11 +1,14 @@
-from PIL import Image
+from PIL import Image, ImageOps
 from PIL.ImageTk import PhotoImage
 
 try:
     from tkinter import PhotoImage as TkinterPhotoImage
 except ImportError:
     from Tkinter import PhotoImage as TkinterPhotoImage
-
+try:
+    from io import BytesIO
+except ImportError:
+    import BytesIO
 try:
     import cairo
     cairoimport = True
@@ -31,14 +34,9 @@ else:
                 rsvgimport = "girsvg"
             except Exception:
                 rsvgimport = None
-    if rsvgimport:
-        try:
-            from io import BytesIO
-        except ImportError:
-            import BytesIO
 
 
-def newimage(data, name, imagetype):
+def newimage(data, name, imagetype, invert):
     image = None
     error = None
     if "svg" in imagetype:
@@ -74,10 +72,22 @@ def newimage(data, name, imagetype):
             image = PhotoImage(image, name=name)
         else:
             error = "corrupt"
+    elif invert:
+        image = Image.open(BytesIO(data))
+        if image.mode == 'RGBA':
+            r,g,b,a = image.split()
+            image = Image.merge('RGB', (r,g,b))
+            image = ImageOps.invert(image)
+            r2,g2,b2 = image.split()
+            image = Image.merge('RGBA', (r2,g2,b2,a))
+        else:
+            image = image.convert("RGB")
+            image = ImageOps.invert(image)
+        image = PhotoImage(image=image, name=name)
     elif imagetype == "image/png" or imagetype == "image/gif" or imagetype == "image/ppm" or imagetype == "image/bmp":
         image = TkinterPhotoImage(name=name, data=data)
     else:
-        image = PhotoImage(name=name, data=data)
+        image = PhotoImage(data=data, name=name)
 
     return image, error
 

@@ -377,60 +377,65 @@ Parameters
 Clear the list of visited websites.
 
 ---
-#### **enable_stylesheets**(isenabled=True)
+#### **enable_stylesheets**(enabled=True)
 Enable or disable CSS styling.
 This is enabled by default.
 This method must be invoked *before* loading a webpage to take effect.
 
 Parameters
-* **isenabled** *(boolean)* - Specifies whether stylesheets are enabled or not.
+* **enabled** *(boolean)* - Specifies whether stylesheets are enabled or not.
 
 ---
-#### **enable_images**(isenabled=True)
+#### **enable_images**(enabled=True)
 Enable or disable image loading.
 This is enabled by default.
 This method must be invoked *before* loading a webpage to take effect.
 
 Parameters
-* **isenabled** *(boolean)* - Specifies whether images should or should not be loaded.
+* **enabled** *(boolean)* - Specifies whether images should or should not be loaded.
 
 ---
-#### **enable_forms**(isenabled=True)
+#### **enable_forms**(enabled=True)
 Enable or disable form-filling capabilities.
 This is enabled by default.
 This method must be invoked *before* loading a webpage to take effect.
 
 Parameters
-* **isenabled** *(boolean)* - Specifies whether forms are handled or not.
+* **enabled** *(boolean)* - Specifies whether forms are handled or not.
 
 ---
-#### **enable_objects**(isenabled=True)
+#### **enable_objects**(enabled=True)
 Enable or disable `<object>` and `<iframe>` embedded elements.
 This is enabled by default.
 This method must be invoked *before* loading a webpage to take effect.
 
 Parameters
-* **isenabled** *(boolean)* - Specifies whether objects should or should not be loaded.
+* **enabled** *(boolean)* - Specifies whether objects should or should not be loaded.
 
 ---
-#### **enable_caches**(isenabled=True)
+#### **enable_caches**(enabled=True)
 Enable or disable webpage caches.
 This is enabled by default.
 Disabling this option will conserve memory, but will also result in longer page load times.
 This method must be invoked *before* loading a webpage to take effect.
 
 Parameters
-* **isenabled** *(boolean)* - Specifies whether caches can be used or not.
+* **enabled** *(boolean)* - Specifies whether caches can be used or not.
 
 ---
-#### **enable_crash_prevention**(isenabled=True)
-Enable or disable crash prevention.
-This is enabled by default.
-If crash prevention is enabled, most emojis will not be shown. The `noto color emoji` font will be replaced with the `arial` font, and invalid CSS `rgb` commands will be removed. This helps prevent Tkinter crashes. This is nessessary to load some websites on certain operating systems.
-This method must be invoked *before* loading a webpage to take effect.
+
+    def enable_dark_theme(self, enabled=True, invert_images=True):
+        "Enable or disable dark theme"
+        "This will cause page colours to be 'inverted' if enabled is set to True"
+        "This will also cause images to be inverted if 'invert_images' is also set to True"
+#### **enable_dark_theme**(enabled=True, invert_images=True)
+Enable or disable dark theme.
+This is disabled by default.
+This function is experimental and may cause hangs or crashes.
 
 Parameters
-* **isenabled** *(boolean)* - Specifies whether crash protection can be used or not.
+* **enabled** *(boolean)* - Specifies whether page colours should be inverted.
+* **invert_images** *(boolean)* - Specifies images should be inverted.
 
 ---
 #### **ignore_invalid_images**(value)

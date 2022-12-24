@@ -383,7 +383,7 @@ This is enabled by default.
 This method must be invoked *before* loading a webpage to take effect.
 
 Parameters
-* **enabled** *(boolean)* - Specifies whether stylesheets are enabled or not.
+* **enabled** *(boolean)* - Specifies whether stylesheets should be enabled.
 
 ---
 #### **enable_images**(enabled=True)
@@ -392,7 +392,7 @@ This is enabled by default.
 This method must be invoked *before* loading a webpage to take effect.
 
 Parameters
-* **enabled** *(boolean)* - Specifies whether images should or should not be loaded.
+* **enabled** *(boolean)* - Specifies whether images should be loaded.
 
 ---
 #### **enable_forms**(enabled=True)
@@ -401,7 +401,7 @@ This is enabled by default.
 This method must be invoked *before* loading a webpage to take effect.
 
 Parameters
-* **enabled** *(boolean)* - Specifies whether forms are handled or not.
+* **enabled** *(boolean)* - Specifies whether forms should be handled.
 
 ---
 #### **enable_objects**(enabled=True)
@@ -410,7 +410,7 @@ This is enabled by default.
 This method must be invoked *before* loading a webpage to take effect.
 
 Parameters
-* **enabled** *(boolean)* - Specifies whether objects should or should not be loaded.
+* **enabled** *(boolean)* - Specifies whether objects should be loaded.
 
 ---
 #### **enable_caches**(enabled=True)
@@ -420,14 +420,10 @@ Disabling this option will conserve memory, but will also result in longer page 
 This method must be invoked *before* loading a webpage to take effect.
 
 Parameters
-* **enabled** *(boolean)* - Specifies whether caches can be used or not.
+* **enabled** *(boolean)* - Specifies whether caches can be used.
 
 ---
 
-    def enable_dark_theme(self, enabled=True, invert_images=True):
-        "Enable or disable dark theme"
-        "This will cause page colours to be 'inverted' if enabled is set to True"
-        "This will also cause images to be inverted if 'invert_images' is also set to True"
 #### **enable_dark_theme**(enabled=True, invert_images=True)
 Enable or disable dark theme.
 This is disabled by default.

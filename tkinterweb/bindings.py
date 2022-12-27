@@ -343,6 +343,15 @@ class TkinterWeb(tk.Widget):
         coords = map(float, self.tk.call(self._w, "xview").split())
         return tuple(coords)
 
+    def xview_scroll(self, number, what):
+        """Shifts the view in the window left or right, according to number and
+        what. "number" is an integer, and "what" is either "units" or "pages"."""
+        return self.xview("scroll", number, what)
+
+    def xview_moveto(self, number):
+        """Shifts the view horizontally to the specified position."""
+        return self.xview("moveto", number)
+
     def yview(self, *args):
         """Used to control the vertical position of the document."""
         return self.tk.call(self._w, "yview", *args)
@@ -351,6 +360,10 @@ class TkinterWeb(tk.Widget):
         """Shifts the view in the window up or down, according to number and
         what. "number" is an integer, and "what" is either "units" or "pages"."""
         return self.yview("scroll", number, what)
+
+    def yview_moveto(self, number):
+        """Shifts the view vertically to the specified position."""
+        return self.yview("moveto", number)
 
     def get_node_text(self, node_handle):
         """Get the text content of the given node"""
@@ -375,6 +388,14 @@ class TkinterWeb(tk.Widget):
     def get_node_property(self, node_handle, node_property):
         """Get the specified attribute of the given node"""
         return self.tk.call(node_handle, "property", node_property)
+
+    def insert_node(self, node_handle, children_nodes):
+        """Experimental, insert the specified nodes into the parent node"""
+        return self.tk.call(node_handle, "insert", children_nodes)
+
+    def delete_node(self, node_handle):
+        """Delete the given node"""
+        return self.tk.call(node_handle, "destroy")
 
     def get_current_node(self, event):
         """Get current node"""

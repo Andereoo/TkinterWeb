@@ -119,9 +119,6 @@ myhtmlframe.bind("<Button-3>", on_right_click)
 The above code will call `on_right_click` every time the user right-clicks on the HtmlFrame widget.
 This can be extended with the following:
 ```
-def open_in_new_tab(url):
-    myhtmlframe.load_website(url)
-   
 def on_right_click(event):
   url = myhtmlframe.get_current_link() #get the current link
   if url: #if mouse was clicked on a link

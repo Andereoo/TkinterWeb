@@ -344,6 +344,17 @@ class HtmlFrame(ttk.Frame):
             self.cursor = cursor
             self.config(cursor=cursor)
 
+    def get_current_link(self, resolve=True):
+        "Convenience method for getting the url of the current hyperlink"
+        if self.get_currently_hovered_node_tag().lower() == "a": 
+            href = self.get_currently_hovered_node_attribute("href")
+            if resolve:
+                return self.resolve_url(href)
+            else:
+                return href
+        else:
+            return ""
+
     def get_currently_hovered_node_tag(self):
         "Get the tag of the HTML element the mouse pointer is currently over"
         try:

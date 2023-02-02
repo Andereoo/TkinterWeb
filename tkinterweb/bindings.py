@@ -600,14 +600,27 @@ class TkinterWeb(tk.Widget):
         """Handle <form> elements"""
         if not self.forms_enabled:
             return
-        inputs = list(self.tk.call(self, "search", "INPUT,SELECT,TEXTAREA,BUTTON"))
+
+        """inputs = list(self.tk.call(self, "search", "INPUT,SELECT,TEXTAREA,BUTTON"))
         for i in inputs:
             if i in self.form_elements:
                 inputs.remove(i)
             else:
-                self.form_elements[i] = node
-        self.loaded_forms[node] = inputs
+                self.form_elements[i] = node"""
+
+        inputs = []
+        def scan(form):
+            for i in self.get_node_children(form):
+                tag = self.get_node_tag(i)
+                if tag:
+                    scan(i)
+                if tag.lower() in {"input", "select", "textarea", "button"}:
+                    inputs.append(i)
+                    self.form_elements[i] = node
         
+        scan(node)
+        self.loaded_forms[node] = inputs
+
         self.message_func("Successfully setup <form> element.")
 
     def on_select(self, node):

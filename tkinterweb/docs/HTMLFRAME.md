@@ -121,9 +121,8 @@ def open_in_new_tab(url):
     myhtmlframe.load_website(url)
    
 def on_right_click(event):
-  if myhtmlframe.get_currently_hovered_node_tag() == "a": #if the mouse is over a link
-      link = myhtmlframe.get_currently_hovered_node_attribute("href") #get the link's url
-      url = myhtmlframe.resolve_url(link) #get a full url from the link
+  url = myhtmlframe.get_current_link() #get the current link
+  if url: #if mouse was clicked on a link
       menu = tk.Menu(root, tearoff=0) #create the menu
       menu.add_command(label="Open %s" % url, command=lambda url=url: myhtmlframe.load_url(url)) #add a button to the menu showing the url
       menu.tk_popup(event.x_root, event.y_root, 0) #show the menu
@@ -439,6 +438,13 @@ Enable or disable showing a broken image icon whenever an image can't be loaded.
 
 Parameters
 * **value** *(boolean)* - Specifies whether invalid images should or should not be ignored.
+
+---
+#### **get_current_link**(resolve=True)
+Convenience method for getting the url of the current hyperlink.
+
+Parameters
+* **resolve** *(boolean)* - If True, the url will be resolved before being returned. Otherwise, it will be returned as-is.
 
 ---
 #### **get_currently_hovered_node_tag**()

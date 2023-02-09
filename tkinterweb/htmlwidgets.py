@@ -166,7 +166,7 @@ class HtmlFrame(ttk.Frame):
                 if threadname().isrunning():
                     self.url_change_func(newurl)
                     if "image" in filetype:
-                        image, error = newimage(data, "_htmlframe_img_{}_{}_".format(id(self), self.image_count), filetype)
+                        image, error = newimage(data, "_htmlframe_img_{}_{}_".format(id(self), self.image_count), filetype, self.html.image_inversion_enabled)
                         self.load_html("<img style='max-width:100%' src='replace:{}'></img".format(image))
                         self.image_count += 1
                         self.image = image

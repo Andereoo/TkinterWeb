@@ -137,6 +137,7 @@ class TkinterWeb(tk.Widget):
         self.form_elements = {}
         self.loaded_forms = {}
         self.radio_buttons = {}
+        self.waiting_forms = 0
 
         # other UI variables
         self.cursors = {
@@ -191,6 +192,8 @@ class TkinterWeb(tk.Widget):
                      self.register(self.on_object))
         self.tk.call(self._w, "handler", "node", "iframe",
                      self.register(self.on_iframe))
+        self.tk.call(self._w, "handler", "node", "table",
+                     self.register(self.on_table))
 
     def placeholder(self, *args, **kwargs):
         """Blank placeholder function. The only purpose of this is to
@@ -281,6 +284,7 @@ class TkinterWeb(tk.Widget):
         self.form_get_commands = {}
         self.form_elements = {}
         self.loaded_forms = {}
+        self.waiting_forms = 0
         self.radio_buttons = {}
         self.prev_hovered_nodes = []
         self.on_embedded_node = None
@@ -601,13 +605,6 @@ class TkinterWeb(tk.Widget):
         if not self.forms_enabled:
             return
 
-        """inputs = list(self.tk.call(self, "search", "INPUT,SELECT,TEXTAREA,BUTTON"))
-        for i in inputs:
-            if i in self.form_elements:
-                inputs.remove(i)
-            else:
-                self.form_elements[i] = node"""
-
         inputs = []
         def scan(form):
             for i in self.get_node_children(form):
@@ -617,11 +614,38 @@ class TkinterWeb(tk.Widget):
                 if tag.lower() in {"input", "select", "textarea", "button"}:
                     inputs.append(i)
                     self.form_elements[i] = node
-        
         scan(node)
-        self.loaded_forms[node] = inputs
+        if len(inputs) == 0:
+            self.waiting_forms += 1
+        else:
+            self.loaded_forms[node] = inputs
+            self.message_func("Successfully setup <form> element.")
 
-        self.message_func("Successfully setup <form> element.")
+    def on_table(self, node):
+        """Handle <form> elements in tables; workaround for Bug #48"""
+        if not self.forms_enabled:
+            return
+        
+        if self.waiting_forms > 0:
+            inputs = {}
+            def scan(element, form):                        
+                for i in self.get_node_children(element):
+                    tag = self.get_node_tag(i).lower()
+                    if tag == "form":
+                        form = i
+                    elif tag.lower() in {"input", "select", "textarea", "button"}:
+                        if form in inputs:
+                            inputs[form].append(i)
+                        else:
+                            inputs[form] = [i]
+                        self.form_elements[i] = form
+                    if tag:
+                        scan(i, form)
+            scan(node, node)
+            for form in inputs:
+                self.loaded_forms[form] = inputs[form]
+                self.message_func("Successfully setup table <form> element.")
+                self.waiting_forms -= 1
 
     def on_select(self, node):
         """Handle <select> elements"""

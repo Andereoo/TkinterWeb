@@ -1,9 +1,9 @@
 """
-TkinterWeb v3.16
+TkinterWeb v3.17
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
 
-Copyright (c) 2022 Andereoo
+Copyright (c) 2023 Andereoo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -54,7 +54,7 @@ See https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/docs/FAQ.md for 
 
 __title__ = 'TkinterWeb'
 ___author__ = "Andereoo"
-__version__ = '3.16'
+__version__ = '3.17'
 __all__ = ['HtmlFrame', 'HtmlLabel', 'TkinterWeb', 'Demo']
 
 

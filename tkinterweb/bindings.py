@@ -315,30 +315,33 @@ class TkinterWeb(tk.Widget):
         selector; return a Tkhtml3 node if found."""
         return self.tk.call(self._w, "search", selector)
 
-    def zoom(self, multiplier):
+    def set_zoom(self, multiplier):
         """Set and get the page zoom"""
-        if multiplier:
-            self.tk.call(self._w, "configure", "-zoom", multiplier)
-        else:
-            return self.tk.call(self._w, "cget", "-zoom")
+        self.tk.call(self._w, "configure", "-zoom", float(multiplier))
+        
+    def get_zoom(self):
+        """Return the page zoom"""
+        return self.tk.call(self._w, "cget", "-zoom")
 
-    def parsemode(self, mode):
-        """Set and get the page render mode"""
-        if mode:
-            self.tk.call(self._w, "configure", "-parsemode", mode)
-        else:
-            return self.tk.call(self._w, "cget", "-parsemode")
+    def set_parsemode(self, mode):
+        """Set and page render mode"""
+        self.tk.call(self._w, "configure", "-parsemode", mode)
+        
+    def get_parsemode(self):
+        """Return the page render mode"""
+        return self.tk.call(self._w, "cget", "-parsemode")
+
+    def set_fontscale(self, multiplier):
+        """Set the font zoom"""
+        self.tk.call(self._w, "configure", "-fontscale", multiplier)
+
+    def get_fontscale(self, multiplier):
+        """Return the font zoom"""
+        return self.tk.call(self._w, "cget", "-fontscale")
 
     def shrink(self, value):
         """Set shrink value for html widget"""
         self.tk.call(self._w, "configure", "-shrink", value)
-
-    def fontscale(self, multiplier):
-        """Set and get the font zoom"""
-        if multiplier:
-            self.tk.call(self._w, "configure", "-fontscale", multiplier)
-        else:
-            return self.tk.call(self._w, "cget", "-fontscale")
 
     def xview(self, *args):
         """Used to control horizontal scrolling."""
@@ -1230,6 +1233,9 @@ class TkinterWeb(tk.Widget):
 
     def find_text(self, searchtext, select, ignore_case, highlight_all):
         """Search for and highlight specific text in the document"""
+
+        self.clear_selection()
+        
         nmatches = 0
         matches = []
         selected = []
@@ -1322,6 +1328,19 @@ class TkinterWeb(tk.Widget):
         """Get full url from partial url"""
         return urljoin(self.base_url, href)
 
+    def select_all(self):
+        """Select all of the text in the document"""
+        self.clear_selection()
+        beginning = self.text("index", 0)
+        end = self.text("index", len(self.text("text")))
+        self.tag("add", "selection", beginning[0], beginning[1], end[0], end[1]) 
+        self.tag("configure", "selection", "-background", "#3584e4")
+
+    def clear_selection(self):
+        """Clear current selection possible"""
+        self.tag("delete", "selection")
+        self.selection_start_node = None    
+
     def start_selection(self, event):
         """Make selection possible"""
         self.focus_set()
@@ -1333,11 +1352,16 @@ class TkinterWeb(tk.Widget):
 
     def extend_selection(self, event):
         """Alter selection and HTML element states based on mouse movement"""
-        self.tag("delete", "selection")
         if self.selection_start_node is None:
+            self.tag("delete", "selection")
             return
         try:
             self.selection_end_node, self.selection_end_offset = self.node(True, event.x, event.y)
+
+            if self.selection_end_node is None:
+                return
+            else:
+                self.tag("delete", "selection")
 
             self.tag("add", "selection", 
                     self.selection_start_node,

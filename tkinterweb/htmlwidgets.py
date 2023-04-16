@@ -97,6 +97,17 @@ class HtmlFrame(ttk.Frame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
 
+        #Redirected commands
+        self.select_all = self.html.select_all
+        self.bind = self.html.bind
+        self.set_zoom = self.html.set_zoom
+        self.get_zoom = self.html.get_zoom
+        self.set_fontscale = self.html.set_fontscale
+        self.get_fontscale = self.html.get_fontscale
+        self.set_parsemode = self.html.set_parsemode
+        self.get_parsemode = self.html.get_parsemode
+        self.resolve_url = self.html.resolve_url
+
     def load_website(self, website_url, decode=None, force=False):
         "Load a website from the specified URL"
         if (not website_url.startswith("https://")) and (not website_url.startswith("http://")) and (not website_url.startswith("about:")):
@@ -206,41 +217,9 @@ class HtmlFrame(ttk.Frame):
         self.url_change_func(self.current_url)
         self.done_loading()
 
-    def bind(self, *args, **kwargs):
-        "Redirect bindings"
-        self.html.bind(*args, **kwargs)
-
     def done_loading(self):
         self.in_progress = False
         self.done_loading_func()
-
-    def set_zoom(self, multiplier):
-        "Set the zoom multiplier"
-        self.html.zoom(float(multiplier))
-
-    def get_zoom(self):
-        "Get the zoom multiplier"
-        return self.html.zoom(None)
-
-    def set_fontscale(self, multiplier):
-        "Set the fontsize multiplier"
-        self.html.fontscale(float(multiplier))
-
-    def get_fontscale(self):
-        "Get the fontsize multiplier"
-        return self.html.fontscale(None)
-
-    def set_parsemode(self, mode):
-        "Set the page render mode"
-        self.html.parsemode(mode)
-
-    def get_parsemode(self):
-        "Get the page render mode"
-        return self.html.parsemode(None)
-     
-    def resolve_url(self, url):
-        "Get full url from partial url"
-        return self.html.resolve_url(url)
 
     def on_link_click(self, function):
         "Allows for handling link clicks"

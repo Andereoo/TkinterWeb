@@ -103,6 +103,12 @@ class TkinterWeb(tk.Widget):
         self.currently_hovered_node = ""
         self.recursive_hovering_count = 5
         self.max_thread_count = 20
+        self.find_match_highlight_color = "#ef0fff"
+        self.find_match_text_color = "#fff"
+        self.find_current_highlight_color = "#38d878"
+        self.find_current_text_color = "#fff"
+        self.selected_text_highlight_color = "#3584e4"
+        self.selected_text_color = "#fff"
         self.visited_links = []
         self.title_change_func = self.placeholder
         self.icon_change_func = self.placeholder
@@ -1275,11 +1281,11 @@ class TkinterWeb(tk.Widget):
                 for match in matches:
                     node1, index1, node2, index2 = match
                     self.tag("add", "findtext", node1, index1, node2, index2)
-                    self.tag("configure", "findtext", "-bg", "#ef0fff", "-fg", "white")
+                    self.tag("configure", "findtext", "-bg", self.find_match_highlight_color, "-fg", self.find_match_text_color)
                     
                 node1, index1, node2, index2 = selected
                 self.tag("add", "findtextselected", node1, index1, node2, index2)
-                self.tag("configure", "findtextselected", "-bg", "#38d878", "-fg", "white")
+                self.tag("configure", "findtextselected", "-bg", self.find_current_highlight_color, "-fg", self.find_current_text_color)
 
                 #scroll to node if selected match is not visible
                 nodebox = self.text("bbox", node1, index1, node2, index2)
@@ -1334,7 +1340,7 @@ class TkinterWeb(tk.Widget):
         beginning = self.text("index", 0)
         end = self.text("index", len(self.text("text")))
         self.tag("add", "selection", beginning[0], beginning[1], end[0], end[1]) 
-        self.tag("configure", "selection", "-background", "#3584e4")
+        self.tag("configure", "selection", "-bg", self.selected_text_highlight_color, "-fg", self.selected_text_color)
 
     def clear_selection(self):
         """Clear current selection possible"""
@@ -1368,7 +1374,7 @@ class TkinterWeb(tk.Widget):
                     self.selection_start_offset, 
                     self.selection_end_node, 
                     self.selection_end_offset)
-            self.tag("configure", "selection", "-background", "#3584e4")
+            self.tag("configure", "selection", "-bg", self.selected_text_highlight_color, "-fg", self.selected_text_color)
 
             if self.prev_active_node is not None:
                 if len(self.get_selection()) > 0:

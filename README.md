@@ -38,7 +38,7 @@ Some other tricks, such as handling page title changes or link clicks, can be fo
 &nbsp;
 &nbsp;
 ## Installation
-**To install TkinterWeb, simply type `pip install tkinterweb` in the command prompt or terminal.**
+To install TkinterWeb, simply type `pip install tkinterweb` in the command prompt or terminal.
 That's it.
 
 &nbsp;

@@ -212,7 +212,7 @@ Stop loading this page.
 This will abandon all pending requests and show the document as it is.
 
 ---
-#### **find_text**(searchtext, select=1, ignore_case=True, highlight_all=True):
+#### **find_text**(searchtext, select=1, ignore_case=True, highlight_all=True)
 Search the document for text and highlight matches. 
 This will return the number of matches found.
 
@@ -224,6 +224,10 @@ Parameters
 
 Return type
 * *integer*
+
+---
+#### **select_all**()
+Select all text found in the current document. 
 
 ---
 #### **on_link_click**(function)

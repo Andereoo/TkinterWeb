@@ -1320,7 +1320,7 @@ class TkinterWeb(tk.Widget):
         widgetid.enable_objects(self.objects_enabled)
         widgetid.enable_caches(self.caches_enabled)
 
-        widgetid.set_parsemode(self.parsemode(None))
+        widgetid.set_parsemode(self.get_parsemode())
 
         if html:
             widgetid.load_html(html, url)

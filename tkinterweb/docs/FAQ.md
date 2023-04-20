@@ -10,7 +10,7 @@
 * Like any other Tkinter widget, mouse and keyboard events can be bound to the HtmlFrame widget. For example, the following would open a pop-up menu when the user right-clicks on a link. The menu would contain a button with the url that, when clicked, would open the link:
 ```
 def on_right_click(event):
-  url = myhtmlframe.get_current_link() #get the current link
+  url = myhtmlframe.get_current_link(resolve=True) #get the current link
   if url: #if mouse was clicked on a link
       menu = tk.Menu(root, tearoff=0) #create the menu
       menu.add_command(label="Open %s" % url, command=lambda url=url: myhtmlframe.load_url(url)) #add a button to the menu showing the url

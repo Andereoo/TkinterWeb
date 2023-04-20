@@ -45,7 +45,7 @@ That's it.
 &nbsp;
 ## Dependencies
 **In order to load webpages and show images, TkinterWeb requires the following packages:**
-* Tkinter (which is automatically installed on most Python versions)
+* Tkinter (which is automatically packaged with most Python installations)
 * PIL (can be installed via `pip install pillow`)
 * PIL.ImageTk (may be automatically installed with PIL on some systems, otherwise needs to be installed)
 

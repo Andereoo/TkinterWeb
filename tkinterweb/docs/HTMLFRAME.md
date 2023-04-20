@@ -120,7 +120,7 @@ The above code will call `on_right_click` every time the user right-clicks on th
 This can be extended with the following:
 ```
 def on_right_click(event):
-  url = myhtmlframe.get_current_link() #get the current link
+  url = myhtmlframe.get_current_link(resolve=True) #get the current link
   if url: #if mouse was clicked on a link
       menu = tk.Menu(root, tearoff=0) #create the menu
       menu.add_command(label="Open %s" % url, command=lambda url=url: myhtmlframe.load_url(url)) #add a button to the menu showing the url

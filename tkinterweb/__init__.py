@@ -54,7 +54,7 @@ See https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/docs/FAQ.md for 
 
 __title__ = 'TkinterWeb'
 ___author__ = "Andereoo"
-__version__ = '3.17'
+__version__ = '3.18'
 __all__ = ['HtmlFrame', 'HtmlLabel', 'TkinterWeb', 'Demo']
 
 

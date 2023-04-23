@@ -883,6 +883,7 @@ class TkinterWeb(tk.Widget):
         """Handle click releases on <a> nodes"""
         if self.is_selecting:
             self.is_selecting = False
+            self.current_node = None
             self.on_mouse_motion(event)
             return
 

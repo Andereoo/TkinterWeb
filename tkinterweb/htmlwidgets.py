@@ -68,6 +68,8 @@ class HtmlFrame(ttk.Frame):
             vsb.bind("<MouseWheel>", self.scroll)
             vsb.bind("<Button-4>", self.scroll_x11)
             vsb.bind("<Button-5>", self.scroll_x11)
+            html.bind("<Button-4>", self.overflow_scroll_x11)
+            html.bind("<Button-5>", self.overflow_scroll_x11)
             self.bind_class("{0}.document".format(html),
                             "<MouseWheel>", self.scroll)
             self.bind_class(html.scrollable_node_tag,
@@ -453,6 +455,13 @@ class HtmlFrame(ttk.Frame):
                 self.scroll_overflow.scroll_x11(event)
             else:
                 self.html.yview_scroll(4, "units")
+    
+    def overflow_scroll_x11(self, event):
+        yview = self.html.yview()
+        if event.num == 4 and self.scroll_overflow and yview[0] == 0:
+            self.scroll_overflow.scroll_x11(event)
+        elif self.scroll_overflow and yview[1] == 1:
+            self.scroll_overflow.scroll_x11(event)
 
     def load_html(self, html_source, base_url=None):
         "Reset parser and send html code to it"

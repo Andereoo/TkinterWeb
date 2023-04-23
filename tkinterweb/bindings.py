@@ -1,3 +1,29 @@
+"""
+TkinterWeb v3.18
+This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
+which displays styled HTML documents in Tkinter.
+
+Copyright (c) 2023 Andereoo
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
 try:
     from urllib.parse import urljoin, urlparse, urlunparse, urlencode
 except ImportError:
@@ -51,11 +77,10 @@ class Combobox(tk.Widget):
         val = self.tk.call(self._w, "curselection")[0]
         return self.values[val]
 
-
 class TkinterWeb(tk.Widget):
     """Bindings for the Tkhtml3 HTML widget"""
 
-    def __init__(self, master, message_func, embed_obj, cfg={}, **kwargs):
+    def __init__(self, master, message_func, embed_obj, scroll_overflow=True, cfg={}, **kwargs):
         self.message_func = message_func
         folder = get_tkhtml_folder()
 
@@ -66,13 +91,15 @@ class TkinterWeb(tk.Widget):
                 platform.system(),
                 str(sys.version_info[0:3]).replace(", ", ".").replace(")", "").replace("(", "")))
 
-        # pre-load custom stylesheet and register the image loading infrastructure
+        # pre-load custom stylesheet, set default parse mode, and register image loading infrastructure
         if "imagecmd" not in kwargs:
             kwargs["imagecmd"] = master.register(self.on_image)
         if "defaultstyle" not in kwargs:
             kwargs["defaultstyle"] = DEFAULTSTYLE
         if "parsemode" not in kwargs:
             kwargs["parsemode"] = DEFAULTPARSEMODE
+        #if "logcmd" not in kwargs:
+        #    kwargs["logcmd"] = tkhtml_notifier
 
         # catch htmldrawcleanup crashes on supported platforms
         if (platform.system() == "Windows") or (platform.system() == "Linux" and sys.maxsize > 2**32):
@@ -100,8 +127,7 @@ class TkinterWeb(tk.Widget):
         self.dark_theme_enabled = False
         self.image_inversion_enabled = False
         self.base_url = ""
-        self.currently_hovered_node = ""
-        self.recursive_hovering_count = 5
+        self.recursive_hovering_count = 10
         self.max_thread_count = 20
         self.find_match_highlight_color = "#ef0fff"
         self.find_match_text_color = "#fff"
@@ -117,6 +143,11 @@ class TkinterWeb(tk.Widget):
         self.form_submit_func = self.placeholder
         self.done_loading_func = self.placeholder
         self.downloading_resource_func = self.placeholder
+
+        if scroll_overflow:
+            self.scroll_overflow = master
+        else:
+            self.scroll_overflow = None
 
         # widget status variables
         self.embed_obj = embed_obj
@@ -134,8 +165,9 @@ class TkinterWeb(tk.Widget):
         self.selection_end_node = None
         self.selection_end_offset = None
         self.prev_active_node = None
-        self.prev_hovered_nodes = []
-        self.prev_cursor = ""
+        self.current_node = None
+        self.hovered_nodes = []
+        self.current_cursor = ""
 
         # enable form resetting and submission
         self.form_get_commands = {}
@@ -163,7 +195,7 @@ class TkinterWeb(tk.Widget):
         
         # set up bindtags
         self.node_tag = "tkinterweb.{0}.nodes".format(id(self))
-        self.scrollable_node_tag = "tkinterweb.{0}.nodes".format(id(self))
+        self.scrollable_node_tag = "tkinterweb.{0}.scrollablenodes".format(id(self))
         self.add_bindtags(self, False)
 
         # bindings
@@ -292,7 +324,8 @@ class TkinterWeb(tk.Widget):
         self.loaded_forms = {}
         self.waiting_forms = 0
         self.radio_buttons = {}
-        self.prev_hovered_nodes = []
+        self.hovered_nodes = []
+        self.current_node = None
         self.on_embedded_node = None
         self.tk.call(self._w, "reset")
 
@@ -305,7 +338,11 @@ class TkinterWeb(tk.Widget):
     def node(self, *args):
         """Retrieve one or more document
         node handles from the current document."""
-        return self.tk.call(self._w, "node", *args)
+        nodes = self.tk.call(self._w, "node", *args)
+        if nodes:
+            return nodes
+        else:
+            return None, None
 
     def text(self, *args):
         """Enable interaction with the text of the HTML document."""
@@ -410,6 +447,14 @@ class TkinterWeb(tk.Widget):
         """Delete the given node"""
         return self.tk.call(node_handle, "destroy")
 
+    def set_node_flags(self, node, name):
+        """Set dynamic flags on the given node"""
+        self.tk.call(node, "dynamic", "set", name)
+    
+    def remove_node_flags(self, node, name):
+        """Set dynamic flags on the given node"""
+        self.tk.call(node, "dynamic", "clear", name)
+
     def get_current_node(self, event):
         """Get current node"""
         return self.tk.eval("""set node [lindex [lindex [{0} node {1} {2}] end] end]""".format(self, event.x, event.y))
@@ -503,12 +548,12 @@ class TkinterWeb(tk.Widget):
 
     def on_a(self, node):
         """Handle <a> elements"""
-        self.tk.call(node, "dynamic", "set", "link")
+        self.set_node_flags(node, "link")
         try:
             href = self.get_node_attribute(node, "href")
             url = self.resolve_url(href)
             if url in self.visited_links:
-                self.tk.call(node, "dynamic", "set", "visited")
+                self.set_node_flags(node, "visited")
         except tk.TclError:
             pass
 
@@ -689,7 +734,7 @@ class TkinterWeb(tk.Widget):
         """Handle <textarea> elements"""
         if not self.forms_enabled:
             return
-        widgetid = ScrolledTextBox(self, borderwidth=0, selectborderwidth=0, highlightthickness=0)
+        widgetid = ScrolledTextBox(self, scroll_overflow=self.scroll_overflow, borderwidth=0, selectborderwidth=0, highlightthickness=0)
         widgetid.bind("<<ScrollbarShown>>", widgetid.reset_bindtags)
         widgetid.bind("<<ScrollbarHidden>>", lambda event, widgetid=widgetid: self.add_bindtags(widgetid))
         self.form_get_commands[node] = lambda: widgetid.get("1.0", 'end-1c')
@@ -774,132 +819,19 @@ class TkinterWeb(tk.Widget):
 
     def on_click(self, event):
         """Set active element flags"""
-        self.start_selection(event)
-        try:
-            node_handle = self.get_current_node(event)
-            if node_handle == "":
-                return
-        except ValueError:
-            self.selection_start_node = None
-            return
+        
+        self.focus_set()
+        self.tag("delete", "selection")
+        node_handle = self.get_current_node(event)
 
-        if self.stylesheets_enabled:
-            try:
-                self.tk.call(node_handle, "dynamic", "set", "active")
-            except Exception:
-                try:
+        if node_handle:
+            self.selection_start_node, self.selection_start_offset = self.node(True, event.x, event.y)
+
+            if node_handle and self.stylesheets_enabled:
+                if not self.get_node_tag(node_handle):
                     node_handle = self.get_current_node_parent(node_handle)
-                    self.tk.call(node_handle, "dynamic", "set", "active")
-                except Exception:
-                    pass
-        self.prev_active_node = node_handle
-
-    def on_click_release(self, event):
-        """Handle click releases on <a> nodes"""
-        self.is_selecting = False
-
-        try:
-            node_handle = self.get_current_node(event)
-            parent = self.get_current_node_parent(node_handle)
-
-            node_tag = self.get_node_tag(node_handle).lower()
-            parent_tag = self.get_node_tag(parent).lower()
-            node_type = self.get_node_attribute(node_handle, "type").lower()
-            parent_type = self.get_node_attribute(parent, "type").lower()
-
-            if self.prev_active_node and self.stylesheets_enabled:
-                self.tk.call(self.prev_active_node,"dynamic", "clear", "active")
-
-            if node_handle != self.prev_active_node and parent != self.prev_active_node:
-                for i in self.prev_hovered_nodes:
-                    if self.get_node_tag(i) == "a":
-                        self.tk.call(i, "dynamic", "set", "visited")
-                        self.handle_link_click(i)
-                        break
-            elif node_tag == "input" and node_type == "reset":
-                self.handle_form_reset(node_handle)
-            elif node_tag == "input" and node_type == "submit":
-                self.handle_form_submission(node_handle)
-            elif node_tag == "input" and node_type == "image":
-                self.handle_form_submission(node_handle)
-            elif node_tag == "button" and node_type == "submit":
-                self.handle_form_submission(node_handle)
-            elif node_tag == "a":
-                self.tk.call(node_handle, "dynamic", "set", "visited")
-                self.handle_link_click(node_handle)
-            elif parent_tag == "input" and parent_type == "reset":
-                self.handle_form_submission(parent)
-            elif parent_tag == "input" and parent_type == "submit":
-                self.handle_form_submission(parent)
-            elif parent_tag == "input" and parent_type == "image":
-                self.handle_form_submission(parent)
-            elif parent_tag == "button" and parent_type == "submit":
-                self.handle_form_submission(parent)
-            elif parent_tag == "a":
-                self.tk.call(parent, "dynamic", "set", "visited")
-                self.handle_link_click(parent)
-            else:
-                for i in self.prev_hovered_nodes:
-                    if self.get_node_tag(i) == "a":
-                        self.tk.call(i, "dynamic", "set", "visited")
-                        self.handle_link_click(i)
-                        break
-        except Exception:
-            pass
-
-        self.prev_active_node = None
-
-    def on_mouse_motion(self, event):
-        """Set hover flags and handle the CSS 'cursor' property"""
-        if self.is_selecting:
-            return
-        if self.on_embedded_node is None:
-            try:
-                node_handle = self.get_current_node(event)
-                if node_handle == "":
-                    self.on_leave(None)
-                    return
-
-            except ValueError:
-                self.on_leave(None)
-                return
-        else:
-            node_handle = self.on_embedded_node
-
-        self.currently_hovered_node = node_handle
-        can_set = False
-
-        self.handle_cursor_change(node_handle)
-
-        if self.stylesheets_enabled:
-            try:
-                if self.prev_hovered_nodes == []:
-                    can_set = True
-                elif node_handle != self.prev_hovered_nodes[0]:
-                    can_set = True
-                if can_set:
-                    for node in self.prev_hovered_nodes:
-                        self.tk.call(node, "dynamic", "clear", "hover")
-                    self.tk.call(node_handle, "dynamic", "set", "hover")
-            except Exception:
-                try:
-                    node_handle = self.get_current_node_parent(node_handle)
-                    if self.prev_hovered_nodes == []:
-                        can_set = True
-                    elif node_handle != self.prev_hovered_nodes[0]:
-                        can_set = True
-                    if can_set:
-                        for node in self.prev_hovered_nodes:
-                            self.tk.call(node, "dynamic", "clear", "hover")
-                        self.tk.call(node_handle, "dynamic", "set", "hover")
-                except Exception:
-                    can_set = False
-
-        self.prev_hovered_nodes = [node_handle]
-        try:
-            self.handle_recursive_hovering(self.get_current_node_parent(node_handle), self.recursive_hovering_count)
-        except Exception:
-            pass
+                self.set_node_flags(node_handle, "active")
+                self.prev_active_node = node_handle
 
     def on_leave(self, event):
         """Set the cursor to the default when leaving this widget"""
@@ -907,14 +839,109 @@ class TkinterWeb(tk.Widget):
         self.prev_cursor = ""
         if self.stylesheets_enabled:
             for node in self.prev_hovered_nodes:
+                self.tk.call(node, "dynamic", "clear", "hover")
+        self.prev_hovered_nodes = []
+
+    def on_mouse_motion(self, event):
+        """Set hover flags and handle the CSS 'cursor' property"""
+        if self.is_selecting:
+            return
+        if self.on_embedded_node:
+            node_handle = self.on_embedded_node
+        else:
+            node_handle = self.get_current_node(event)
+            if not node_handle:
+                self.on_leave(None)
+                return
+
+        if node_handle and node_handle != self.current_node and self.stylesheets_enabled:
+            old_handle = self.current_node
+            self.current_node = node_handle
+
+            if node_handle != old_handle:
+                is_text_node = False
+                if not self.get_node_tag(node_handle):
+                    node_handle = self.get_current_node_parent(node_handle)
+                    is_text_node = True
+
+                cursor = self.get_node_property(node_handle, "cursor")
+                if cursor in self.cursors:
+                    self.set_cursor(cursor)
+                elif is_text_node:
+                    self.set_cursor("text")
+                else:
+                    self.set_cursor("default")
+                        
+                for node in self.hovered_nodes:
+                    self.remove_node_flags(node, "hover")
+
+                self.hovered_nodes = []
+                self.handle_recursive_hovering(node_handle, self.recursive_hovering_count)
+
+
+    def on_click_release(self, event):
+        """Handle click releases on <a> nodes"""
+        if self.is_selecting:
+            self.is_selecting = False
+            self.on_mouse_motion(event)
+            return
+
+        node_handle = self.get_current_node(event)
+
+        try:
+            if node_handle:
+                node_tag = self.get_node_tag(node_handle).lower()
+
+                if not node_tag:
+                    node_handle = self.get_node_parent(node_handle)
+                    node_tag = self.get_node_tag(node_handle).lower()
+
+                node_type = self.get_node_attribute(node_handle, "type").lower()
+
+                if self.prev_active_node and self.stylesheets_enabled:
+                    self.remove_node_flags(self.prev_active_node, "active")
+                if node_tag == "a":
+                    self.set_node_flags(node_handle, "visited")
+                    self.handle_link_click(node_handle)
+                elif node_tag == "input" and node_type == "reset":
+                    self.handle_form_reset(node_handle)
+                elif node_tag == "input" and node_type == "submit":
+                    self.handle_form_submission(node_handle)
+                elif node_tag == "input" and node_type == "image":
+                    self.handle_form_submission(node_handle)
+                elif node_tag == "button" and node_type == "submit":
+                    self.handle_form_submission(node_handle)
+                else:
+                    for node in self.hovered_nodes:
+                        node_tag = self.get_node_tag(node).lower()
+                        if node_tag == "a":
+                            self.set_node_flags(node, "visited")
+                            self.handle_link_click(node)
+                            break
+                        elif node_tag == "button":
+                            if self.get_node_attribute(node, "type").lower() == "submit":
+                                self.handle_form_submission(node)
+                                break
+        except tk.TclError:
+            pass
+
+        self.prev_active_node = None
+
+    def on_leave(self, event):
+        """Set the cursor to the default when leaving this widget"""
+        self.set_cursor("default")
+        if self.stylesheets_enabled:
+            for node in self.hovered_nodes:
                 try:
-                    self.tk.call(node, "dynamic", "clear", "hover")
+                    self.remove_node_flags(node, "hover")
                 except tk.TclError:
                     pass
-        self.prev_hovered_nodes = []
+        self.hovered_nodes = []
+        self.current_node = None
 
     def on_embedded_mouse_motion(self, event, node_handle):
         self.on_embedded_node = node_handle
+        self.on_mouse_motion(event)
 
     def add_bindtags(self, widgetid, allowscrolling=True):
         """Add bindtags to allow scrolling and on_embedded_mouse function calls"""
@@ -922,7 +949,6 @@ class TkinterWeb(tk.Widget):
             tags = (self.node_tag, self.scrollable_node_tag,)
         else:
             tags = (self.node_tag,)
-
         widgetid.bindtags(widgetid.bindtags() + tags)
 
     def crash_prevention(self, data):
@@ -1041,32 +1067,6 @@ class TkinterWeb(tk.Widget):
         self.visited_links.append(url)
         self.link_click_func(url)
 
-    def handle_cursor_change(self, node_handle):
-        """Handle CSS 'cursor' property"""
-        try:
-            cursor = self.get_node_property(node_handle, "cursor")
-            cursor = self.cursors[cursor]
-            if self.prev_cursor != cursor:
-                self.cursor_change_func(cursor=cursor)
-                self.prev_cursor = cursor
-        except KeyError:
-            try:
-                cursor = self.get_node_property(self.get_current_node_parent(node_handle), "cursor")
-                cursor = self.cursors[cursor]
-                if self.prev_cursor != cursor:
-                    self.cursor_change_func(cursor=cursor)
-                    self.prev_cursor = cursor
-            except Exception:
-                if self.get_node_tag(node_handle) == "":
-                    if self.prev_cursor != "text":
-                        cursor = self.cursors["text"]
-                        self.cursor_change_func(cursor=cursor)
-                        self.prev_cursor = cursor
-                else:
-                    if self.prev_cursor != "":
-                        self.cursor_change_func(cursor="")
-                        self.prev_cursor = ""
-
     def handle_entry_reset(self, widgetid, content):
         """Reset tk.Entry widgets in HTML forms"""
         widgetid.delete(0, "end")
@@ -1143,10 +1143,7 @@ class TkinterWeb(tk.Widget):
             else:
                 self.tk.call(node, "replace", widgetid)
 
-        if allowscrolling:
-            self.add_bindtags(widgetid)
-        else:
-            self.add_bindtags(widgetid, False)
+        self.add_bindtags(widgetid, allowscrolling)
 
         widgetid.bind("<Enter>", lambda event, node_handle=node: self.on_embedded_mouse_motion(event, node_handle=node_handle))
         widgetid.bind("<Leave>", lambda event, node_handle=None: self.on_embedded_mouse_motion(event, node_handle=node_handle))
@@ -1185,21 +1182,23 @@ class TkinterWeb(tk.Widget):
                 fg = "white"
             widgetid.configure(background=bg, foreground=fg, font=font)
 
+    def set_cursor(self, cursor):
+        """Set document cursor"""
+
+        if self.current_cursor != cursor:
+            cursor = self.cursors[cursor]
+            self.cursor_change_func(cursor=cursor)
+            self.current_cursor = cursor
+
     def handle_recursive_hovering(self, node_handle, count):
-        """Set hover flags to the parents of
-        the hovered element as well"""
-        try:
-            if self.stylesheets_enabled:
-                self.tk.call(node_handle, "dynamic", "set", "hover")
-            self.prev_hovered_nodes.append(node_handle)
-        except Exception:
-            pass
-        try:
-            if count >= 1:
-                self.handle_recursive_hovering(
-                    self.get_current_node_parent(node_handle), count-1)
-        except Exception:
-            pass
+        """Set hover flags on the parents of the hovered element"""
+        self.set_node_flags(node_handle, "hover")
+        self.hovered_nodes.append(node_handle)
+
+        if count >= 1:
+            parent = self.get_current_node_parent(node_handle)
+            if parent:
+                self.handle_recursive_hovering(parent, count-1)
 
     def setup_widgets(self):
         """Replace Tkhtml nodes with Tk widgets when needed"""
@@ -1280,8 +1279,12 @@ class TkinterWeb(tk.Widget):
 
                 for match in matches:
                     node1, index1, node2, index2 = match
-                    self.tag("add", "findtext", node1, index1, node2, index2)
-                    self.tag("configure", "findtext", "-bg", self.find_match_highlight_color, "-fg", self.find_match_text_color)
+                    self.tag("add", "findtext", 
+                             node1, index1, 
+                             node2, index2)
+                    self.tag("configure", "findtext", 
+                             "-bg", self.find_match_highlight_color, 
+                             "-fg", self.find_match_text_color)
                     
                 node1, index1, node2, index2 = selected
                 self.tag("add", "findtextselected", node1, index1, node2, index2)
@@ -1308,19 +1311,8 @@ class TkinterWeb(tk.Widget):
             return 0
 
     def create_iframe(self, node, url, html=None):
-        widgetid = self.embed_obj(self, False)
-                
-        widgetid.set_message_func(self.message_func)
-        widgetid.set_recursive_hover_depth(self.recursive_hovering_count)
-        widgetid.set_maximum_thread_count(self.max_thread_count)
-        widgetid.ignore_invalid_images(self.ignore_invalid_images)
-        widgetid.enable_stylesheets(self.stylesheets_enabled)
-        widgetid.enable_images(self.images_enabled)
-        widgetid.enable_forms(self.forms_enabled)
-        widgetid.enable_objects(self.objects_enabled)
-        widgetid.enable_caches(self.caches_enabled)
-
-        widgetid.set_parsemode(self.get_parsemode())
+        widgetid = self.embed_obj(self, False, scroll_overflow=self.scroll_overflow)
+        widgetid.copy_settings(self)
 
         if html:
             widgetid.load_html(html, url)
@@ -1347,51 +1339,39 @@ class TkinterWeb(tk.Widget):
         self.tag("delete", "selection")
         self.selection_start_node = None    
 
-    def start_selection(self, event):
-        """Make selection possible"""
-        self.focus_set()
-        self.tag("delete", "selection")
-        try:
-            self.selection_start_node, self.selection_start_offset = self.node(True, event.x, event.y)
-        except ValueError:
-            self.selection_start_node = None
-
     def extend_selection(self, event):
         """Alter selection and HTML element states based on mouse movement"""
         if self.selection_start_node is None:
             self.tag("delete", "selection")
             return
+        
         try:
             self.selection_end_node, self.selection_end_offset = self.node(True, event.x, event.y)
-
+            
             if self.selection_end_node is None:
                 return
-            else:
-                self.tag("delete", "selection")
 
+            self.tag("delete", "selection")
             self.tag("add", "selection", 
                     self.selection_start_node,
                     self.selection_start_offset, 
                     self.selection_end_node, 
                     self.selection_end_offset)
-            self.tag("configure", "selection", "-bg", self.selected_text_highlight_color, "-fg", self.selected_text_color)
-
-            if self.prev_active_node is not None:
-                if len(self.get_selection()) > 0:
-                    self.is_selecting = True
-                    if self.prev_cursor != "text":
-                        cursor = self.cursors["text"]
-                        self.cursor_change_func(cursor=cursor)
-                        self.prev_cursor = cursor
-                    if self.stylesheets_enabled:
-                        self.tk.call(self.prev_active_node, "dynamic", "clear", "active")
-                        for node in self.prev_hovered_nodes:
-                            self.tk.call(node, "dynamic", "clear", "hover")
-                    self.prev_active_node = None
-                    self.prev_hovered_nodes = []
-
-        except ValueError:
-            self.selection_end_node = None
+            self.tag("configure", "selection", 
+                    "-bg", self.selected_text_highlight_color, 
+                    "-fg", self.selected_text_color)
+            
+            self.set_cursor("text")
+            if not self.is_selecting and self.prev_active_node:
+                self.is_selecting = True
+                if self.stylesheets_enabled:
+                    self.remove_node_flags(self.prev_active_node, "active")
+                    for node in self.hovered_nodes:
+                        self.remove_node_flags(node, "hover")
+                self.prev_active_node = None
+                self.hovered_nodes = []
+        except tk.TclError:
+            self.set_cursor("default")
 
     def get_selection(self):
         """Return the currently selected text"""

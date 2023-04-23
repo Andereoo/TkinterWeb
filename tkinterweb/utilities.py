@@ -1,3 +1,29 @@
+"""
+TkinterWeb v3.18
+This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
+which displays styled HTML documents in Tkinter.
+
+Copyright (c) 2023 Andereoo
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
 import sys, os
 import platform
 import threading
@@ -555,18 +581,38 @@ class AutoScrollbar(ttk.Scrollbar):
 class ScrolledTextBox(tk.Frame):
     "Text widget with a scrollbar."
 
-    def __init__(self, parent, **kwargs):
+    def __init__(self, parent, scroll_overflow=None, **kwargs):
 
         tk.Frame.__init__(self, parent)
+
+        self.scroll_overflow = scroll_overflow
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.tbox = tbox = tk.Text(self, **kwargs)
-        tbox.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
+        tbox.grid(row=0, column=0, sticky="nsew")
 
         self.vsb = vsb = AutoScrollbar(self, command=tbox.yview)
         vsb.grid(row=0, column=1, sticky='nsew')
         tbox['yscrollcommand'] = self.check
+
+        tbox.bind("<MouseWheel>", self.scroll)
+        tbox.bind("<Button-4>", self.scroll_x11)
+        tbox.bind("<Button-5>", self.scroll_x11)
+
+    def scroll(self, event):
+        yview = self.tbox.yview()
+        if self.scroll_overflow and yview[0] == 0 and event.delta > 0:
+            self.scroll_overflow.scroll(event)
+        elif self.scroll_overflow and yview[1] == 1 and event.delta < 0:
+            self.scroll_overflow.scroll(event)
+
+    def scroll_x11(self, event):
+        yview = self.tbox.yview()
+        if event.num == 4 and self.scroll_overflow and yview[0] == 0:
+            self.scroll_overflow.scroll_x11(event)
+        elif event.num == 5 and self.scroll_overflow and yview[1] == 1:
+            self.scroll_overflow.scroll_x11(event)
 
     def check(self, *args):
         self.vsb.set(*args)
@@ -840,8 +886,7 @@ def load_tkhtml(master, location=None, force=False):
     global tkhtml_loaded
     if (not tkhtml_loaded) or force:
         if location:
-            path = ["linsert", "$auto_path", 0, location]
-            master.tk.call("set", "auto_path", path)
+            master.tk.eval("set auto_path [linsert $auto_path 0 {"+location+"}]")
         master.tk.eval("package require Tkhtml")
         tkhtml_loaded = True
 
@@ -852,7 +897,7 @@ def load_combobox(master, force=False):
     if not (combobox_loaded) or force:
         path = os.path.join(currentpath(), "tkhtml")
         master.tk.call("lappend", "auto_path", path)
-        master.tk.eval("package require combobox")
+        master.tk.call("package", "require", "combobox")
         combobox_loaded = True
 
 
@@ -863,3 +908,10 @@ def notifier(text):
     except Exception:
         "sys.stdout.write doesn't work in .pyw files."
         "Since .pyw files have no console, we can simply not bother printing messages."
+
+def tkhtml_notifier(name, text, *args):
+    "Tkhtml -logcmd printer."
+    try:
+        sys.stdout.write("DEBUG "+str(name)+": "+str(text)+"\n\n")
+    except Exception:
+        pass

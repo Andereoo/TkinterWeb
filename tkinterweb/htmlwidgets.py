@@ -1,3 +1,29 @@
+"""
+TkinterWeb v3.18
+This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
+which displays styled HTML documents in Tkinter.
+
+Copyright (c) 2023 Andereoo
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
 from bindings import TkinterWeb
 from utilities import (AutoScrollbar, StoppableThread, cachedownload, download,
                    notifier, currentpath, threadname)
@@ -18,7 +44,7 @@ except ImportError:
 
 
 class HtmlFrame(ttk.Frame):
-    def __init__(self, master, messages_enabled=True, vertical_scrollbar="auto", horizontal_scrollbar=False, **kw):
+    def __init__(self, master, messages_enabled=True, vertical_scrollbar="auto", horizontal_scrollbar=False, scroll_overflow=None, **kw):
         ttk.Frame.__init__(self, master, **kw)
 
         if messages_enabled:
@@ -67,8 +93,11 @@ class HtmlFrame(ttk.Frame):
             html.configure(xscrollcommand=hsb.set)
             hsb.grid(row=1, column=0, sticky=tk.NSEW)
 
+        self.bind("<Leave>", html.on_leave)
+
         # state and settings variables
         self.master = master
+        self.scroll_overflow = scroll_overflow
         self.current_url = ""
         self.cursor = ""
         self.image_count = 0
@@ -313,6 +342,18 @@ class HtmlFrame(ttk.Frame):
         self.html.image_inversion_enabled = invert_images
         self.html.update_default_style()
 
+    def copy_settings(self, html):
+        self.set_message_func(html.message_func)
+        self.set_recursive_hover_depth(html.recursive_hovering_count)
+        self.set_maximum_thread_count(html.max_thread_count)
+        self.ignore_invalid_images(html.ignore_invalid_images)
+        self.enable_stylesheets(html.stylesheets_enabled)
+        self.enable_images(html.images_enabled)
+        self.enable_forms(html.forms_enabled)
+        self.enable_objects(html.objects_enabled)
+        self.enable_caches(html.caches_enabled)
+        self.set_parsemode(html.get_parsemode())
+
     def find_text(self, searchtext, select=1, ignore_case=True, highlight_all=True):
         "Search for and highlight specific text"
         return self.html.find_text(searchtext, select, ignore_case, highlight_all)
@@ -337,10 +378,10 @@ class HtmlFrame(ttk.Frame):
     def get_currently_hovered_node_tag(self):
         "Get the tag of the HTML element the mouse pointer is currently over"
         try:
-            tag = self.html.get_node_tag(self.html.currently_hovered_node)
+            tag = self.html.get_node_tag(self.html.current_node)
             if tag == "":
                 tag = self.html.get_node_tag(
-                    self.html.get_node_parent(self.html.currently_hovered_node))
+                    self.html.get_node_parent(self.html.current_node))
         except tk.TclError:
             tag = ""
         return tag
@@ -348,10 +389,10 @@ class HtmlFrame(ttk.Frame):
     def get_currently_hovered_node_text(self):
         "Get the text content of the HTML element the mouse pointer is currently over"
         try:
-            text = self.html.get_node_text(self.html.currently_hovered_node)
+            text = self.html.get_node_text(self.html.current_node)
             if text == "":
                 text = self.html.get_node_text(
-                    self.html.get_node_parent(self.html.currently_hovered_node))
+                    self.html.get_node_parent(self.html.current_node))
         except tk.TclError:
             text = ""
         return text
@@ -364,10 +405,10 @@ class HtmlFrame(ttk.Frame):
         """
         try:
             attr = self.html.get_node_attribute(
-                self.html.currently_hovered_node, attribute)
+                self.html.current_node, attribute)
             if attr == "":
                 attr = self.html.get_node_attribute(self.html.get_node_parent(
-                    self.html.currently_hovered_node), attribute)
+                    self.html.current_node), attribute)
         except tk.TclError:
             attr = ""
         return attr
@@ -390,16 +431,28 @@ class HtmlFrame(ttk.Frame):
 
     def scroll(self, event):
         "Handle mouse/touchpad scrolling"
-        if platform.system() == "Darwin":
-            self.html.yview_scroll(int(-1*(event.delta)), "units")
+        yview = self.html.yview()
+        if self.scroll_overflow and yview[0] == 0 and event.delta > 0:
+            self.scroll_overflow.scroll(event)
+        elif self.scroll_overflow and yview[1] == 1 and event.delta < 0:
+            self.scroll_overflow.scroll(event)
+        elif platform.system() == "Darwin":
+            self.html.yview_scroll(int(-1*event.delta), "units")
         else:
-            self.html.yview_scroll(int(-1*(event.delta)/40), "units")
+            self.html.yview_scroll(int(-1*event.delta/30), "units")
 
     def scroll_x11(self, event):
+        yview = self.html.yview()
         if event.num == 4:
-            self.html.yview_scroll(-4, "units")
+            if self.scroll_overflow and yview[0] == 0:
+                self.scroll_overflow.scroll_x11(event)
+            else:
+                self.html.yview_scroll(-4, "units")
         else:
-            self.html.yview_scroll(4, "units")
+            if self.scroll_overflow and yview[1] == 1:
+                self.scroll_overflow.scroll_x11(event)
+            else:
+                self.html.yview_scroll(4, "units")
 
     def load_html(self, html_source, base_url=None):
         "Reset parser and send html code to it"

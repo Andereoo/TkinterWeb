@@ -1361,16 +1361,17 @@ class TkinterWeb(tk.Widget):
             self.tag("configure", "selection", 
                     "-bg", self.selected_text_highlight_color, 
                     "-fg", self.selected_text_color)
-            
-            self.set_cursor("text")
+
             if not self.is_selecting and self.prev_active_node:
-                self.is_selecting = True
-                if self.stylesheets_enabled:
-                    self.remove_node_flags(self.prev_active_node, "active")
-                    for node in self.hovered_nodes:
-                        self.remove_node_flags(node, "hover")
-                self.prev_active_node = None
-                self.hovered_nodes = []
+                if len(self.get_selection()) > 0:
+                    self.is_selecting = True
+                    self.set_cursor("text")
+                    if self.stylesheets_enabled:
+                        self.remove_node_flags(self.prev_active_node, "active")
+                        for node in self.hovered_nodes:
+                            self.remove_node_flags(node, "hover")
+                    self.prev_active_node = None
+                    self.hovered_nodes = []
         except tk.TclError:
             self.set_cursor("default")
 

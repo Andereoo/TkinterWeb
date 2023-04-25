@@ -197,7 +197,7 @@ class HtmlFrame(ttk.Frame):
                 url = str(url) + str(data)
 
             # if url is different than the current one, load the new site.
-            if force or (method == "POST") or (urldefrag(url)[0] != urldefrag(self.current_url)[0]):
+            if force or (method == "POST") or (self.skim(urldefrag(url)[0]) != self.skim(urldefrag(self.current_url)[0])):
                 self.message_func("Connecting to {0}.".format(parsed.netloc))
                 if (parsed.scheme == "file") or (not self.html.caches_enabled):
                     data, newurl, filetype = download(
@@ -239,6 +239,9 @@ class HtmlFrame(ttk.Frame):
             self.current_url = ""
 
         self.thread_in_progress = None
+
+    def skim(self, url):
+        return url.replace("/", "")
 
     def stop(self):
         "Stop loading a page"

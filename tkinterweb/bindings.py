@@ -819,6 +819,10 @@ class TkinterWeb(tk.Widget):
 
     def on_click(self, event):
         """Set active element flags"""
+
+        if not self.current_node:
+            #register current node if mouse has never moved
+            self.on_mouse_motion(event)
         
         self.focus_set()
         self.tag("delete", "selection")

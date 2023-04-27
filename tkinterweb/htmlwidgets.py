@@ -96,6 +96,7 @@ class HtmlFrame(ttk.Frame):
             hsb.grid(row=1, column=0, sticky=tk.NSEW)
 
         self.bind("<Leave>", html.on_leave)
+        self.bind("<Enter>", html.on_mouse_motion)
 
         # state and settings variables
         self.master = master

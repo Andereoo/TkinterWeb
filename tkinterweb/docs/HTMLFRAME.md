@@ -146,7 +146,7 @@ This will make a popup show if the user right-clicked on a link. Clicking link s
 ### Useful Methods:
 
 ---
-#### **load_website**(website_url, decode=None, force=False)
+#### `load_website(website_url, decode=None, force=False)`
 Loads and parses a website.
 
 Parameters
@@ -156,7 +156,7 @@ Parameters
 
 ---
 
-#### **load_file**(file_url, decode=None, force=False)
+#### `load_file(file_url, decode=None, force=False)`
 Loads and parses a local HTML file.
 
 Parameters
@@ -165,7 +165,7 @@ Parameters
 * **force** *(boolean)* - Force the page to reload all elements.
 
 ---
-#### **load_url**(url, decode=None, force=False)
+#### `load_url(url, decode=None, force=False)`
 Loads and parses html from the given url. A local file will be loaded if the url begins with "file://". If the url begins with "https://" or "http://", a website will be loaded. 
 
 Parameters
@@ -174,14 +174,14 @@ Parameters
 * **force** *(boolean)* - Force the page to reload all elements.
 
 ---
-#### **load_html**(html_source, base_url="")
+#### `load_html(html_source, base_url="")`
 Parses the supplied HTML code.
 
 Parameters
 * **html_source** *(string)* - Specifies the HTML code
 * **base_url** *(string)* - Specifies the base url to use when parsing stylesheets and images. If this argument is not supplied, it will be set to the current working directory.
 ---
-#### **load_form_data**(url, data, method="GET", decode=None)
+#### `load_form_data(url, data, method="GET", decode=None)`
 Submit the form data to a server.
 
 Parameters
@@ -191,7 +191,7 @@ Parameters
 * **decode** *(string)* - Specifies the decoding to use when loading the website.
 
 ---
-#### **add_html**(html_source)
+#### `add_html(html_source)`
 Send HTML code to the parser.
 Unlike `load_html`, `add_html` parses the specified HTML code and adds it to the end of the webpage without clearing the original document.
 
@@ -199,7 +199,7 @@ Parameters
 * **html_source** *(string)* - Specifies the code to parse and add to the end of the document. Must be valid HTML code.
 
 ---
-#### **add_css**(css_source)
+#### `add_css(css_source)`
 Send CSS stylesheets to the parser.
 This can be used to remotely alter the appearance of websites.
 
@@ -207,12 +207,12 @@ Parameters
 * **css_source** *(string)* - Specifies the code to parse. Must be valid CSS code.
 
 ---
-#### **stop**()
+#### `stop()`
 Stop loading this page.
 This will abandon all pending requests and show the document as it is.
 
 ---
-#### **find_text**(searchtext, select=1, ignore_case=True, highlight_all=True)
+#### `find_text(searchtext, select=1, ignore_case=True, highlight_all=True)`
 Search the document for text and highlight matches. 
 This will return the number of matches found.
 
@@ -226,11 +226,11 @@ Return type
 * *integer*
 
 ---
-#### **select_all**()
+#### `select_all()`
 Select all text found in the current document. 
 
 ---
-#### **on_link_click**(function)
+#### `on_link_click(function)`
 Set TkinterWeb to call the specified python function whenever a link is clicked.
 When a link is clicked on a webpage, a variable containing the url of the clicked link will be passed to the specified function.
 
@@ -238,7 +238,7 @@ Parameters
 * **function** *(python function)* - Specifies the function to call when a link is clicked.
 
 ---
-#### **on_form_submit**(function)
+#### `on_form_submit(function)`
 Set TkinterWeb to call the specified python function whenever a form is submitted.
 When an HTML form is submitted, three variables, one containing the url, a second containing the submission data, and a third containing the submission method (GET or POST) will be passed to the specified function.
 
@@ -246,7 +246,7 @@ Parameters
 * **function** *(python function)* - Specifies the function to call when a form is submitted.
 
 ---
-#### **on_title_change**(function)
+#### `on_title_change(function)`
 Set TkinterWeb to call the specified python function whenever the title of a website or file has changed.
 When the title of a webpage changes, a variable containing the new title will be passed to the specified function.
 
@@ -254,7 +254,7 @@ Parameters
 * **function** *(python function)* - Specifies the function to call when a title changes.
 
 ---
-#### **on_icon_change**(function)
+#### `on_icon_change(function)`
 Set TkinterWeb to call the specified python function whenever the icon of a website or file has changed.
 When the icon of a webpage changes, a variable containing the url of the new icon will be passed to the specified function.
 
@@ -262,7 +262,7 @@ Parameters
 * **function** *(python function)* - Specifies the function to call when the icon changes.
 
 ---
-#### **on_url_change**(function)
+#### `on_url_change(function)`
 Set TkinterWeb to call the specified python function whenever the HtmlFrame widget is navigating to a new url.
 When an new url is navigated to, a variable containing the new url will be passed to the specified function.
 
@@ -270,63 +270,63 @@ Parameters
 * **function** *(python function)* - Specifies the function to call when a url changes.
 
 ---
-#### **on_done_loading**(function)
+#### `on_done_loading(function)`
 Set TkinterWeb to call the specified python function whenever all outstanding resources have been downloaded. This is generally a good indicator as to when the website is done loading. The specified function may be called multiple times while loading a page.
 
 Parameters
 * **function** *(python function)* - Specifies the function to call when a webpage is expected to be done loading.
 
 ---
-#### **on_downloading_resource**(function)
+#### `on_downloading_resource(function)`
 Set TkinterWeb to call the specified python function whenever a new resource is being downloaded.
 
 Parameters
 * **function** *(python function)* - Specifies the function to call when a resource is downloaded.
 
 ---
-#### **set_zoom**(multiplier)
+#### `set_zoom(multiplier)`
 Set the zoom multiplier of the document.
 
 Parameters
 * **multiplier** *(float or integer)* - Specifies the zoom multiplier.
 
 ---
-#### **get_zoom**()
+#### `get_zoom()`
 Return the zoom multiplier of the document.
 
 Return type
 * *float*
 
 ---
-#### **set_fontscale**(multiplier)
+#### `set_fontscale(multiplier)`
 Set the zoom multiplier of the document's text.
 
 Parameters
 * **multiplier** *(float or integer)* - Specifies the fontscale multiplier.
 
 ---
-#### **get_fontscale**()
+#### `get_fontscale()`
 Return the zoom multiplier of the document's text.
 
 Return type
 * *float*
 
 ---
-#### **set_parsemode**(mode)
+#### `set_parsemode(mode)`
 Set the parser mode. The three availiable options are `html`, `xhtml`, and `xhtml`. In `html` mode, explicit XML-style self-closing tags are not handled specially and unknown tags are ignored. `xhtml` mode is similar to `html` mode except that explicit self-closing tags are recognized. `xml` mode is similar to `xhtml` mode except that XML CDATA sections and unknown tag names are recognized. This is the default value.
 
 Parameters
 * **mode** *(string)* - Specifies the parse mode.
 
 ---
-#### **get_parsemode**()
+#### `get_parsemode()`
 Return the parser mode.
 
 Return type
 * *string*
 
 ---
-#### **resolve_url**(url)
+#### `resolve_url(url)`
 Generate a full url from the specified url. This can be used to generate proper links when given a relative url.
 
 Parameters
@@ -336,7 +336,7 @@ Return type
 * *string*
 
 ---
-#### **set_message_func**(function)
+#### `set_message_func(function)`
 Set TkinterWeb to call the specified python function whenever a new message is released.
 By default, unless `messages_enabled` was set to `False` when calling `HtmlFrame()`, messages will be printed to the console.
 After calling `set_message_func`, whenever a new message is released, a variable containing the main message and a second variable containing more information will be passed to the specified function.
@@ -345,21 +345,21 @@ Parameters
 * **function** *(python function)* - Specifies the function to call when a message is released.
 
 ---
-#### **set_broken_webpage_message**(html)
+#### `set_broken_webpage_message(html)`
 Set the HTML code to be displayed when a webpage cannot be reached.
 
 Parameters
 * **html** *(string)* - Specifies the HTML to be parsed when an invalid url is requested. Must be valid HTML code.
 
 ---
-#### **set_maximum_thread_count**(maximum)
+#### `set_maximum_thread_count(maximum)`
 By deafult, TkinterWeb uses threading to improve page load times and to prevent Tkinter from freezing when loading HTML. TkinterWeb allows up to 20 threads to run at once. Increasing this value can improve speed and responsiveness, at the cost of CPU and memory usage while a page is loading. To disable threading altogether, call `set_maximum_thread_count` with a value of 0.
 
 Parameters
 * **maximum** *(integer)* - Specifies the maximum number of threads that can run at the same time.
 
 ---
-#### **set_recursive_hover_depth**(depth)
+#### `set_recursive_hover_depth(depth)`
 When a mouse hovers over an element in a webpage, the element under the mouse is flagged as hovered.
 TkinterWeb then marks the parent of that element repeatedly, up to the 5th degree. This works fine for most websites, but may cause a few websites to lag slightly. If this is becoming an issue, simply call `set_recursive_hover_depth` and set the *depth* to a smaller integer.
 
@@ -367,7 +367,7 @@ Parameters
 * **depth** *(integer)* - Specifies the number of recursions to apply the hover flag to.
 
 ---
-#### **add_visited_links**(links)
+#### `add_visited_links(links)`
 TkinterWeb stores a list of visited websites to determine whether a link on a webpage should be flagged as visited or not visited.
 The method add_visited_links enables adding new custom urls to this list. 
 
@@ -375,11 +375,11 @@ Parameters
 * **links** *(string or list)* - Specifies the url(s) to be added to the list of visited websites.
 
 ---
-#### **clear_visited_links**()
+#### `clear_visited_links()`
 Clear the list of visited websites.
 
 ---
-#### **enable_stylesheets**(enabled=True)
+#### `enable_stylesheets(enabled=True)`
 Enable or disable CSS styling.
 This is enabled by default.
 This method must be invoked *before* loading a webpage to take effect.
@@ -388,7 +388,7 @@ Parameters
 * **enabled** *(boolean)* - Specifies whether stylesheets should be enabled.
 
 ---
-#### **enable_images**(enabled=True)
+#### `enable_images(enabled=True)`
 Enable or disable image loading.
 This is enabled by default.
 This method must be invoked *before* loading a webpage to take effect.
@@ -397,7 +397,7 @@ Parameters
 * **enabled** *(boolean)* - Specifies whether images should be loaded.
 
 ---
-#### **enable_forms**(enabled=True)
+#### `enable_forms(enabled=True)`
 Enable or disable form-filling capabilities.
 This is enabled by default.
 This method must be invoked *before* loading a webpage to take effect.
@@ -406,7 +406,7 @@ Parameters
 * **enabled** *(boolean)* - Specifies whether forms should be handled.
 
 ---
-#### **enable_objects**(enabled=True)
+#### `enable_objects(enabled=True)`
 Enable or disable `<object>` and `<iframe>` embedded elements.
 This is enabled by default.
 This method must be invoked *before* loading a webpage to take effect.
@@ -415,7 +415,7 @@ Parameters
 * **enabled** *(boolean)* - Specifies whether objects should be loaded.
 
 ---
-#### **enable_caches**(enabled=True)
+#### `enable_caches(enabled=True)`
 Enable or disable webpage caches.
 This is enabled by default.
 Disabling this option will conserve memory, but will also result in longer page load times.
@@ -426,7 +426,7 @@ Parameters
 
 ---
 
-#### **enable_dark_theme**(enabled=True, invert_images=True)
+#### `enable_dark_theme(enabled=True, invert_images=True)`
 Enable or disable dark theme.
 This is disabled by default.
 This function is experimental and may cause hangs or crashes.
@@ -436,21 +436,21 @@ Parameters
 * **invert_images** *(boolean)* - Specifies images should be inverted.
 
 ---
-#### **ignore_invalid_images**(value)
+#### `ignore_invalid_images(value)`
 Enable or disable showing a broken image icon whenever an image can't be loaded.
 
 Parameters
 * **value** *(boolean)* - Specifies whether invalid images should or should not be ignored.
 
 ---
-#### **get_current_link**(resolve=True)
+#### `get_current_link(resolve=True)`
 Convenience method for getting the url of the current hyperlink.
 
 Parameters
 * **resolve** *(boolean)* - If True, the url will be resolved before being returned. Otherwise, it will be returned as-is.
 
 ---
-#### **get_currently_hovered_node_tag**()
+#### `get_currently_hovered_node_tag()`
 Get the tag of the HTML element the mouse is currently over.
 For example, if the mouse is hovering over a heading, `get_currently_hovered_node_tag()` would return "h1".
 
@@ -458,13 +458,13 @@ Return type
 * *string*
 
 ---
-#### **get_currently_hovered_node_text**()
+#### `get_currently_hovered_node_text()`
 Get the text content of the HTML element the mouse is currently over.
 
 Return type
 * *string*
 ---
-#### **get_currently_hovered_node_attribute**(attribute)
+#### `get_currently_hovered_node_attribute(attribute)`
 Get the specified attribute of the HTML element the mouse is currently over.
 For example, if the mouse is over a link to python.org, `get_currently_hovered_node_attribute("href")` would return "python.org".
 If the current element does not have the specified attribute, an empty string is returned.
@@ -476,7 +476,7 @@ Return type
 * *string*
 
 ---
-#### **get_currently_selected_text**()
+#### `get_currently_selected_text()`
 Get the text content that is currently highlighted/selected in the HtmlFrame.
 
 Return type
@@ -484,7 +484,7 @@ Return type
 
 ---
 
-#### **replace_widget**(oldwidget, newwidget)
+#### `replace_widget(oldwidget, newwidget)`
 Removes the `oldwidget` from the document, and replaces it with the `newwidget`. Note that if both `oldwidget` and `newwidget` are currently shown in the document, their locations will be swapped. See the [geometry management docs](GEOMETRY.md) for more information.
 
 Parameters
@@ -493,7 +493,7 @@ Parameters
 
 ---
 
-#### **replace_element**(cssselector, newwidget)
+#### `replace_element(cssselector, newwidget)`
 Replaces the content of the element matching the specified CSS selector with the `newwidget`. See the [geometry management docs](GEOMETRY.md) for more information.
 
 Parameters
@@ -502,7 +502,7 @@ Parameters
 
 ---
 
-#### **remove_widget**(oldwidget)
+#### `remove_widget(oldwidget)`
 Removes the `oldwidget` from the document. 
 This method is experimental and may cause issues. If you encounter any issues, please [report them](https://github.com/Andereoo/TkinterWeb/issues). See the [geometry management docs](GEOMETRY.md) for more information.
 

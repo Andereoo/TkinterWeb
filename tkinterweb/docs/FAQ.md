@@ -7,16 +7,8 @@
 **How do I manage clicks and use custom bindings?**
 
 * The `on_link_click` method can be used to assign a custom function to link clicks. Likewise the `on_form_submit` function can be used for form submits. See the [API reference](https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/docs/HTMLFRAME.md) for more information
-* Like any other Tkinter widget, mouse and keyboard events can be bound to the HtmlFrame widget. For example, the following would open a pop-up menu when the user right-clicks on a link. The menu would contain a button with the url that, when clicked, would open the link:
-```
-def on_right_click(event):
-  url = myhtmlframe.get_current_link(resolve=True) #get the current link
-  if url: #if mouse was clicked on a link
-      menu = tk.Menu(root, tearoff=0) #create the menu
-      menu.add_command(label="Open %s" % url, command=lambda url=url: myhtmlframe.load_url(url)) #add a button to the menu showing the url
-      menu.tk_popup(event.x_root, event.y_root, 0) #show the menu
-myhtmlframe.bind("<Button-3>", on_right_click)
-```
+* Like any other Tkinter widget, mouse and keyboard events can be bound to the HtmlFrame widget. See the [Tips and Tricks](https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/docs/HTMLFRAME.md#tips-and-tricks) page for examples of binding navigation keys and opening menus on right-clicks.
+ 
 **TkinterWeb is crashing. Help?**
 
 * That is defenitely not normal. Make sure your are using the most up-to-date TkinterWeb version and have crash protection enabled.

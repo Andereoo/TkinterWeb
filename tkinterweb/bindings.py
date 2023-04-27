@@ -838,13 +838,17 @@ class TkinterWeb(tk.Widget):
                 self.prev_active_node = node_handle
 
     def on_leave(self, event):
-        """Set the cursor to the default when leaving this widget"""
-        self.cursor_change_func(cursor="")
-        self.prev_cursor = ""
+        """Reset cursor and node states when leaving this widget"""
+        self.set_cursor("default")
         if self.stylesheets_enabled:
-            for node in self.prev_hovered_nodes:
-                self.tk.call(node, "dynamic", "clear", "hover")
-        self.prev_hovered_nodes = []
+            for node in self.hovered_nodes:
+                try:
+                    self.remove_node_flags(node, "hover")
+                    self.remove_node_flags(node, "active")
+                except tk.TclError:
+                    pass
+        self.hovered_nodes = []
+        self.current_node = None
 
     def on_mouse_motion(self, event):
         """Set hover flags and handle the CSS 'cursor' property"""
@@ -931,18 +935,6 @@ class TkinterWeb(tk.Widget):
             pass
 
         self.prev_active_node = None
-
-    def on_leave(self, event):
-        """Set the cursor to the default when leaving this widget"""
-        self.set_cursor("default")
-        if self.stylesheets_enabled:
-            for node in self.hovered_nodes:
-                try:
-                    self.remove_node_flags(node, "hover")
-                except tk.TclError:
-                    pass
-        self.hovered_nodes = []
-        self.current_node = None
 
     def on_embedded_mouse_motion(self, event, node_handle):
         self.on_embedded_node = node_handle

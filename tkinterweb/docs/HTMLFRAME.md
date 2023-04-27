@@ -35,10 +35,45 @@ To load a website, call `myhtmlframe.load_website("www.yourwebsite.com")`
 The HtmlFrame widget can also load files and custom HTML code. It also supports clicking on links, submitting forms, and handling website titles. In order to use these features, refer to the API refrence below.
 
 ## Tips and Tricks
+*Bindings*
+
+Like any other Tkinter widget, mouse and keyboard events can be bound to the HtmlFrame widget.
+
+An example of the usage of bingings with the HtmlFrame widget can be seen below:
+```
+def on_right_click(event):
+    "Do stuff"
+    
+myhtmlframe.bind("<Button-3>", on_right_click)
+```
+The above code will call `on_right_click` every time the user right-clicks on the HtmlFrame widget.
+This can be extended with the following:
+```
+def on_right_click(event):
+  url = myhtmlframe.get_current_link(resolve=True) #get the current link
+  if url: #if mouse was clicked on a link
+      menu = tk.Menu(root, tearoff=0) #create the menu
+      menu.add_command(label="Open %s" % url, command=lambda url=url: myhtmlframe.load_url(url)) #add a button to the menu showing the url
+      menu.tk_popup(event.x_root, event.y_root, 0) #show the menu
+myhtmlframe.bind("<Button-3>", on_right_click)
+```
+This will make a popup show if the user right-clicked on a link. Clicking link shown in the popup would load the website.
+
+Similarly, bindings can also be applied to navigation keys:  
+```
+  myhtmlframe.bind_all("<Up>", lambda e: myhtmlframe.html.yview_scroll(-5, "units"))
+  myhtmlframe.bind_all("<Down>", lambda e: myhtmlframe.html.yview_scroll(5, "units"))
+  myhtmlframe.bind_all("<Prior>", lambda e: myhtmlframe.html.yview_scroll(-1, "pages"))
+  myhtmlframe.bind_all("<Next>", lambda e: myhtmlframe.html.yview_scroll(1, "pages"))
+  myhtmlframe.bind_all("<Home>", lambda e: myhtmlframe.html.yview_moveto(0))
+  myhtmlframe.bind_all("<End>", lambda e: myhtmlframe.html.yview_moveto(1))
+```
+
+---
 *Changing the title*
 
 It is very easy to handle title changes with the HtmlFrame widget.
-To change the title of `root`(see example above) every time the title of a website changes, paste the following code into your script:
+To change the title of `root`(see example above) every time the title of a website changes, use the following:
 ```
 def change_title(title):
     root.title(title) # change the title
@@ -48,6 +83,20 @@ myhtmlframe.on_title_change(change_title)
 Similarily, `on_icon_change` can be used to get the website's icon when it is loaded.
 
 ---
+*Url changes*
+
+Normally, a website's url may change when it is loaded. For example, `www.github.com` will redirect to `https://github.com`. This can be handled with `on_url_change`:
+
+```
+def url_changed(url):
+    # do something, such as change the text an a url-bar
+    
+myhtmlframe.on_url_change(url_changed)
+```
+It is highly recomended to use this method to change the text in a url-bar, for example, instead of changing the text when a page is loaded at first. This method will handle page redirects, and url changes when stopping loading page.
+
+
+---
 *Search the page*
 
 Searching the page for specific text is very straightfoward. To search the document for the word 'python', for example, the following may be used:
@@ -55,19 +104,6 @@ Searching the page for specific text is very straightfoward. To search the docum
 number_of_matches = myhtmlframe.find_text("python")
 ```
 Refer to the API reference for more information and [Bug 18](https://github.com/Andereoo/TkinterWeb/issues/18#issuecomment-881649007) for sample code.
-
----
-*Url changes*
-
-Normally, a website's url may change when it is loaded. For example, `www.github.com` will redirect to `https://github.com`. This can be handled with `on_url_change`:
-
-```
-def url_changed(title):
-    # do something, such as change the text an a url-bar
-    
-myhtmlframe.on_url_change(url_changed)
-```
-It is highly recomended to use this method to change the text in a url-bar, for example, instead of changing the text when a page is loaded at first. This method will handle page redirects, and url changes when stopping loading page.
 
 ---
 *Done loading?*
@@ -104,30 +140,6 @@ myhtmlframe.set_zoom(2)
 ```
 To zoom only the text, use `set_fontscale()` instead.
 
----
-*Bindings*
-
-Like any other Tkinter widget, mouse and keyboard events can be bound to the HtmlFrame widget.
-
-An example of the usage of bingings with the HtmlFrame widget can be seen below:
-```
-def on_right_click(event):
-    "Do stuff"
-    
-myhtmlframe.bind("<Button-3>", on_right_click)
-```
-The above code will call `on_right_click` every time the user right-clicks on the HtmlFrame widget.
-This can be extended with the following:
-```
-def on_right_click(event):
-  url = myhtmlframe.get_current_link(resolve=True) #get the current link
-  if url: #if mouse was clicked on a link
-      menu = tk.Menu(root, tearoff=0) #create the menu
-      menu.add_command(label="Open %s" % url, command=lambda url=url: myhtmlframe.load_url(url)) #add a button to the menu showing the url
-      menu.tk_popup(event.x_root, event.y_root, 0) #show the menu
-myhtmlframe.bind("<Button-3>", on_right_click)
-```
-This will make a popup show if the user right-clicked on a link. Clicking link shown in the popup would load the website.
 
 ---
 *Other methods can be found in the [useful methods section](#useful-methods) below.*

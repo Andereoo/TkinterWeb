@@ -359,7 +359,7 @@ class TkinterWeb(tk.Widget):
         return self.tk.call(self._w, "search", selector)
 
     def set_zoom(self, multiplier):
-        """Set and get the page zoom"""
+        """Set the page zoom"""
         self.tk.call(self._w, "configure", "-zoom", float(multiplier))
         
     def get_zoom(self):
@@ -367,7 +367,7 @@ class TkinterWeb(tk.Widget):
         return self.tk.call(self._w, "cget", "-zoom")
 
     def set_parsemode(self, mode):
-        """Set and page render mode"""
+        """Set the page render mode"""
         self.tk.call(self._w, "configure", "-parsemode", mode)
         
     def get_parsemode(self):

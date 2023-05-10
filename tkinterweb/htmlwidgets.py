@@ -224,6 +224,7 @@ class HtmlFrame(ttk.Frame):
             if frag:
                 #self.html.tk.call(self.html._w, "_force")
                 try:
+                    frag = ''.join(char for char in frag if char.isalnum() or char in ("-", "_"))
                     node = self.html.search("[id=%s]" % frag)
                     if node:
                         self.html.yview(node)

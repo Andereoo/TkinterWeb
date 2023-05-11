@@ -1254,9 +1254,9 @@ class TkinterWeb(tk.Widget):
         try:
             #find matches
             if ignore_case:
-                rmatches = re.finditer(searchtext, doctext, flags=re.IGNORECASE)
+                rmatches = re.finditer(searchtext, doctext, flags=re.IGNORECASE | re.MULTILINE)
             else:
-                rmatches = re.finditer(searchtext, doctext)
+                rmatches = re.finditer(searchtext, doctext, flags=re.MULTILINE)
                 
             for match in rmatches:
                 match_indexes.append((match.start(0), match.end(0),))

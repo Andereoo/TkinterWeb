@@ -89,8 +89,8 @@ Get the parent of the given node and clean the output.
 Return the font zoom.
 
 ---
-#### `get_node_attribute(node_handle, attribute, default='')`
-Get the specified attribute of the given node.
+#### `get_node_attribute(node_handle, attribute, default='', value=None)`
+Get the value of a specified attribute of the given node. If provided, the value of the specified attribute will be set to `value`.
 
 ---
 #### `get_node_children(node_handle)`

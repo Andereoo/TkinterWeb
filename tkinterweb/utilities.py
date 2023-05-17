@@ -633,6 +633,9 @@ class ScrolledTextBox(tk.Frame):
     def get(self, *args, **kwargs):
         return self.tbox.get(*args, **kwargs)
 
+    def insert(self, *args, **kwargs):
+        return self.tbox.insert(*args, **kwargs)
+
     def delete(self, *args, **kwargs):
         self.tbox.delete(*args, **kwargs)
 

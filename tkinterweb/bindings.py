@@ -737,6 +737,7 @@ class TkinterWeb(tk.Widget):
         widgetid = ScrolledTextBox(self, scroll_overflow=self.scroll_overflow, borderwidth=0, selectborderwidth=0, highlightthickness=0)
         widgetid.bind("<<ScrollbarShown>>", widgetid.reset_bindtags)
         widgetid.bind("<<ScrollbarHidden>>", lambda event, widgetid=widgetid: self.add_bindtags(widgetid))
+        widgetid.insert("1.0", self.get_node_text(self.get_node_children(node)))
         self.form_get_commands[node] = lambda: widgetid.get("1.0", 'end-1c')
         self.form_reset_commands[node] = lambda: widgetid.delete("0.0", "end")
         self.handle_node_replacement(node, widgetid, 

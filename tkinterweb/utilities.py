@@ -407,6 +407,9 @@ INPUT[type="submit"],INPUT[type="button"], INPUT[type="reset"], BUTTON {
   color: #000000;
   color: tcl(::tkhtml::if_disabled #666666 #000000);
 }
+INPUT[disabled], BUTTON[disabled] {
+    cursor: auto;
+}
 INPUT[type="submit"]:after {
   content: "Submit";
 }
@@ -630,6 +633,9 @@ class ScrolledTextBox(tk.Frame):
     def configure(self, *args, **kwargs):
         self.tbox.configure(*args, **kwargs)
 
+    def insert(self, *args, **kwargs):
+        return self.tbox.insert(*args, **kwargs)
+
     def get(self, *args, **kwargs):
         return self.tbox.get(*args, **kwargs)
 
@@ -672,25 +678,50 @@ class FileSelector(tk.Frame):
         if "activebackground" in kwargs:
             del kwargs["activebackground"]
         self.label.config(*args, **kwargs)
+        if "state" in kwargs:
+            del kwargs["state"]
         self.config(*args, **kwargs)
 
 class ColourSelector(tk.Frame):
     "Colour selector widget."
 
     def __init__(self, parent, colour, **kwargs):
-        tk.Button.__init__(self, parent, command=self.select_colour, bg="#ccc", activebackground="#aaa", width=5, highlightthickness=0, borderwidth=0)
+        tk.Frame.__init__(self, parent, bg="#ccc", highlightthickness=0)
         colour = colour if colour else "#000000"
         self.selector = tk.Button(self, bg=colour, command=self.select_colour, activebackground=colour, width=5, highlightthickness=0, borderwidth=0)
         self.selector.pack(expand=True, fill="both", padx=5, pady=5)
-        self.selector.bind("<Button-1>", lambda event: self.config(bg="#aaa"))
-        self.selector.bind("<ButtonRelease-1>", lambda event: self.config(bg="#ccc"))
+        self.bind("<Button-1>", self.on_click)
+        self.bind("<ButtonRelease-1>", self.on_release)
+        self.selector.bind("<Button-1>", self.on_click)
+        self.selector.bind("<ButtonRelease-1>", self.on_button_release)
         self.colour = colour
         self.default_colour = colour
+        self.disabled = True
+    
+    def on_release(self, event):
+        if not self.disabled:
+            self.config(bg="#ccc")
+            self.select_colour()
+    
+    def on_button_release(self, event):
+        if not self.disabled:
+            self.config(bg="#ccc")
+    
+    def on_click(self, event):
+        if not self.disabled:
+            self.config(bg="#aaa")
 
     def select_colour(self):
         colour = colorchooser.askcolor(title = "Choose color")[1]
         self.colour = colour if colour else self.colour
         self.selector.config(bg=self.colour, activebackground=self.colour)
+    
+    def configure(self, *args, **kwargs):
+        state = kwargs.pop("state")
+        if state == "disabled":
+            self.selector.config(state="disabled")
+            self.disabled = True
+        self.config(*args, **kwargs)
 
     def reset(self):
         self.colour = self.default_colour

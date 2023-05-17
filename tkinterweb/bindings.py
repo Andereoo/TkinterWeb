@@ -415,9 +415,9 @@ class TkinterWeb(tk.Widget):
         """Shifts the view vertically to the specified position."""
         return self.yview("moveto", number)
 
-    def get_node_text(self, node_handle):
+    def get_node_text(self, node_handle, *args):
         """Get the text content of the given node"""
-        return self.tk.call(node_handle, "text")
+        return self.tk.call(node_handle, "text", *args)
 
     def get_node_tag(self, node_handle):
         """Get the HTML tag of the given node"""
@@ -431,9 +431,12 @@ class TkinterWeb(tk.Widget):
         """Get the children of the given node"""
         return self.tk.call(node_handle, "children")
 
-    def get_node_attribute(self, node_handle, attribute, default=""):
+    def get_node_attribute(self, node_handle, attribute, default="", value=None):
         """Get the specified attribute of the given node"""
-        return self.tk.call(node_handle, "attribute", "-default", default, attribute)
+        if value:
+            return self.tk.call(node_handle, "attribute", attribute, value)
+        else:
+            return self.tk.call(node_handle, "attribute", "-default", default, attribute)
 
     def get_node_property(self, node_handle, node_property):
         """Get the specified attribute of the given node"""
@@ -726,6 +729,9 @@ class TkinterWeb(tk.Widget):
         widgetid.insert(text, values, selected)
         self.form_get_commands[node] = lambda: widgetid.get()
         self.form_reset_commands[node] = lambda: widgetid.reset()
+        state = self.get_node_attribute(node, "disabled", False) != "0"
+        if state:
+            widgetid.configure(state="disabled")
         self.handle_node_replacement(node, widgetid, 
             lambda widgetid=widgetid: self.handle_node_removal(widgetid), 
             lambda node=node, widgetid=widgetid, widgettype="text": self.handle_node_style(node, widgetid, widgettype))
@@ -739,6 +745,10 @@ class TkinterWeb(tk.Widget):
         widgetid.bind("<<ScrollbarHidden>>", lambda event, widgetid=widgetid: self.add_bindtags(widgetid))
         self.form_get_commands[node] = lambda: widgetid.get("1.0", 'end-1c')
         self.form_reset_commands[node] = lambda: widgetid.delete("0.0", "end")
+        widgetid.insert("1.0", self.get_node_text(self.get_node_children(node), "-pre"))
+        state = self.get_node_attribute(node, "disabled", False) != "0"
+        if state:
+            widgetid.configure(state="disabled")
         self.handle_node_replacement(node, widgetid, 
             lambda widgetid=widgetid: self.handle_node_removal(widgetid), 
             lambda node=node, widgetid=widgetid, widgettype="text": self.handle_node_style(node, widgetid, widgettype))
@@ -753,6 +763,7 @@ class TkinterWeb(tk.Widget):
         nodevalue = self.get_node_attribute(node, "value")
 
         if any((nodetype == "image", nodetype == "submit", nodetype == "reset", nodetype == "button")):
+            widgetid = None
             self.form_get_commands[node] = self.placeholder
             self.form_reset_commands[node] = self.placeholder
         elif nodetype == "file":
@@ -770,6 +781,7 @@ class TkinterWeb(tk.Widget):
                 lambda widgetid=widgetid: self.handle_node_removal(widgetid), 
                 self.placeholder)
         elif nodetype == "hidden":
+            widgetid = None
             self.form_get_commands[node] = lambda node=node: self.get_node_attribute(
                 node, "value")
             self.form_reset_commands[node] = lambda: None
@@ -816,6 +828,11 @@ class TkinterWeb(tk.Widget):
             self.handle_node_replacement(node, widgetid, 
                 lambda widgetid=widgetid: self.handle_node_removal(widgetid), 
                 lambda node=node, widgetid=widgetid, widgettype="text": self.handle_node_style(node, widgetid, widgettype))
+        
+        if widgetid:    
+            state = self.get_node_attribute(node, "disabled", False) != "0"
+            if state:
+                widgetid.configure(state="disabled")
 
     def on_click(self, event):
         """Set active element flags"""

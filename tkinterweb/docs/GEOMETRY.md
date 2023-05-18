@@ -91,7 +91,7 @@ myhtmlframe.load_html("""<html><body>
 myhtmlframe.pack(fill="both", expand=True)
 root.mainloop()
 ```
-The equivelent code in pure Tkinter is much less straightfoward:
+The equivalent code in pure Tkinter is much less straightfoward:
 
 ```
 try:
@@ -152,4 +152,4 @@ root.mainloop()
 ## Questions, bugs, and features
 Please report bugs or request new features in the [issues page](https://github.com/Andereoo/TkinterWeb/issues).
 
-If you need some help using TkinterWeb in your app, also feel free to head over to the issues page.
+If you need some help using TkinterWeb in your app, also feel free to ask for tips the issues page.

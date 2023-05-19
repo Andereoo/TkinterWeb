@@ -143,6 +143,7 @@ class TkinterWeb(tk.Widget):
         self.form_submit_func = self.placeholder
         self.done_loading_func = self.placeholder
         self.downloading_resource_func = self.placeholder
+        self.token = "TKWtsvLKac1"
 
         if scroll_overflow:
             self.scroll_overflow = master
@@ -767,7 +768,9 @@ class TkinterWeb(tk.Widget):
             self.form_get_commands[node] = self.placeholder
             self.form_reset_commands[node] = self.placeholder
         elif nodetype == "file":
-            widgetid = FileSelector(self)
+            accept = self.get_node_attribute(node, "accept")
+            multiple = self.get_node_attribute(node, "multiple", self.token) != self.token
+            widgetid = FileSelector(self, accept, multiple)
             self.form_get_commands[node] = widgetid.get_value
             self.form_reset_commands[node] = widgetid.reset
             self.handle_node_replacement(node, widgetid, 
@@ -811,7 +814,7 @@ class TkinterWeb(tk.Widget):
             else:
                 variable = tk.StringVar(self)
                 self.radio_buttons[name] = variable
-            widgetid = tk.Radiobutton(self, value=nodevalue, variable=variable,tristatevalue="TKWtsvLKac1", borderwidth=0, padx=0, pady=0, highlightthickness=0)
+            widgetid = tk.Radiobutton(self, value=nodevalue, variable=variable, tristatevalue=self.token, borderwidth=0, padx=0, pady=0, highlightthickness=0)
             self.form_get_commands[node] = lambda: variable.get()
             self.form_reset_commands[node] = lambda: variable.set("")
             self.handle_node_replacement(node, widgetid, 
@@ -830,8 +833,8 @@ class TkinterWeb(tk.Widget):
                 lambda node=node, widgetid=widgetid, widgettype="text": self.handle_node_style(node, widgetid, widgettype))
         
         if widgetid:    
-            state = self.get_node_attribute(node, "disabled", False) != "0"
-            if state:
+            state = self.get_node_attribute(node, "disabled", self.token)
+            if state != self.token:
                 widgetid.configure(state="disabled")
 
     def on_click(self, event):
@@ -1102,7 +1105,7 @@ class TkinterWeb(tk.Widget):
         if (node not in self.form_elements) or (not self.forms_enabled):
             return
 
-        data = {}
+        data = []
         form = self.form_elements[node]
         action = self.get_node_attribute(form, "action")
         method = self.get_node_attribute(form, "method", "GET").upper()
@@ -1111,15 +1114,19 @@ class TkinterWeb(tk.Widget):
             nodeattrname = self.get_node_attribute(formelement, "name")
             if nodeattrname:
                 nodevalue = self.form_get_commands[formelement]()
-                if self.get_node_attribute(formelement, "type") == "submit" or self.get_node_attribute(formelement, "type") == "reset":
+                nodetype = self.get_node_attribute(formelement, "type")
+                if nodetype == "submit" or nodetype == "reset":
                     continue
+                elif nodetype == "file":
+                    for value in nodevalue:
+                        data.append((nodeattrname, value),)
                 else:
-                    data[nodeattrname] = nodevalue
+                    data.append((nodeattrname, nodevalue),)
         if not event:
             nodeattrname = self.get_node_attribute(node, "name")
             nodevalue = self.get_node_attribute(node, "value")
             if nodeattrname and nodevalue:
-                data[nodeattrname] = nodevalue
+                data.append((nodeattrname, nodevalue),)
 
         data = urlencode(data)
         

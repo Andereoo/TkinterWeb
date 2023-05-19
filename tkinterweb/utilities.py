@@ -646,7 +646,7 @@ class ScrolledTextBox(tk.Frame):
 class FileSelector(tk.Frame):
     "File selector widget."
 
-    def __init__(self, parent, **kwargs):
+    def __init__(self, parent, accept, multiple, **kwargs):
         tk.Frame.__init__(self, parent)
         self.selector = selector = tk.Button(
             self, text="Browse", command=self.select_file)
@@ -655,23 +655,62 @@ class FileSelector(tk.Frame):
         selector.pack(side="left")
         label.pack(side="right", fill="both")
 
-    def select_file(self):
-        name = filedialog.askopenfilename()
-        if name:
-            name = name.replace("\\", "/").split("/")[-1]
-            self.label.config(text=name)
+        self.generate_filetypes(accept)
+
+        self.multiple = multiple
+        self.files = []
+    
+    def generate_filetypes(self, accept):
+        if accept:
+            accept = accept.split(",")
+            filetypes = []
+            for mimetype in accept:
+                mimetype = mimetype.replace(" ", "")
+
+                if mimetype == "image/*":
+                    mimetype = "Image files"
+                    filetypes.append((mimetype, ".apng .avif .gif .jpeg .jpg .png .svg .web, .bmp .ico .tiff",))
+                elif mimetype == "video/*":
+                    mimetype = "Video files"
+                    filetypes.append((mimetype, ".mpeg .ogg .mp4 .quicktime .mov .webm",))
+                elif mimetype == "audio/*":
+                    mimetype = "Audio files"
+                    filetypes.append((mimetype, ".aac .mpeg .flac .mp3 .wav .webm .3gpp",))
+                elif "/" in mimetype:
+                    filetype = mimetype.split("/")[-1]
+                    if filetype.lower() == "jpeg" and "jpg" not in str(accept):
+                        filetypes.append((mimetype, ".jpg",))
+                    elif filetype.lower() == "jpg" and "jpeg" not in str(accept):
+                        filetypes.append((mimetype, ".jpeg",))
+                    filetypes.append((mimetype, ".{}".format(filetypes),))
+                else:
+                    filetypes.append((mimetype, mimetype,))
+
+            self.filetypes = filetypes
         else:
+            self.filetypes = accept
+
+    def select_file(self):
+        if self.multiple:
+            self.files = files = filedialog.askopenfilenames(title="Select files", filetypes=self.filetypes)
+        else:
+            files = filedialog.askopenfilename(title="Select file", filetypes=self.filetypes)
+            if files:
+                self.files = files = (files,)
+        number = len(files)
+        if number == 0:
             self.label.config(text="No files selected.")
+        elif number == 1:
+            files = files[0].replace("\\", "/").split("/")[-1]
+            self.label.config(text=files)
+        else:
+            self.label.config(text="{} files selected.".format(number))
 
     def reset(self):
         self.label.config(text="No files selected.")
 
     def get_value(self):
-        text = self.label["text"]
-        if text == "No files selected.":
-            return ""
-        else:
-            return text
+        return self.files
 
     def configure(self, *args, **kwargs):
         self.selector.config(*args, **kwargs)

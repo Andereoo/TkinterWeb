@@ -909,6 +909,7 @@ proc ::combobox::Select {w index} {
     $widgets(entry) selection range 0 end
     $widgets(entry) icursor end
 
+    event generate $widgets(this) <<Modified>>
     $widgets(this) close
 
     return ""

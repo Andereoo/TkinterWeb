@@ -24,9 +24,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import mimetypes
 import sys, os
 import platform
 import threading
+
+#mimetypes.init()
 
 try:
     from urllib.request import Request, urlopen
@@ -665,27 +668,17 @@ class FileSelector(tk.Frame):
             accept = accept.split(",")
             filetypes = []
             for mimetype in accept:
-                mimetype = mimetype.replace(" ", "")
-
-                if mimetype == "image/*":
-                    mimetype = "Image files"
-                    filetypes.append((mimetype, ".apng .avif .gif .jpeg .jpg .png .svg .web, .bmp .ico .tiff",))
-                elif mimetype == "video/*":
-                    mimetype = "Video files"
-                    filetypes.append((mimetype, ".mpeg .ogg .mp4 .quicktime .mov .webm",))
-                elif mimetype == "audio/*":
-                    mimetype = "Audio files"
-                    filetypes.append((mimetype, ".aac .mpeg .flac .mp3 .wav .webm .3gpp",))
-                elif "/" in mimetype:
-                    filetype = mimetype.split("/")[-1]
-                    if filetype.lower() == "jpeg" and "jpg" not in str(accept):
-                        filetypes.append((mimetype, ".jpg",))
-                    elif filetype.lower() == "jpg" and "jpeg" not in str(accept):
-                        filetypes.append((mimetype, ".jpeg",))
-                    filetypes.append((mimetype, ".{}".format(filetypes),))
+                if mimetype.startswith("."):
+                    filetypes.append((mimetype, mimetype))
+                elif mimetype.endswith("*"):
+                    filetypes.append((mimetype, ' '.join(
+                        k for k, v in mimetypes.types_map.items()
+                        if v.startswith(mimetype[:-1])
+                        )))
                 else:
-                    filetypes.append((mimetype, mimetype,))
-
+                    filetypes.append(
+                        (mimetype, ' '.join(mimetypes.guess_all_extensions(mimetype)))
+                    )
             self.filetypes = filetypes
         else:
             self.filetypes = accept

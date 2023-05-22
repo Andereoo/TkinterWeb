@@ -666,19 +666,23 @@ class FileSelector(tk.Frame):
     def generate_filetypes(self, accept):
         if accept:
             accept = accept.split(",")
+            alltypes = set()
             filetypes = []
             for mimetype in accept:
                 if mimetype.startswith("."):
-                    filetypes.append((mimetype, mimetype))
+                    extensions = [ mimetype ]
                 elif mimetype.endswith("*"):
-                    filetypes.append((mimetype, ' '.join(
+                    extensions = [
                         k for k, v in mimetypes.types_map.items()
                         if v.startswith(mimetype[:-1])
-                        )))
+                    ]
                 else:
-                    filetypes.append(
-                        (mimetype, ' '.join(mimetypes.guess_all_extensions(mimetype)))
-                    )
+                    extensions = mimetypes.guess_all_extensions(mimetype)
+                filetypes.append((mimetype, ' '.join(extensions)))
+                alltypes.update(extensions)
+            if len(filetypes) > 1:
+                extensions = sorted(alltypes)
+                filetypes.insert(0, ("All Supported Types", ' '.join(extensions)))
             self.filetypes = filetypes
         else:
             self.filetypes = accept

@@ -669,6 +669,7 @@ class FileSelector(tk.Frame):
             alltypes = set()
             filetypes = []
             for mimetype in accept:
+                mimetype = mimetype.strip()
                 if mimetype.startswith("."):
                     extensions = [ mimetype ]
                 elif mimetype.endswith("*"):

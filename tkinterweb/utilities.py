@@ -665,14 +665,14 @@ class FileSelector(tk.Frame):
     
     def generate_filetypes(self, accept):
         if accept:
-            accept = accept.split(",")
-            alltypes = set()
+            accept_list = [ a.strip() for a in accept.split(",") ]
+            all_extensions = set()
             filetypes = []
-            for mimetype in accept:
-                mimetype = mimetype.strip()
-                if mimetype.startswith("."):
-                    extensions = [ mimetype ]
-                elif mimetype.endswith("*"):
+
+            # First find all the MIME types
+            for mimetype in [ a for a in accept_list if not a.startswith(".") ]:
+                # the HTML spec specifies these three wildcard cases only:
+                if mimetype in ('audio/*', 'video/*', 'image/*'):
                     extensions = [
                         k for k, v in mimetypes.types_map.items()
                         if v.startswith(mimetype[:-1])
@@ -680,13 +680,19 @@ class FileSelector(tk.Frame):
                 else:
                     extensions = mimetypes.guess_all_extensions(mimetype)
                 filetypes.append((mimetype, ' '.join(extensions)))
-                alltypes.update(extensions)
+                all_extensions.update(extensions)
+
+            # Now add any non-MIME types not already included as part of a MIME type.
+            for suffix in [ a for a in accept_list if a.startswith(".") ]:
+                if suffix not in all_extensions:
+                    filetypes.append((f"{suffix} files", suffix))
+
             if len(filetypes) > 1:
-                extensions = sorted(alltypes)
-                filetypes.insert(0, ("All Supported Types", ' '.join(extensions)))
+                filetypes.insert(0, ("All Supported Types", ' '.join(sorted(all_extensions))))
+
             self.filetypes = filetypes
         else:
-            self.filetypes = accept
+            self.filetypes = []
 
     def select_file(self):
         if self.multiple:

@@ -187,7 +187,7 @@ Parameters
 
 ---
 #### `load_html(html_source, base_url="")`
-Parses the supplied HTML code.
+Parses the supplied HTML code. Note that this clears the current page, including any CSS code added using `add_css`.
 
 Parameters
 * **html_source** *(string)* - Specifies the HTML code

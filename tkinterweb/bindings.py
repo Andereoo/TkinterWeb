@@ -790,6 +790,7 @@ class TkinterWeb(tk.Widget):
             self.form_reset_commands[node] = lambda: None
         elif nodetype == "checkbox":
             variable = tk.IntVar()
+            variable.trace('w', self.on_input_change)
             widgetid = tk.Checkbutton(self, borderwidth=0, padx=0, pady=0, highlightthickness=0, variable=variable)
             self.form_get_commands[node] = lambda: variable.get()
             self.form_reset_commands[node] = lambda: variable.set(0)
@@ -799,6 +800,7 @@ class TkinterWeb(tk.Widget):
         elif nodetype == "range":
             variable = tk.IntVar()
             variable.set(nodevalue)
+            variable.trace('w', self.on_input_change)
             from_ = self.get_node_attribute(node, "min", 0)
             to = self.get_node_attribute(node, "max", 100)
             widgetid = ttk.Scale(self, variable=variable, from_=from_, to=to)
@@ -813,6 +815,7 @@ class TkinterWeb(tk.Widget):
                 variable = self.radio_buttons[name]
             else:
                 variable = tk.StringVar(self)
+                variable.trace('w', self.on_input_change)
                 self.radio_buttons[name] = variable
             widgetid = tk.Radiobutton(self, value=nodevalue, variable=variable, tristatevalue=self.token, borderwidth=0, padx=0, pady=0, highlightthickness=0)
             self.form_get_commands[node] = lambda: variable.get()
@@ -821,8 +824,9 @@ class TkinterWeb(tk.Widget):
                 lambda widgetid=widgetid: self.handle_node_removal(widgetid), 
                 lambda node=node, widgetid=widgetid: self.handle_node_style(node, widgetid))
         else:
-            widgetid = tk.Entry(self, borderwidth=0, highlightthickness=0)
-            widgetid.insert(0, nodevalue)
+            variable = tk.StringVar(self, value=nodevalue)
+            variable.trace('w', self.on_input_change)
+            widgetid = tk.Entry(self, textvariable=variable, borderwidth=0, highlightthickness=0)
             if nodetype == "password":
                 widgetid.configure(show='*')
             widgetid.bind("<Return>", lambda event, node=node: self.handle_form_submission(node=node, event=event))
@@ -836,6 +840,9 @@ class TkinterWeb(tk.Widget):
             state = self.get_node_attribute(node, "disabled", self.token)
             if state != self.token:
                 widgetid.configure(state="disabled")
+
+    def on_input_change(self, *_):
+        self.event_generate("<<Modified>>")
 
     def on_click(self, event):
         """Set active element flags"""

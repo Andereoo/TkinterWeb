@@ -709,9 +709,11 @@ class FileSelector(tk.Frame):
             self.label.config(text=files)
         else:
             self.label.config(text="{} files selected.".format(number))
+        self.event_generate("<<Modified>>")
 
     def reset(self):
         self.label.config(text="No files selected.")
+        self.event_generate("<<Modified>>")
 
     def get_value(self):
         return self.files
@@ -758,6 +760,7 @@ class ColourSelector(tk.Frame):
         colour = colorchooser.askcolor(title = "Choose color")[1]
         self.colour = colour if colour else self.colour
         self.selector.config(bg=self.colour, activebackground=self.colour)
+        self.event_generate("<<Modified>>")
     
     def configure(self, *args, **kwargs):
         state = kwargs.pop("state")
@@ -769,6 +772,7 @@ class ColourSelector(tk.Frame):
     def reset(self):
         self.colour = self.default_colour
         self.selector.config(bg=self.colour, activebackground=self.colour)
+        self.event_generate("<<Modified>>")
 
     def get_value(self):
         return self.colour

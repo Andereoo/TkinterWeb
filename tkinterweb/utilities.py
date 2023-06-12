@@ -29,8 +29,6 @@ import sys, os
 import platform
 import threading
 
-#mimetypes.init()
-
 try:
     from urllib.request import Request, urlopen
 except ImportError:
@@ -685,7 +683,13 @@ class FileSelector(tk.Frame):
             # Now add any non-MIME types not already included as part of a MIME type.
             for suffix in [ a for a in accept_list if a.startswith(".") ]:
                 if suffix not in all_extensions:
-                    filetypes.append((f"{suffix} files", suffix))
+                    mimetype = mimetypes.guess_type(f" {suffix}", suffix)[0]
+                    if mimetype:
+                        extensions = mimetypes.guess_all_extensions(mimetype)
+                        filetypes.append((mimetype, ' '.join(extensions)))
+                        all_extensions.update(extensions)
+                    else:
+                        filetypes.append((f"{suffix} files", suffix))
 
             if len(filetypes) > 1:
                 filetypes.insert(0, ("All Supported Types", ' '.join(sorted(all_extensions))))
@@ -726,6 +730,7 @@ class FileSelector(tk.Frame):
         if "state" in kwargs:
             del kwargs["state"]
         self.config(*args, **kwargs)
+
 
 class ColourSelector(tk.Frame):
     "Colour selector widget."
@@ -776,6 +781,7 @@ class ColourSelector(tk.Frame):
 
     def get_value(self):
         return self.colour
+
 
 class Notebook(ttk.Frame):
     """Drop-in replacement for the ttk.Notebook widget,

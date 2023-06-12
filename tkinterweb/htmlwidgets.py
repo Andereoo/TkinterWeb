@@ -476,12 +476,17 @@ class HtmlFrame(ttk.Frame):
             if not path.startswith("/"):
                 path = "/{0}".format(path)
             base_url = "file://{0}/".format(path)
-        self.current_url = base_url
-        self.html.base_url = base_url
+        self.html.base_url = self.current_url = base_url
         self.html.parse(html_source)
 
     def add_html(self, html_source):
         "Parse HTML and add it to the end of the current document."
+        if not self.current_url:
+            path = currentpath(False)
+            if not path.startswith("/"):
+                path = "/{0}".format(path)
+            base_url = "file://{0}/".format(path)
+            self.html.base_url = self.current_url = base_url
         self.html.parse(html_source)
 
     def add_css(self, css_source):

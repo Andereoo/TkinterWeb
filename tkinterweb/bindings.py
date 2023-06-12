@@ -790,8 +790,8 @@ class TkinterWeb(tk.Widget):
             self.form_reset_commands[node] = lambda: None
         elif nodetype == "checkbox":
             variable = tk.IntVar()
-            variable.trace('w', self.on_input_change)
             widgetid = tk.Checkbutton(self, borderwidth=0, padx=0, pady=0, highlightthickness=0, variable=variable)
+            variable.trace('w', lambda *_, widgetid=widgetid: self.on_input_change(widgetid))
             self.form_get_commands[node] = lambda: variable.get()
             self.form_reset_commands[node] = lambda: variable.set(0)
             self.handle_node_replacement(node, widgetid, 
@@ -800,10 +800,10 @@ class TkinterWeb(tk.Widget):
         elif nodetype == "range":
             variable = tk.IntVar()
             variable.set(nodevalue)
-            variable.trace('w', self.on_input_change)
             from_ = self.get_node_attribute(node, "min", 0)
             to = self.get_node_attribute(node, "max", 100)
             widgetid = ttk.Scale(self, variable=variable, from_=from_, to=to)
+            variable.trace('w', lambda *_, widgetid=widgetid: self.on_input_change(widgetid))
             self.form_get_commands[node] = lambda: variable.get()
             self.form_reset_commands[node] = lambda: variable.set(0)
             self.handle_node_replacement(node, widgetid, 
@@ -813,18 +813,20 @@ class TkinterWeb(tk.Widget):
             name = self.tk.call(node, "attr", "-default", "", "name")
             if name in self.radio_buttons:
                 variable = self.radio_buttons[name]
+                widgetid = tk.Radiobutton(self, value=nodevalue, variable=variable, tristatevalue=self.token, borderwidth=0, padx=0, pady=0, highlightthickness=0)
             else:
                 variable = tk.StringVar(self)
-                variable.trace('w', self.on_input_change)
+                widgetid = tk.Radiobutton(self, value=nodevalue, variable=variable, tristatevalue=self.token, borderwidth=0, padx=0, pady=0, highlightthickness=0)
+                variable.trace('w', lambda *_, widgetid=widgetid: self.on_input_change(widgetid))
                 self.radio_buttons[name] = variable
-            widgetid = tk.Radiobutton(self, value=nodevalue, variable=variable, tristatevalue=self.token, borderwidth=0, padx=0, pady=0, highlightthickness=0)
             self.form_get_commands[node] = lambda: variable.get()
             self.form_reset_commands[node] = lambda: variable.set("")
             self.handle_node_replacement(node, widgetid, 
                 lambda widgetid=widgetid: self.handle_node_removal(widgetid), 
                 lambda node=node, widgetid=widgetid: self.handle_node_style(node, widgetid))
         else:
-            widgetid = tk.Entry(self, validate="key", validatecommand=self.on_input_change, borderwidth=0, highlightthickness=0)
+            widgetid = tk.Entry(self, validate="key", borderwidth=0, highlightthickness=0)
+            widgetid.configure(validatecommand=lambda *_, widgetid=widgetid: self.on_input_change(widgetid))
             if nodetype == "password":
                 widgetid.configure(show='*')
             widgetid.bind("<Return>", lambda event, node=node: self.handle_form_submission(node=node, event=event))
@@ -839,8 +841,8 @@ class TkinterWeb(tk.Widget):
             if state != self.token:
                 widgetid.configure(state="disabled")
 
-    def on_input_change(self, *args):
-        self.event_generate("<<Modified>>")
+    def on_input_change(self, widgetid):
+        widgetid.event_generate("<<Modified>>")
         return True
 
     def on_click(self, event):

@@ -824,9 +824,7 @@ class TkinterWeb(tk.Widget):
                 lambda widgetid=widgetid: self.handle_node_removal(widgetid), 
                 lambda node=node, widgetid=widgetid: self.handle_node_style(node, widgetid))
         else:
-            variable = tk.StringVar(self, value=nodevalue)
-            variable.trace('w', self.on_input_change)
-            widgetid = tk.Entry(self, textvariable=variable, borderwidth=0, highlightthickness=0)
+            widgetid = tk.Entry(self, validate="key", validatecommand=self.on_input_change, borderwidth=0, highlightthickness=0)
             if nodetype == "password":
                 widgetid.configure(show='*')
             widgetid.bind("<Return>", lambda event, node=node: self.handle_form_submission(node=node, event=event))
@@ -841,8 +839,9 @@ class TkinterWeb(tk.Widget):
             if state != self.token:
                 widgetid.configure(state="disabled")
 
-    def on_input_change(self, *_):
+    def on_input_change(self, *args):
         self.event_generate("<<Modified>>")
+        return True
 
     def on_click(self, event):
         """Set active element flags"""

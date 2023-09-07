@@ -296,6 +296,14 @@ Parameters
 * **function** *(python function)* - Specifies the function to call when a resource is downloaded.
 
 ---
+#### `on_image_setup(function)`
+Set TkinterWeb to call the specified python function whenever the setup of an image is completed.
+The url of the image will be passed to the specified function as well as a boolean variable that is set to `True` if the image was successfully loaded and `False` if it could not be displayed.
+
+Parameters
+* **function** *(python function)* - Specifies the function to call when an image is setup.
+
+---
 #### `set_zoom(multiplier)`
 Set the zoom multiplier of the document.
 

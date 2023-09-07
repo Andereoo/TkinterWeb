@@ -1,5 +1,5 @@
 """
-TkinterWeb v3.19
+TkinterWeb v3.20
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
 
@@ -103,6 +103,8 @@ class HtmlFrame(ttk.Frame):
         self.scroll_overflow = scroll_overflow
         self.current_url = ""
         self.cursor = ""
+        self.accumulated_styles = []
+        self.waiting_for_reset = False
         self.image_count = 0
         self.image = None
         self.thread_in_progress = None
@@ -148,10 +150,11 @@ class HtmlFrame(ttk.Frame):
 
     def load_file(self, file_url, decode=None, force=False):
         "Load a locally stored file from the specified path"
-        file_url = str(file_url).split("/", 1)[1]
-        if not file_url.startswith("/"):
-            file_url = "/" + file_url
-        file_url = "file://" + file_url
+        if not file_url.startswith("file://"):
+            if platform.system() == "Windows" and not file_url.startswith("/"):
+                file_url = "file:///" + str(file_url)
+            else:
+                file_url = "file://" + str(file_url)
         self.load_url(file_url, decode, force)
 
     def load_url(self, url, decode=None, force=False):
@@ -160,6 +163,8 @@ class HtmlFrame(ttk.Frame):
         Technically Tkinter isn't threadsafe and will crash when doing this, but under certain circumstances we can get away with it.
         As long as we do not use the .join() method and no errors are raised in the mainthread, we should be okay.
         """
+        self.waiting_for_reset = True
+
         #Workaround for Bug #40, where urllib.urljoin constructs improperly formatted urls on Linux when url starts with file:///
         if not url.startswith("file://///"):
             url = url.replace("file:////", "file:///")
@@ -188,6 +193,7 @@ class HtmlFrame(ttk.Frame):
 
     def continue_loading(self, url, data="", method="GET", decode=None, force=False):
         "Finish loading urls and handle URI fragments"
+
         self.html.downloading_resource_func()
         self.url_change_func(url)
         try:
@@ -210,6 +216,10 @@ class HtmlFrame(ttk.Frame):
                     self.url_change_func(newurl)
                     if "image" in filetype:
                         image, error = newimage(data, "_htmlframe_img_{}_{}_".format(id(self), self.image_count), filetype, self.html.image_inversion_enabled)
+                        if error:
+                            self.html.image_setup_func(url, False)
+                        else:
+                            self.html.image_setup_func(url, True)
                         self.load_html("<img style='max-width:100%' src='replace:{}'></img".format(image))
                         self.image_count += 1
                         self.image = image
@@ -280,6 +290,10 @@ class HtmlFrame(ttk.Frame):
     def on_done_loading(self, function):
         "Alllows for handling the finishing of all outstanding requests"
         self.done_loading_func = function
+
+    def on_image_setup(self, function):
+        "Callback for image loading"
+        self.html.image_setup_func = function
 
     def on_downloading_resource(self, function):
         "Allows for handling resource downloads"
@@ -478,6 +492,12 @@ class HtmlFrame(ttk.Frame):
             base_url = "file://{0}/".format(path)
         self.html.base_url = self.current_url = base_url
         self.html.parse(html_source)
+        
+        if self.waiting_for_reset:
+            self.waiting_for_reset = False
+            for style in self.accumulated_styles:
+                self.add_css(style)
+            self.accumulated_styles = []
 
     def add_html(self, html_source):
         "Parse HTML and add it to the end of the current document."
@@ -491,7 +511,10 @@ class HtmlFrame(ttk.Frame):
 
     def add_css(self, css_source):
         "Parse CSS code"
-        self.html.parse_css(data=css_source)
+        if self.waiting_for_reset:
+            self.accumulated_styles.append(css_source)
+        else:
+            self.html.parse_css(data=css_source, override=True)
 
 
 class HtmlLabel(HtmlFrame):

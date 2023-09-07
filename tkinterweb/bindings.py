@@ -98,6 +98,8 @@ class TkinterWeb(tk.Widget):
             kwargs["defaultstyle"] = DEFAULTSTYLE
         if "parsemode" not in kwargs:
             kwargs["parsemode"] = DEFAULTPARSEMODE
+        #if "enablelayout" not in kwargs:
+        #    kwargs["enablelayout"] = True
         #if "logcmd" not in kwargs:
         #    kwargs["logcmd"] = tkhtml_notifier
 
@@ -143,6 +145,7 @@ class TkinterWeb(tk.Widget):
         self.form_submit_func = self.placeholder
         self.done_loading_func = self.placeholder
         self.downloading_resource_func = self.placeholder
+        self.image_setup_func = self.placeholder
         self.token = "TKWtsvLKac1"
 
         if scroll_overflow:
@@ -306,13 +309,16 @@ class TkinterWeb(tk.Widget):
         else:
             return match.group()
 
-    def parse_css(self, sheetid=None, importcmd=None, data=""):
+    def parse_css(self, sheetid=None, importcmd=None, data="", override=False):
         """Parse CSS code"""
         data = self.crash_prevention(data)
         if self.dark_theme_enabled:
             data = re.sub(self.dark_theme_regex, self.generate_altered_colour, data)
         if sheetid and importcmd:
             self.tk.call(self._w, "style", "-id", sheetid, "-importcmd", importcmd, data)
+        elif override:
+            self.style_count += 1
+            self.tk.call(self._w, "style", "-id", "author" + str(self.style_count).zfill(4), data)
         else:
             self.tk.call(self._w, "style", data)
 
@@ -434,11 +440,15 @@ class TkinterWeb(tk.Widget):
 
     def get_node_attribute(self, node_handle, attribute, default="", value=None):
         """Get the specified attribute of the given node"""
-        if value:
+        if value: #backwards compatability
             return self.tk.call(node_handle, "attribute", attribute, value)
         else:
             return self.tk.call(node_handle, "attribute", "-default", default, attribute)
-
+        
+    def set_node_attribute(self, node_handle, attribute, value):
+        """Set the specified attribute of the given node"""
+        return self.tk.call(node_handle, "attribute", attribute, value)
+        
     def get_node_property(self, node_handle, node_property):
         """Get the specified attribute of the given node"""
         return self.tk.call(node_handle, "property", node_property)
@@ -476,7 +486,7 @@ class TkinterWeb(tk.Widget):
             return
         self.downloads_have_occured = True
         self.style_count += 1
-        ids = "author." + str(self.style_count).zfill(4)
+        ids = "user." + str(self.style_count).zfill(4)
         handler_proc = self.register(lambda new_url,
                                      parent_url=self.base_url:
                                      self.on_atimport(parent_url, new_url)
@@ -500,7 +510,7 @@ class TkinterWeb(tk.Widget):
                 self.message_func(
                     "Loading stylesheet from {0}.".format(shorten(url)))
                 self.style_count += 1
-                ids = "author." + str(self.style_count).zfill(4)
+                ids = "user." + str(self.style_count).zfill(4)
                 handler_proc = self.register(lambda new_url,
                                              parent_url=url:
                                              self.on_atimport(
@@ -524,7 +534,7 @@ class TkinterWeb(tk.Widget):
             url = urljoin(parent_url, new_url)
             self.message_func(
                 "Loading stylesheet from {}.".format(shorten(url)))
-            ids = "author." + str(self.style_count).zfill(4)
+            ids = "user." + str(self.style_count).zfill(4)
             handler_proc = self.register(lambda new_url,
                                          parent_url=url:
                                          self.on_atimport(parent_url, new_url)
@@ -653,6 +663,7 @@ class TkinterWeb(tk.Widget):
             if not done:
                 self.message_func(
                     "The image {} could not be shown because it is not supported yet.".format(shorten(url)))
+                self.image_setup_func(url, True)
         else:
             url = self.resolve_url(url)
             self.image_thread_check(url, name)
@@ -1053,7 +1064,6 @@ class TkinterWeb(tk.Widget):
         """Fetch images and display them in the document"""
         thread = self.begin_download()
 
-        path = urlparse(url).path
         self.message_func("Fetching image: {0}.".format(shorten(url)))
 
         try:
@@ -1067,19 +1077,24 @@ class TkinterWeb(tk.Widget):
 
                 if image:
                     self.loaded_images.add(image)
+                    self.image_setup_func(url, True)
                 elif error == "no_pycairo":
                     self.message_func(
                         "Scalable Vector Graphics could not be shown because Pycairo is not installed but is required to parse .svg files.")
+                    self.image_setup_func(url, False)
                 elif error == "no_rsvg":
                     self.message_func(
                         "Scalable Vector Graphics could not be shown because Rsvg is not installed but is required to parse .svg files.")
+                    self.image_setup_func(url, False)
                 elif error == "corrupt":
                     self.message_func(
                         "The image {} could not be shown.".format(url))
+                    self.image_setup_func(url, False)
 
         except Exception:
             self.message_func(
                 "The image {} could not be shown because it is corrupt or is not supported yet.".format(url))
+            self.image_setup_func(url, False)
 
         self.finish_download(thread)
         
@@ -1264,6 +1279,7 @@ class TkinterWeb(tk.Widget):
         node = self.search(selector)[0]
         self.tk.call(node, "replace", widgetid)
         self.stored_widgets[widgetid] = node
+
 
     def find_text(self, searchtext, select, ignore_case, highlight_all):
         """Search for and highlight specific text in the document"""

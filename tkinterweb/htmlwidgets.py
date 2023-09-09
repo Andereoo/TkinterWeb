@@ -232,7 +232,7 @@ class HtmlFrame(ttk.Frame):
             # handle URI fragments
             frag = parsed.fragment
             if frag:
-                #self.html.tk.call(self.html._w, "_force")
+                self.html.tk.call(self.html._w, "_force")
                 try:
                     frag = ''.join(char for char in frag if char.isalnum() or char in ("-", "_"))
                     node = self.html.search("[id=%s]" % frag)

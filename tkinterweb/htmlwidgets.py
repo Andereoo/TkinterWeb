@@ -1,5 +1,5 @@
 """
-TkinterWeb v3.20
+TkinterWeb v3.21
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
 
@@ -142,6 +142,19 @@ class HtmlFrame(ttk.Frame):
         self.get_parsemode = self.html.get_parsemode
         self.resolve_url = self.html.resolve_url
 
+        self.yview = self.html.yview
+        self.yview_moveto = self.html.yview_moveto
+        self.yview_scroll = self.html.yview_scroll
+        
+    def yview_toelement(self, selector, index=0):
+        "Find an element that matches a given CSS selectors and scroll to it"
+        nodes = self.html.search(selector)
+        if nodes:
+            try:
+                self.html.yview(nodes[index])
+            except IndexError:
+                pass
+
     def load_website(self, website_url, decode=None, force=False):
         "Load a website from the specified URL"
         if (not website_url.startswith("https://")) and (not website_url.startswith("http://")) and (not website_url.startswith("about:")):
@@ -229,10 +242,12 @@ class HtmlFrame(ttk.Frame):
             else:
                 # if no requests need to be made, we can signal that the page is done loading
                 self.html.done_loading_func()
+                
             # handle URI fragments
             frag = parsed.fragment
             if frag:
-                self.html.tk.call(self.html._w, "_force")
+                #self.html.tk.call(self.html._w, "_force")
+                self.html.update()
                 try:
                     frag = ''.join(char for char in frag if char.isalnum() or char in ("-", "_"))
                     node = self.html.search("[id=%s]" % frag)

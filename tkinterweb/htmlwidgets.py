@@ -123,7 +123,7 @@ class HtmlFrame(ttk.Frame):
         self.html.done_loading_func = self.done_loading
 
         self.message_func(
-            "Welcome to TkinterWeb 3.19! \nhttps://github.com/Andereoo/TkinterWeb")
+            "Welcome to TkinterWeb 3.21! \nhttps://github.com/Andereoo/TkinterWeb")
 
         self.message_func(
             "Debugging messages are enabled. \nUse the parameter `messages_enabled = False` when calling HtmlFrame() to disable these messages.")
@@ -242,7 +242,7 @@ class HtmlFrame(ttk.Frame):
             else:
                 # if no requests need to be made, we can signal that the page is done loading
                 self.html.done_loading_func()
-                
+
             # handle URI fragments
             frag = parsed.fragment
             if frag:

@@ -61,12 +61,12 @@ This will make a popup show if the user right-clicked on a link. Clicking link s
 
 Similarly, bindings can also be applied to navigation keys:  
 ```
-  myhtmlframe.bind_all("<Up>", lambda e: myhtmlframe.html.yview_scroll(-5, "units"))
-  myhtmlframe.bind_all("<Down>", lambda e: myhtmlframe.html.yview_scroll(5, "units"))
-  myhtmlframe.bind_all("<Prior>", lambda e: myhtmlframe.html.yview_scroll(-1, "pages"))
-  myhtmlframe.bind_all("<Next>", lambda e: myhtmlframe.html.yview_scroll(1, "pages"))
-  myhtmlframe.bind_all("<Home>", lambda e: myhtmlframe.html.yview_moveto(0))
-  myhtmlframe.bind_all("<End>", lambda e: myhtmlframe.html.yview_moveto(1))
+  myhtmlframe.bind_all("<Up>", lambda e: myhtmlframe.yview_scroll(-5, "units"))
+  myhtmlframe.bind_all("<Down>", lambda e: myhtmlframe.yview_scroll(5, "units"))
+  myhtmlframe.bind_all("<Prior>", lambda e: myhtmlframe.yview_scroll(-1, "pages"))
+  myhtmlframe.bind_all("<Next>", lambda e: myhtmlframe.yview_scroll(1, "pages"))
+  myhtmlframe.bind_all("<Home>", lambda e: myhtmlframe.yview_moveto(0))
+  myhtmlframe.bind_all("<End>", lambda e: myhtmlframe.yview_moveto(1))
 ```
 
 ---
@@ -139,7 +139,6 @@ Setting the zoom of the HtmlFrame widget is very easy. This can be used to add a
 myhtmlframe.set_zoom(2)
 ```
 To zoom only the text, use `set_fontscale()` instead.
-
 
 ---
 *Other methods can be found in the [useful methods section](#useful-methods) below.*
@@ -454,6 +453,33 @@ This function is experimental and may cause hangs or crashes.
 Parameters
 * **enabled** *(boolean)* - Specifies whether page colours should be inverted.
 * **invert_images** *(boolean)* - Specifies images should be inverted.
+
+---
+#### `yview(*args)`
+Can be used to adgust the viewport; base function for `yview_moveto` and `yview_scroll`. If a Tkhtml3 node is passed to this function, the document will scroll to the top of the given node.
+
+---
+#### `yview_moveto(number)`
+Shifts the view vertically to the specified position.
+
+Parameters
+* **number** *(float)* - Specifies the position to be scrolled to.
+
+---
+#### `yview_scroll(number, what)`
+Shifts the view in the window up or down.
+
+Parameters
+* **number** *(float)* - Specifies the number of 'whats' to scroll; may be positive to scroll down or negative to scroll up.
+* **what** *(string)* - Either "units" or "pages".
+
+---
+#### `yview_toelement(selector, index=0)`
+Find an element that matches a given CSS selectors and scroll to it.
+
+Parameters
+* **selector** *(string)* - Specifies the CSS selector to be used.
+* **index** *(integer)* - Specifies which element is to be scrolled to.
 
 ---
 #### `ignore_invalid_images(value)`

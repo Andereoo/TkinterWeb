@@ -873,7 +873,7 @@ class StoppableThread(threading.Thread):
 
     def __init__(self,  *args, **kwargs):
         threading.Thread.__init__(self, *args, **kwargs)
-        self.setDaemon(True)
+        self.daemon = True
         self.running = True
 
     def stop(self):

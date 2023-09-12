@@ -24,8 +24,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import sys
 import os
+import sys
+
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
 try:
@@ -34,6 +35,7 @@ try:
     from utilities import Notebook
 except (ImportError, ModuleNotFoundError):
     import traceback
+
     # Give useful troubleshooting information as a popup, as most bundled applications don't have a visible console
     # Also print the message in case something is wrong with the Tkinter installation as well
     error_message = "ModuleNotFoundError: The files required to run TkinterWeb could not be found. \

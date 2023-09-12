@@ -25,9 +25,9 @@ SOFTWARE.
 """
 
 import mimetypes
-import sys
 import os
 import platform
+import sys
 import threading
 
 try:
@@ -37,11 +37,11 @@ except ImportError:
 
 try:
     import tkinter as tk
-    from tkinter import filedialog, ttk, colorchooser
+    from tkinter import colorchooser, filedialog, ttk
 except ImportError:
-    import Tkinter as tk
-    import tkFileDialog as filedialog
     import tkColorChooser as colorchooser
+    import tkFileDialog as filedialog
+    import Tkinter as tk
     import ttk
 
 try:

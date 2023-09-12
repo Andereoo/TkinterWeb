@@ -26,14 +26,14 @@ SOFTWARE.
 import platform
 
 from bindings import TkinterWeb
-from utilities import (AutoScrollbar, StoppableThread, cachedownload, download,
-                   notifier, currentpath, threadname)
 from imageutils import newimage
+from utilities import (AutoScrollbar, StoppableThread, cachedownload,
+                       currentpath, download, notifier, threadname)
 
 try:
-    from urllib.parse import urlparse, urldefrag
+    from urllib.parse import urldefrag, urlparse
 except ImportError:
-    from urlparse import urlparse, urldefrag
+    from urlparse import urldefrag, urlparse
 
 try:
     import tkinter as tk

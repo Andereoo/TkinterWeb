@@ -25,7 +25,7 @@ SOFTWARE.
 """
 
 from _thread import RLock
-from functools import update_wrapper, _make_key
+from functools import _make_key, update_wrapper
 
 
 def _lru_cache_wrapper(user_function):

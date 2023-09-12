@@ -24,23 +24,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import platform
 import re
 import sys
-import platform
 
 try:
-    from urllib.parse import urljoin, urlparse, urlunparse, urlencode
+    from urllib.parse import urlencode, urljoin, urlparse, urlunparse
 except ImportError:
-    from urlparse import urljoin, urlparse, urlunparse
     from urllib import urlencode
+
+    from urlparse import urljoin, urlparse, urlunparse
 
 try:
     import tkinter as tk
 except ImportError:
     import Tkinter as tk
 
-from utilities import *
 from imageutils import *
+from utilities import *
+
 
 class Combobox(tk.Widget):
     """Bindings for Bryan Oakley's combobox widget"""

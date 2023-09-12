@@ -713,7 +713,7 @@ class FileSelector(tk.Frame):
             files = files[0].replace("\\", "/").split("/")[-1]
             self.label.config(text=files)
         else:
-            self.label.config(text="{} files selected.".format(number))
+            self.label.config(text=f"{number} files selected.")
         self.event_generate("<<Modified>>")
 
     def reset(self):
@@ -819,14 +819,14 @@ class Notebook(ttk.Frame):
 
     def add(self, child, **kwargs):
         if child in self.pages:
-            raise ValueError("{} is already managed by {}.".format(child, self))
+            raise ValueError(f"{child} is already managed by {self}.")
         frame = self.blankframe()
         self.notebook.add(frame, **kwargs)
         self.pages.append(child)
 
     def insert(self, where, child, **kwargs):
         if child in self.pages:
-            raise ValueError("{} is already managed by {}.".format(child, self))
+            raise ValueError(f"{child} is already managed by {self}.")
         frame = self.blankframe()
         self.notebook.insert(where, frame, **kwargs)
         self.pages.insert(where, child)

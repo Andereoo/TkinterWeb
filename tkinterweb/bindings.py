@@ -117,7 +117,7 @@ class TkinterWeb(tk.Widget):
             load_tkhtml(master, folder, force=True)
             tk.Widget.__init__(self, master, "html", cfg, kwargs)
 
-        self.message_func("Tkhtml3 successfully loaded from {}.".format(folder))
+        self.message_func(f"Tkhtml3 successfully loaded from {folder}.")
 
         # widget settings
         self.stylesheets_enabled = True
@@ -160,7 +160,7 @@ class TkinterWeb(tk.Widget):
         self.active_threads = []
         self.stored_widgets = {}
         self.loaded_images = set()
-        self.image_name_prefix = "_tkinterweb_img_{}_".format(id(self))
+        self.image_name_prefix = f"_tkinterweb_img_{id(self)}_"
         self.is_selecting = False
         self.downloads_have_occured = False
         self.unstoppable = True
@@ -199,8 +199,8 @@ class TkinterWeb(tk.Widget):
         self.dark_theme_limit = 160
 
         # set up bindtags
-        self.node_tag = "tkinterweb.{0}.nodes".format(id(self))
-        self.scrollable_node_tag = "tkinterweb.{0}.scrollablenodes".format(id(self))
+        self.node_tag = f"tkinterweb.{id(self)}.nodes"
+        self.scrollable_node_tag = f"tkinterweb.{id(self)}.scrollablenodes"
         self.add_bindtags(self, False)
 
         # bindings
@@ -264,7 +264,7 @@ class TkinterWeb(tk.Widget):
 
     def rgb_to_hex(self, red, green, blue, *args):
         """Convert RGB colour code to HEX"""
-        return '#%02x%02x%02x' % (red, green, blue)
+        return f'#{red:02x}{green:02x}{blue:02x}'
 
     def check_colors(self, rgb, match):
         """Check colour, invert if necessary, and convert"""
@@ -472,11 +472,11 @@ class TkinterWeb(tk.Widget):
 
     def get_current_node(self, event):
         """Get current node"""
-        return self.tk.eval("""set node [lindex [lindex [{0} node {1} {2}] end] end]""".format(self, event.x, event.y))
+        return self.tk.eval(f"""set node [lindex [lindex [{self} node {event.x} {event.y}] end] end]""")
 
     def get_current_node_parent(self, node):
         """Get the parent of the given node"""
-        return self.tk.eval("""set node [lindex [lindex [{0} parent] end] end]""".format(node))
+        return self.tk.eval(f"""set node [lindex [lindex [{node} parent] end] end]""")
 
     def on_script(self, *args):
         """Currently just ignoring script"""
@@ -509,7 +509,7 @@ class TkinterWeb(tk.Widget):
             try:
                 url = self.resolve_url(href)
                 self.message_func(
-                    "Loading stylesheet from {0}.".format(shorten(url)))
+                    f"Loading stylesheet from {shorten(url)}.")
                 self.style_count += 1
                 ids = "user." + str(self.style_count).zfill(4)
                 handler_proc = self.register(lambda new_url,
@@ -519,7 +519,7 @@ class TkinterWeb(tk.Widget):
                                              )
                 self.style_thread_check(sheetid=ids, handler=handler_proc, errorurl=href, url=url)
             except Exception as error:
-                self.message_func("Error reading stylesheet {}: {}.".format(href, error))
+                self.message_func(f"Error reading stylesheet {href}: {error}.")
         elif "icon" in rel:
             href = self.get_node_attribute(node, "href")
             url = self.resolve_url(href)
@@ -534,7 +534,7 @@ class TkinterWeb(tk.Widget):
         try:
             url = urljoin(parent_url, new_url)
             self.message_func(
-                "Loading stylesheet from {}.".format(shorten(url)))
+                f"Loading stylesheet from {shorten(url)}.")
             ids = "user." + str(self.style_count).zfill(4)
             handler_proc = self.register(lambda new_url,
                                          parent_url=url:
@@ -545,7 +545,7 @@ class TkinterWeb(tk.Widget):
 
         except Exception as error:
             self.message_func(
-                "Error reading stylesheet {}: {}.".format(new_url, error)) 
+                f"Error reading stylesheet {new_url}: {error}.") 
 
     def on_title(self, node):
         """Handle <title> elements"""
@@ -602,7 +602,7 @@ class TkinterWeb(tk.Widget):
                 # Otherwise the page will load the same object indefinitely and freeze the GUI forever
                 return
 
-            self.message_func("Loading object: {}.".format(shorten(url)))
+            self.message_func(f"Loading object: {shorten(url)}.")
 
             # Download the data and display it if it is an image or html file
             # Ideally threading would be used here, but at the moment threading <object> elements breaks some images
@@ -617,11 +617,11 @@ class TkinterWeb(tk.Widget):
             if data and filetype.startswith("image"):
                 image, error = newimage(data, name, filetype, self.image_inversion_enabled)
                 self.loaded_images.add(image)
-                self.tk.call(node, "override", "-tkhtml-replacement-image url(replace:{})".format(image))
+                self.tk.call(node, "override", f"-tkhtml-replacement-image url(replace:{image})")
             elif data and filetype == "text/html":
                 self.create_iframe(node, newurl, data)
         except Exception as error:
-            self.message_func("An error has been encountered while loading an <object> element: {}.".format(error))
+            self.message_func(f"An error has been encountered while loading an <object> element: {error}.")
 
     def on_drawcleanupcrash(self):
         if self.prevent_crashes:
@@ -654,7 +654,7 @@ class TkinterWeb(tk.Widget):
                 url.startswith("repeating-linear-gradient("),
                 url.startswith("repeating-radial-gradient(")]):
             done = False
-            self.message_func("Fetching image: {0}.".format(shorten(url)))
+            self.message_func(f"Fetching image: {shorten(url)}.")
             for image in url.split(","):
                 if image.startswith("url("):
                     image = strip_css_url(image)
@@ -663,7 +663,7 @@ class TkinterWeb(tk.Widget):
                     done = True
             if not done:
                 self.message_func(
-                    "The image {} could not be shown because it is not supported yet.".format(shorten(url)))
+                    f"The image {shorten(url)} could not be shown because it is not supported yet.")
                 self.image_setup_func(url, True)
         else:
             url = self.resolve_url(url)
@@ -1011,7 +1011,7 @@ class TkinterWeb(tk.Widget):
         newurl = match.group()
         newurl = strip_css_url(newurl)
         newurl = urljoin(url, newurl)
-        newurl = "url('{}')".format(newurl)
+        newurl = f"url('{newurl}')"
         return newurl
 
     def remove_noto_emoji(self, match):
@@ -1054,10 +1054,10 @@ class TkinterWeb(tk.Widget):
 
             except Exception as error:
                 self.message_func(
-                    "Error reading stylesheet {}: {}.".format(errorurl, error))
+                    f"Error reading stylesheet {errorurl}: {error}.")
         if data and self.unstoppable:
 
-            self.parse_css("{}.9999".format(sheetid), handler, data)
+            self.parse_css(f"{sheetid}.9999", handler, data)
 
         self.finish_download(thread)
 
@@ -1065,7 +1065,7 @@ class TkinterWeb(tk.Widget):
         """Fetch images and display them in the document"""
         thread = self.begin_download()
 
-        self.message_func("Fetching image: {0}.".format(shorten(url)))
+        self.message_func(f"Fetching image: {shorten(url)}.")
 
         try:
             if url.startswith("file://") or (not self.caches_enabled):
@@ -1089,12 +1089,12 @@ class TkinterWeb(tk.Widget):
                     self.image_setup_func(url, False)
                 elif error == "corrupt":
                     self.message_func(
-                        "The image {} could not be shown.".format(url))
+                        f"The image {url} could not be shown.")
                     self.image_setup_func(url, False)
 
         except Exception:
             self.message_func(
-                "The image {} could not be shown because it is corrupt or is not supported yet.".format(url))
+                f"The image {url} could not be shown because it is corrupt or is not supported yet.")
             self.image_setup_func(url, False)
 
         self.finish_download(thread)
@@ -1104,7 +1104,7 @@ class TkinterWeb(tk.Widget):
         href = self.get_node_attribute(node_handle, "href")
         url = self.resolve_url(href)
         self.message_func(
-            "A link to '{}' has been clicked.".format(shorten(url)))
+            f"A link to '{shorten(url)}' has been clicked.")
         self.visited_links.append(url)
         self.link_click_func(url)
 
@@ -1168,7 +1168,7 @@ class TkinterWeb(tk.Widget):
             data = data.encode()
 
         self.message_func(
-            "A form has been submitted to {}.".format(shorten(url)))
+            f"A form has been submitted to {shorten(url)}.")
         self.form_submit_func(url, data, method)
 
     def handle_node_replacement(self, node, widgetid, deletecmd, stylecmd=None, allowscrolling=True, handledelete=True):
@@ -1214,7 +1214,7 @@ class TkinterWeb(tk.Widget):
             if bg == "transparent":
                 bg = "white"
             style = ttk.Style()
-            stylename = "Scale{}.Horizontal.TScale".format(widgetid)
+            stylename = f"Scale{widgetid}.Horizontal.TScale"
             style.configure(stylename, background=bg)
             widgetid.configure(style=stylename)
         elif widgettype == "text":
@@ -1313,7 +1313,7 @@ class TkinterWeb(tk.Widget):
 
             if len(match_indexes) > 0:
                 #highlight matches
-                self.message_func("{} results for the search key '{}' have been found.".format(nmatches, searchtext))
+                self.message_func(f"{nmatches} results for the search key '{searchtext}' have been found.")
                 if highlight_all:
                     for num, match in enumerate(match_indexes):
                         match = self.text("index", match_indexes[num][0])
@@ -1348,12 +1348,12 @@ class TkinterWeb(tk.Widget):
                 if (node_top < view_top) or (node_bottom > view_bottom):
                     self.yview("moveto", node_top/docheight)
             else:
-                self.message_func("No results for the search key '{}' could be found.".format(searchtext))
+                self.message_func(f"No results for the search key '{searchtext}' could be found.")
 
             return nmatches
         except Exception as error:
             self.message_func(
-            "An error has been encountered while searching the document for {}: {}.".format(searchtext, error))
+            f"An error has been encountered while searching the document for {searchtext}: {error}.")
             return 0
 
     def create_iframe(self, node, url, html=None):
@@ -1439,4 +1439,4 @@ class TkinterWeb(tk.Widget):
         self.clipboard_clear()
         self.clipboard_append(selected_text)
         self.message_func(
-            "The text '{}' has been copied to the clipboard.".format(selected_text))
+            f"The text '{selected_text}' has been copied to the clipboard.")

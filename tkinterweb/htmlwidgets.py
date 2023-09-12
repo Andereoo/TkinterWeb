@@ -70,7 +70,7 @@ class HtmlFrame(ttk.Frame):
             vsb.bind("<Button-5>", self.scroll_x11)
             html.bind("<Button-4>", self.overflow_scroll_x11)
             html.bind("<Button-5>", self.overflow_scroll_x11)
-            self.bind_class("{0}.document".format(html),
+            self.bind_class(f"{html}.document",
                             "<MouseWheel>", self.scroll)
             self.bind_class(html.scrollable_node_tag,
                             "<MouseWheel>", self.scroll)
@@ -218,7 +218,7 @@ class HtmlFrame(ttk.Frame):
 
             # if url is different than the current one, load the new site.
             if force or (method == "POST") or (self.skim(urldefrag(url)[0]) != self.skim(urldefrag(self.current_url)[0])):
-                self.message_func("Connecting to {0}.".format(parsed.netloc))
+                self.message_func(f"Connecting to {parsed.netloc}.")
                 if (parsed.scheme == "file") or (not self.html.caches_enabled):
                     data, newurl, filetype = download(
                         url, data, method, decode)
@@ -228,12 +228,12 @@ class HtmlFrame(ttk.Frame):
                 if threadname().isrunning():
                     self.url_change_func(newurl)
                     if "image" in filetype:
-                        image, error = newimage(data, "_htmlframe_img_{}_{}_".format(id(self), self.image_count), filetype, self.html.image_inversion_enabled)
+                        image, error = newimage(data, f"_htmlframe_img_{id(self)}_{self.image_count}_", filetype, self.html.image_inversion_enabled)
                         if error:
                             self.html.image_setup_func(url, False)
                         else:
                             self.html.image_setup_func(url, True)
-                        self.load_html("<img style='max-width:100%' src='replace:{}'></img".format(image))
+                        self.load_html(f"<img style='max-width:100%' src='replace:{image}'></img")
                         self.image_count += 1
                         self.image = image
                     else:
@@ -250,18 +250,18 @@ class HtmlFrame(ttk.Frame):
                 self.html.update()
                 try:
                     frag = ''.join(char for char in frag if char.isalnum() or char in ("-", "_"))
-                    node = self.html.search("[id=%s]" % frag)
+                    node = self.html.search(f"[id={frag}]")
                     if node:
                         self.html.yview(node)
                     else:
-                        node = self.html.search("[name=%s]" % frag)
+                        node = self.html.search(f"[name={frag}]")
                         if node:
                             self.html.yview(node)
                 except Exception:
                     pass
         except Exception as error:
             self.message_func(
-                "An error has been encountered while loading {}: {}.".format(url, error))
+                f"An error has been encountered while loading {url}: {error}.")
             self.load_html(self.broken_page_msg)
             self.current_url = ""
 
@@ -503,8 +503,8 @@ class HtmlFrame(ttk.Frame):
         if not base_url:
             path = currentpath(False)
             if not path.startswith("/"):
-                path = "/{0}".format(path)
-            base_url = "file://{0}/".format(path)
+                path = f"/{path}"
+            base_url = f"file://{path}/"
         self.html.base_url = self.current_url = base_url
         self.html.parse(html_source)
 
@@ -519,8 +519,8 @@ class HtmlFrame(ttk.Frame):
         if not self.current_url:
             path = currentpath(False)
             if not path.startswith("/"):
-                path = "/{0}".format(path)
-            base_url = "file://{0}/".format(path)
+                path = f"/{path}"
+            base_url = f"file://{path}/"
             self.html.base_url = self.current_url = base_url
         self.html.parse(html_source)
 

@@ -279,7 +279,7 @@ class TkinterWeb(tk.Widget):
     def generate_altered_colour(self, match):
         """Invert document colours. Highly experimental."""
         colors = match.group(2).replace("\n", "")
-        colors = re.split("\s(?![^()]*\))", colors)
+        colors = re.split(r"\s(?![^()]*\))", colors)
         changed = False
 
         for count, color in enumerate(colors):
@@ -990,9 +990,9 @@ class TkinterWeb(tk.Widget):
 
     def crash_prevention(self, data):
         if self.prevent_crashes:
-            data = ''.join(c for c in data if c <= u'\uFFFF')
+            data = ''.join(c for c in data if c <= '\uFFFF')
             data = re.sub("font-family:[^;']*(;)?", self.remove_noto_emoji, data, flags=re.IGNORECASE)
-            data = re.sub("rgb\([^0-9](.*?)\)", "inherit", data, flags=re.IGNORECASE)
+            data = re.sub(r"rgb\([^0-9](.*?)\)", "inherit", data, flags=re.IGNORECASE)
         return data
 
     def begin_download(self):
@@ -1050,7 +1050,7 @@ class TkinterWeb(tk.Widget):
                     data = cachedownload(url)[0]
 
                 matcher = lambda match, url=url: self.fix_css_urls(match, url)
-                data = re.sub("url\((.*?)\)", matcher, data)
+                data = re.sub(r"url\((.*?)\)", matcher, data)
 
             except Exception as error:
                 self.message_func(

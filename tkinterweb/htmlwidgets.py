@@ -242,6 +242,7 @@ class HtmlFrame(ttk.Frame):
             else:
                 # if no requests need to be made, we can signal that the page is done loading
                 self.html.done_loading_func()
+                self.finish_css()
 
             # handle URI fragments
             frag = parsed.fragment
@@ -507,7 +508,10 @@ class HtmlFrame(ttk.Frame):
             base_url = "file://{0}/".format(path)
         self.html.base_url = self.current_url = base_url
         self.html.parse(html_source)
-        
+
+        self.finish_css()
+
+    def finish_css(self):        
         if self.waiting_for_reset:
             self.waiting_for_reset = False
             for style in self.accumulated_styles:

@@ -1,6 +1,6 @@
 """
 TkinterWeb v3.21
-This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
+This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html,
 which displays styled HTML documents in Tkinter.
 
 Copyright (c) 2023 Andereoo
@@ -24,7 +24,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import sys, os
+import sys
+import os
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
 try:
@@ -41,14 +42,14 @@ See https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/docs/FAQ.md for 
 Error code: {} \n\
 If you think this is a bug, please file a bug report at https://github.com/Andereoo/TkinterWeb.".format(traceback.format_exc())
     sys.stdout.write(error_message)
-    
+
     try:
         import tkinter as tk
         from tkinter import messagebox
     except ImportError:
         import Tkinter as tk
         import tkMessageBox as messagebox
-        
+
     root = tk.Tk()
     root.withdraw()
     message = messagebox.showerror("Fatal Error Encountered", error_message) #for older versions of pyinstaller, windowed app may crash without any message of any kind

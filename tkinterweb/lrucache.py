@@ -33,8 +33,8 @@ def _lru_cache_wrapper(user_function):
     It only adds to the cache if the data is not None.
     This means that if a page load is stopped, re-loading the page will not cause the page to be blank."""
     sentinel = object()
-    make_key = _make_key 
-    PREV, NEXT, KEY, RESULT = 0, 1, 2, 3 
+    make_key = _make_key
+    PREV, NEXT, KEY, RESULT = 0, 1, 2, 3
 
     cache = {}
     hits = misses = 0
@@ -82,7 +82,7 @@ def _lru_cache_wrapper(user_function):
                     last = root[PREV]
                     link = [last, root, key, result]
                     last[NEXT] = root[PREV] = cache[key] = link
-                    full = (cache_len() >= maxsize)
+                    full = cache_len() >= maxsize
         return result
     return wrapper
 

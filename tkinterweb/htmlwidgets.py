@@ -23,12 +23,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+import platform
 
 from bindings import TkinterWeb
 from utilities import (AutoScrollbar, StoppableThread, cachedownload, download,
                    notifier, currentpath, threadname)
 from imageutils import newimage
-import platform
 
 try:
     from urllib.parse import urlparse, urldefrag
@@ -145,7 +145,7 @@ class HtmlFrame(ttk.Frame):
         self.yview = self.html.yview
         self.yview_moveto = self.html.yview_moveto
         self.yview_scroll = self.html.yview_scroll
-        
+
     def yview_toelement(self, selector, index=0):
         "Find an element that matches a given CSS selectors and scroll to it"
         nodes = self.html.search(selector)
@@ -181,7 +181,7 @@ class HtmlFrame(ttk.Frame):
         #Workaround for Bug #40, where urllib.urljoin constructs improperly formatted urls on Linux when url starts with file:///
         if not url.startswith("file://///"):
             url = url.replace("file:////", "file:///")
-                
+
         if self.thread_in_progress:
             self.thread_in_progress.stop()
         if self.html.max_thread_count >= 1:
@@ -372,7 +372,7 @@ class HtmlFrame(ttk.Frame):
         "Enable or disable dark theme"
         "This will cause page colours to be 'inverted' if enabled is set to True"
         "This will also cause images to be inverted if 'invert_images' is also set to True"
-        if (enabled or invert_images): 
+        if (enabled or invert_images):
             self.message_func("Warning: dark theme has been enabled. This feature is highly experimental and may cause freezes or crashes.")
         self.html.dark_theme_enabled = enabled
         self.html.image_inversion_enabled = invert_images
@@ -402,7 +402,7 @@ class HtmlFrame(ttk.Frame):
 
     def get_current_link(self, resolve=True):
         "Convenience method for getting the url of the current hyperlink"
-        if self.get_currently_hovered_node_tag().lower() == "a": 
+        if self.get_currently_hovered_node_tag().lower() == "a":
             href = self.get_currently_hovered_node_attribute("href")
             if resolve:
                 return self.resolve_url(href)
@@ -489,7 +489,7 @@ class HtmlFrame(ttk.Frame):
                 self.scroll_overflow.scroll_x11(event)
             else:
                 self.html.yview_scroll(4, "units")
-    
+
     def overflow_scroll_x11(self, event):
         yview = self.html.yview()
         if event.num == 4 and self.scroll_overflow and yview[0] == 0:
@@ -507,7 +507,7 @@ class HtmlFrame(ttk.Frame):
             base_url = "file://{0}/".format(path)
         self.html.base_url = self.current_url = base_url
         self.html.parse(html_source)
-        
+
         if self.waiting_for_reset:
             self.waiting_for_reset = False
             for style in self.accumulated_styles:
@@ -539,7 +539,7 @@ class HtmlLabel(HtmlFrame):
         tags = list(self.html.bindtags())
         tags.remove("Html")
         self.html.bindtags(tags)
-        
+
         self.html.shrink(True)
 
         self.load_html(text)

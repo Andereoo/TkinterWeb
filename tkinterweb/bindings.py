@@ -24,6 +24,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import re
+import sys
+import platform
+
 try:
     from urllib.parse import urljoin, urlparse, urlunparse, urlencode
 except ImportError:
@@ -37,11 +41,6 @@ except ImportError:
 
 from utilities import *
 from imageutils import *
-
-import re
-import sys
-import platform
-
 
 class Combobox(tk.Widget):
     """Bindings for Bryan Oakley's combobox widget"""
@@ -196,7 +195,7 @@ class TkinterWeb(tk.Widget):
         self.broken_image = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x19\x00\x00\x00\x1e\x08\x03\x00\x00\x00\xee2E\xe9\x00\x00\x03\x00PLTE\xc5\xd5\xf4\xcd\xdb\xf4\xdf\xe8\xfc\xd5\xdd\xf4\xa5\xa3\xa5\x85\x83\x85\xfc\xfe\xfc\xf4\xf6\xf9\x95\x93\x95S\xb39\x9d\x9f\x9d\xc5\xd3\xedo\xbbg\xd5\xe3\xf4\xd5\xdf\xfc\xd5\xe3\xfc\xb5\xcf\xd5\x9d\xc7\xb5\xc5\xdf\xe5S\xaf9\x8d\xc7\x8d\x15\x15\x15\x16\x16\x16\x17\x17\x17\x18\x18\x18\x19\x19\x19\x1a\x1a\x1a\x1b\x1b\x1b\x1c\x1c\x1c\x1d\x1d\x1d\x1e\x1e\x1e\x1f\x1f\x1f   !!!"""###$$$%%%&&&\'\'\'((()))***+++,,,---...///000111222333444555666777888999:::;;;<<<===>>>???@@@AAABBBCCCDDDEEEFFFGGGHHHIIIJJJKKKLLLMMMNNNOOOPPPQQQRRRSSSTTTUUUVVVWWWXXXYYYZZZ[[[\\\\\\]]]^^^___```aaabbbcccdddeeefffggghhhiiijjjkkklllmmmnnnooopppqqqrrrssstttuuuvvvwwwxxxyyyzzz{{{|||}}}~~~\x7f\x7f\x7f\x80\x80\x80\x81\x81\x81\x82\x82\x82\x83\x83\x83\x84\x84\x84\x85\x85\x85\x86\x86\x86\x87\x87\x87\x88\x88\x88\x89\x89\x89\x8a\x8a\x8a\x8b\x8b\x8b\x8c\x8c\x8c\x8d\x8d\x8d\x8e\x8e\x8e\x8f\x8f\x8f\x90\x90\x90\x91\x91\x91\x92\x92\x92\x93\x93\x93\x94\x94\x94\x95\x95\x95\x96\x96\x96\x97\x97\x97\x98\x98\x98\x99\x99\x99\x9a\x9a\x9a\x9b\x9b\x9b\x9c\x9c\x9c\x9d\x9d\x9d\x9e\x9e\x9e\x9f\x9f\x9f\xa0\xa0\xa0\xa1\xa1\xa1\xa2\xa2\xa2\xa3\xa3\xa3\xa4\xa4\xa4\xa5\xa5\xa5\xa6\xa6\xa6\xa7\xa7\xa7\xa8\xa8\xa8\xa9\xa9\xa9\xaa\xaa\xaa\xab\xab\xab\xac\xac\xac\xad\xad\xad\xae\xae\xae\xaf\xaf\xaf\xb0\xb0\xb0\xb1\xb1\xb1\xb2\xb2\xb2\xb3\xb3\xb3\xb4\xb4\xb4\xb5\xb5\xb5\xb6\xb6\xb6\xb7\xb7\xb7\xb8\xb8\xb8\xb9\xb9\xb9\xba\xba\xba\xbb\xbb\xbb\xbc\xbc\xbc\xbd\xbd\xbd\xbe\xbe\xbe\xbf\xbf\xbf\xc0\xc0\xc0\xc1\xc1\xc1\xc2\xc2\xc2\xc3\xc3\xc3\xc4\xc4\xc4\xc5\xc5\xc5\xc6\xc6\xc6\xc7\xc7\xc7\xc8\xc8\xc8\xc9\xc9\xc9\xca\xca\xca\xcb\xcb\xcb\xcc\xcc\xcc\xcd\xcd\xcd\xce\xce\xce\xcf\xcf\xcf\xd0\xd0\xd0\xd1\xd1\xd1\xd2\xd2\xd2\xd3\xd3\xd3\xd4\xd4\xd4\xd5\xd5\xd5\xd6\xd6\xd6\xd7\xd7\xd7\xd8\xd8\xd8\xd9\xd9\xd9\xda\xda\xda\xdb\xdb\xdb\xdc\xdc\xdc\xdd\xdd\xdd\xde\xde\xde\xdf\xdf\xdf\xe0\xe0\xe0\xe1\xe1\xe1\xe2\xe2\xe2\xe3\xe3\xe3\xe4\xe4\xe4\xe5\xe5\xe5\xe6\xe6\xe6\xe7\xe7\xe7\xe8\xe8\xe8\xe9\xe9\xe9\xea\xea\xea\xeb\xeb\xeb\xec\xec\xec\xed\xed\xed\xee\xee\xee\xef\xef\xef\xf0\xf0\xf0\xf1\xf1\xf1\xf2\xf2\xf2\xf3\xf3\xf3\xf4\xf4\xf4\xf5\xf5\xf5\xf6\xf6\xf6\xf7\xf7\xf7\xf8\xf8\xf8\xf9\xf9\xf9\xfa\xfa\xfa\xfb\xfb\xfb\xfc\xfc\xfc\xfd\xfd\xfd\xfe\xfe\xfe\xff\xff\xff\x01\xb3\x9a&\x00\x00\x01+IDATx\x9c\x9d\x91\xe9\x92\x84 \x0c\x84s (\x08A\xc6\xf7\x7f\xd6M8\x9c\x9d\xa9\xda?\xdb\x96W\x7f\xb6\xd5\x04\xf0\x7f\t\xdcT\x9c\xf7}\x0f\xf4I\x16U\x12\x16\t\x1f\xdaw\xe7\x16!\xcay\x9cL\xac\xc4\xfb\x18\x06\xc9\x81\x14\xd0\xd4o\xc2\x88\xa5X\x1e\x0b"\x1a\xf1\xd1\x05\x0f1f3\x06\xc9\x85\xb6Nb\x08\xe0\xa2d\x9cK\xd00\xefKF\x16\xf0E\ti?\xb2\x8aJ2\xf9\'\x83\xa8]Fy#\xa8\x1d\x00\x91\xa1\x01d\xad\x9e1h\x11m EM(\xa2vA\xe0\xc2,T,\xe3\x98$\xc1T\xd307 \xda6[)C\xea\x16\x1aK\x8c\rDv#BF\xd4\x03\xb4\x0b\xa4\x02,:\x83\xe8H i\xc2<\xec,%\xa2>\x1d\xc9)\x8dD\xad\xfd\x89a\xce\xad\x10\xdbw\xa0\xa0Z.\xa54v!\x8a@\x85\xeb:^\xaf\xe38\xcfZ\x19\xfc"E\xbf\xbf.\x03F\x1a\xf0 Q\xbbUM\xbc\xd5\xfd\xbeR\xa2\xda\x9d\xb3\x1f\xdd\x97\xbc\xf5Y\xf35\xc9\x93\xd0\x19\xe8\xdc\\k_\x7f\xf2g\xb6\x19\xc4\xf8\x90s\x91\x17\xe5\xbe\x0b\xf7\xf9\x99\xd0\x87\xfbV\xb2\xbd\xd5\xfd\xe7\xed?\xe4\x07\xca\xeb\x13o\x88}\xa9\x12\x00\x00\x00\x00IEND\xaeB`\x82'
         self.dark_theme_regex = re.compile(r'([^:;\s{]+)\s?:\s?([^;{!]+)(?=!|;|})') #([^:;\s{]+)\s?:\s?([^;{]+)(?=;|})')
         self.dark_theme_limit = 160
-        
+
         # set up bindtags
         self.node_tag = "tkinterweb.{0}.nodes".format(id(self))
         self.scrollable_node_tag = "tkinterweb.{0}.scrollablenodes".format(id(self))
@@ -274,13 +273,13 @@ class TkinterWeb(tk.Widget):
             rgb[1] = max(1, min(255, 240-rgb[1]))
             rgb[2] = max(1, min(255, 240-rgb[2]))
             return self.rgb_to_hex(*rgb)
-    
+
     def generate_altered_colour(self, match):
         """Invert document colours. Highly experimental."""
         colors = match.group(2).replace("\n", "")
         colors = re.split("\s(?![^()]*\))", colors)
         changed = False
-        
+
         for count, color in enumerate(colors):
             try:
                 if color.startswith("#"):
@@ -303,7 +302,7 @@ class TkinterWeb(tk.Widget):
                     colors[count] = COLORMAPPINGS[color]
             except ValueError as error:
                 changed = False
-                
+
         if changed:
             return match.group(1) + ": " + ' '.join(colors)
         else:
@@ -368,7 +367,7 @@ class TkinterWeb(tk.Widget):
     def set_zoom(self, multiplier):
         """Set the page zoom"""
         self.tk.call(self._w, "configure", "-zoom", float(multiplier))
-        
+
     def get_zoom(self):
         """Return the page zoom"""
         return self.tk.call(self._w, "cget", "-zoom")
@@ -376,7 +375,7 @@ class TkinterWeb(tk.Widget):
     def set_parsemode(self, mode):
         """Set the page render mode"""
         self.tk.call(self._w, "configure", "-parsemode", mode)
-        
+
     def get_parsemode(self):
         """Return the page render mode"""
         return self.tk.call(self._w, "cget", "-parsemode")
@@ -444,11 +443,11 @@ class TkinterWeb(tk.Widget):
             return self.tk.call(node_handle, "attribute", attribute, value)
         else:
             return self.tk.call(node_handle, "attribute", "-default", default, attribute)
-        
+
     def set_node_attribute(self, node_handle, attribute, value):
         """Set the specified attribute of the given node"""
         return self.tk.call(node_handle, "attribute", attribute, value)
-        
+
     def get_node_property(self, node_handle, node_property):
         """Get the specified attribute of the given node"""
         return self.tk.call(node_handle, "property", node_property)
@@ -464,7 +463,7 @@ class TkinterWeb(tk.Widget):
     def set_node_flags(self, node, name):
         """Set dynamic flags on the given node"""
         self.tk.call(node, "dynamic", "set", name)
-    
+
     def remove_node_flags(self, node, name):
         """Set dynamic flags on the given node"""
         self.tk.call(node, "dynamic", "clear", name)
@@ -539,9 +538,9 @@ class TkinterWeb(tk.Widget):
                                          parent_url=url:
                                          self.on_atimport(parent_url, new_url)
                                          )
-            
+
             self.style_thread_check(sheetid=ids, handler=handler_proc, errorurl=new_url, url=url)
-            
+
         except Exception as error:
             self.message_func(
                 "Error reading stylesheet {}: {}.".format(new_url, error)) 
@@ -575,10 +574,10 @@ class TkinterWeb(tk.Widget):
         """Handle <iframe> elements"""
         if not self.objects_enabled or not self.unstoppable:
             return
-        
+
         src = self.get_node_attribute(node, "src")
         srcdoc = self.get_node_attribute(node, "srcdoc")
-        
+
         self.message_func("Loading <iframe> element.")
         if srcdoc:
             self.create_iframe(node, None, srcdoc)
@@ -590,17 +589,17 @@ class TkinterWeb(tk.Widget):
         """Handle <object> elements"""
         if not self.objects_enabled or not self.unstoppable:
             return
-        
+
         name = self.image_name_prefix + str(len(self.loaded_images))
         url = self.get_node_attribute(node, "data")
-            
+
         try:
             url = self.resolve_url(url)
             if url == self.base_url:
                 # Don't load the object if it is the same as the current file
                 # Otherwise the page will load the same object indefinitely and freeze the GUI forever
                 return
-            
+
             self.message_func("Loading object: {}.".format(shorten(url)))
 
             # Download the data and display it if it is an image or html file
@@ -612,7 +611,7 @@ class TkinterWeb(tk.Widget):
                 data, newurl, filetype = cachedownload(url)
             else:
                 return
-                
+
             if data and filetype.startswith("image"):
                 image, error = newimage(data, name, filetype, self.image_inversion_enabled)
                 self.loaded_images.add(image)
@@ -694,10 +693,10 @@ class TkinterWeb(tk.Widget):
         """Handle <form> elements in tables; workaround for Bug #48"""
         if not self.forms_enabled:
             return
-        
+
         if self.waiting_forms > 0:
             inputs = {}
-            def scan(element, form):                        
+            def scan(element, form):
                 for i in self.get_node_children(element):
                     tag = self.get_node_tag(i).lower()
                     if tag == "form":
@@ -744,8 +743,8 @@ class TkinterWeb(tk.Widget):
         state = self.get_node_attribute(node, "disabled", False) != "0"
         if state:
             widgetid.configure(state="disabled")
-        self.handle_node_replacement(node, widgetid, 
-            lambda widgetid=widgetid: self.handle_node_removal(widgetid), 
+        self.handle_node_replacement(node, widgetid,
+            lambda widgetid=widgetid: self.handle_node_removal(widgetid),
             lambda node=node, widgetid=widgetid, widgettype="text": self.handle_node_style(node, widgetid, widgettype))
 
     def on_textarea(self, node):
@@ -761,8 +760,8 @@ class TkinterWeb(tk.Widget):
         state = self.get_node_attribute(node, "disabled", False) != "0"
         if state:
             widgetid.configure(state="disabled")
-        self.handle_node_replacement(node, widgetid, 
-            lambda widgetid=widgetid: self.handle_node_removal(widgetid), 
+        self.handle_node_replacement(node, widgetid,
+            lambda widgetid=widgetid: self.handle_node_removal(widgetid),
             lambda node=node, widgetid=widgetid, widgettype="text": self.handle_node_style(node, widgetid, widgettype))
 
     def on_input(self, node):
@@ -784,15 +783,15 @@ class TkinterWeb(tk.Widget):
             widgetid = FileSelector(self, accept, multiple)
             self.form_get_commands[node] = widgetid.get_value
             self.form_reset_commands[node] = widgetid.reset
-            self.handle_node_replacement(node, widgetid, 
-                lambda widgetid=widgetid: self.handle_node_removal(widgetid), 
+            self.handle_node_replacement(node, widgetid,
+                lambda widgetid=widgetid: self.handle_node_removal(widgetid),
                 lambda node=node, widgetid=widgetid: self.handle_node_style(node, widgetid))
         elif nodetype == "color":
             widgetid = ColourSelector(self, nodevalue)
             self.form_get_commands[node] = widgetid.get_value
             self.form_reset_commands[node] = widgetid.reset
-            self.handle_node_replacement(node, widgetid, 
-                lambda widgetid=widgetid: self.handle_node_removal(widgetid), 
+            self.handle_node_replacement(node, widgetid,
+                lambda widgetid=widgetid: self.handle_node_removal(widgetid),
                 self.placeholder)
         elif nodetype == "hidden":
             widgetid = None
@@ -805,8 +804,8 @@ class TkinterWeb(tk.Widget):
             variable.trace('w', lambda *_, widgetid=widgetid: self.on_input_change(widgetid))
             self.form_get_commands[node] = lambda: variable.get()
             self.form_reset_commands[node] = lambda: variable.set(0)
-            self.handle_node_replacement(node, widgetid, 
-                lambda widgetid=widgetid: self.handle_node_removal(widgetid), 
+            self.handle_node_replacement(node, widgetid,
+                lambda widgetid=widgetid: self.handle_node_removal(widgetid),
                 lambda node=node, widgetid=widgetid: self.handle_node_style(node, widgetid))
         elif nodetype == "range":
             variable = tk.IntVar()
@@ -817,7 +816,7 @@ class TkinterWeb(tk.Widget):
             variable.trace('w', lambda *_, widgetid=widgetid: self.on_input_change(widgetid))
             self.form_get_commands[node] = lambda: variable.get()
             self.form_reset_commands[node] = lambda: variable.set(0)
-            self.handle_node_replacement(node, widgetid, 
+            self.handle_node_replacement(node, widgetid,
                 lambda widgetid=widgetid: self.handle_node_removal(widgetid),
                 lambda node=node, widgetid=widgetid, widgettype="range": self.handle_node_style(node, widgetid, widgettype))
         elif nodetype == "radio":
@@ -832,8 +831,8 @@ class TkinterWeb(tk.Widget):
                 self.radio_buttons[name] = variable
             self.form_get_commands[node] = lambda: variable.get()
             self.form_reset_commands[node] = lambda: variable.set("")
-            self.handle_node_replacement(node, widgetid, 
-                lambda widgetid=widgetid: self.handle_node_removal(widgetid), 
+            self.handle_node_replacement(node, widgetid,
+                lambda widgetid=widgetid: self.handle_node_removal(widgetid),
                 lambda node=node, widgetid=widgetid: self.handle_node_style(node, widgetid))
         else:
             widgetid = tk.Entry(self, validate="key", borderwidth=0, highlightthickness=0)
@@ -843,11 +842,11 @@ class TkinterWeb(tk.Widget):
             widgetid.bind("<Return>", lambda event, node=node: self.handle_form_submission(node=node, event=event))
             self.form_get_commands[node] = lambda: widgetid.get()
             self.form_reset_commands[node] = lambda widgetid=widgetid, content=nodevalue: self.handle_entry_reset(widgetid, content)
-            self.handle_node_replacement(node, widgetid, 
-                lambda widgetid=widgetid: self.handle_node_removal(widgetid), 
+            self.handle_node_replacement(node, widgetid,
+                lambda widgetid=widgetid: self.handle_node_removal(widgetid),
                 lambda node=node, widgetid=widgetid, widgettype="text": self.handle_node_style(node, widgetid, widgettype))
-        
-        if widgetid:    
+
+        if widgetid:
             state = self.get_node_attribute(node, "disabled", self.token)
             if state != self.token:
                 widgetid.configure(state="disabled")
@@ -862,7 +861,7 @@ class TkinterWeb(tk.Widget):
         if not self.current_node:
             #register current node if mouse has never moved
             self.on_mouse_motion(event)
-        
+
         self.focus_set()
         self.tag("delete", "selection")
         node_handle = self.get_current_node(event)
@@ -918,7 +917,7 @@ class TkinterWeb(tk.Widget):
                     self.set_cursor("text")
                 else:
                     self.set_cursor("default")
-                        
+
                 for node in self.hovered_nodes:
                     self.remove_node_flags(node, "hover")
 
@@ -1040,7 +1039,7 @@ class TkinterWeb(tk.Widget):
     def fetch_styles(self, sheetid, handler, errorurl="", url=None, data=None):
         """Fetch stylesheets and parse the CSS code they contain"""
         thread = self.begin_download()
-        
+
         if url and self.unstoppable:
             try:
                 if url.startswith("file://") or (not self.caches_enabled):
@@ -1097,7 +1096,7 @@ class TkinterWeb(tk.Widget):
             self.image_setup_func(url, False)
 
         self.finish_download(thread)
-        
+
     def handle_link_click(self, node_handle):
         """Handle link clicks"""
         href = self.get_node_attribute(node_handle, "href")
@@ -1152,7 +1151,7 @@ class TkinterWeb(tk.Widget):
                 data.append((nodeattrname, nodevalue),)
 
         data = urlencode(data)
-        
+
         if action == "":
             url = list(urlparse(self.base_url))
             url = url[:-3]
@@ -1160,7 +1159,7 @@ class TkinterWeb(tk.Widget):
             url = urlunparse(url)
         else:
             url = self.resolve_url(action)
-	
+
         if method == "GET":
             data = "?" + data
         else:
@@ -1175,14 +1174,14 @@ class TkinterWeb(tk.Widget):
         if stylecmd:
             if handledelete:
                 self.tk.call(node, "replace", widgetid, "-deletecmd",
-                             self.register(deletecmd), "-stylecmd", 
+                             self.register(deletecmd), "-stylecmd",
                              self.register(stylecmd))
             else:
-                self.tk.call(node, "replace", widgetid, "-stylecmd", 
+                self.tk.call(node, "replace", widgetid, "-stylecmd",
                              self.register(stylecmd))
         else:
             if handledelete:
-                self.tk.call(node, "replace", widgetid, "-deletecmd", 
+                self.tk.call(node, "replace", widgetid, "-deletecmd",
                              self.register(deletecmd))
             else:
                 self.tk.call(node, "replace", widgetid)
@@ -1285,7 +1284,7 @@ class TkinterWeb(tk.Widget):
         """Search for and highlight specific text in the document"""
 
         self.clear_selection()
-        
+
         nmatches = 0
         matches = []
         selected = []
@@ -1305,7 +1304,7 @@ class TkinterWeb(tk.Widget):
                 rmatches = re.finditer(searchtext, doctext, flags=re.IGNORECASE | re.MULTILINE)
             else:
                 rmatches = re.finditer(searchtext, doctext, flags=re.MULTILINE)
-                
+
             for match in rmatches:
                 match_indexes.append((match.start(0), match.end(0),))
                 nmatches += 1
@@ -1317,20 +1316,20 @@ class TkinterWeb(tk.Widget):
                     for num, match in enumerate(match_indexes):
                         match = self.text("index", match_indexes[num][0])
                         match += self.text("index", match_indexes[num][1])
-                        matches.append(match)   
-                
+                        matches.append(match)
+
                 selected = self.text("index", match_indexes[select-1][0])
                 selected += self.text("index", match_indexes[select-1][1])
 
                 for match in matches:
                     node1, index1, node2, index2 = match
-                    self.tag("add", "findtext", 
-                             node1, index1, 
+                    self.tag("add", "findtext",
+                             node1, index1,
                              node2, index2)
-                    self.tag("configure", "findtext", 
-                             "-bg", self.find_match_highlight_color, 
+                    self.tag("configure", "findtext",
+                             "-bg", self.find_match_highlight_color,
                              "-fg", self.find_match_text_color)
-                    
+
                 node1, index1, node2, index2 = selected
                 self.tag("add", "findtextselected", node1, index1, node2, index2)
                 self.tag("configure", "findtextselected", "-bg", self.find_current_highlight_color, "-fg", self.find_current_text_color)
@@ -1338,7 +1337,7 @@ class TkinterWeb(tk.Widget):
                 #scroll to node if selected match is not visible
                 nodebox = self.text("bbox", node1, index1, node2, index2)
                 docheight = float(self.tk.call(self._w, "bbox")[3])
-                
+
                 view_top = docheight * self.yview()[0]
                 view_bottom = view_top + self.winfo_height()
                 node_top = float(nodebox[1])
@@ -1347,7 +1346,7 @@ class TkinterWeb(tk.Widget):
                 if (node_top < view_top) or (node_bottom > view_bottom):
                     self.yview("moveto", node_top/docheight)
             else:
-                self.message_func("No results for the search key '{}' could be found.".format(searchtext))            
+                self.message_func("No results for the search key '{}' could be found.".format(searchtext))
 
             return nmatches
         except Exception as error:
@@ -1364,8 +1363,8 @@ class TkinterWeb(tk.Widget):
         elif url:
             widgetid.load_html("<p>Loading...</p>")
             widgetid.load_url(url)
-            
-        self.handle_node_replacement(node, widgetid, lambda widgetid=widgetid: self.handle_node_removal(widgetid))  
+
+        self.handle_node_replacement(node, widgetid, lambda widgetid=widgetid: self.handle_node_removal(widgetid))
 
     def resolve_url(self, href):
         """Get full url from partial url"""
@@ -1376,34 +1375,34 @@ class TkinterWeb(tk.Widget):
         self.clear_selection()
         beginning = self.text("index", 0)
         end = self.text("index", len(self.text("text")))
-        self.tag("add", "selection", beginning[0], beginning[1], end[0], end[1]) 
+        self.tag("add", "selection", beginning[0], beginning[1], end[0], end[1])
         self.tag("configure", "selection", "-bg", self.selected_text_highlight_color, "-fg", self.selected_text_color)
 
     def clear_selection(self):
         """Clear current selection possible"""
         self.tag("delete", "selection")
-        self.selection_start_node = None    
+        self.selection_start_node = None
 
     def extend_selection(self, event):
         """Alter selection and HTML element states based on mouse movement"""
         if self.selection_start_node is None:
             self.tag("delete", "selection")
             return
-        
+
         try:
             self.selection_end_node, self.selection_end_offset = self.node(True, event.x, event.y)
-            
+
             if self.selection_end_node is None:
                 return
 
             self.tag("delete", "selection")
-            self.tag("add", "selection", 
+            self.tag("add", "selection",
                     self.selection_start_node,
-                    self.selection_start_offset, 
-                    self.selection_end_node, 
+                    self.selection_start_offset,
+                    self.selection_end_node,
                     self.selection_end_offset)
-            self.tag("configure", "selection", 
-                    "-bg", self.selected_text_highlight_color, 
+            self.tag("configure", "selection",
+                    "-bg", self.selected_text_highlight_color,
                     "-fg", self.selected_text_color)
 
             if not self.is_selecting and self.prev_active_node:

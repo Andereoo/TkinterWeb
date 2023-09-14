@@ -25,8 +25,9 @@ SOFTWARE.
 """
 
 import mimetypes
-import sys, os
+import os
 import platform
+import sys
 import threading
 
 try:
@@ -36,11 +37,11 @@ except ImportError:
 
 try:
     import tkinter as tk
-    from tkinter import filedialog, ttk, colorchooser
+    from tkinter import colorchooser, filedialog, ttk
 except ImportError:
-    import Tkinter as tk
-    import tkFileDialog as filedialog
     import tkColorChooser as colorchooser
+    import tkFileDialog as filedialog
+    import Tkinter as tk
     import ttk
 
 try:
@@ -660,7 +661,7 @@ class FileSelector(tk.Frame):
 
         self.multiple = multiple
         self.files = []
-    
+
     def generate_filetypes(self, accept):
         if accept:
             accept_list = [ a.strip() for a in accept.split(",") ]
@@ -712,7 +713,7 @@ class FileSelector(tk.Frame):
             files = files[0].replace("\\", "/").split("/")[-1]
             self.label.config(text=files)
         else:
-            self.label.config(text="{} files selected.".format(number))
+            self.label.config(text=f"{number} files selected.")
         self.event_generate("<<Modified>>")
 
     def reset(self):
@@ -747,16 +748,16 @@ class ColourSelector(tk.Frame):
         self.colour = colour
         self.default_colour = colour
         self.disabled = True
-    
+
     def on_release(self, event):
         if not self.disabled:
             self.config(bg="#ccc")
             self.select_colour()
-    
+
     def on_button_release(self, event):
         if not self.disabled:
             self.config(bg="#ccc")
-    
+
     def on_click(self, event):
         if not self.disabled:
             self.config(bg="#aaa")
@@ -766,7 +767,7 @@ class ColourSelector(tk.Frame):
         self.colour = colour if colour else self.colour
         self.selector.config(bg=self.colour, activebackground=self.colour)
         self.event_generate("<<Modified>>")
-    
+
     def configure(self, *args, **kwargs):
         state = kwargs.pop("state")
         if state == "disabled":
@@ -788,7 +789,7 @@ class Notebook(ttk.Frame):
     The ttk.Notebook widget is incompatable with Tkhtml on some platforms, causing crashes when selecting tabs
     Workaround for Bug #19, this widget manages pages itself while a ttk.Notebook handles tabs. 
     Designed to look and behave exactly like a ttk.Notebook, just without any crashes."""
-    
+
     def __init__(self, master, takefocus=True, **kwargs):
         ttk.Frame.__init__(self, master, **kwargs)
         self.notebook = notebook = ttk.Notebook(self, takefocus=takefocus)
@@ -815,21 +816,21 @@ class Notebook(ttk.Frame):
             self.previous_page = newpage
         except tk.TclError:
             pass
-            
+
     def add(self, child, **kwargs):
         if child in self.pages:
-            raise ValueError("{} is already managed by {}.".format(child, self))
+            raise ValueError(f"{child} is already managed by {self}.")
         frame = self.blankframe()
         self.notebook.add(frame, **kwargs)
         self.pages.append(child)
 
     def insert(self, where, child, **kwargs):
         if child in self.pages:
-            raise ValueError("{} is already managed by {}.".format(child, self))
+            raise ValueError(f"{child} is already managed by {self}.")
         frame = self.blankframe()
         self.notebook.insert(where, frame, **kwargs)
         self.pages.insert(where, child)
-        
+
     def enable_traversal(self):
         self.notebook.enable_traversal()
 
@@ -842,7 +843,7 @@ class Notebook(ttk.Frame):
 
     def transcribe(self, item, reverse=False):
         return self.pages[self.notebook.index(item)]
-        
+
     def tab(self, tabId, option=None, **kwargs):
         if not isinstance(tabId, int) and tabId in self.pages:
             tabId = self.pages.index(tabId)
@@ -862,7 +863,7 @@ class Notebook(ttk.Frame):
             return self.pages.index(child)
         except (IndexError, ValueError):
             return self.transcribe(self.notebook.index(child))
-    
+
     def tabs(self):
         return self.pages
 
@@ -872,7 +873,7 @@ class StoppableThread(threading.Thread):
 
     def __init__(self,  *args, **kwargs):
         threading.Thread.__init__(self, *args, **kwargs)
-        self.setDaemon(True)
+        self.daemon = True
         self.running = True
 
     def stop(self):
@@ -937,7 +938,7 @@ def cachedownload(*args, **kwargs):
 
 def shorten(string):
     "Shorten text to avoid overloading the terminal."
-    if (len(string) > 100):
+    if len(string) > 100:
         string = string[:100] + "..."
     return string
 

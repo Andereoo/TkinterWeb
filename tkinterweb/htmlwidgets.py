@@ -170,7 +170,7 @@ class HtmlFrame(ttk.Frame):
                 file_url = "file://" + str(file_url)
         self.load_url(file_url, decode, force)
 
-    def load_url(self, url, decode=None, force=False):
+    def load_url(self, url, decode=None, force=False, insecure=False):
         """Load a website (https:// or http://) or a file (file://) from the specified URL.
         We use threading here to prevent the GUI from freezing while fetching the website.
         Technically Tkinter isn't threadsafe and will crash when doing this, but under certain circumstances we can get away with it.
@@ -186,11 +186,11 @@ class HtmlFrame(ttk.Frame):
             self.thread_in_progress.stop()
         if self.html.max_thread_count >= 1:
             thread = StoppableThread(target=self.continue_loading, args=(
-                url,), kwargs={"decode": decode, "force": force})
+                url,), kwargs={"decode": decode, "force": force, "insecure": insecure})
             self.thread_in_progress = thread
             thread.start()
         else:
-            self.continue_loading(url, decode=decode, force=force)
+            self.continue_loading(url, decode=decode, force=force, insecure=insecure)
 
     def load_form_data(self, url, data, method="GET", decode=None):
         "Load a webpage using form data"
@@ -198,13 +198,13 @@ class HtmlFrame(ttk.Frame):
             self.thread_in_progress.stop()
         if self.html.max_thread_count >= 1:
             thread = StoppableThread(
-                target=self.continue_loading, args=(url, data, method, decode,))
+                target=self.continue_loading, args=(url, data, method, decode))
             self.thread_in_progress = thread
             thread.start()
         else:
             self.continue_loading(url, data, method, decode)
 
-    def continue_loading(self, url, data="", method="GET", decode=None, force=False):
+    def continue_loading(self, url, data="", method="GET", decode=None, force=False, insecure=False):
         "Finish loading urls and handle URI fragments"
 
         self.html.downloading_resource_func()
@@ -221,10 +221,10 @@ class HtmlFrame(ttk.Frame):
                 self.message_func("Connecting to {0}.".format(parsed.netloc))
                 if (parsed.scheme == "file") or (not self.html.caches_enabled):
                     data, newurl, filetype = download(
-                        url, data, method, decode)
+                        url, data, method, decode, insecure)
                 else:
                     data, newurl, filetype = cachedownload(
-                        url, data, method, decode)
+                        url, data, method, decode, insecure)
                 if threadname().isrunning():
                     self.url_change_func(newurl)
                     if "image" in filetype:

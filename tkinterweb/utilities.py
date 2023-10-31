@@ -34,6 +34,8 @@ try:
 except ImportError:
     from urllib2 import Request, urlopen
 
+import ssl
+
 try:
     import tkinter as tk
     from tkinter import filedialog, ttk, colorchooser
@@ -893,7 +895,7 @@ class PlaceholderThread:
         return True
 
 
-def download(url, data=None, method="GET", decode=None):
+def download(url, data=None, method="GET", decode=None, insecure=False):
     "Fetch files."
     "Technically this isn't thread-safe (even though it is being used inside threads by Tkinterweb, "
     "but as long as install_opener() is not called and a string is used as the url parameter we are okay."
@@ -901,12 +903,19 @@ def download(url, data=None, method="GET", decode=None):
     if url in BUILTINPAGES:
         return BUILTINPAGES[url], url, 'text/html'
 
+    ctx = ssl.create_default_context()
+    if insecure:
+        # TODO: turn off with messages off
+        print("WARNGING: Beginging insecure HTTPS session")
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+
     thread = threadname()
     url = url.replace(" ", "%20")
     if data and (method == "POST"):
-        req = urlopen(Request(url, data, headers=HEADER))
+        req = urlopen(Request(url, data, headers=HEADER), context=ctx)
     else:
-        req = urlopen(Request(url, headers=HEADER))
+        req = urlopen(Request(url, headers=HEADER), context=ctx)
     if not thread.isrunning():
         return None, url, ""
     data = req.read()

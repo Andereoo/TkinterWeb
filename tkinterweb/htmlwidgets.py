@@ -155,20 +155,20 @@ class HtmlFrame(ttk.Frame):
             except IndexError:
                 pass
 
-    def load_website(self, website_url, decode=None, force=False):
+    def load_website(self, website_url, decode=None, force=False, insecure=False):):
         "Load a website from the specified URL"
         if (not website_url.startswith("https://")) and (not website_url.startswith("http://")) and (not website_url.startswith("about:")):
             website_url = "http://" + str(website_url)
-        self.load_url(website_url, decode, force)
+        self.load_url(website_url, decode, force, insecure)
 
-    def load_file(self, file_url, decode=None, force=False):
+    def load_file(self, file_url, decode=None, force=False, insecure=False):
         "Load a locally stored file from the specified path"
         if not file_url.startswith("file://"):
             if platform.system() == "Windows" and not file_url.startswith("/"):
                 file_url = "file:///" + str(file_url)
             else:
                 file_url = "file://" + str(file_url)
-        self.load_url(file_url, decode, force)
+        self.load_url(file_url, decode, force, insecure)
 
     def load_url(self, url, decode=None, force=False, insecure=False):
         """Load a website (https:// or http://) or a file (file://) from the specified URL.

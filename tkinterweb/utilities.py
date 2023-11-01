@@ -1,5 +1,5 @@
 """
-TkinterWeb v3.21
+TkinterWeb v3.22
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
 
@@ -905,8 +905,6 @@ def download(url, data=None, method="GET", decode=None, insecure=False):
 
     ctx = ssl.create_default_context()
     if insecure:
-        # TODO: turn off with messages off
-        print("WARNGING: Beginging insecure HTTPS session")
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
 

@@ -1,5 +1,5 @@
 """
-TkinterWeb v3.21
+TkinterWeb v3.22
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
 
@@ -123,7 +123,7 @@ class HtmlFrame(ttk.Frame):
         self.html.done_loading_func = self.done_loading
 
         self.message_func(
-            "Welcome to TkinterWeb 3.21! \nhttps://github.com/Andereoo/TkinterWeb")
+            "Welcome to TkinterWeb 3.22! \nhttps://github.com/Andereoo/TkinterWeb")
 
         self.message_func(
             "Debugging messages are enabled. \nUse the parameter `messages_enabled = False` when calling HtmlFrame() to disable these messages.")
@@ -155,7 +155,7 @@ class HtmlFrame(ttk.Frame):
             except IndexError:
                 pass
 
-    def load_website(self, website_url, decode=None, force=False, insecure=False):):
+    def load_website(self, website_url, decode=None, force=False, insecure=False):
         "Load a website from the specified URL"
         if (not website_url.startswith("https://")) and (not website_url.startswith("http://")) and (not website_url.startswith("about:")):
             website_url = "http://" + str(website_url)
@@ -220,9 +220,11 @@ class HtmlFrame(ttk.Frame):
             if force or (method == "POST") or (self.skim(urldefrag(url)[0]) != self.skim(urldefrag(self.current_url)[0])):
                 self.message_func("Connecting to {0}.".format(parsed.netloc))
                 if (parsed.scheme == "file") or (not self.html.caches_enabled):
+                    self.message_func("WARNGING: Using insecure HTTPS session")
                     data, newurl, filetype = download(
                         url, data, method, decode, insecure)
                 else:
+                    self.message_func("WARNGING: Using insecure HTTPS session")
                     data, newurl, filetype = cachedownload(
                         url, data, method, decode, insecure)
                 if threadname().isrunning():

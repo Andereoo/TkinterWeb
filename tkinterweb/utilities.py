@@ -1,5 +1,5 @@
 """
-TkinterWeb v3.22
+TkinterWeb v3.23
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
 
@@ -965,6 +965,9 @@ def currentpath(use_file=True):
 
 def strip_css_url(url):
     return url[4:-1].replace("'", "").replace('"', '')
+
+def get_fonts():
+    return os.path.join(currentpath(), "tkhtml", "opensans.ttf")
 
 def get_tkhtml_folder():
     return os.path.join(currentpath(), "tkhtml",

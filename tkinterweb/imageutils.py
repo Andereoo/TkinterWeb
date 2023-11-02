@@ -1,5 +1,5 @@
 """
-TkinterWeb v3.22
+TkinterWeb v3.23
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
 
@@ -24,7 +24,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageFont, ImageDraw
 from PIL.ImageTk import PhotoImage
 
 try:
@@ -61,6 +61,20 @@ else:
             except Exception:
                 rsvgimport = None
 
+def textimage(name, alt, nodebox, font_type, font_size, threshold):
+    font = ImageFont.truetype(font_type, font_size)
+    if len(nodebox) == 4:
+        width = nodebox[2]-nodebox[0]
+        height = nodebox[3]-nodebox[1]
+        if (width < threshold) or (height < threshold):
+            width, height = font.getsize(alt)
+    else:
+        width, height = font.getsize(alt)
+    image = Image.new('RGBA', (width, height))
+    draw = ImageDraw.Draw(image)
+    draw.text((0,0), alt, fill=(0, 0, 0), font=font)
+    image = PhotoImage(image, name=name)
+    return image
 
 def newimage(data, name, imagetype, invert):
     image = None

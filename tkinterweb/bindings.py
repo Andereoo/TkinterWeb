@@ -652,12 +652,8 @@ class TkinterWeb(tk.Widget):
         self.downloads_have_occured = True
         name = self.image_name_prefix + str(len(self.loaded_images))
 
-        if not self.ignore_invalid_images:
-            image = newimage(self.broken_image, name, "image/png", self.image_inversion_enabled)
-            self.loaded_images.add(image)
-        else:
-            image = blankimage(name)
-            self.loaded_images.add(image)
+        image = blankimage(name)
+        self.loaded_images.add(image)
 
         if url.startswith("replace:"):
             thread = self.begin_download()
@@ -1082,8 +1078,12 @@ class TkinterWeb(tk.Widget):
             node = self.image_directory[url]
             nodebox = self.bbox(node)
             alt = self.get_node_attribute(self.image_directory[url], "alt")
-            image = textimage(name, alt, nodebox, self.image_alternate_text_font, self.image_alternate_text_size, self.image_alternate_text_threshold)
-            self.loaded_images.add(image)
+            if alt:
+                image = textimage(name, alt, nodebox, self.image_alternate_text_font, self.image_alternate_text_size, self.image_alternate_text_threshold)
+                self.loaded_images.add(image)
+            elif not self.ignore_invalid_images:
+                image = newimage(self.broken_image, name, "image/png", self.image_inversion_enabled)
+                self.loaded_images.add(image)
 
     def fetch_images(self, url, name, urltype):
         """Fetch images and display them in the document"""

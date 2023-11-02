@@ -219,12 +219,12 @@ class HtmlFrame(ttk.Frame):
             # if url is different than the current one, load the new site.
             if force or (method == "POST") or (self.skim(urldefrag(url)[0]) != self.skim(urldefrag(self.current_url)[0])):
                 self.message_func("Connecting to {0}.".format(parsed.netloc))
-                if (parsed.scheme == "file") or (not self.html.caches_enabled):
+                if insecure:
                     self.message_func("WARNGING: Using insecure HTTPS session")
+                if (parsed.scheme == "file") or (not self.html.caches_enabled):
                     data, newurl, filetype = download(
                         url, data, method, decode, insecure)
                 else:
-                    self.message_func("WARNGING: Using insecure HTTPS session")
                     data, newurl, filetype = cachedownload(
                         url, data, method, decode, insecure)
                 if threadname().isrunning():

@@ -157,32 +157,35 @@ To zoom only the text, use `set_fontscale()` instead.
 ### Useful Methods:
 
 ---
-#### `load_website(website_url, decode=None, force=False)`
+#### `load_website(website_url, decode=None, force=False, insecure=False)`
 Loads and parses a website.
 
 Parameters
 * **website_url** *(string)* - Specifies the url to load.
 * **decode** *(string)* - Specifies the decoding to use when loading the website.
 * **force** *(boolean)* - Force the page to reload all elements.
+* **insecure** *(boolean)* - Set to True to ignore website certificate errors. This is a workaround for issues where `ssl` is unable to get a page's certificate.
 
 ---
 
-#### `load_file(file_url, decode=None, force=False)`
+#### `load_file(file_url, decode=None, force=False, insecure=False)`
 Loads and parses a local HTML file.
 
 Parameters
 * **file_url** *(string)* - Specifies the file to load.
 * **decode** *(string)* - Specifies the decoding to use when loading the file.
 * **force** *(boolean)* - Force the page to reload all elements.
+* **insecure** *(boolean)* - Set to True to ignore website certificate errors. This is a workaround for issues where `ssl` is unable to get a page's certificate.
 
 ---
-#### `load_url(url, decode=None, force=False)`
+#### `load_url(url, decode=None, force=False, insecure=False)`
 Loads and parses html from the given url. A local file will be loaded if the url begins with "file://". If the url begins with "https://" or "http://", a website will be loaded. 
 
 Parameters
 * **url** *(string)* - Specifies the url to load.
 * **decode** *(string)* - Specifies the decoding to use when loading the website.
 * **force** *(boolean)* - Force the page to reload all elements.
+* **insecure** *(boolean)* - Set to True to ignore website certificate errors. This is a workaround for issues where `ssl` is unable to get a page's certificate.
 
 ---
 #### `load_html(html_source, base_url="")`

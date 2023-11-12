@@ -963,16 +963,21 @@ def currentpath(use_file=True):
     else:
         return os.getcwd()
 
+
 def strip_css_url(url):
     return url[4:-1].replace("'", "").replace('"', '')
+
 
 def get_fonts():
     return os.path.join(currentpath(), "tkhtml", "opensans.ttf")
 
+
 def get_tkhtml_folder():
-    return os.path.join(currentpath(), "tkhtml",
-                        platform.system(),
-                        "64-bit" if sys.maxsize > 2**32 else "32-bit")
+    if "arm" in os.uname()[-1]: # for Raspberry Pi (#24)
+        bit = "arm"
+    else:
+        bit = "64-bit" if sys.maxsize > 2**32 else "32-bit"
+    return os.path.join(currentpath(), "tkhtml", platform.system(), bit)
 
 
 def load_tkhtml(master, location=None, force=False):

@@ -6,8 +6,8 @@ README = (HERE / "README.md").read_text()
 
 setup(
     name="tkinterweb",
-    version="3.23.3",
-    description="HTML/CSS viewer for Tkinter - bindings for Tkhtml3",
+    version="3.23.7",
+    description="HTML/CSS viewer for Tkinter",
     long_description=README,
     long_description_content_type="text/markdown",
     url="https://github.com/Andereoo/TkinterWeb",

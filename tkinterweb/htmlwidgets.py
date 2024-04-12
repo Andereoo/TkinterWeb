@@ -3,7 +3,7 @@ TkinterWeb v3.23
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
 
-Copyright (c) 2023 Andereoo
+Copyright (c) 2024 Andereoo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -393,9 +393,13 @@ class HtmlFrame(ttk.Frame):
         self.enable_caches(html.caches_enabled)
         self.set_parsemode(html.get_parsemode())
 
-    def find_text(self, searchtext, select=1, ignore_case=True, highlight_all=True):
+    def find_text(self, searchtext, select=1, ignore_case=True, highlight_all=True, detailed=False):
         "Search for and highlight specific text"
-        return self.html.find_text(searchtext, select, ignore_case, highlight_all)
+        nmatches, selected, matches = self.html.find_text(searchtext, select, ignore_case, highlight_all)
+        if detailed:
+            return nmatches, selected, matches
+        else:
+            return nmatches
 
     def change_cursor(self, cursor):
         "Handle cursor changes"

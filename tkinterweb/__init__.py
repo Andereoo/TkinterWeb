@@ -3,7 +3,7 @@ TkinterWeb v3.23
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
 
-Copyright (c) 2023 Andereoo
+Copyright (c) 2024 Andereoo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

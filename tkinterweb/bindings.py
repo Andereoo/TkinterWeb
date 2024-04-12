@@ -3,7 +3,7 @@ TkinterWeb v3.23
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
 
-Copyright (c) 2023 Andereoo
+Copyright (c) 2024 Andereoo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -1377,11 +1377,11 @@ class TkinterWeb(tk.Widget):
             else:
                 self.message_func("No results for the search key '{}' could be found.".format(searchtext))            
 
-            return nmatches
+            return nmatches, selected, matches
         except Exception as error:
             self.message_func(
             "An error has been encountered while searching the document for {}: {}.".format(searchtext, error))
-            return 0
+            return (0, None, None)
 
     def create_iframe(self, node, url, html=None):
         widgetid = self.embed_obj(self, False, scroll_overflow=self.scroll_overflow)

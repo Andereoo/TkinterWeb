@@ -1323,7 +1323,7 @@ class TkinterWeb(tk.Widget):
         self.tag("delete", "findtextselected")
 
         if len(searchtext) == 0 or select <= 0:
-            return 0
+            return nmatches, selected, matches
 
         doctext = self.text("text")
 
@@ -1376,13 +1376,12 @@ class TkinterWeb(tk.Widget):
                     self.yview("moveto", node_top/docheight)
             else:
                 self.message_func("No results for the search key '{}' could be found.".format(searchtext))            
-
             return nmatches, selected, matches
         except Exception as error:
             self.message_func(
             "An error has been encountered while searching the document for {}: {}.".format(searchtext, error))
-            return (0, None, None)
-
+            return nmatches, selected, matches
+        
     def create_iframe(self, node, url, html=None):
         widgetid = self.embed_obj(self, False, scroll_overflow=self.scroll_overflow)
         widgetid.copy_settings(self)

@@ -226,7 +226,7 @@ Stop loading this page.
 This will abandon all pending requests and show the document as it is.
 
 ---
-#### `find_text(searchtext, select=1, ignore_case=True, highlight_all=True)`
+#### `find_text(searchtext, select=1, ignore_case=True, highlight_all=True, detailed=False)`
 Search the document for text and highlight matches. 
 This will return the number of matches found.
 
@@ -235,6 +235,7 @@ Parameters
 * **select** *(integer)* - Specifies the index of the match to select and scroll to. 
 * **ignore_case** *(boolean)* - Specifies whether or not uppercase and lowercase letters whould be treated as different characters.
 * **highlight_all** *(boolean)* - Specifies whether or not all matches should be highlighted.
+* **detailed** *(boolean)* - If True, this function will also return information on the nodes that were found. See [#93](https://github.com/Andereoo/TkinterWeb/issues/93#issuecomment-2052516492) for more details.
 
 Return type
 * *integer*

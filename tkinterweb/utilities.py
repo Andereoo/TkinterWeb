@@ -973,8 +973,8 @@ def get_fonts():
 
 
 def get_tkhtml_folder():
-    if platform.system() == "Linux":
-        if "arm" in os.uname()[-1]: # for Raspberry Pi (#24)
+    if platform.system() == "Linux" or platform.system() == "Darwin":
+        if "arm" in os.uname()[-1]: # for Raspberry Pi (#24) and M1 Mac (#26)
             bit = "arm"
         else:
             bit = "64-bit" if sys.maxsize > 2**32 else "32-bit"

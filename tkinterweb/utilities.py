@@ -840,7 +840,8 @@ class Notebook(ttk.Frame):
             tabId = self.pages.index(tabId)
             return self.notebook.select(tabId)
         else:
-            return self.transcribe(self.notebook.select(tabId))
+            self.notebook.select(tabId)
+            return self.transcribe(self.notebook.select())
 
     def transcribe(self, item, reverse=False):
         return self.pages[self.notebook.index(item)]

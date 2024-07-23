@@ -67,9 +67,20 @@ def textimage(name, alt, nodebox, font_type, font_size, threshold):
         width = nodebox[2]-nodebox[0]
         height = nodebox[3]-nodebox[1]
         if (width < threshold) or (height < threshold):
-            width, height = font.getsize(alt)
+            try:
+                width, height = font.getsize(alt)
+            except AttributeError:
+                left, top, right, bottom = font.getbbox(alt)
+                width = right - left
+                height = bottom
     else:
-        width, height = font.getsize(alt)
+        try:
+            width, height = font.getsize(alt)
+        except AttributeError:
+            left, top, right, bottom = font.getbbox(alt)
+            width = right - left
+            height = bottom
+            
     image = Image.new('RGBA', (width, height))
     draw = ImageDraw.Draw(image)
     draw.text((0,0), alt, fill=(0, 0, 0), font=font)

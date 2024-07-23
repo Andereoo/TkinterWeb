@@ -563,6 +563,9 @@ INPUT[type="submit"],INPUT[type="button"], INPUT[type="reset"], BUTTON {
   color: tcl(::tkhtml::if_disabled #666666 #ffffff);
 }
 """
+ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
+WORKING_DIR = os.getcwd()
+    
 tkhtml_loaded = False
 combobox_loaded = False
 
@@ -958,30 +961,24 @@ def threadname():
     return thread
 
 
-def currentpath(use_file=True):
-    if use_file:
-        return os.path.abspath(os.path.dirname(__file__))
-    else:
-        return os.getcwd()
-
-
 def strip_css_url(url):
     return url[4:-1].replace("'", "").replace('"', '')
 
 
 def get_fonts():
-    return os.path.join(currentpath(), "tkhtml", "opensans.ttf")
+    return os.path.join(ROOT_DIR, "tkhtml", "opensans.ttf")
 
 
 def get_tkhtml_folder():
-    if platform.system() == "Linux" or platform.system() == "Darwin":
+    return os.path.join(ROOT_DIR, "tkhtml", "binaries") # Below code obselete now that TkinterWeb ships as wheels
+    """if platform.system() == "Linux" or platform.system() == "Darwin":
         if "arm" in os.uname()[-1]: # for Raspberry Pi (#24) and M1 Mac (#26)
             bit = "arm"
         else:
             bit = "64-bit" if sys.maxsize > 2**32 else "32-bit"
     else:
         bit = "64-bit" if sys.maxsize > 2**32 else "32-bit"
-    return os.path.join(currentpath(), "tkhtml", platform.system(), bit)
+    return os.path.join(ROOT_DIR, "tkhtml", platform.system(), bit)"""
 
 
 def load_tkhtml(master, location=None, force=False):
@@ -998,7 +995,7 @@ def load_combobox(master, force=False):
     """Load combobox.tcl"""
     global combobox_loaded
     if not (combobox_loaded) or force:
-        path = os.path.join(currentpath(), "tkhtml")
+        path = os.path.join(ROOT_DIR, "tkhtml")
         master.tk.call("lappend", "auto_path", path)
         master.tk.call("package", "require", "combobox")
         combobox_loaded = True

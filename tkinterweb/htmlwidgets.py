@@ -25,8 +25,8 @@ SOFTWARE.
 """
 
 from bindings import TkinterWeb
-from utilities import (AutoScrollbar, StoppableThread, cachedownload, download,
-                   notifier, currentpath, threadname)
+from utilities import (WORKING_DIR, AutoScrollbar, StoppableThread, cachedownload, download,
+                   notifier, threadname)
 from imageutils import newimage
 import platform
 
@@ -508,7 +508,7 @@ class HtmlFrame(ttk.Frame):
         "Reset parser and send html code to it"
         self.html.reset()
         if not base_url:
-            path = currentpath(False)
+            path = WORKING_DIR
             if not path.startswith("/"):
                 path = "/{0}".format(path)
             base_url = "file://{0}/".format(path)
@@ -527,7 +527,7 @@ class HtmlFrame(ttk.Frame):
     def add_html(self, html_source):
         "Parse HTML and add it to the end of the current document."
         if not self.current_url:
-            path = currentpath(False)
+            path = WORKING_DIR
             if not path.startswith("/"):
                 path = "/{0}".format(path)
             base_url = "file://{0}/".format(path)

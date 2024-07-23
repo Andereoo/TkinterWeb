@@ -970,15 +970,24 @@ def get_fonts():
 
 
 def get_tkhtml_folder():
-    return os.path.join(ROOT_DIR, "tkhtml", "binaries") # Below code obselete now that TkinterWeb ships as wheels
-    """if platform.system() == "Linux" or platform.system() == "Darwin":
-        if "arm" in os.uname()[-1]: # for Raspberry Pi (#24) and M1 Mac (#26)
-            bit = "arm"
-        else:
-            bit = "64-bit" if sys.maxsize > 2**32 else "32-bit"
+    if platform.system() == "Linux":
+        if "arm" in os.uname()[-1]: # 32 bit arm Linux - Raspberry Pi (#24) # TODO: add arm64
+            folder = "linux_armv71"
+        elif sys.maxsize > 2**32: # 64 bit Linux
+            folder = "manylinux1_x86_64"
+        else: # 32 bit Linux
+            folder = "manylinux1_i386"
+    elif platform.system() == "Darwin":
+        if "arm" in os.uname()[-1]: # for M1 Mac (#26)
+            folder = "macosx_11_0_arm64"
+        else: # other Macs
+            folder = "macosx_10_6_x86_64"
     else:
-        bit = "64-bit" if sys.maxsize > 2**32 else "32-bit"
-    return os.path.join(ROOT_DIR, "tkhtml", platform.system(), bit)"""
+        if sys.maxsize > 2**32: # 64 bit Windows
+            folder = "win_amd64"
+        else:
+            folder = "win32" # 32 bit Windows
+    return os.path.join(ROOT_DIR, "tkhtml", folder)
 
 
 def load_tkhtml(master, location=None, force=False):

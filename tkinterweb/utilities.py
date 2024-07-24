@@ -972,7 +972,7 @@ def get_tkhtml_folder():
         elif sys.maxsize > 2**32: # 64 bit Linux
             folder = "manylinux1_x86_64"
         else: # 32 bit Linux
-            folder = "manylinux1_i386"
+            folder = "manylinux1_i686"
     elif platform.system() == "Darwin":
         if "arm" in os.uname()[-1]: # for M1 Mac (#26)
             folder = "macosx_11_0_arm64"

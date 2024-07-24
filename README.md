@@ -101,4 +101,4 @@ Thanks to the [BRL-CAD project](https://github.com/BRL-CAD/brlcad) for providing
 
 Thanks to [Google Fonts](https://github.com/google/fonts) for providing the font used for generating alternate text when images fail to load.
 
-A special thanks to everyone else who helped this project by reporting bugs and providing suggestions!
+A special thanks to everyone else who helped this project by reporting bugs, creating pull requests, and providing suggestions!

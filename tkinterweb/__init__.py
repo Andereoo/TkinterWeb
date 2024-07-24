@@ -1,9 +1,9 @@
 """
-TkinterWeb v3.21
-This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html,
+TkinterWeb v3.23
+This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
 
-Copyright (c) 2023 Andereoo
+Copyright (c) 2024 Andereoo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -60,7 +60,7 @@ If you think this is a bug, please file a bug report at https://github.com/Ander
 
 __title__ = 'TkinterWeb'
 ___author__ = "Andereoo"
-__version__ = '3.21'
+__version__ = '3.23'
 __all__ = ['HtmlFrame', 'HtmlLabel', 'TkinterWeb', 'Demo']
 
 
@@ -80,7 +80,6 @@ class Demo():
 
         frame.on_title_change(self.change_title)
         frame.load_url("https://wiki.python.org/moin/TkInter")
-
 
         frame.pack(expand=True, fill="both")
         root.mainloop()

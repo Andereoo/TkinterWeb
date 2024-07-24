@@ -1,9 +1,9 @@
 """
-TkinterWeb v3.21
+TkinterWeb v3.23
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
 
-Copyright (c) 2023 Andereoo
+Copyright (c) 2024 Andereoo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -34,6 +34,8 @@ try:
     from urllib.request import Request, urlopen
 except ImportError:
     from urllib2 import Request, urlopen
+
+import ssl
 
 try:
     import tkinter as tk
@@ -562,6 +564,9 @@ INPUT[type="submit"],INPUT[type="button"], INPUT[type="reset"], BUTTON {
   color: tcl(::tkhtml::if_disabled #666666 #ffffff);
 }
 """
+ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
+WORKING_DIR = os.getcwd()
+    
 tkhtml_loaded = False
 combobox_loaded = False
 
@@ -839,7 +844,8 @@ class Notebook(ttk.Frame):
             tabId = self.pages.index(tabId)
             return self.notebook.select(tabId)
         else:
-            return self.transcribe(self.notebook.select(tabId))
+            self.notebook.select(tabId)
+            return self.transcribe(self.notebook.select())
 
     def transcribe(self, item, reverse=False):
         return self.pages[self.notebook.index(item)]
@@ -894,7 +900,7 @@ class PlaceholderThread:
         return True
 
 
-def download(url, data=None, method="GET", decode=None):
+def download(url, data=None, method="GET", decode=None, insecure=False):
     "Fetch files."
     "Technically this isn't thread-safe (even though it is being used inside threads by Tkinterweb, "
     "but as long as install_opener() is not called and a string is used as the url parameter we are okay."
@@ -902,12 +908,17 @@ def download(url, data=None, method="GET", decode=None):
     if url in BUILTINPAGES:
         return BUILTINPAGES[url], url, 'text/html'
 
+    ctx = ssl.create_default_context()
+    if insecure:
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+
     thread = threadname()
     url = url.replace(" ", "%20")
     if data and (method == "POST"):
-        req = urlopen(Request(url, data, headers=HEADER))
+        req = urlopen(Request(url, data, headers=HEADER), context=ctx)
     else:
-        req = urlopen(Request(url, headers=HEADER))
+        req = urlopen(Request(url, headers=HEADER), context=ctx)
     if not thread.isrunning():
         return None, url, ""
     data = req.read()
@@ -951,23 +962,43 @@ def threadname():
     return thread
 
 
-def currentpath(use_file=True):
-    if use_file:
-        return os.path.abspath(os.path.dirname(__file__))
-    else:
-        return os.getcwd()
-
 def strip_css_url(url):
+    "Extract the address from a css url"
     return url[4:-1].replace("'", "").replace('"', '')
 
+
+def get_alt_font():
+    "Get the location of the truetype file to be used for image alternate text"
+    return os.path.join(ROOT_DIR, "tkhtml", "opensans.ttf")
+
+
 def get_tkhtml_folder():
-    return os.path.join(currentpath(), "tkhtml",
-                        platform.system(),
-                        "64-bit" if sys.maxsize > 2**32 else "32-bit")
+    "Get the location of the platform's tkhtml binary"
+    # Universal sdist
+    if platform.system() == "Linux":
+        if "arm" in os.uname()[-1]: # 32 bit arm Linux - Raspberry Pi (#24) # TODO: add arm64
+            folder = "linux_armv71"
+        elif sys.maxsize > 2**32: # 64 bit Linux
+            folder = "manylinux1_x86_64"
+        else: # 32 bit Linux
+            folder = "manylinux1_i386"
+    elif platform.system() == "Darwin":
+        if "arm" in os.uname()[-1]: # for M1 Mac (#26)
+            folder = "macosx_11_0_arm64"
+        else: # other Macs
+            folder = "macosx_10_6_x86_64"
+    else:
+        if sys.maxsize > 2**32: # 64 bit Windows
+            folder = "win_amd64"
+        else:
+            folder = "win32" # 32 bit Windows
+    return os.path.join(ROOT_DIR, "tkhtml", folder)
+    # Platform-specific wheel
+    return os.path.join(ROOT_DIR, "tkhtml", "binaries")
 
 
 def load_tkhtml(master, location=None, force=False):
-    """Load nessessary Tkhtml files"""
+    "Load nessessary Tkhtml files"
     global tkhtml_loaded
     if (not tkhtml_loaded) or force:
         if location:
@@ -977,10 +1008,10 @@ def load_tkhtml(master, location=None, force=False):
 
 
 def load_combobox(master, force=False):
-    """Load combobox.tcl"""
+    "Load combobox.tcl"
     global combobox_loaded
     if not (combobox_loaded) or force:
-        path = os.path.join(currentpath(), "tkhtml")
+        path = os.path.join(ROOT_DIR, "tkhtml")
         master.tk.call("lappend", "auto_path", path)
         master.tk.call("package", "require", "combobox")
         combobox_loaded = True
@@ -993,6 +1024,7 @@ def notifier(text):
     except Exception:
         "sys.stdout.write doesn't work in .pyw files."
         "Since .pyw files have no console, we can simply not bother printing messages."
+
 
 def tkhtml_notifier(name, text, *args):
     "Tkhtml -logcmd printer."

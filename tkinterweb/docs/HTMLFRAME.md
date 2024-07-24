@@ -157,32 +157,35 @@ To zoom only the text, use `set_fontscale()` instead.
 ### Useful Methods:
 
 ---
-#### `load_website(website_url, decode=None, force=False)`
+#### `load_website(website_url, decode=None, force=False, insecure=False)`
 Loads and parses a website.
 
 Parameters
 * **website_url** *(string)* - Specifies the url to load.
 * **decode** *(string)* - Specifies the decoding to use when loading the website.
 * **force** *(boolean)* - Force the page to reload all elements.
+* **insecure** *(boolean)* - Set to True to ignore website certificate errors. This is a workaround for issues where `ssl` is unable to get a page's certificate.
 
 ---
 
-#### `load_file(file_url, decode=None, force=False)`
+#### `load_file(file_url, decode=None, force=False, insecure=False)`
 Loads and parses a local HTML file.
 
 Parameters
 * **file_url** *(string)* - Specifies the file to load.
 * **decode** *(string)* - Specifies the decoding to use when loading the file.
 * **force** *(boolean)* - Force the page to reload all elements.
+* **insecure** *(boolean)* - Set to True to ignore website certificate errors. This is a workaround for issues where `ssl` is unable to get a page's certificate.
 
 ---
-#### `load_url(url, decode=None, force=False)`
+#### `load_url(url, decode=None, force=False, insecure=False)`
 Loads and parses html from the given url. A local file will be loaded if the url begins with "file://". If the url begins with "https://" or "http://", a website will be loaded. 
 
 Parameters
 * **url** *(string)* - Specifies the url to load.
 * **decode** *(string)* - Specifies the decoding to use when loading the website.
 * **force** *(boolean)* - Force the page to reload all elements.
+* **insecure** *(boolean)* - Set to True to ignore website certificate errors. This is a workaround for issues where `ssl` is unable to get a page's certificate.
 
 ---
 #### `load_html(html_source, base_url="")`
@@ -223,7 +226,7 @@ Stop loading this page.
 This will abandon all pending requests and show the document as it is.
 
 ---
-#### `find_text(searchtext, select=1, ignore_case=True, highlight_all=True)`
+#### `find_text(searchtext, select=1, ignore_case=True, highlight_all=True, detailed=False)`
 Search the document for text and highlight matches. 
 This will return the number of matches found.
 
@@ -232,6 +235,7 @@ Parameters
 * **select** *(integer)* - Specifies the index of the match to select and scroll to. 
 * **ignore_case** *(boolean)* - Specifies whether or not uppercase and lowercase letters whould be treated as different characters.
 * **highlight_all** *(boolean)* - Specifies whether or not all matches should be highlighted.
+* **detailed** *(boolean)* - If True, this function will also return information on the nodes that were found. See [#93](https://github.com/Andereoo/TkinterWeb/issues/93#issuecomment-2052516492) for more details.
 
 Return type
 * *integer*

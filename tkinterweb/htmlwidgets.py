@@ -1,9 +1,9 @@
 """
-TkinterWeb v3.21
+TkinterWeb v3.23
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
 
-Copyright (c) 2023 Andereoo
+Copyright (c) 2024 Andereoo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,12 +23,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+
 import platform
 
 from bindings import TkinterWeb
+from utilities import (WORKING_DIR, AutoScrollbar, StoppableThread, cachedownload, download,
+                   notifier, threadname)
 from imageutils import newimage
-from utilities import (AutoScrollbar, StoppableThread, cachedownload,
-                       currentpath, download, notifier, threadname)
 
 try:
     from urllib.parse import urldefrag, urlparse
@@ -123,7 +124,7 @@ class HtmlFrame(ttk.Frame):
         self.html.done_loading_func = self.done_loading
 
         self.message_func(
-            "Welcome to TkinterWeb 3.21! \nhttps://github.com/Andereoo/TkinterWeb")
+            "Welcome to TkinterWeb 3.23! \nhttps://github.com/Andereoo/TkinterWeb")
 
         self.message_func(
             "Debugging messages are enabled. \nUse the parameter `messages_enabled = False` when calling HtmlFrame() to disable these messages.")
@@ -155,22 +156,22 @@ class HtmlFrame(ttk.Frame):
             except IndexError:
                 pass
 
-    def load_website(self, website_url, decode=None, force=False):
+    def load_website(self, website_url, decode=None, force=False, insecure=False):
         "Load a website from the specified URL"
         if (not website_url.startswith("https://")) and (not website_url.startswith("http://")) and (not website_url.startswith("about:")):
             website_url = "http://" + str(website_url)
-        self.load_url(website_url, decode, force)
+        self.load_url(website_url, decode, force, insecure)
 
-    def load_file(self, file_url, decode=None, force=False):
+    def load_file(self, file_url, decode=None, force=False, insecure=False):
         "Load a locally stored file from the specified path"
         if not file_url.startswith("file://"):
             if platform.system() == "Windows" and not file_url.startswith("/"):
                 file_url = "file:///" + str(file_url)
             else:
                 file_url = "file://" + str(file_url)
-        self.load_url(file_url, decode, force)
+        self.load_url(file_url, decode, force, insecure)
 
-    def load_url(self, url, decode=None, force=False):
+    def load_url(self, url, decode=None, force=False, insecure=False):
         """Load a website (https:// or http://) or a file (file://) from the specified URL.
         We use threading here to prevent the GUI from freezing while fetching the website.
         Technically Tkinter isn't threadsafe and will crash when doing this, but under certain circumstances we can get away with it.
@@ -186,11 +187,11 @@ class HtmlFrame(ttk.Frame):
             self.thread_in_progress.stop()
         if self.html.max_thread_count >= 1:
             thread = StoppableThread(target=self.continue_loading, args=(
-                url,), kwargs={"decode": decode, "force": force})
+                url,), kwargs={"decode": decode, "force": force, "insecure": insecure})
             self.thread_in_progress = thread
             thread.start()
         else:
-            self.continue_loading(url, decode=decode, force=force)
+            self.continue_loading(url, decode=decode, force=force, insecure=insecure)
 
     def load_form_data(self, url, data, method="GET", decode=None):
         "Load a webpage using form data"
@@ -198,13 +199,13 @@ class HtmlFrame(ttk.Frame):
             self.thread_in_progress.stop()
         if self.html.max_thread_count >= 1:
             thread = StoppableThread(
-                target=self.continue_loading, args=(url, data, method, decode,))
+                target=self.continue_loading, args=(url, data, method, decode))
             self.thread_in_progress = thread
             thread.start()
         else:
             self.continue_loading(url, data, method, decode)
 
-    def continue_loading(self, url, data="", method="GET", decode=None, force=False):
+    def continue_loading(self, url, data="", method="GET", decode=None, force=False, insecure=False):
         "Finish loading urls and handle URI fragments"
 
         self.html.downloading_resource_func()
@@ -218,13 +219,15 @@ class HtmlFrame(ttk.Frame):
 
             # if url is different than the current one, load the new site.
             if force or (method == "POST") or (self.skim(urldefrag(url)[0]) != self.skim(urldefrag(self.current_url)[0])):
-                self.message_func(f"Connecting to {parsed.netloc}.")
+                self.message_func("Connecting to {0}.".format(parsed.netloc))
+                if insecure:
+                    self.message_func("WARNGING: Using insecure HTTPS session")
                 if (parsed.scheme == "file") or (not self.html.caches_enabled):
                     data, newurl, filetype = download(
-                        url, data, method, decode)
+                        url, data, method, decode, insecure)
                 else:
                     data, newurl, filetype = cachedownload(
-                        url, data, method, decode)
+                        url, data, method, decode, insecure)
                 if threadname().isrunning():
                     self.url_change_func(newurl)
                     if "image" in filetype:
@@ -391,9 +394,13 @@ class HtmlFrame(ttk.Frame):
         self.enable_caches(html.caches_enabled)
         self.set_parsemode(html.get_parsemode())
 
-    def find_text(self, searchtext, select=1, ignore_case=True, highlight_all=True):
+    def find_text(self, searchtext, select=1, ignore_case=True, highlight_all=True, detailed=False):
         "Search for and highlight specific text"
-        return self.html.find_text(searchtext, select, ignore_case, highlight_all)
+        nmatches, selected, matches = self.html.find_text(searchtext, select, ignore_case, highlight_all)
+        if detailed:
+            return nmatches, selected, matches
+        else:
+            return nmatches
 
     def change_cursor(self, cursor):
         "Handle cursor changes"
@@ -502,7 +509,7 @@ class HtmlFrame(ttk.Frame):
         "Reset parser and send html code to it"
         self.html.reset()
         if not base_url:
-            path = currentpath(False)
+            path = WORKING_DIR
             if not path.startswith("/"):
                 path = f"/{path}"
             base_url = f"file://{path}/"
@@ -521,7 +528,7 @@ class HtmlFrame(ttk.Frame):
     def add_html(self, html_source):
         "Parse HTML and add it to the end of the current document."
         if not self.current_url:
-            path = currentpath(False)
+            path = WORKING_DIR
             if not path.startswith("/"):
                 path = f"/{path}"
             base_url = f"file://{path}/"

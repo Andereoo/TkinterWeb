@@ -1,9 +1,9 @@
 """
-TkinterWeb v3.21
+TkinterWeb v3.23
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
 
-Copyright (c) 2023 Andereoo
+Copyright (c) 2024 Andereoo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -105,7 +105,7 @@ class TkinterWeb(tk.Widget):
         #    kwargs["logcmd"] = tkhtml_notifier
 
         # catch htmldrawcleanup crashes on supported platforms
-        if (platform.system() == "Windows") or (platform.system() == "Linux" and sys.maxsize > 2**32):
+        if not (platform.system() == "Linux" and sys.maxsize <= 2**32):
             if "drawcleanupcrashcmd" not in kwargs:
                 kwargs["drawcleanupcrashcmd"] = master.register(self.on_drawcleanupcrash)
 
@@ -132,6 +132,10 @@ class TkinterWeb(tk.Widget):
         self.base_url = ""
         self.recursive_hovering_count = 10
         self.max_thread_count = 20
+        self.image_alternate_text_enabled = True
+        self.image_alternate_text_font = get_alt_font()
+        self.image_alternate_text_size = 14
+        self.image_alternate_text_threshold = 10
         self.find_match_highlight_color = "#ef0fff"
         self.find_match_text_color = "#fff"
         self.find_current_highlight_color = "#38d878"
@@ -160,7 +164,8 @@ class TkinterWeb(tk.Widget):
         self.active_threads = []
         self.stored_widgets = {}
         self.loaded_images = set()
-        self.image_name_prefix = f"_tkinterweb_img_{id(self)}_"
+        self.image_directory = {}
+        self.image_name_prefix = "_tkinterweb_img_{}_".format(id(self))
         self.is_selecting = False
         self.downloads_have_occured = False
         self.unstoppable = True
@@ -237,6 +242,8 @@ class TkinterWeb(tk.Widget):
                      self.register(self.on_iframe))
         self.tk.call(self._w, "handler", "node", "table",
                      self.register(self.on_table))
+        self.tk.call(self._w, "handler", "node", "img",
+                     self.register(self.on_image_node))
 
     def placeholder(self, *args, **kwargs):
         """Blank placeholder function. The only purpose of this is to
@@ -327,6 +334,7 @@ class TkinterWeb(tk.Widget):
         """Reset the widget"""
         self.stop()
         self.loaded_images = set()
+        self.image_directory = {}
         self.form_get_commands = {}
         self.form_elements = {}
         self.loaded_forms = {}
@@ -395,7 +403,7 @@ class TkinterWeb(tk.Widget):
         self.tk.call(self._w, "configure", "-shrink", value)
 
     def xview(self, *args):
-        """Used to control horizontal scrolling."""
+        """Used to control horizontal scrolling"""
         if args:
             return self.tk.call(self._w, "xview", *args)
         coords = map(float, self.tk.call(self._w, "xview").split())
@@ -407,11 +415,11 @@ class TkinterWeb(tk.Widget):
         return self.xview("scroll", number, what)
 
     def xview_moveto(self, number):
-        """Shifts the view horizontally to the specified position."""
+        """Shifts the view horizontally to the specified position"""
         return self.xview("moveto", number)
 
     def yview(self, *args):
-        """Used to control the vertical position of the document."""
+        """Used to control the vertical position of the document"""
         return self.tk.call(self._w, "yview", *args)
 
     def yview_scroll(self, number, what):
@@ -420,8 +428,12 @@ class TkinterWeb(tk.Widget):
         return self.yview("scroll", number, what)
 
     def yview_moveto(self, number):
-        """Shifts the view vertically to the specified position."""
+        """Shifts the view vertically to the specified position"""
         return self.yview("moveto", number)
+    
+    def bbox(self, node=None):
+        """Get the bounding box of the viewport or a specified node"""
+        return self.tk.call(self._w, "bbox", node)
 
     def get_node_text(self, node_handle, *args):
         """Get the text content of the given node"""
@@ -629,20 +641,20 @@ class TkinterWeb(tk.Widget):
         else:
             self.destroy()
 
+    def on_image_node(self, node):
+        url = self.resolve_url(self.get_node_attribute(node, "src"))
+        self.image_directory[url] = node
+
     def on_image(self, url):
         """Handle images"""
         if not self.images_enabled or not self.unstoppable:
             return
-
+        
         self.downloads_have_occured = True
         name = self.image_name_prefix + str(len(self.loaded_images))
 
-        if not self.ignore_invalid_images:
-            image = newimage(self.broken_image, name, "image/png", self.image_inversion_enabled)
-            self.loaded_images.add(image)
-        else:
-            image = blankimage(name)
-            self.loaded_images.add(image)
+        image = blankimage(name)
+        self.loaded_images.add(image)
 
         if url.startswith("replace:"):
             thread = self.begin_download()
@@ -662,6 +674,7 @@ class TkinterWeb(tk.Widget):
                     self.image_thread_check(url, name)
                     done = True
             if not done:
+                self.load_alt_image(url, name)
                 self.message_func(
                     f"The image {shorten(url)} could not be shown because it is not supported yet.")
                 self.image_setup_func(url, True)
@@ -1061,6 +1074,18 @@ class TkinterWeb(tk.Widget):
 
         self.finish_download(thread)
 
+    def load_alt_image(self, url, name):
+        if (url in self.image_directory) and self.image_alternate_text_enabled:
+            node = self.image_directory[url]
+            nodebox = self.bbox(node)
+            alt = self.get_node_attribute(self.image_directory[url], "alt")
+            if alt:
+                image = textimage(name, alt, nodebox, self.image_alternate_text_font, self.image_alternate_text_size, self.image_alternate_text_threshold)
+                self.loaded_images.add(image)
+            elif not self.ignore_invalid_images:
+                image = newimage(self.broken_image, name, "image/png", self.image_inversion_enabled)
+                self.loaded_images.add(image)
+
     def fetch_images(self, url, name, urltype):
         """Fetch images and display them in the document"""
         thread = self.begin_download()
@@ -1073,26 +1098,29 @@ class TkinterWeb(tk.Widget):
             else:
                 data, newurl, filetype = cachedownload(url)
 
-            if self.unstoppable and data:
-                image, error = newimage(data, name, filetype, self.image_inversion_enabled)
-
+            if self.unstoppable and data:  
+                image, error = newimage(data, name, filetype, self.image_inversion_enabled)    
                 if image:
                     self.loaded_images.add(image)
                     self.image_setup_func(url, True)
                 elif error == "no_pycairo":
+                    self.load_alt_image(url, name)
                     self.message_func(
                         "Scalable Vector Graphics could not be shown because Pycairo is not installed but is required to parse .svg files.")
                     self.image_setup_func(url, False)
                 elif error == "no_rsvg":
+                    self.load_alt_image(url, name)
                     self.message_func(
                         "Scalable Vector Graphics could not be shown because Rsvg is not installed but is required to parse .svg files.")
                     self.image_setup_func(url, False)
                 elif error == "corrupt":
+                    self.load_alt_image(url, name)
                     self.message_func(
                         f"The image {url} could not be shown.")
                     self.image_setup_func(url, False)
 
         except Exception:
+            self.load_alt_image(url, name)
             self.message_func(
                 f"The image {url} could not be shown because it is corrupt or is not supported yet.")
             self.image_setup_func(url, False)
@@ -1296,7 +1324,7 @@ class TkinterWeb(tk.Widget):
         self.tag("delete", "findtextselected")
 
         if len(searchtext) == 0 or select <= 0:
-            return 0
+            return nmatches, selected, matches
 
         doctext = self.text("text")
 
@@ -1338,7 +1366,7 @@ class TkinterWeb(tk.Widget):
 
                 #scroll to node if selected match is not visible
                 nodebox = self.text("bbox", node1, index1, node2, index2)
-                docheight = float(self.tk.call(self._w, "bbox")[3])
+                docheight = float(self.bbox()[3])
 
                 view_top = docheight * self.yview()[0]
                 view_bottom = view_top + self.winfo_height()
@@ -1348,13 +1376,12 @@ class TkinterWeb(tk.Widget):
                 if (node_top < view_top) or (node_bottom > view_bottom):
                     self.yview("moveto", node_top/docheight)
             else:
-                self.message_func(f"No results for the search key '{searchtext}' could be found.")
-
-            return nmatches
+                self.message_func("No results for the search key '{}' could be found.".format(searchtext))            
+            return nmatches, selected, matches
         except Exception as error:
             self.message_func(
-            f"An error has been encountered while searching the document for {searchtext}: {error}.")
-            return 0
+            "An error has been encountered while searching the document for {}: {}.".format(searchtext, error))
+            return nmatches, selected, matches
 
     def create_iframe(self, node, url, html=None):
         widgetid = self.embed_obj(self, False, scroll_overflow=self.scroll_overflow)

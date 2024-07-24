@@ -132,7 +132,7 @@ class TkinterWeb(tk.Widget):
         self.recursive_hovering_count = 10
         self.max_thread_count = 20
         self.image_alternate_text_enabled = True
-        self.image_alternate_text_font = get_fonts()
+        self.image_alternate_text_font = get_alt_font()
         self.image_alternate_text_size = 14
         self.image_alternate_text_threshold = 10
         self.find_match_highlight_color = "#ef0fff"

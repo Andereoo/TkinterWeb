@@ -30,21 +30,12 @@ import platform
 import sys
 import threading
 
-try:
-    from urllib.request import Request, urlopen
-except ImportError:
-    from urllib2 import Request, urlopen
+from urllib.request import Request, urlopen
 
 import ssl
 
-try:
-    import tkinter as tk
-    from tkinter import colorchooser, filedialog, ttk
-except ImportError:
-    import tkColorChooser as colorchooser
-    import tkFileDialog as filedialog
-    import Tkinter as tk
-    import ttk
+import tkinter as tk
+from tkinter import colorchooser, filedialog, ttk
 
 try:
     from lrucache import lru_cache

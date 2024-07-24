@@ -45,12 +45,8 @@ Error code: {} \n\
 If you think this is a bug, please file a bug report at https://github.com/Andereoo/TkinterWeb.".format(traceback.format_exc())
     sys.stdout.write(error_message)
 
-    try:
-        import tkinter as tk
-        from tkinter import messagebox
-    except ImportError:
-        import Tkinter as tk
-        import tkMessageBox as messagebox
+    import tkinter as tk
+    from tkinter import messagebox
 
     root = tk.Tk()
     root.withdraw()
@@ -69,10 +65,7 @@ class Demo():
 
     def __init__(self):
 
-        try:
-            import tkinter as tk
-        except ImportError:
-            import Tkinter as tk
+        import tkinter as tk
 
         self.root = root = tk.Tk()
 

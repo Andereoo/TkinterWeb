@@ -28,17 +28,9 @@ import platform
 import re
 import sys
 
-try:
-    from urllib.parse import urlencode, urljoin, urlparse, urlunparse
-except ImportError:
-    from urllib import urlencode
+from urllib.parse import urlencode, urljoin, urlparse, urlunparse
 
-    from urlparse import urljoin, urlparse, urlunparse
-
-try:
-    import tkinter as tk
-except ImportError:
-    import Tkinter as tk
+import tkinter as tk
 
 from imageutils import *
 from utilities import *

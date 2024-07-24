@@ -26,15 +26,11 @@ SOFTWARE.
 
 from PIL import Image, ImageOps, ImageFont, ImageDraw
 from PIL.ImageTk import PhotoImage
+from io import BytesIO
 
-try:
-    from tkinter import PhotoImage as TkinterPhotoImage
-except ImportError:
-    from Tkinter import PhotoImage as TkinterPhotoImage
-try:
-    from io import BytesIO
-except ImportError:
-    import BytesIO
+from tkinter import PhotoImage as TkinterPhotoImage
+
+
 try:
     import cairo
     cairoimport = True

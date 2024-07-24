@@ -25,23 +25,15 @@ SOFTWARE.
 """
 
 import platform
+from urllib.parse import urldefrag, urlparse
 
 from bindings import TkinterWeb
 from utilities import (WORKING_DIR, AutoScrollbar, StoppableThread, cachedownload, download,
                    notifier, threadname)
 from imageutils import newimage
 
-try:
-    from urllib.parse import urldefrag, urlparse
-except ImportError:
-    from urlparse import urldefrag, urlparse
-
-try:
-    import tkinter as tk
-    from tkinter import ttk
-except ImportError:
-    import Tkinter as tk
-    import ttk
+import tkinter as tk
+from tkinter import ttk
 
 
 class HtmlFrame(ttk.Frame):

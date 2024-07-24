@@ -962,14 +962,18 @@ def threadname():
 
 
 def strip_css_url(url):
+    "Extract the address from a css url"
     return url[4:-1].replace("'", "").replace('"', '')
 
 
-def get_fonts():
+def get_alt_font():
+    "Get the location of the truetype file to be used for image alternate text"
     return os.path.join(ROOT_DIR, "tkhtml", "opensans.ttf")
 
 
 def get_tkhtml_folder():
+    "Get the location of the platform's tkhtml binary"
+    # Universal sdist
     if platform.system() == "Linux":
         if "arm" in os.uname()[-1]: # 32 bit arm Linux - Raspberry Pi (#24) # TODO: add arm64
             folder = "linux_armv71"
@@ -988,10 +992,12 @@ def get_tkhtml_folder():
         else:
             folder = "win32" # 32 bit Windows
     return os.path.join(ROOT_DIR, "tkhtml", folder)
+    # Platform-specific wheel
+    return os.path.join(ROOT_DIR, "tkhtml", "binaries")
 
 
 def load_tkhtml(master, location=None, force=False):
-    """Load nessessary Tkhtml files"""
+    "Load nessessary Tkhtml files"
     global tkhtml_loaded
     if (not tkhtml_loaded) or force:
         if location:
@@ -1001,7 +1007,7 @@ def load_tkhtml(master, location=None, force=False):
 
 
 def load_combobox(master, force=False):
-    """Load combobox.tcl"""
+    "Load combobox.tcl"
     global combobox_loaded
     if not (combobox_loaded) or force:
         path = os.path.join(ROOT_DIR, "tkhtml")
@@ -1017,6 +1023,7 @@ def notifier(text):
     except Exception:
         "sys.stdout.write doesn't work in .pyw files."
         "Since .pyw files have no console, we can simply not bother printing messages."
+
 
 def tkhtml_notifier(name, text, *args):
     "Tkhtml -logcmd printer."

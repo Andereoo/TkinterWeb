@@ -1,13 +1,12 @@
 import pathlib
-
-from setuptools import find_packages, setup
+from setuptools import setup, find_packages
 
 HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
 
 setup(
     name="tkinterweb",
-    version="3.23.10",
+    version="3.23.11",
     description="HTML/CSS viewer for Tkinter",
     long_description=README,
     long_description_content_type="text/markdown",

@@ -1023,3 +1023,8 @@ def tkhtml_notifier(name, text, *args):
         sys.stdout.write("DEBUG "+str(name)+": "+str(text)+"\n\n")
     except Exception:
         pass
+
+def extract_nested(nested):
+    if isinstance(nested, tuple):
+        return extract_nested(nested[0])
+    return nested

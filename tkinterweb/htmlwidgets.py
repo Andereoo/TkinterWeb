@@ -28,7 +28,7 @@ import platform
 from urllib.parse import urldefrag, urlparse
 
 from bindings import TkinterWeb
-from utilities import (WORKING_DIR, AutoScrollbar, StoppableThread, cachedownload, download,
+from utilities import (WORKING_DIR, AutoScrollbar, StoppableThread, cachedownload, download, extract_nested,
                    notifier, threadname)
 from imageutils import newimage
 
@@ -533,6 +533,50 @@ class HtmlFrame(ttk.Frame):
             self.accumulated_styles.append(css_source)
         else:
             self.html.parse_css(data=css_source, override=True)
+
+    def get_inner_html(self, node):
+        return self.tk.eval("""
+            set node %s
+            if {[$node tag] eq ""} {error "$node is not an HTMLElement"}
+
+            proc innerHtml {node} {
+                set ret ""
+                foreach child [$node children] {
+                    append ret [nodeToHtml $child]
+                }
+                return $ret
+            }
+            proc nodeToHtml {node} {
+                set tag [$node tag]
+                if {$tag eq ""} {
+                    return [$node text -pre]
+                } else {
+                    set inner [innerHtml $node]
+                    return "<$tag>$inner</$tag>"
+                }
+            }
+            return [innerHtml $node]
+            """ % extract_nested(node)
+        )
+
+    def set_inner_html(self, node, new):
+        self.tk.eval("""
+            set node %s
+            if {[$node tag] eq ""} {error "$node is not an HTMLElement"}
+
+            # Destroy the existing children (and their descendants) of $node.
+            set children [$node children]
+            $node remove $children
+            foreach child $children {
+                $child destroy
+            }
+
+            set newHtml %s
+            # Insert the new descendants, created by parseing $newHtml.
+            set children [%s fragment $newHtml]
+            $node insert $children
+            """ % (extract_nested(node), new, self.html)
+        )
 
 
 class HtmlLabel(HtmlFrame):

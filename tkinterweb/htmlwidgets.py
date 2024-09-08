@@ -571,11 +571,19 @@ class HtmlFrame(ttk.Frame):
                 $child destroy
             }
 
-            set newHtml %s
+            set newHtml "%s"
             # Insert the new descendants, created by parseing $newHtml.
             set children [%s fragment $newHtml]
             $node insert $children
             """ % (extract_nested(node), new, self.html)
+        )
+
+    def createElement(self, tagname):
+        return self.tk.eval("""
+            set node [%s fragment "<%s>"]
+            if {$node eq ""} {error "DOMException NOT_SUPPORTED_ERR"}
+            return $node
+            """ % (self.html, tagname)
         )
 
 

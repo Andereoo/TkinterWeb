@@ -28,9 +28,9 @@ import platform
 from urllib.parse import urldefrag, urlparse
 
 from bindings import TkinterWeb
-from utilities import (WORKING_DIR, AutoScrollbar, StoppableThread, cachedownload, download, extract_nested,
-                   notifier, threadname)
-from imageutils import newimage
+from utilities import (WORKING_DIR, AutoScrollbar, StoppableThread, cachedownload, download,
+                       notifier, threadname, extract_nested, escape_Tcl)
+from imageutils import newimage, createRGBimage
 
 import tkinter as tk
 from tkinter import ttk
@@ -138,6 +138,8 @@ class HtmlFrame(ttk.Frame):
         self.yview = self.html.yview
         self.yview_moveto = self.html.yview_moveto
         self.yview_scroll = self.html.yview_scroll
+
+        self.html.tk.createcommand("node_to_html", self.node_to_html)
 
     def yview_toelement(self, selector, index=0):
         "Find an element that matches a given CSS selectors and scroll to it"
@@ -534,34 +536,55 @@ class HtmlFrame(ttk.Frame):
         else:
             self.html.parse_css(data=css_source, override=True)
 
+    def node_to_html(self, node, isDeep=True):
+        return self.tk.eval(r"""
+            proc TclNode_to_html {node} {
+                set tag [$node tag]
+                if {$tag eq ""} {
+                    append ret [$node text -pre]
+                } else {
+                    append ret <$tag
+                    foreach {zKey zVal} [$node attribute] {
+                        set zEscaped [string map [list "\x22" "\x5C\x22"] $zVal]
+                        append ret " $zKey=\"$zEscaped\""
+                    }
+                    append ret >
+                    if {%s} {
+                        append ret [node_to_childrenHtml $node]
+                    }
+                    append ret </$tag>
+                }
+            }
+            proc node_to_childrenHtml {node} {
+                set ret ""
+                foreach child [$node children] {
+                    append ret [TclNode_to_html $child]
+                }
+                return $ret
+            }
+            return [TclNode_to_html %s]
+            """ % (isDeep, extract_nested(node))
+        )
+
     def get_inner_html(self, node):
         return self.tk.eval("""
             set node %s
             if {[$node tag] eq ""} {error "$node is not an HTMLElement"}
 
-            proc innerHtml {node} {
-                set ret ""
-                foreach child [$node children] {
-                    append ret [nodeToHtml $child]
-                }
-                return $ret
+            set ret ""
+            foreach child [$node children] {
+                append ret [node_to_html $child 1]
             }
-            proc nodeToHtml {node} {
-                set tag [$node tag]
-                if {$tag eq ""} {
-                    return [$node text -pre]
-                } else {
-                    set inner [innerHtml $node]
-                    return "<$tag>$inner</$tag>"
-                }
-            }
-            return [innerHtml $node]
+            update
+            return $ret
             """ % extract_nested(node)
         )
 
     def set_inner_html(self, node, new):
+        if extract_nested(node) is None: raise ValueError("Node is empty.")
         self.tk.eval("""
             set node %s
+            
             if {[$node tag] eq ""} {error "$node is not an HTMLElement"}
 
             # Destroy the existing children (and their descendants) of $node.
@@ -575,16 +598,56 @@ class HtmlFrame(ttk.Frame):
             # Insert the new descendants, created by parseing $newHtml.
             set children [%s fragment $newHtml]
             $node insert $children
-            """ % (extract_nested(node), new, self.html)
+            update
+            """ % (extract_nested(node), escape_Tcl(new), self.html)
         )
 
-    def createElement(self, tagname):
+    def create_element(self, tagname):
         return self.tk.eval("""
             set node [%s fragment "<%s>"]
             if {$node eq ""} {error "DOMException NOT_SUPPORTED_ERR"}
             return $node
             """ % (self.html, tagname)
         )
+
+    def create_text_node(self, text):
+        return self.tk.eval("""
+            set tkw %s
+            set text "%s"
+            if {$text eq ""} {
+                # Special case - The [fragment] API usually parses an empty string
+                # to an empty fragment. So create a text node with text "X", then 
+                # set the text to an empty string.
+                set node [$tkw fragment X]
+                $node text set ""
+            } else {
+                set escaped [string map {< &lt; > &gt;} $text]
+                set node [$tkw fragment $escaped]
+            }
+            return $node
+            """ % (self.html, escape_Tcl(text))
+        )
+
+    def text_content(self, node, text):
+        self.tk.eval("""
+            set node %s
+            foreach child [$node children] {
+                $child destroy
+            }
+            $node insert %s
+            """ % (extract_nested(node), self.create_text_node(text))
+        )
+
+    def body(self):
+        return self.tk.eval(f"""set body [lindex [[{self.html} node] children] 1]""")
+
+    def screenshot(self, name="", full=False):
+        image = self.html.image(full)
+        data = image[next(iter(image))]
+        height = len(data)
+        width = len(data[0].split())
+        self.message_func("Screenshot taken.")
+        return createRGBimage(data, name, width, height)
 
 
 class HtmlLabel(HtmlFrame):

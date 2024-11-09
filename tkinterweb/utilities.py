@@ -975,6 +975,13 @@ def get_tkhtml_folder():
             folder = "manylinux1_x86_64"
         else: # 32 bit Intel/AMD Linux
             folder = "manylinux1_i686"
+        tkhtml_path = os.path.join(ROOT_DIR, "tkhtml", folder)
+        # Try locally installed library
+        if os.path.isfile(tkhtml_path + "/libTkhtml3.0.so"):
+           return tkhtml_path
+        # else try the system wide library
+        elif os.path.isfile("/usr/lib/Tkhtml3.0/libTkhtml3.0.so"):
+            return "/usr/lib/Tkhtml3.0"            
     elif platform.system() == "Darwin":
         if "arm" in os.uname()[-1]: # for M1 Mac (#26)
             folder = "macosx_11_0_arm64"

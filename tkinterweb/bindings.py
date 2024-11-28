@@ -434,6 +434,10 @@ class TkinterWeb(tk.Widget):
         """Get the text content of the given node"""
         return self.tk.call(node_handle, "text", *args)
 
+    def set_node_text(self, node_handle, new):
+        """Set the text content of the given node"""
+        return self.tk.call(node_handle, "text", "set", new)
+
     def get_node_tag(self, node_handle):
         """Get the HTML tag of the given node"""
         return self.tk.call(node_handle, "tag")
@@ -1468,6 +1472,6 @@ class TkinterWeb(tk.Widget):
         self.message_func(
             f"The text '{selected_text}' has been copied to the clipboard.")
 
-    def image(self, full=False):
-        image = self.tk.call(self._w, "image", "-full", full)
+    def image(self, full=""):
+        image = self.tk.call(self._w, "image", full)
         return {image: self.tk.call(image, "data")}

@@ -139,7 +139,9 @@ class HtmlFrame(ttk.Frame):
         self.yview_moveto = self.html.yview_moveto
         self.yview_scroll = self.html.yview_scroll
 
+        # Python functions used by Tcl later in this file
         self.html.tk.createcommand("node_to_html", self.node_to_html)
+        self.html.tk.createcommand("text_content_get", self.text_content)
 
     def yview_toelement(self, selector, index=0):
         "Find an element that matches a given CSS selectors and scroll to it"
@@ -628,25 +630,35 @@ class HtmlFrame(ttk.Frame):
             """ % (self.html, escape_Tcl(text))
         )
 
-    def text_content(self, node, text):
-        self.tk.eval("""
+    def text_content(self, node, text=None):
+        return self.tk.eval("""
             set node %s
-            foreach child [$node children] {
-                $child destroy
+            set textnode %s
+            if {$textnode ne ""} {
+                foreach child [$node children] {
+                    $child destroy
+                }
+                $node insert $textnode
+            } else {
+                set ret ""
+                foreach child [$node children] {
+                    append ret [$child text -pre]
+                    append ret [text_content_get $child ""]
+                }
+                return $ret
             }
-            $node insert %s
-            """ % (extract_nested(node), self.create_text_node(text))
+            """ % (extract_nested(node), self.create_text_node(text) if text else '""')
         )
 
     def body(self):
         return self.tk.eval(f"""set body [lindex [[{self.html} node] children] 1]""")
 
     def screenshot(self, name="", full=False):
-        image = self.html.image(full)
+        image = self.html.image("-full" if full else None)
         data = image[next(iter(image))]
         height = len(data)
         width = len(data[0].split())
-        self.message_func("Screenshot taken.")
+        self.message_func(f"Screenshot taken: {name} {width}x{height}.")
         return createRGBimage(data, name, width, height)
 
 

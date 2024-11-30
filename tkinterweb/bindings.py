@@ -465,12 +465,12 @@ class TkinterWeb(tk.Widget):
         """Get the specified attribute of the given node"""
         return self.tk.call(node_handle, "property", node_property)
 
-    def insert_node(self, node_handle, children_nodes, before=None):
+    def insert_node(self, node_handle, children_nodes):
         """Experimental, insert the specified nodes into the parent node"""
-        if before:
-            return self.tk.call(node_handle, "insert", "-before", before, children_nodes)
-        else:
-            return self.tk.call(node_handle, "insert", children_nodes)
+        return self.tk.call(node_handle, "insert", children_nodes)
+
+    def insert_node_before(self, node_handle, children_nodes, before):
+        return self.tk.call(node_handle, "insert", "-before", before, children_nodes)
 
     def delete_node(self, node_handle):
         """Delete the given node"""

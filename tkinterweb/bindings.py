@@ -470,6 +470,7 @@ class TkinterWeb(tk.Widget):
         return self.tk.call(node_handle, "insert", children_nodes)
 
     def insert_node_before(self, node_handle, children_nodes, before):
+        """Same as the last one except node is placed before another node"""
         return self.tk.call(node_handle, "insert", "-before", before, children_nodes)
 
     def delete_node(self, node_handle):

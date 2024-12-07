@@ -632,7 +632,19 @@ class HtmlFrame(ttk.Frame):
 
     def text_content(self, node, text=None):
         return self.tk.eval("""
+            proc get_child_text {node} {
+                set t ""
+                foreach child [$node children] {
+                    if {[$child tag] eq ""} {
+                        append t [$child text -pre]
+                    } else {
+                        append t [get_child_text $child]
+                    }
+                }
+                return $t
+            }
             set node %s
+            if {$node eq ""} {error "DOMException NOT_SUPPORTED_ERR"}
             set textnode %s
             if {$textnode ne ""} {
                 foreach child [$node children] {
@@ -640,12 +652,7 @@ class HtmlFrame(ttk.Frame):
                 }
                 $node insert $textnode
             } else {
-                set ret ""
-                foreach child [$node children] {
-                    append ret [$child text -pre]
-                    append ret [text_content_get $child ""]
-                }
-                return $ret
+                return [get_child_text $node]
             }
             """ % (extract_nested(node), self.create_text_node(text) if text else '""')
         )

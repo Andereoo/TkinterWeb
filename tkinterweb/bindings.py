@@ -428,9 +428,9 @@ class TkinterWeb(tk.Widget):
         return self.tk.call(self._w, "bbox", node)
 
     def parse_fragment(self, html):
-        """Part of a document comprised of nodes just like a standard document
-        difference is that the document fragment isn't part of the active document.
-        Changes made to the fragment don't affect the document. Returns a root node"""
+        """Parse part of a document comprised of nodes just like a standard document,
+        except that the document fragment isn't part of the active document. Changes
+        made to the fragment don't affect the document. Returns a root node."""
         return self.tk.call(self._w, "fragment", html)
 
     def get_node_text(self, node_handle, *args):

@@ -607,7 +607,7 @@ Return type
 Create a new text node. 
 
 Parameters
-* **string** *(string)* - New text.
+* **text** *(string)* - New text.
 
 Return type
 * *node*
@@ -619,7 +619,7 @@ Return or change the text content of a node.
 
 Parameters
 * **node** *(node)* - Node in question.
-* **new** *(string)* - New text.
+* **text** *(string)* - New text.
 
 Return type
 * *node*

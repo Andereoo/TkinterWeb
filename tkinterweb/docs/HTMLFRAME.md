@@ -588,7 +588,7 @@ Get the HTML content of a node.
 
 Parameters
 * **node** *(node)* - Node in question.
-* **string** *(string)* - New inner HTML.
+* **new** *(string)* - New inner HTML.
 
 ---
 
@@ -596,7 +596,7 @@ Parameters
 Create a new node of specified type. 
 
 Parameters
-* **string** *(string)* - New node type e.g. <P>.
+* **tagname** *(string)* - New node type e.g. <P>.
 
 Return type
 * *node*
@@ -619,7 +619,7 @@ Return or change the text content of a node.
 
 Parameters
 * **node** *(node)* - Node in question.
-* **string** *(string)* - New text.
+* **new** *(string)* - New text.
 
 Return type
 * *node*

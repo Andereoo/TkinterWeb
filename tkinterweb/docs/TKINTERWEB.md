@@ -150,7 +150,7 @@ Parse CSS code.
 
 ---
 #### `parse_fragment(html)`
-Part of a document comprised of nodes just like a standard document difference is that the document fragment isn't part of the active document. Changes made to the fragment don't affect the document. Returns a root node.
+Parse part of a document comprised of nodes just like a standard document, except that the document fragment isn't part of the active document. Changes made to the fragment don't affect the document. Returns a root node.
 
 ---
 #### `remove_node_flags(node, name)`
@@ -198,7 +198,7 @@ Set the page render mode.
 
 ---
 #### `set_node_text(mode)`
-Set the text content of the given node.
+Set the text content of the given text node.
 
 ---
 #### `set_zoom(multiplier)`

@@ -97,7 +97,7 @@ class TkinterWeb(tk.Widget):
         #    kwargs["logcmd"] = tkhtml_notifier
 
         # catch htmldrawcleanup crashes on supported platforms
-        if not (platform.system() == "Linux" and sys.maxsize <= 2**32):
+        if (platform.system() == "Linux" and sys.maxsize <= 2**32) or (platform.system() == "Darwin" and "arm" not in os.uname()):
             if "drawcleanupcrashcmd" not in kwargs:
                 kwargs["drawcleanupcrashcmd"] = master.register(self.on_drawcleanupcrash)
 

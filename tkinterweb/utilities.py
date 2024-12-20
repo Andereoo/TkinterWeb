@@ -967,12 +967,21 @@ def get_tkhtml_folder():
     "Get the location of the platform's tkhtml binary"
     # Universal sdist
     if platform.system() == "Linux":
-        if "arm" in os.uname()[-1]: # 32 bit arm Linux - Raspberry Pi (#24) # TODO: add arm64
+        if "arm" in os.uname()[-1]: # 32 bit arm Linux - Raspberry Pi and others
             folder = "linux_armv71"
-        elif sys.maxsize > 2**32: # 64 bit Linux
+        elif "aarch64" in os.uname()[-1]: # 64 bit arm Linux - Raspberry Pi and others
+            folder = "linux_aarch64"
+        elif sys.maxsize > 2**32: # 64 bit Intel/AMD Linux
             folder = "manylinux1_x86_64"
-        else: # 32 bit Linux
+        else: # 32 bit Intel/AMD Linux
             folder = "manylinux1_i686"
+        tkhtml_path = os.path.join(ROOT_DIR, "tkhtml", folder)
+        # Try locally installed library
+        if os.path.isfile(tkhtml_path + "/libTkhtml3.0.so"):
+           return tkhtml_path
+        # else try the system wide library
+        elif os.path.isfile("/usr/lib/Tkhtml3.0/libTkhtml3.0.so"):
+            return "/usr/lib/Tkhtml3.0"            
     elif platform.system() == "Darwin":
         if "arm" in os.uname()[-1]: # for M1 Mac (#26)
             folder = "macosx_11_0_arm64"

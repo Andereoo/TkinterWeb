@@ -142,3 +142,13 @@ def blankimage(name):
     image = Image.new("RGBA", (1, 1))
     image = PhotoImage(image, name=name)
     return image
+
+def createRGBimage(data, name, w, h):
+    image = Image.new("RGB", (w, h))
+    for y, row in enumerate(data):
+        for x, hexc in enumerate(row.split()):
+            rgb = tuple(int(hexc[1:][i:i+2], 16) for i in (0, 2, 4))
+            image.putpixel((x, y), rgb)
+
+    if name: image.save(name)
+    return image

@@ -968,25 +968,25 @@ def get_tkhtml_folder():
     # Universal sdist
     if platform.system() == "Linux":
         if "arm" in os.uname()[-1]: # 32 bit arm Linux - Raspberry Pi and others
-            return os.path.join(ROOT_DIR, "linux_armv71"), True
+            return os.path.join(ROOT_DIR, "linux_armv71")
         elif "aarch64" in os.uname()[-1]: # 64 bit arm Linux - Raspberry Pi and others
-            return os.path.join(ROOT_DIR, "linux_aarch64"), True
+            return os.path.join(ROOT_DIR, "linux_aarch64")
         elif sys.maxsize > 2**32: # 64 bit Linux
-            return os.path.join(ROOT_DIR, "manylinux1_x86_64"), True
+            return os.path.join(ROOT_DIR, "manylinux1_x86_64")
         else: # 32 bit Linux
-            return os.path.join(ROOT_DIR, "manylinux1_i686"), True
+            return os.path.join(ROOT_DIR, "manylinux1_i686")
     elif platform.system() == "Darwin":
         if "arm" in os.uname()[-1]: # M1 Mac
-            return os.path.join(ROOT_DIR, "macosx_11_0_arm64"), True
+            return os.path.join(ROOT_DIR, "macosx_11_0_arm64")
         else: # other Macs
-            return os.path.join(ROOT_DIR, "macosx_10_6_x86_64"), False
+            return os.path.join(ROOT_DIR, "macosx_10_6_x86_64")
     else:
         if sys.maxsize > 2**32: # 64 bit Windows
-            return os.path.join(ROOT_DIR, "win_amd64"), True
+            return os.path.join(ROOT_DIR, "win_amd64")
         else: # 32 bit Windows
-            return os.path.join(ROOT_DIR, "win32"), True
+            return os.path.join(ROOT_DIR, "win32")
     # Platform-specific wheel
-    return os.path.join(ROOT_DIR, "binaries"), True
+    return os.path.join(ROOT_DIR, "binaries")
 
 
 def load_tkhtml(master, location=None, force=False):

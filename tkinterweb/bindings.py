@@ -75,7 +75,7 @@ class TkinterWeb(tk.Widget):
 
     def __init__(self, master, message_func, embed_obj, scroll_overflow=True, cfg={}, **kwargs):
         self.message_func = message_func
-        folder, supports_drawcrashcleanupcmd = get_tkhtml_folder()
+        folder = get_tkhtml_folder()
 
         # provide OS information for troubleshooting
         self.message_func(
@@ -87,6 +87,8 @@ class TkinterWeb(tk.Widget):
         # pre-load custom stylesheet, set default parse mode, and register image loading infrastructure
         if "imagecmd" not in kwargs:
             kwargs["imagecmd"] = master.register(self.on_image)
+        if "drawcleanupcrashcmd" not in kwargs:
+            kwargs["drawcleanupcrashcmd"] = master.register(self.on_drawcleanupcrash)
         if "defaultstyle" not in kwargs:
             kwargs["defaultstyle"] = DEFAULTSTYLE
         if "parsemode" not in kwargs:
@@ -95,11 +97,6 @@ class TkinterWeb(tk.Widget):
         #    kwargs["enablelayout"] = True
         #if "logcmd" not in kwargs:
         #    kwargs["logcmd"] = tkhtml_notifier
-        
-        # catch htmldrawcleanup crashes on supported platforms
-        if supports_drawcrashcleanupcmd:
-            if "drawcleanupcrashcmd" not in kwargs:
-                kwargs["drawcleanupcrashcmd"] = master.register(self.on_drawcleanupcrash)
 
         # load the Tkhtml3 widget
         try:

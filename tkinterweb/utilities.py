@@ -555,7 +555,7 @@ INPUT[type="submit"],INPUT[type="button"], INPUT[type="reset"], BUTTON {
   color: tcl(::tkhtml::if_disabled #666666 #ffffff);
 }
 """
-ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
+ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "tkhtml")
 WORKING_DIR = os.getcwd()
     
 tkhtml_loaded = False
@@ -960,7 +960,7 @@ def strip_css_url(url):
 
 def get_alt_font():
     "Get the location of the truetype file to be used for image alternate text"
-    return os.path.join(ROOT_DIR, "tkhtml", "opensans.ttf")
+    return os.path.join(ROOT_DIR, "opensans.ttf")
 
 
 def get_tkhtml_folder():
@@ -968,25 +968,25 @@ def get_tkhtml_folder():
     # Universal sdist
     if platform.system() == "Linux":
         if "arm" in os.uname()[-1]: # 32 bit arm Linux - Raspberry Pi and others
-            return os.path.join(ROOT_DIR, "tkhtml", "linux_armv71"), True
+            return os.path.join(ROOT_DIR, "linux_armv71"), True
         elif "aarch64" in os.uname()[-1]: # 64 bit arm Linux - Raspberry Pi and others
-            return os.path.join(ROOT_DIR, "tkhtml", "linux_aarch64"), True
+            return os.path.join(ROOT_DIR, "linux_aarch64"), True
         elif sys.maxsize > 2**32: # 64 bit Linux
-            return os.path.join(ROOT_DIR, "tkhtml", "manylinux1_x86_64"), True
+            return os.path.join(ROOT_DIR, "manylinux1_x86_64"), True
         else: # 32 bit Linux
-            return os.path.join(ROOT_DIR, "tkhtml", "manylinux1_i686"), True
+            return os.path.join(ROOT_DIR, "manylinux1_i686"), True
     elif platform.system() == "Darwin":
         if "arm" in os.uname()[-1]: # M1 Mac
-            return os.path.join(ROOT_DIR, "tkhtml", "macosx_11_0_arm64"), True
+            return os.path.join(ROOT_DIR, "macosx_11_0_arm64"), True
         else: # other Macs
-            return os.path.join(ROOT_DIR, "tkhtml", "macosx_10_6_x86_64"), False
+            return os.path.join(ROOT_DIR, "macosx_10_6_x86_64"), False
     else:
         if sys.maxsize > 2**32: # 64 bit Windows
-            return os.path.join(ROOT_DIR, "tkhtml", "win_amd64"), True
+            return os.path.join(ROOT_DIR, "win_amd64"), True
         else: # 32 bit Windows
-            return os.path.join(ROOT_DIR, "tkhtml", "win32"), True
+            return os.path.join(ROOT_DIR, "win32"), True
     # Platform-specific wheel
-    return os.path.join(ROOT_DIR, "tkhtml", "binaries"), True
+    return os.path.join(ROOT_DIR, "binaries"), True
 
 
 def load_tkhtml(master, location=None, force=False):
@@ -1003,8 +1003,7 @@ def load_combobox(master, force=False):
     "Load combobox.tcl"
     global combobox_loaded
     if not (combobox_loaded) or force:
-        path = os.path.join(ROOT_DIR, "tkhtml")
-        master.tk.call("lappend", "auto_path", path)
+        master.tk.call("lappend", "auto_path", ROOT_DIR)
         master.tk.call("package", "require", "combobox")
         combobox_loaded = True
 

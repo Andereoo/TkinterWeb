@@ -210,7 +210,7 @@ COLORMAPPINGS = {
     'whitesmoke': '#010101',
     'yellowgreen': '#5623be',
 }
-DEFAULTSTYLE = """
+DEFAULTSTYLE = r"""
 /* Default stylesheet to be loaded whenever HTML is parsed. */
 /* This is a modified version of the stylesheet that comes bundled with Tkhtml. */
 /* Display types for non-table items. */

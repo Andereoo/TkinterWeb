@@ -970,7 +970,7 @@ def get_tkhtml_folder():
         if "arm" in os.uname()[-1]: # 32 bit arm Linux - Raspberry Pi and others
             return os.path.join(ROOT_DIR, "linux_armv71")
         elif "aarch64" in os.uname()[-1]: # 64 bit arm Linux - Raspberry Pi and others
-            return os.path.join(ROOT_DIR, "linux_aarch64")
+            return os.path.join(ROOT_DIR, "manylinux2014_aarch64")
         elif sys.maxsize > 2**32: # 64 bit Linux
             return os.path.join(ROOT_DIR, "manylinux1_x86_64")
         else: # 32 bit Linux

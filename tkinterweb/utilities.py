@@ -968,33 +968,25 @@ def get_tkhtml_folder():
     # Universal sdist
     if platform.system() == "Linux":
         if "arm" in os.uname()[-1]: # 32 bit arm Linux - Raspberry Pi and others
-            folder = "linux_armv71"
+            return os.path.join(ROOT_DIR, "tkhtml", "linux_armv71"), True
         elif "aarch64" in os.uname()[-1]: # 64 bit arm Linux - Raspberry Pi and others
-            folder = "linux_aarch64"
-        elif sys.maxsize > 2**32: # 64 bit Intel/AMD Linux
-            folder = "manylinux1_x86_64"
-        else: # 32 bit Intel/AMD Linux
-            folder = "manylinux1_i686"
-        tkhtml_path = os.path.join(ROOT_DIR, "tkhtml", folder)
-        # Try locally installed library
-        if os.path.isfile(tkhtml_path + "/libTkhtml3.0.so"):
-           return tkhtml_path
-        # else try the system wide library
-        elif os.path.isfile("/usr/lib/Tkhtml3.0/libTkhtml3.0.so"):
-            return "/usr/lib/Tkhtml3.0"            
+            return os.path.join(ROOT_DIR, "tkhtml", "linux_aarch64"), True
+        elif sys.maxsize > 2**32: # 64 bit Linux
+            return os.path.join(ROOT_DIR, "tkhtml", "manylinux1_x86_64"), True
+        else: # 32 bit Linux
+            return os.path.join(ROOT_DIR, "tkhtml", "manylinux1_i686"), True
     elif platform.system() == "Darwin":
-        if "arm" in os.uname()[-1]: # for M1 Mac (#26)
-            folder = "macosx_11_0_arm64"
+        if "arm" in os.uname()[-1]: # M1 Mac
+            return os.path.join(ROOT_DIR, "tkhtml", "macosx_11_0_arm64"), True
         else: # other Macs
-            folder = "macosx_10_6_x86_64"
+            return os.path.join(ROOT_DIR, "tkhtml", "macosx_10_6_x86_64"), False
     else:
         if sys.maxsize > 2**32: # 64 bit Windows
-            folder = "win_amd64"
-        else:
-            folder = "win32" # 32 bit Windows
-    return os.path.join(ROOT_DIR, "tkhtml", folder)
+            return os.path.join(ROOT_DIR, "tkhtml", "win_amd64"), True
+        else: # 32 bit Windows
+            return os.path.join(ROOT_DIR, "tkhtml", "win32"), True
     # Platform-specific wheel
-    return os.path.join(ROOT_DIR, "tkhtml", "binaries")
+    return os.path.join(ROOT_DIR, "tkhtml", "binaries"), True
 
 
 def load_tkhtml(master, location=None, force=False):

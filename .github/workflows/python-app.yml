@@ -24,7 +24,7 @@ jobs:
       with:
         python-version: "3.10"
     - name: Install dependencies
-      run: pip install PIL
+      run: pip install pillow
     - name: Test
       run: |
         cd tkinterweb

@@ -27,6 +27,5 @@ jobs:
       run: pip install pillow
     - name: Test
       run: |
-        pip install tkinterweb
-        cd /
-        python3 -m tkinterweb.__init__ Demo
+        cd tkinterweb
+        python3 -m __init__ Demo

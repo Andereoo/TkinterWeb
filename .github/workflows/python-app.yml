@@ -28,4 +28,5 @@ jobs:
     - name: Test
       run: |
         pip install tkinterweb
+        cd /
         python3 -m tkinterweb.__init__ Demo

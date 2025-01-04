@@ -75,7 +75,7 @@ class TkinterWeb(tk.Widget):
 
     def __init__(self, master, message_func, embed_obj, scroll_overflow=True, cfg={}, **kwargs):
         self.message_func = message_func
-        folder = get_tkhtml_folder()
+        folder, supports_drawcrashcleanupcmd = get_tkhtml_folder()
 
         # provide OS information for troubleshooting
         self.message_func(
@@ -95,9 +95,9 @@ class TkinterWeb(tk.Widget):
         #    kwargs["enablelayout"] = True
         #if "logcmd" not in kwargs:
         #    kwargs["logcmd"] = tkhtml_notifier
-
+        
         # catch htmldrawcleanup crashes on supported platforms
-        if not (platform.system() == "Darwin" and "arm" not in os.uname()):
+        if supports_drawcrashcleanupcmd:
             if "drawcleanupcrashcmd" not in kwargs:
                 kwargs["drawcleanupcrashcmd"] = master.register(self.on_drawcleanupcrash)
 

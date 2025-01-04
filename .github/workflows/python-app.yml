@@ -15,7 +15,7 @@ permissions:
 jobs:
   build:
 
-    runs-on: macos-15
+    runs-on: macos-13
 
     steps:
     - uses: actions/checkout@v4
@@ -27,5 +27,5 @@ jobs:
       run: pip install pillow
     - name: Test
       run: |
-        cd tkinterweb
-        python3 -m __init__ Demo
+        pip install tkinterweb
+        python3 -m tkinterweb.__init__ Demo

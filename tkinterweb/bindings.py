@@ -3,7 +3,7 @@ TkinterWeb v3.24
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
 
-Copyright (c) 2024 Andereoo
+Copyright (c) 2025 Andereoo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -141,6 +141,7 @@ class TkinterWeb(tk.Widget):
         self.downloading_resource_func = self.placeholder
         self.image_setup_func = self.placeholder
         self.token = "TKWtsvLKac1"
+        self.insecure_https = False
 
         if scroll_overflow:
             self.scroll_overflow = master
@@ -609,9 +610,9 @@ class TkinterWeb(tk.Widget):
             # Ideally threading would be used here, but at the moment threading <object> elements breaks some images
             # It doesn't really matter though, since very few webpages use <object> elements anyway
             if url.startswith("file://") or (not self.caches_enabled):
-                data, newurl, filetype = download(url)
+                data, newurl, filetype = download(url, insecure=self.insecure_https)
             elif url:
-                data, newurl, filetype = cachedownload(url)
+                data, newurl, filetype = cachedownload(url, insecure=self.insecure_https)
             else:
                 return
 
@@ -1047,9 +1048,9 @@ class TkinterWeb(tk.Widget):
         if url and self.unstoppable:
             try:
                 if url.startswith("file://") or (not self.caches_enabled):
-                    data = download(url)[0]
+                    data = download(url, insecure=self.insecure_https)[0]
                 else:
-                    data = cachedownload(url)[0]
+                    data = cachedownload(url, insecure=self.insecure_https)[0]
 
                 matcher = lambda match, url=url: self.fix_css_urls(match, url)
                 data = re.sub(r"url\((.*?)\)", matcher, data)
@@ -1083,9 +1084,9 @@ class TkinterWeb(tk.Widget):
 
         try:
             if url.startswith("file://") or (not self.caches_enabled):
-                data, newurl, filetype = download(url)
+                data, newurl, filetype = download(url, insecure=self.insecure_https)
             else:
-                data, newurl, filetype = cachedownload(url)
+                data, newurl, filetype = cachedownload(url, insecure=self.insecure_https)
 
             if self.unstoppable and data:  
                 image, error = newimage(data, name, filetype, self.image_inversion_enabled)    
@@ -1380,7 +1381,7 @@ class TkinterWeb(tk.Widget):
             widgetid.load_html(html, url)
         elif url:
             widgetid.load_html("<p>Loading...</p>")
-            widgetid.load_url(url)
+            widgetid.load_url(url, insecure=self.insecure_https)
 
         self.handle_node_replacement(node, widgetid, lambda widgetid=widgetid: self.handle_node_removal(widgetid))
 

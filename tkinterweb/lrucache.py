@@ -3,7 +3,7 @@ TkinterWeb v3.24
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
 
-Copyright (c) 2024 Andereoo
+Copyright (c) 2025 Andereoo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@ SOFTWARE.
 """
 
 from _thread import RLock
-from functools import _make_key, update_wrapper
+from functools import update_wrapper, _make_key
 
 
 def _lru_cache_wrapper(user_function):
@@ -82,7 +82,7 @@ def _lru_cache_wrapper(user_function):
                     last = root[PREV]
                     link = [last, root, key, result]
                     last[NEXT] = root[PREV] = cache[key] = link
-                    full = cache_len() >= maxsize
+                    full = (cache_len() >= maxsize)
         return result
     return wrapper
 

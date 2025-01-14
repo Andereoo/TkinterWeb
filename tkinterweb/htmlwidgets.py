@@ -3,7 +3,7 @@ TkinterWeb v3.24
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
 
-Copyright (c) 2024 Andereoo
+Copyright (c) 2025 Andereoo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -124,7 +124,7 @@ class HtmlFrame(ttk.Frame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
 
-        #Redirected commands
+        # redirected commands
         self.select_all = self.html.select_all
         self.bind = self.html.bind
         self.set_zoom = self.html.set_zoom
@@ -148,13 +148,13 @@ class HtmlFrame(ttk.Frame):
             except IndexError:
                 pass
 
-    def load_website(self, website_url, decode=None, force=False, insecure=False):
+    def load_website(self, website_url, decode=None, force=False, insecure=None):
         "Load a website from the specified URL"
         if (not website_url.startswith("https://")) and (not website_url.startswith("http://")) and (not website_url.startswith("about:")):
             website_url = "http://" + str(website_url)
         self.load_url(website_url, decode, force, insecure)
 
-    def load_file(self, file_url, decode=None, force=False, insecure=False):
+    def load_file(self, file_url, decode=None, force=False, insecure=None):
         "Load a locally stored file from the specified path"
         if not file_url.startswith("file://"):
             if platform.system() == "Windows" and not file_url.startswith("/"):
@@ -163,7 +163,7 @@ class HtmlFrame(ttk.Frame):
                 file_url = "file://" + str(file_url)
         self.load_url(file_url, decode, force, insecure)
 
-    def load_url(self, url, decode=None, force=False, insecure=False):
+    def load_url(self, url, decode=None, force=False, insecure=None):
         """Load a website (https:// or http://) or a file (file://) from the specified URL.
         We use threading here to prevent the GUI from freezing while fetching the website.
         Technically Tkinter isn't threadsafe and will crash when doing this, but under certain circumstances we can get away with it.
@@ -171,7 +171,7 @@ class HtmlFrame(ttk.Frame):
         """
         self.waiting_for_reset = True
 
-        #Workaround for Bug #40, where urllib.urljoin constructs improperly formatted urls on Linux when url starts with file:///
+        # workaround for Bug #40, where urllib.urljoin constructs improperly formatted urls on Linux when url starts with file:///
         if not url.startswith("file://///"):
             url = url.replace("file:////", "file:///")
 
@@ -185,23 +185,28 @@ class HtmlFrame(ttk.Frame):
         else:
             self.continue_loading(url, decode=decode, force=force, insecure=insecure)
 
-    def load_form_data(self, url, data, method="GET", decode=None):
+    def load_form_data(self, url, data, method="GET", decode=None, insecure=None):
         "Load a webpage using form data"
         if self.thread_in_progress:
             self.thread_in_progress.stop()
         if self.html.max_thread_count >= 1:
             thread = StoppableThread(
-                target=self.continue_loading, args=(url, data, method, decode))
+                target=self.continue_loading, args=(url, data, method, decode), kwargs={"insecure": insecure})
             self.thread_in_progress = thread
             thread.start()
         else:
             self.continue_loading(url, data, method, decode)
 
-    def continue_loading(self, url, data="", method="GET", decode=None, force=False, insecure=False):
+    def continue_loading(self, url, data="", method="GET", decode=None, force=False, insecure=None):
         "Finish loading urls and handle URI fragments"
+        if insecure == None:
+            insecure = self.html.insecure_https
+        else:
+            self.html.insecure_https = insecure
 
         self.html.downloading_resource_func()
         self.url_change_func(url)
+        
         try:
             method = method.upper()
             parsed = urlparse(url)
@@ -209,7 +214,7 @@ class HtmlFrame(ttk.Frame):
             if method == "GET":
                 url = str(url) + str(data)
 
-            # if url is different than the current one, load the new site.
+            # if url is different than the current one, load the new site
             if force or (method == "POST") or (self.skim(urldefrag(url)[0]) != self.skim(urldefrag(self.current_url)[0])):
                 self.message_func("Connecting to {0}.".format(parsed.netloc))
                 if insecure:
@@ -260,6 +265,14 @@ class HtmlFrame(ttk.Frame):
                 f"An error has been encountered while loading {url}: {error}.")
             self.load_html(self.broken_page_msg)
             self.current_url = ""
+            
+            if "CERTIFICATE_VERIFY_FAILED" in str(error):
+                python_version = ".".join(platform.python_version_tuple()[:2])
+                self.message_func(
+                    f"This may happen if your Python distribution does not come installed with website certificates.\n\
+This is a known Python bug on older MacOS systems. \
+Running something along the lines of \"/Applications/Python {python_version}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
+Otherwise, use 'insecure=True' when loading a page to ignore website certificates.")
 
         self.thread_in_progress = None
 

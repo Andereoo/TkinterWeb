@@ -431,7 +431,11 @@ class TkinterWeb(tk.Widget):
         """Parse part of a document comprised of nodes just like a standard document,
         except that the document fragment isn't part of the active document. Changes
         made to the fragment don't affect the document. Returns a root node."""
-        return self.tk.call(self._w, "fragment", html)
+        self.unstoppable = True
+        html = self.crash_prevention(html)
+        fragments = self.tk.call(self._w, "fragment", html)
+        self.setup_widgets()
+        return fragments
 
     def get_node_text(self, node_handle, *args):
         """Get the text content of the given node"""

@@ -583,8 +583,9 @@ class HtmlFrame(ttk.Frame):
         )
 
     def set_inner_html(self, node, new):
-        if extract_nested(node) is None: raise ValueError("Node is empty.")
+        if not node: raise ValueError("Node is empty.")
         self.tk.eval("""
+            set tkw %s
             set node %s
             
             if {[$node tag] eq ""} {error "$node is not an HTMLElement"}
@@ -597,11 +598,15 @@ class HtmlFrame(ttk.Frame):
             }
 
             set newHtml "%s"
+            set oldmode [$tkw cget -parsemode]
+            $tkw configure -parsemode html
             # Insert the new descendants, created by parseing $newHtml.
-            set children [%s fragment $newHtml]
+            set children [$tkw fragment $newHtml]
             $node insert $children
+
+            $tkw configure -parsemode $oldmode
             update
-            """ % (extract_nested(node), escape_Tcl(new), self.html)
+            """ % (self.html, extract_nested(node), escape_Tcl(new))
         )
 
     def create_element(self, tagname):

@@ -361,10 +361,12 @@ class TkinterWeb(tk.Widget):
         document node, or an empty string if the node is a text node."""
         return self.tk.call(self._w, "tag", subcommand, tag_name, *args)
 
-    def search(self, selector):
+    def search(self, selector, **kw):
         """Search the document for the specified CSS
         selector; return a Tkhtml3 node if found."""
-        return self.tk.call(self._w, "search", selector)
+        opt = ()
+        for k, v in kw.items(): opt = opt + (f"-{k}", v)
+        return self.tk.call((self._w, "search", selector)+opt)
 
     def set_zoom(self, multiplier):
         """Set the page zoom"""

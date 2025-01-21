@@ -359,10 +359,12 @@ class TkinterWeb(tk.Widget):
         document node, or an empty string if the node is a text node."""
         return self.tk.call(self._w, "tag", subcommand, tag_name, *args)
 
-    def search(self, selector):
+    def search(self, selector, **kw):
         """Search the document for the specified CSS
         selector; return a Tkhtml3 node if found."""
-        return self.tk.call(self._w, "search", selector)
+        opt = ()
+        for k, v in kw.items(): opt = opt + (f"-{k}", v)
+        return self.tk.call((self._w, "search", selector)+opt)
 
     def set_zoom(self, multiplier):
         """Set the page zoom"""
@@ -425,9 +427,23 @@ class TkinterWeb(tk.Widget):
         """Get the bounding box of the viewport or a specified node"""
         return self.tk.call(self._w, "bbox", node)
 
+    def parse_fragment(self, html):
+        """Parse part of a document comprised of nodes just like a standard document,
+        except that the document fragment isn't part of the active document. Changes
+        made to the fragment don't affect the document. Returns a root node."""
+        self.unstoppable = True
+        html = self.crash_prevention(html)
+        fragments = self.tk.call(self._w, "fragment", html)
+        self.setup_widgets()
+        return fragments
+
     def get_node_text(self, node_handle, *args):
         """Get the text content of the given node"""
         return self.tk.call(node_handle, "text", *args)
+
+    def set_node_text(self, node_handle, new):
+        """Set the text content of the given node"""
+        return self.tk.call(node_handle, "text", "set", new)
 
     def get_node_tag(self, node_handle):
         """Get the HTML tag of the given node"""
@@ -459,6 +475,10 @@ class TkinterWeb(tk.Widget):
     def insert_node(self, node_handle, children_nodes):
         """Experimental, insert the specified nodes into the parent node"""
         return self.tk.call(node_handle, "insert", children_nodes)
+
+    def insert_node_before(self, node_handle, children_nodes, before):
+        """Same as the last one except node is placed before another node"""
+        return self.tk.call(node_handle, "insert", "-before", before, children_nodes)
 
     def delete_node(self, node_handle):
         """Delete the given node"""
@@ -664,7 +684,7 @@ class TkinterWeb(tk.Widget):
                     self.image_thread_check(url, name)
                     done = True
             if not done:
-                self.load_alt_image(url, name)
+                self.load_alt_text(url, name)
                 self.message_func(
                     f"The image {shorten(url)} could not be shown because it is not supported yet.")
                 self.image_setup_func(url, True)
@@ -1064,15 +1084,13 @@ class TkinterWeb(tk.Widget):
 
         self.finish_download(thread)
 
-    def load_alt_image(self, url, name):
-        if (url in self.image_directory) and self.image_alternate_text_enabled:
+    def load_alt_text(self, url, name):
+        if (url in self.image_directory):
             node = self.image_directory[url]
-            nodebox = self.bbox(node)
-            alt = self.get_node_attribute(self.image_directory[url], "alt")
-            if alt:
-                image = textimage(name, alt, nodebox, self.image_alternate_text_font, self.image_alternate_text_size, self.image_alternate_text_threshold)
-                self.loaded_images.add(image)
-            elif not self.ignore_invalid_images:
+            alt = self.get_node_attribute(node, "alt")
+            if alt and self.image_alternate_text_enabled:
+                self.insert_node(node, self.parse_fragment(alt))
+            if not self.ignore_invalid_images:
                 image = newimage(self.broken_image, name, "image/png", self.image_inversion_enabled)
                 self.loaded_images.add(image)
 
@@ -1093,24 +1111,28 @@ class TkinterWeb(tk.Widget):
                 if image:
                     self.loaded_images.add(image)
                     self.image_setup_func(url, True)
+                    for node in self.search("img"):
+                        if self.get_node_attribute(node, "src") == url:
+                            if self.get_node_children(node): self.delete_node(self.get_node_children(node))
+                            break
                 elif error == "no_pycairo":
-                    self.load_alt_image(url, name)
+                    self.load_alt_text(url, name)
                     self.message_func(
                         "Scalable Vector Graphics could not be shown because Pycairo is not installed but is required to parse .svg files.")
                     self.image_setup_func(url, False)
                 elif error == "no_rsvg":
-                    self.load_alt_image(url, name)
+                    self.load_alt_text(url, name)
                     self.message_func(
                         "Scalable Vector Graphics could not be shown because Rsvg is not installed but is required to parse .svg files.")
                     self.image_setup_func(url, False)
                 elif error == "corrupt":
-                    self.load_alt_image(url, name)
+                    self.load_alt_text(url, name)
                     self.message_func(
                         f"The image {url} could not be shown.")
                     self.image_setup_func(url, False)
 
         except Exception:
-            self.load_alt_image(url, name)
+            self.load_alt_text(url, name)
             self.message_func(
                 f"The image {url} could not be shown because it is corrupt or is not supported yet.")
             self.image_setup_func(url, False)
@@ -1457,3 +1479,7 @@ class TkinterWeb(tk.Widget):
         self.clipboard_append(selected_text)
         self.message_func(
             f"The text '{selected_text}' has been copied to the clipboard.")
+
+    def image(self, full=""):
+        image = self.tk.call(self._w, "image", full)
+        return {image: self.tk.call(image, "data")}

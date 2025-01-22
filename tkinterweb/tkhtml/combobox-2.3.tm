@@ -1,3 +1,34 @@
+# Copyright (c) 1998-2003, Bryan Oakley
+# All Rights Reservered
+#
+# Bryan Oakley
+# oakley@bardo.clearlight.com
+#
+# combobox v2.3 August 16, 2003
+#
+# a combobox / dropdown listbox (pick your favorite name) widget 
+# written in pure tcl
+#
+# this code is freely distributable without restriction, but is 
+# provided as-is with no warranty expressed or implied. 
+#
+# thanks to the following people who provided beta test support or
+# patches to the code (in no particular order):
+#
+# Scott Beasley     Alexandre Ferrieux      Todd Helfter
+# Matt Gushee       Laurent Duperval        John Jackson
+# Fred Rapp         Christopher Nelson
+# Eric Galluzzo     Jean-Francois Moine	    Oliver Bienert
+#
+# A special thanks to Martin M. Hunt who provided several good ideas, 
+# and always with a patch to implement them. Jean-Francois Moine, 
+# Todd Helfter and John Jackson were also kind enough to send in some 
+# code patches.
+#
+# ... and many others over the years.
+
+# slightly modified for use in the TkinterWeb project, 2021-2023
+
 package provide combobox 2.3
 
 namespace eval ::combobox {

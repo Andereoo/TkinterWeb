@@ -1023,20 +1023,3 @@ def tkhtml_notifier(name, text, *args):
         sys.stdout.write("DEBUG "+str(name)+": "+str(text)+"\n\n")
     except Exception:
         pass
-
-
-def extract_nested(nested):
-    if isinstance(nested, tuple) and len(nested):
-        return extract_nested(nested[0])
-    return nested
-
-
-def escape_Tcl(string):
-    string = str(string)
-    escaped = ""
-    special_chars = '"\\$[]'
-    for char in string:
-        if char in special_chars: escaped += "\\"
-        escaped += char
-
-    return escaped

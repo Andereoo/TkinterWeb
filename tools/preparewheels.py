@@ -15,6 +15,7 @@ TKINTERWEB_ROOT_PATH = os.path.join(ROOT_PATH, "tkinterweb")
 TKINTERWEB_NEW_ROOT_PATH = os.path.join(WHEELS_ROOT_PATH, "tkinterweb_")
 TKHTML_ROOT_PATH = os.path.join(TKINTERWEB_ROOT_PATH, "tkhtml")
 README_PATH = os.path.join(ROOT_PATH, "README.md")
+LICENCE_PATH = os.path.join(ROOT_PATH, "LICENSE.md")
 TKHTML_SUBFOLDER_NAME = "binaries"
 
 manifest_in_contents = "recursive-include tkinterweb/tkhtml *"
@@ -42,7 +43,6 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
         "Topic :: Software Development",
       ],
@@ -150,6 +150,7 @@ for folder in tkhtml_folders:
         handle.write(manifest_in_contents.format(folder))
 
     shutil.copy2(README_PATH, folder_path)
+    shutil.copy2(LICENCE_PATH, folder_path)
     
     print(f"Creating wheel for {folder}...", end="")
     run_shell("python3", "-m", "build", "--no-isolation", "--wheel", cwd=folder_path, is_wheel=True)    

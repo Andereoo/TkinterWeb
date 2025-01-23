@@ -13,9 +13,9 @@ All major operating systems running Python 3+ are supported.
 ## Usage
 
 **TkinterWeb provides:**
-* [a webbrowser frame to display websites in Tkinter](/tkinterweb/docs/HTMLFRAME.md)
-* [a label that can display styled text, tables, and images](/tkinterweb/docs/HTMLLABEL.md)
-* [a geometry manager to display Tkinter widgets *and HTML elements* together in a Tkinter application](/tkinterweb/docs/GEOMETRY.md)
+* [a webbrowser frame to display websites in Tkinter](/docs/HTMLFRAME.md)
+* [a label that can display styled text, tables, and images](/docs/HTMLLABEL.md)
+* [a geometry manager to display Tkinter widgets *and HTML elements* together in a Tkinter application](/docs/GEOMETRY.md)
 
 **TkinterWeb can be used in any Tkinter application. Here is an example:**
 ```
@@ -33,7 +33,7 @@ root.mainloop()
 ```
 ![TkinterWeb](/images/tkinterweb.png)
 
-Some other tricks, such as handling page title changes, link clicks, and navigation key presses, can be found in [the HtmlFrame documentation](/tkinterweb/docs/HTMLFRAME.md#tips-and-tricks)
+Some other tricks, such as handling page title changes, link clicks, and navigation key presses, can be found in [the HtmlFrame documentation](/docs/HTMLFRAME.md#tips-and-tricks)
 
 &nbsp;
 &nbsp;
@@ -57,15 +57,15 @@ Pip will automatically install PIL when installing TkinterWeb.
 **TkinterWeb ships with a few classes that make it quick and easy to use.**
 
 Documentation and additional information for these classes can be found in the corresponding API refrence pages:
-* [`TkinterWeb.HtmlFrame`](/tkinterweb/docs/HTMLFRAME.md)
-* [`TkinterWeb.HtmlLabel`](/tkinterweb/docs/HTMLLABEL.md)
-* [`TkinterWeb.Demo`](/tkinterweb/docs/DEMO.md)
-* [`TkinterWeb.TkinterWeb`](/tkinterweb/docs/TKINTERWEB.md)
+* [`TkinterWeb.HtmlFrame`](/docs/HTMLFRAME.md)
+* [`TkinterWeb.HtmlLabel`](/docs/HTMLLABEL.md)
+* [`TkinterWeb.Demo`](/docs/DEMO.md)
+* [`TkinterWeb.TkinterWeb`](/docs/TKINTERWEB.md)
 
 &nbsp;
 &nbsp;
 ## FAQs
-See https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/docs/FAQ.md.
+See https://github.com/Andereoo/TkinterWeb/blob/main/docs/FAQ.md.
 
 &nbsp;
 &nbsp;
@@ -88,7 +88,7 @@ See https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/docs/FAQ.md.
 ## Contributing
 **TkinterWeb happily accepts contributions.**
 
-The best way to contribute to this project is to go to the [issues tab](https://github.com/Andereoo/TkinterWeb/issues) and report bugs or submit a feature request. This helps TkinterWeb become more stable and full-featured. Please check the [FAQs](https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/docs/FAQ.md) and [closed bugs](https://github.com/Andereoo/TkinterWeb/issues?q=is%3Aissue+is%3Aclosed) before submitting a bug report to see if your question as already been answered.
+The best way to contribute to this project is to go to the [issues tab](https://github.com/Andereoo/TkinterWeb/issues) and report bugs or submit a feature request. This helps TkinterWeb become more stable and full-featured. Please check the [FAQs](https://github.com/Andereoo/TkinterWeb/blob/main/docs/FAQ.md) and [closed bugs](https://github.com/Andereoo/TkinterWeb/issues?q=is%3Aissue+is%3Aclosed) before submitting a bug report to see if your question as already been answered.
 
 &nbsp;
 &nbsp;

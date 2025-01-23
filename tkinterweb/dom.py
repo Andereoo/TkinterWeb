@@ -52,7 +52,7 @@ class TkwDocumentObjectModel:
         self.html.tk.createcommand("parse_fragment", self.html.parse_fragment)
 
     def createElement(self, tagname):
-        "Create a new HTML element with the specified tag name"
+        "Create a new HTML element with the given tag name"
         return HtmlElement(
             self.html,
             self.html.tk.eval(
@@ -66,7 +66,7 @@ class TkwDocumentObjectModel:
         )
 
     def createTextNode(self, text):
-        "Create a new text node"
+        "Create a new text node with the given text conent"
         return HtmlElement(self.html, generate_text_node(self.html, text))
 
     def body(self):  # attr
@@ -95,7 +95,7 @@ class TkwDocumentObjectModel:
         return [HtmlElement(self.html, node) for node in nodes]
 
     def getElementsByName(self, query):
-        "Return a list of elements matching the given name attribute"
+        "Return a list of elements matching a given name attribute"
         newquery = []
         for classname in query.split():
             if classname.startswith("[name=") and classname.endswith("]"):
@@ -116,7 +116,7 @@ class TkwDocumentObjectModel:
         return HtmlElement(self.html, node)
 
     def querySelectorAll(self, query):
-        "Return a list of elements that matche a given CSS selector"
+        "Return a list of elements that match a given CSS selector"
         nodes = self.html.search(query)
         return [HtmlElement(self.html, node) for node in nodes]
 
@@ -171,7 +171,7 @@ class HtmlElement:
         return children
 
     def innerHTML(self, contents=None):  # attr
-        "Get and set the inner HTML contents of an element"
+        "Get and set the inner HTML of an element"
         if contents:
             self.html.tk.eval(
                 """
@@ -254,7 +254,7 @@ class HtmlElement:
         )
 
     def getAttribute(self, attribute):
-        "Return the value of the given attribute"
+        "Get the value of the given attribute"
         return self.html.get_node_attribute(self.node, attribute)
 
     def setAttribute(self, attribute, value):
@@ -266,7 +266,7 @@ class HtmlElement:
         return self.html.get_node_tag(self.node)
 
     def style(self, property, value=None):  # attr
-        "Get and set the specified CSS property"
+        "Get and set the value of the given CSS property"
         if value:
             styles = self.html.get_node_attribute(self.node, "style")
             newstyles = []

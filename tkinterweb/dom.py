@@ -67,7 +67,7 @@ class TkwDocumentObjectModel:
 
     def createTextNode(self, text):
         "Create a new text node"
-        return generate_text_node(self.html, text)
+        return HtmlElement(self.html, generate_text_node(self.html, text))
 
     def body(self):  # attr
         "Return the document body element"
@@ -169,9 +169,6 @@ class HtmlElement:
             children.append(HtmlElement(self.html, child))
             children += self.find_nested_children(child)
         return children
-    
-    def createTextNode(self, text):
-        return generate_text_node(self.html, text)
 
     def innerHTML(self, contents=None):  # attr
         "Get and set the inner HTML contents of an element"
@@ -253,7 +250,7 @@ class HtmlElement:
                 return [get_child_text $node]
             }
             """
-            % (extract_nested(self.node), self.createTextNode(contents) if contents else '""')
+            % (extract_nested(self.node), generate_text_node(self.html, contents) if contents else '""')
         )
 
     def getAttribute(self, attribute):

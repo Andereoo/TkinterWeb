@@ -1,4 +1,4 @@
-## DOM Manipulation with WkinterWeb
+## DOM Manipulation with TkinterWeb
 
 ## Overview
 TkinterWeb provides a handful of functions that allow for manipulation of the webpage. They are fashioned after common JavaScript functions.

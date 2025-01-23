@@ -1,27 +1,8 @@
 """
-TkinterWeb v3.24
-This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
-which displays styled HTML documents in Tkinter.
+Widgets that expand on the functionality of the basic bindings
+by adding scrolling, file loading, and many other convenience functions
 
 Copyright (c) 2025 Andereoo
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
 """
 
 import platform
@@ -50,7 +31,7 @@ class HtmlFrame(ttk.Frame):
         self.html = html = TkinterWeb(self, message_func, HtmlFrame)
         html.grid(row=0, column=0, sticky=tk.NSEW)
 
-        self.dom = TkwDocumentObjectModel(self)
+        self.document = TkwDocumentObjectModel(html)
 
         if vertical_scrollbar:
             if vertical_scrollbar == "auto":
@@ -119,10 +100,10 @@ class HtmlFrame(ttk.Frame):
         self.html.done_loading_func = self.done_loading
 
         self.message_func(
-            "Welcome to TkinterWeb 3.24! \nhttps://github.com/Andereoo/TkinterWeb")
+            "Welcome to TkinterWeb v3.25! \nhttps://github.com/Andereoo/TkinterWeb")
 
         self.message_func(
-            "Debugging messages are enabled. \nUse the parameter `messages_enabled = False` when calling HtmlFrame() to disable these messages.")
+            "Debugging messages are enabled. \nUse the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLabel() to disable these messages.")
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
@@ -376,14 +357,14 @@ Otherwise, use 'insecure=True' when loading a page to ignore website certificate
         self.html.caches_enabled = enabled
 
     def enable_crash_prevention(self, enabled=True):
-        "Enable or disable extra crash prevention measures"
-        "Disabling this will remove all emojis, the noto color emoji font, and invalid rgb functions"
+        """Enable or disable extra crash prevention measures
+        Disabling this will remove all emojis, the noto color emoji font, and invalid rgb functions"""
         self.html.prevent_crashes = enabled
 
     def enable_dark_theme(self, enabled=True, invert_images=True):
-        "Enable or disable dark theme"
-        "This will cause page colours to be 'inverted' if enabled is set to True"
-        "This will also cause images to be inverted if 'invert_images' is also set to True"
+        """Enable or disable dark theme
+        This will cause page colours to be 'inverted' if enabled is set to True
+        This will also cause images to be inverted if 'invert_images' is also set to True"""
         if (enabled or invert_images):
             self.message_func("Warning: dark theme has been enabled. This feature is highly experimental and may cause freezes or crashes.")
         self.html.dark_theme_enabled = enabled
@@ -450,8 +431,7 @@ Otherwise, use 'insecure=True' when loading a page to ignore website certificate
         return text
 
     def get_currently_hovered_node_attribute(self, attribute):
-        """
-        Get the specified attribute of the HTML element the mouse pointer is currently over
+        """Get the specified attribute of the HTML element the mouse pointer is currently over
         For example, if the mouse is hovering over the element
         "<a href='example.com'></a>", calling "get_currently_hovered_node_attribute('href')" will return "example.com."
         """

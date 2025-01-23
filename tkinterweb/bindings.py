@@ -1,27 +1,7 @@
 """
-TkinterWeb v3.24
-This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
-which displays styled HTML documents in Tkinter.
+The core Python bindings to Tkhtml3
 
 Copyright (c) 2025 Andereoo
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
 """
 
 import platform
@@ -37,7 +17,7 @@ from utilities import *
 
 
 class Combobox(tk.Widget):
-    """Bindings for Bryan Oakley's combobox widget"""
+    "Bindings for Bryan Oakley's combobox widget"
 
     def __init__(self, master):
         load_combobox(master)
@@ -46,10 +26,16 @@ class Combobox(tk.Widget):
         except tk.TclError:
             load_combobox(master, force=True)
             tk.Widget.__init__(self, master, "::combobox::combobox")
-        self.configure(highlightthickness=0, borderwidth=0, editable=False,
-                       takefocus=0, selectbackground="#6eb9ff",
-                       relief="flat", elementborderwidth=0,
-                       buttonbackground="white")
+        self.configure(
+            highlightthickness=0,
+            borderwidth=0,
+            editable=False,
+            takefocus=0,
+            selectbackground="#6eb9ff",
+            relief="flat",
+            elementborderwidth=0,
+            buttonbackground="white",
+        )
         self.data = [""]
         self.values = [""]
         self.default = 0
@@ -70,10 +56,13 @@ class Combobox(tk.Widget):
         val = self.tk.call(self._w, "curselection")[0]
         return self.values[val]
 
-class TkinterWeb(tk.Widget):
-    """Bindings for the Tkhtml3 HTML widget"""
 
-    def __init__(self, master, message_func, embed_obj, scroll_overflow=True, cfg={}, **kwargs):
+class TkinterWeb(tk.Widget):
+    "Bindings for the Tkhtml3 HTML widget"
+
+    def __init__(
+        self, master, message_func, embed_obj, scroll_overflow=True, cfg={}, **kwargs
+    ):
         self.message_func = message_func
         folder = get_tkhtml_folder()
 
@@ -82,7 +71,12 @@ class TkinterWeb(tk.Widget):
             "Starting TkinterWeb for {} {} with Python {}.".format(
                 "64-bit" if sys.maxsize > 2**32 else "32-bit",
                 platform.system(),
-                str(sys.version_info[0:3]).replace(", ", ".").replace(")", "").replace("(", "")))
+                str(sys.version_info[0:3])
+                .replace(", ", ".")
+                .replace(")", "")
+                .replace("(", ""),
+            )
+        )
 
         # pre-load custom stylesheet, set default parse mode, and register image loading infrastructure
         if "imagecmd" not in kwargs:
@@ -93,9 +87,9 @@ class TkinterWeb(tk.Widget):
             kwargs["defaultstyle"] = DEFAULTSTYLE
         if "parsemode" not in kwargs:
             kwargs["parsemode"] = DEFAULTPARSEMODE
-        #if "enablelayout" not in kwargs:
+        # if "enablelayout" not in kwargs:
         #    kwargs["enablelayout"] = True
-        #if "logcmd" not in kwargs:
+        # if "logcmd" not in kwargs:
         #    kwargs["logcmd"] = tkhtml_notifier
 
         # load the Tkhtml3 widget
@@ -140,8 +134,9 @@ class TkinterWeb(tk.Widget):
         self.done_loading_func = self.placeholder
         self.downloading_resource_func = self.placeholder
         self.image_setup_func = self.placeholder
-        self.token = "TKWtsvLKac1"
+        self.radiobutton_token = "TKWtsvLKac1"
         self.insecure_https = False
+        self.embedded_widget_attr_name = "widgetid"
 
         if scroll_overflow:
             self.scroll_overflow = master
@@ -189,8 +184,9 @@ class TkinterWeb(tk.Widget):
             "help": "question_arrow",
             "none": "none",
         }
-        self.broken_image = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x19\x00\x00\x00\x1e\x08\x03\x00\x00\x00\xee2E\xe9\x00\x00\x03\x00PLTE\xc5\xd5\xf4\xcd\xdb\xf4\xdf\xe8\xfc\xd5\xdd\xf4\xa5\xa3\xa5\x85\x83\x85\xfc\xfe\xfc\xf4\xf6\xf9\x95\x93\x95S\xb39\x9d\x9f\x9d\xc5\xd3\xedo\xbbg\xd5\xe3\xf4\xd5\xdf\xfc\xd5\xe3\xfc\xb5\xcf\xd5\x9d\xc7\xb5\xc5\xdf\xe5S\xaf9\x8d\xc7\x8d\x15\x15\x15\x16\x16\x16\x17\x17\x17\x18\x18\x18\x19\x19\x19\x1a\x1a\x1a\x1b\x1b\x1b\x1c\x1c\x1c\x1d\x1d\x1d\x1e\x1e\x1e\x1f\x1f\x1f   !!!"""###$$$%%%&&&\'\'\'((()))***+++,,,---...///000111222333444555666777888999:::;;;<<<===>>>???@@@AAABBBCCCDDDEEEFFFGGGHHHIIIJJJKKKLLLMMMNNNOOOPPPQQQRRRSSSTTTUUUVVVWWWXXXYYYZZZ[[[\\\\\\]]]^^^___```aaabbbcccdddeeefffggghhhiiijjjkkklllmmmnnnooopppqqqrrrssstttuuuvvvwwwxxxyyyzzz{{{|||}}}~~~\x7f\x7f\x7f\x80\x80\x80\x81\x81\x81\x82\x82\x82\x83\x83\x83\x84\x84\x84\x85\x85\x85\x86\x86\x86\x87\x87\x87\x88\x88\x88\x89\x89\x89\x8a\x8a\x8a\x8b\x8b\x8b\x8c\x8c\x8c\x8d\x8d\x8d\x8e\x8e\x8e\x8f\x8f\x8f\x90\x90\x90\x91\x91\x91\x92\x92\x92\x93\x93\x93\x94\x94\x94\x95\x95\x95\x96\x96\x96\x97\x97\x97\x98\x98\x98\x99\x99\x99\x9a\x9a\x9a\x9b\x9b\x9b\x9c\x9c\x9c\x9d\x9d\x9d\x9e\x9e\x9e\x9f\x9f\x9f\xa0\xa0\xa0\xa1\xa1\xa1\xa2\xa2\xa2\xa3\xa3\xa3\xa4\xa4\xa4\xa5\xa5\xa5\xa6\xa6\xa6\xa7\xa7\xa7\xa8\xa8\xa8\xa9\xa9\xa9\xaa\xaa\xaa\xab\xab\xab\xac\xac\xac\xad\xad\xad\xae\xae\xae\xaf\xaf\xaf\xb0\xb0\xb0\xb1\xb1\xb1\xb2\xb2\xb2\xb3\xb3\xb3\xb4\xb4\xb4\xb5\xb5\xb5\xb6\xb6\xb6\xb7\xb7\xb7\xb8\xb8\xb8\xb9\xb9\xb9\xba\xba\xba\xbb\xbb\xbb\xbc\xbc\xbc\xbd\xbd\xbd\xbe\xbe\xbe\xbf\xbf\xbf\xc0\xc0\xc0\xc1\xc1\xc1\xc2\xc2\xc2\xc3\xc3\xc3\xc4\xc4\xc4\xc5\xc5\xc5\xc6\xc6\xc6\xc7\xc7\xc7\xc8\xc8\xc8\xc9\xc9\xc9\xca\xca\xca\xcb\xcb\xcb\xcc\xcc\xcc\xcd\xcd\xcd\xce\xce\xce\xcf\xcf\xcf\xd0\xd0\xd0\xd1\xd1\xd1\xd2\xd2\xd2\xd3\xd3\xd3\xd4\xd4\xd4\xd5\xd5\xd5\xd6\xd6\xd6\xd7\xd7\xd7\xd8\xd8\xd8\xd9\xd9\xd9\xda\xda\xda\xdb\xdb\xdb\xdc\xdc\xdc\xdd\xdd\xdd\xde\xde\xde\xdf\xdf\xdf\xe0\xe0\xe0\xe1\xe1\xe1\xe2\xe2\xe2\xe3\xe3\xe3\xe4\xe4\xe4\xe5\xe5\xe5\xe6\xe6\xe6\xe7\xe7\xe7\xe8\xe8\xe8\xe9\xe9\xe9\xea\xea\xea\xeb\xeb\xeb\xec\xec\xec\xed\xed\xed\xee\xee\xee\xef\xef\xef\xf0\xf0\xf0\xf1\xf1\xf1\xf2\xf2\xf2\xf3\xf3\xf3\xf4\xf4\xf4\xf5\xf5\xf5\xf6\xf6\xf6\xf7\xf7\xf7\xf8\xf8\xf8\xf9\xf9\xf9\xfa\xfa\xfa\xfb\xfb\xfb\xfc\xfc\xfc\xfd\xfd\xfd\xfe\xfe\xfe\xff\xff\xff\x01\xb3\x9a&\x00\x00\x01+IDATx\x9c\x9d\x91\xe9\x92\x84 \x0c\x84s (\x08A\xc6\xf7\x7f\xd6M8\x9c\x9d\xa9\xda?\xdb\x96W\x7f\xb6\xd5\x04\xf0\x7f\t\xdcT\x9c\xf7}\x0f\xf4I\x16U\x12\x16\t\x1f\xdaw\xe7\x16!\xcay\x9cL\xac\xc4\xfb\x18\x06\xc9\x81\x14\xd0\xd4o\xc2\x88\xa5X\x1e\x0b"\x1a\xf1\xd1\x05\x0f1f3\x06\xc9\x85\xb6Nb\x08\xe0\xa2d\x9cK\xd00\xefKF\x16\xf0E\ti?\xb2\x8aJ2\xf9\'\x83\xa8]Fy#\xa8\x1d\x00\x91\xa1\x01d\xad\x9e1h\x11m EM(\xa2vA\xe0\xc2,T,\xe3\x98$\xc1T\xd307 \xda6[)C\xea\x16\x1aK\x8c\rDv#BF\xd4\x03\xb4\x0b\xa4\x02,:\x83\xe8H i\xc2<\xec,%\xa2>\x1d\xc9)\x8dD\xad\xfd\x89a\xce\xad\x10\xdbw\xa0\xa0Z.\xa54v!\x8a@\x85\xeb:^\xaf\xe38\xcfZ\x19\xfc"E\xbf\xbf.\x03F\x1a\xf0 Q\xbbUM\xbc\xd5\xfd\xbeR\xa2\xda\x9d\xb3\x1f\xdd\x97\xbc\xf5Y\xf35\xc9\x93\xd0\x19\xe8\xdc\\k_\x7f\xf2g\xb6\x19\xc4\xf8\x90s\x91\x17\xe5\xbe\x0b\xf7\xf9\x99\xd0\x87\xfbV\xb2\xbd\xd5\xfd\xe7\xed?\xe4\x07\xca\xeb\x13o\x88}\xa9\x12\x00\x00\x00\x00IEND\xaeB`\x82'
-        self.dark_theme_regex = re.compile(r'([^:;\s{]+)\s?:\s?([^;{!]+)(?=!|;|})') #([^:;\s{]+)\s?:\s?([^;{]+)(?=;|})')
+        self.dark_theme_regex = re.compile(
+            r"([^:;\s{]+)\s?:\s?([^;{!]+)(?=!|;|})"
+        )  # ([^:;\s{]+)\s?:\s?([^;{]+)(?=;|})')
         self.dark_theme_limit = 160
 
         # set up bindtags
@@ -206,75 +202,64 @@ class TkinterWeb(tk.Widget):
         self.bind_class(self.node_tag, "<Motion>", self.on_mouse_motion, True)
 
         # register node handlers
-        self.tk.call(self._w, "handler", "script", "script",
-                     self.register(self.on_script))
-        self.tk.call(self._w, "handler", "script", "style",
-                     self.register(self.on_style))
-        self.tk.call(self._w, "handler", "node", "link",
-                     self.register(self.on_link))
-        self.tk.call(self._w, "handler", "node", "title",
-                     self.register(self.on_title))
-        self.tk.call(self._w, "handler", "node", "a",
-                     self.register(self.on_a))
-        self.tk.call(self._w, "handler", "node", "base",
-                     self.register(self.on_base))
-        self.tk.call(self._w, "handler", "node", "input",
-                     self.register(self.on_input))
-        self.tk.call(self._w, "handler", "node", "textarea",
-                     self.register(self.on_textarea))
-        self.tk.call(self._w, "handler", "node", "select",
-                     self.register(self.on_select))
-        self.tk.call(self._w, "handler", "node", "form",
-                     self.register(self.on_form))
-        self.tk.call(self._w, "handler", "node", "object",
-                     self.register(self.on_object))
-        self.tk.call(self._w, "handler", "node", "iframe",
-                     self.register(self.on_iframe))
-        self.tk.call(self._w, "handler", "node", "table",
-                     self.register(self.on_table))
-        self.tk.call(self._w, "handler", "node", "img",
-                     self.register(self.on_image_node))
+        self.register_handler("script", "script", self.on_script)
+        self.register_handler("script", "style", self.on_style)
+        self.register_handler("node", "link", self.on_link)
+        self.register_handler("node", "title", self.on_title)
+        self.register_handler("node", "a", self.on_a)
+        self.register_handler("node", "base", self.on_base)
+        self.register_handler("node", "input", self.on_input)
+        self.register_handler("node", "textarea", self.on_textarea)
+        self.register_handler("node", "select", self.on_select)
+        self.register_handler("node", "form", self.on_form)
+        self.register_handler("node", "object", self.on_object)
+        self.register_handler("node", "iframe", self.on_iframe)
+        self.register_handler("node", "table", self.on_table)
+        self.register_handler("node", "img", self.on_image_node)
 
     def placeholder(self, *args, **kwargs):
         """Blank placeholder function. The only purpose of this is to
         improve readability by avoiding `lambda a, b, c: None` statements."""
 
     def parse(self, html):
-        """Parse HTML code"""
+        "Parse HTML code"
         self.downloads_have_occured = False
         self.unstoppable = True
         html = self.crash_prevention(html)
         self.tk.call(self._w, "parse", html)
-        self.setup_widgets()
+        if self.embedded_widget_attr_name in html:
+            self.setup_widgets()
         # We assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
         if not self.downloads_have_occured:
             self.done_loading_func()
 
     def update_default_style(self, stylesheet=None):
-        """Update the default stylesheet based on color theme"""
+        "Update the default stylesheet based on color theme"
         if stylesheet:
             self.config(defaultstyle=stylesheet)
         elif self.dark_theme_enabled:
-            self.config(defaultstyle=DEFAULTSTYLE+DARKSTYLE)
+            self.config(defaultstyle=DEFAULTSTYLE + DARKSTYLE)
         else:
             self.config(defaultstyle=DEFAULTSTYLE)
 
     def rgb_to_hex(self, red, green, blue, *args):
-        """Convert RGB colour code to HEX"""
-        return f'#{red:02x}{green:02x}{blue:02x}'
+        "Convert RGB colour code to HEX"
+        return f"#{red:02x}{green:02x}{blue:02x}"
 
     def check_colors(self, rgb, match):
-        """Check colour, invert if necessary, and convert"""
-        if ("background" in match and sum(rgb) < self.dark_theme_limit) or (match == "color" and sum(rgb) > self.dark_theme_limit):
+        "Check colour, invert if necessary, and convert"
+        if ("background" in match and sum(rgb) < self.dark_theme_limit) or (
+            match == "color" and sum(rgb) > self.dark_theme_limit
+        ):
             return self.rgb_to_hex(*rgb)
         else:
-            rgb[0] = max(1, min(255, 240-rgb[0]))
-            rgb[1] = max(1, min(255, 240-rgb[1]))
-            rgb[2] = max(1, min(255, 240-rgb[2]))
+            rgb[0] = max(1, min(255, 240 - rgb[0]))
+            rgb[1] = max(1, min(255, 240 - rgb[1]))
+            rgb[2] = max(1, min(255, 240 - rgb[2]))
             return self.rgb_to_hex(*rgb)
 
     def generate_altered_colour(self, match):
-        """Invert document colours. Highly experimental."""
+        "Invert document colours. Highly experimental."
         colors = match.group(2).replace("\n", "")
         colors = re.split(r"\s(?![^()]*\))", colors)
         changed = False
@@ -283,19 +268,33 @@ class TkinterWeb(tk.Widget):
             try:
                 if color.startswith("#"):
                     changed = True
-                    color = color.lstrip('#')
+                    color = color.lstrip("#")
                     lv = len(color)
                     if lv == 3:
                         color = color + color
                         lv = len(color)
                     colors[count] = self.check_colors(
-                        list(int(color[i:i + lv // 3], 16) for i in range(0, lv, lv // 3)),
-                        match.group(1))
+                        list(
+                            int(color[i : i + lv // 3], 16)
+                            for i in range(0, lv, lv // 3)
+                        ),
+                        match.group(1),
+                    )
                 elif color.startswith("rgb(") or color.startswith("rgba("):
                     changed = True
                     colors[count] = self.check_colors(
-                        list(map(int, color.lstrip('rgba(').lstrip('rgb(').rstrip(')').strip(" ").split(","))),
-                        match.group(1))
+                        list(
+                            map(
+                                int,
+                                color.lstrip("rgba(")
+                                .lstrip("rgb(")
+                                .rstrip(")")
+                                .strip(" ")
+                                .split(","),
+                            )
+                        ),
+                        match.group(1),
+                    )
                 elif color in COLORMAPPINGS:
                     changed = True
                     colors[count] = COLORMAPPINGS[color]
@@ -303,25 +302,29 @@ class TkinterWeb(tk.Widget):
                 changed = False
 
         if changed:
-            return match.group(1) + ": " + ' '.join(colors)
+            return match.group(1) + ": " + " ".join(colors)
         else:
             return match.group()
 
     def parse_css(self, sheetid=None, importcmd=None, data="", override=False):
-        """Parse CSS code"""
+        "Parse CSS code"
         data = self.crash_prevention(data)
         if self.dark_theme_enabled:
             data = re.sub(self.dark_theme_regex, self.generate_altered_colour, data)
         if sheetid and importcmd:
-            self.tk.call(self._w, "style", "-id", sheetid, "-importcmd", importcmd, data)
+            self.tk.call(
+                self._w, "style", "-id", sheetid, "-importcmd", importcmd, data
+            )
         elif override:
             self.style_count += 1
-            self.tk.call(self._w, "style", "-id", "author" + str(self.style_count).zfill(4), data)
+            self.tk.call(
+                self._w, "style", "-id", "author" + str(self.style_count).zfill(4), data
+            )
         else:
             self.tk.call(self._w, "style", data)
 
     def reset(self):
-        """Reset the widget"""
+        "Reset the widget"
         self.stop()
         self.loaded_images = set()
         self.image_directory = {}
@@ -336,14 +339,14 @@ class TkinterWeb(tk.Widget):
         self.tk.call(self._w, "reset")
 
     def stop(self):
-        """Stop loading resources"""
+        "Stop loading resources"
         self.unstoppable = False
         for thread in self.active_threads:
             thread.stop()
 
     def node(self, *args):
         """Retrieve one or more document
-        node handles from the current document."""
+        node handles from the current document"""
         nodes = self.tk.call(self._w, "node", *args)
         if nodes:
             return nodes
@@ -351,204 +354,222 @@ class TkinterWeb(tk.Widget):
             return None, None
 
     def text(self, *args):
-        """Enable interaction with the text of the HTML document."""
+        "Enable interaction with the text of the HTML document"
         return self.tk.call(self._w, "text", *args)
 
     def tag(self, subcommand, tag_name, *args):
         """Return the name of the Html tag that generated this
-        document node, or an empty string if the node is a text node."""
+        document node, or an empty string if the node is a text node"""
         return self.tk.call(self._w, "tag", subcommand, tag_name, *args)
 
     def search(self, selector, **kw):
         """Search the document for the specified CSS
-        selector; return a Tkhtml3 node if found."""
+        selector; return a Tkhtml3 node if found"""
         opt = ()
-        for k, v in kw.items(): opt = opt + (f"-{k}", v)
-        return self.tk.call((self._w, "search", selector)+opt)
+        for k, v in kw.items():
+            opt = opt + (f"-{k}", v)
+        return self.tk.call((self._w, "search", selector) + opt)
 
     def set_zoom(self, multiplier):
-        """Set the page zoom"""
+        "Set the page zoom"
         self.tk.call(self._w, "configure", "-zoom", float(multiplier))
 
     def get_zoom(self):
-        """Return the page zoom"""
+        "Return the page zoom"
         return self.tk.call(self._w, "cget", "-zoom")
 
     def set_parsemode(self, mode):
-        """Set the page render mode"""
+        "Set the page render mode"
         self.tk.call(self._w, "configure", "-parsemode", mode)
 
     def get_parsemode(self):
-        """Return the page render mode"""
+        "Return the page render mode"
         return self.tk.call(self._w, "cget", "-parsemode")
 
     def set_fontscale(self, multiplier):
-        """Set the font zoom"""
+        "Set the font zoom"
         self.tk.call(self._w, "configure", "-fontscale", multiplier)
 
     def get_fontscale(self, multiplier):
-        """Return the font zoom"""
+        "Return the font zoom"
         return self.tk.call(self._w, "cget", "-fontscale")
 
     def shrink(self, value):
-        """Set shrink value for html widget"""
+        "Set shrink value for html widget"
         self.tk.call(self._w, "configure", "-shrink", value)
 
     def xview(self, *args):
-        """Used to control horizontal scrolling"""
+        "Used to control horizontal scrolling"
         if args:
             return self.tk.call(self._w, "xview", *args)
         coords = map(float, self.tk.call(self._w, "xview").split())
         return tuple(coords)
 
     def xview_scroll(self, number, what):
-        """Shifts the view in the window left or right, according to number and
-        what. "number" is an integer, and "what" is either "units" or "pages"."""
+        """Shifts the view in the window left or right, according to number and what.
+        "number" is an integer, and "what" is either "units" or "pages"."""
         return self.xview("scroll", number, what)
 
     def xview_moveto(self, number):
-        """Shifts the view horizontally to the specified position"""
+        "Shifts the view horizontally to the specified position"
         return self.xview("moveto", number)
 
     def yview(self, *args):
-        """Used to control the vertical position of the document"""
+        "Used to control the vertical position of the document"
         return self.tk.call(self._w, "yview", *args)
 
     def yview_scroll(self, number, what):
-        """Shifts the view in the window up or down, according to number and
-        what. "number" is an integer, and "what" is either "units" or "pages"."""
+        """Shifts the view in the window up or down, according to number and what.
+        "number" is an integer, and "what" is either "units" or "pages"."""
         return self.yview("scroll", number, what)
 
     def yview_moveto(self, number):
-        """Shifts the view vertically to the specified position"""
+        "Shifts the view vertically to the specified position"
         return self.yview("moveto", number)
-    
+
     def bbox(self, node=None):
-        """Get the bounding box of the viewport or a specified node"""
+        "Get the bounding box of the viewport or a specified node"
         return self.tk.call(self._w, "bbox", node)
 
     def parse_fragment(self, html):
         """Parse a document fragment.
-        A document fragment isn't part of the active document but is comprised of nodes like the active document. 
-        Changes made to the fragment don't affect the document. 
+        A document fragment isn't part of the active document but is comprised of nodes like the active document.
+        Changes made to the fragment don't affect the document.
         Returns a root node."""
+        self.downloads_have_occured = False
         self.unstoppable = True
         html = self.crash_prevention(html)
         fragment = self.tk.call(self._w, "fragment", html)
-        self.setup_widgets()
+        # We assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
+        if not self.downloads_have_occured:
+            self.done_loading_func()
         return fragment
 
     def get_node_text(self, node_handle, *args):
-        """Get the text content of the given node"""
+        "Get the text content of the given node"
         return self.tk.call(node_handle, "text", *args)
 
     def set_node_text(self, node_handle, new):
-        """Set the text content of the given node"""
+        "Set the text content of the given node"
         return self.tk.call(node_handle, "text", "set", new)
 
     def get_node_tag(self, node_handle):
-        """Get the HTML tag of the given node"""
+        "Get the HTML tag of the given node"
         return self.tk.call(node_handle, "tag")
 
     def get_node_parent(self, node_handle):
-        """Get the parent of the given node"""
+        "Get the parent of the given node"
         return self.tk.call(node_handle, "parent")
 
     def get_node_children(self, node_handle):
-        """Get the children of the given node"""
+        "Get the children of the given node"
         return self.tk.call(node_handle, "children")
 
     def get_node_attribute(self, node_handle, attribute, default="", value=None):
-        """Get the specified attribute of the given node"""
-        if value: #backwards compatability
+        "Get the specified attribute of the given node"
+        if value:  # backwards compatability
             return self.tk.call(node_handle, "attribute", attribute, value)
         else:
-            return self.tk.call(node_handle, "attribute", "-default", default, attribute)
+            return self.tk.call(
+                node_handle, "attribute", "-default", default, attribute
+            )
 
     def set_node_attribute(self, node_handle, attribute, value):
-        """Set the specified attribute of the given node"""
+        "Set the specified attribute of the given node"
         return self.tk.call(node_handle, "attribute", attribute, value)
 
     def get_node_property(self, node_handle, node_property):
-        """Get the specified attribute of the given node"""
+        "Get the specified attribute of the given node"
         return self.tk.call(node_handle, "property", node_property)
 
     def insert_node(self, node_handle, children_nodes):
-        """Experimental, insert the specified nodes into the parent node"""
+        "Experimental, insert the specified nodes into the parent node"
         return self.tk.call(node_handle, "insert", children_nodes)
 
     def insert_node_before(self, node_handle, children_nodes, before):
-        """Experimental, place the specified nodes is before another node"""
+        "Experimental, place the specified nodes is before another node"
         return self.tk.call(node_handle, "insert", "-before", before, children_nodes)
 
     def delete_node(self, node_handle):
-        """Delete the given node"""
+        "Delete the given node"
         return self.tk.call(node_handle, "destroy")
 
     def set_node_flags(self, node, name):
-        """Set dynamic flags on the given node"""
+        "Set dynamic flags on the given node"
         self.tk.call(node, "dynamic", "set", name)
 
     def remove_node_flags(self, node, name):
-        """Set dynamic flags on the given node"""
+        "Set dynamic flags on the given node"
         self.tk.call(node, "dynamic", "clear", name)
 
     def get_current_node(self, event):
-        """Get current node"""
-        return self.tk.eval(f"""set node [lindex [lindex [{self} node {event.x} {event.y}] end] end]""")
+        "Get current node"
+        return self.tk.eval(
+            f"""set node [lindex [lindex [{self} node {event.x} {event.y}] end] end]"""
+        )
 
     def get_current_node_parent(self, node):
-        """Get the parent of the given node"""
+        "Get the parent of the given node"
         return self.tk.eval(f"""set node [lindex [lindex [{node} parent] end] end]""")
+    
+    def register_handler(self, handler_type, node_tag, callback):
+        self.tk.call(self._w, "handler", handler_type, node_tag, self.register(callback))
 
     def image(self, full=""):
-        """Return the name of a new Tk image containing the rendered document. 
+        """Return the name of a new Tk image containing the rendered document.
         The returned image should be deleted when the script has finished with it.
-        Note that this command is mainly intended for automated testing. 
+        Note that this command is mainly intended for automated testing.
         Be wary of running this command on large documents.
         Does not work on Windows."""
         return self.tk.call(self._w, "image", full)
 
     def on_script(self, *args):
-        """Currently just ignoring script"""
+        "Currently just ignoring script"
 
     def on_style(self, attributes, tagcontents):
-        """Handle <style> elements"""
+        "Handle <style> elements"
         if not self.stylesheets_enabled or not self.unstoppable:
             return
         self.downloads_have_occured = True
         self.style_count += 1
         ids = "user." + str(self.style_count).zfill(4)
-        handler_proc = self.register(lambda new_url,
-                                     parent_url=self.base_url:
-                                     self.on_atimport(parent_url, new_url)
-                                     )
+        handler_proc = self.register(
+            lambda new_url, parent_url=self.base_url: self.on_atimport(
+                parent_url, new_url
+            )
+        )
         self.message_func("Loading <style> element.")
         self.style_thread_check(sheetid=ids, handler=handler_proc, data=tagcontents)
 
     def on_link(self, node):
-        """Handle <link> elements"""
+        "Handle <link> elements"
         try:
             rel = self.get_node_attribute(node, "rel").lower()
             media = self.get_node_attribute(node, "media", default="all").lower()
         except tk.TclError:
             return
 
-        if ("stylesheet" in rel) and ("all" in media or "screen" in media) and self.stylesheets_enabled and self.unstoppable:
+        if (
+            ("stylesheet" in rel)
+            and ("all" in media or "screen" in media)
+            and self.stylesheets_enabled
+            and self.unstoppable
+        ):
             self.downloads_have_occured = True
             href = self.get_node_attribute(node, "href")
             try:
                 url = self.resolve_url(href)
-                self.message_func(
-                    f"Loading stylesheet from {shorten(url)}.")
+                self.message_func(f"Loading stylesheet from {shorten(url)}.")
                 self.style_count += 1
                 ids = "user." + str(self.style_count).zfill(4)
-                handler_proc = self.register(lambda new_url,
-                                             parent_url=url:
-                                             self.on_atimport(
-                                                 parent_url, new_url)
-                                             )
-                self.style_thread_check(sheetid=ids, handler=handler_proc, errorurl=href, url=url)
+                handler_proc = self.register(
+                    lambda new_url, parent_url=url: self.on_atimport(
+                        parent_url, new_url
+                    )
+                )
+                self.style_thread_check(
+                    sheetid=ids, handler=handler_proc, errorurl=href, url=url
+                )
             except Exception as error:
                 self.message_func(f"Error reading stylesheet {href}: {error}.")
         elif "icon" in rel:
@@ -557,43 +578,43 @@ class TkinterWeb(tk.Widget):
             self.icon_change_func(url)
 
     def on_atimport(self, parent_url, new_url):
-        """Load @import scripts"""
+        "Load @import scripts"
         if not self.stylesheets_enabled or not self.unstoppable:
             return
         self.downloads_have_occured = True
         self.style_count += 1
         try:
             url = urljoin(parent_url, new_url)
-            self.message_func(
-                f"Loading stylesheet from {shorten(url)}.")
+            self.message_func(f"Loading stylesheet from {shorten(url)}.")
             ids = "user." + str(self.style_count).zfill(4)
-            handler_proc = self.register(lambda new_url,
-                                         parent_url=url:
-                                         self.on_atimport(parent_url, new_url)
-                                         )
+            handler_proc = self.register(
+                lambda new_url, parent_url=url: self.on_atimport(parent_url, new_url)
+            )
 
-            self.style_thread_check(sheetid=ids, handler=handler_proc, errorurl=new_url, url=url)
+            self.style_thread_check(
+                sheetid=ids, handler=handler_proc, errorurl=new_url, url=url
+            )
 
         except Exception as error:
-            self.message_func(
-                f"Error reading stylesheet {new_url}: {error}.") 
+            self.message_func(f"Error reading stylesheet {new_url}: {error}.")
 
     def on_title(self, node):
-        """Handle <title> elements"""
-        for child in (self.tk.call(node, "children")):
+        "Handle <title> elements"
+        for child in self.tk.call(node, "children"):
             self.title_change_func(self.tk.call(child, "text"))
 
     def on_base(self, node):
-        """Handle <base> elements"""
+        "Handle <base> elements"
         try:
             href = self.get_node_attribute(node, "href")
             self.base_url = self.resolve_url(href)
         except Exception:
             self.message_func(
-                "Error setting base url: a <base> element has been found without an href attribute.")
+                "Error setting base url: a <base> element has been found without an href attribute."
+            )
 
     def on_a(self, node):
-        """Handle <a> elements"""
+        "Handle <a> elements"
         self.set_node_flags(node, "link")
         try:
             href = self.get_node_attribute(node, "href")
@@ -604,7 +625,7 @@ class TkinterWeb(tk.Widget):
             pass
 
     def on_iframe(self, node):
-        """Handle <iframe> elements"""
+        "Handle <iframe> elements"
         if not self.objects_enabled or not self.unstoppable:
             return
 
@@ -619,7 +640,7 @@ class TkinterWeb(tk.Widget):
             self.create_iframe(node, src)
 
     def on_object(self, node):
-        """Handle <object> elements"""
+        "Handle <object> elements"
         if not self.objects_enabled or not self.unstoppable:
             return
 
@@ -641,22 +662,32 @@ class TkinterWeb(tk.Widget):
             if url.startswith("file://") or (not self.caches_enabled):
                 data, newurl, filetype = download(url, insecure=self.insecure_https)
             elif url:
-                data, newurl, filetype = cachedownload(url, insecure=self.insecure_https)
+                data, newurl, filetype = cachedownload(
+                    url, insecure=self.insecure_https
+                )
             else:
                 return
 
             if data and filetype.startswith("image"):
-                image, error = newimage(data, name, filetype, self.image_inversion_enabled)
+                image, error = newimage(
+                    data, name, filetype, self.image_inversion_enabled
+                )
                 self.loaded_images.add(image)
-                self.tk.call(node, "override", f"-tkhtml-replacement-image url(replace:{image})")
+                self.tk.call(
+                    node, "override", f"-tkhtml-replacement-image url(replace:{image})"
+                )
             elif data and filetype == "text/html":
                 self.create_iframe(node, newurl, data)
         except Exception as error:
-            self.message_func(f"An error has been encountered while loading an <object> element: {error}.")
+            self.message_func(
+                f"An error has been encountered while loading an <object> element: {error}."
+            )
 
     def on_drawcleanupcrash(self):
         if self.prevent_crashes:
-            self.message_func("HtmlDrawCleanup has encountered a critical error. This is being ignored because crash prevention is enabled.")
+            self.message_func(
+                "HtmlDrawCleanup has encountered a critical error. This is being ignored because crash prevention is enabled."
+            )
         else:
             self.destroy()
 
@@ -665,10 +696,10 @@ class TkinterWeb(tk.Widget):
         self.image_directory[url] = node
 
     def on_image(self, url):
-        """Handle images"""
+        "Handle images"
         if not self.images_enabled or not self.unstoppable:
             return
-        
+
         self.downloads_have_occured = True
         name = self.image_name_prefix + str(len(self.loaded_images))
 
@@ -679,11 +710,15 @@ class TkinterWeb(tk.Widget):
             thread = self.begin_download()
             name = url.replace("replace:", "")
             self.finish_download(thread)
-        elif any([url.startswith("linear-gradient("),
+        elif any(
+            [
+                url.startswith("linear-gradient("),
                 url.startswith("url("),
                 url.startswith("radial-gradient("),
                 url.startswith("repeating-linear-gradient("),
-                url.startswith("repeating-radial-gradient(")]):
+                url.startswith("repeating-radial-gradient("),
+            ]
+        ):
             done = False
             self.message_func(f"Fetching image: {shorten(url)}.")
             for image in url.split(","):
@@ -695,7 +730,8 @@ class TkinterWeb(tk.Widget):
             if not done:
                 self.load_alt_image(url, name)
                 self.message_func(
-                    f"The image {shorten(url)} could not be shown because it is not supported yet.")
+                    f"The image {shorten(url)} could not be shown because it is not supported yet."
+                )
                 self.image_setup_func(url, True)
         else:
             url = self.resolve_url(url)
@@ -703,11 +739,12 @@ class TkinterWeb(tk.Widget):
         return name
 
     def on_form(self, node):
-        """Handle <form> elements"""
+        "Handle <form> elements"
         if not self.forms_enabled:
             return
 
         inputs = []
+
         def scan(form):
             for i in self.get_node_children(form):
                 tag = self.get_node_tag(i)
@@ -716,6 +753,7 @@ class TkinterWeb(tk.Widget):
                 if tag.lower() in {"input", "select", "textarea", "button"}:
                     inputs.append(i)
                     self.form_elements[i] = node
+
         scan(node)
         if len(inputs) == 0:
             self.waiting_forms += 1
@@ -724,12 +762,13 @@ class TkinterWeb(tk.Widget):
             self.message_func("Successfully setup <form> element.")
 
     def on_table(self, node):
-        """Handle <form> elements in tables; workaround for Bug #48"""
+        "Handle <form> elements in tables; workaround for Bug #48"
         if not self.forms_enabled:
             return
 
         if self.waiting_forms > 0:
             inputs = {}
+
             def scan(element, form):
                 for i in self.get_node_children(element):
                     tag = self.get_node_tag(i).lower()
@@ -743,6 +782,7 @@ class TkinterWeb(tk.Widget):
                         self.form_elements[i] = form
                     if tag:
                         scan(i, form)
+
             scan(node, node)
             for form in inputs:
                 self.loaded_forms[form] = inputs[form]
@@ -750,7 +790,7 @@ class TkinterWeb(tk.Widget):
                 self.waiting_forms -= 1
 
     def on_select(self, node):
-        """Handle <select> elements"""
+        "Handle <select> elements"
         if not self.forms_enabled:
             return
         text = []
@@ -777,112 +817,217 @@ class TkinterWeb(tk.Widget):
         state = self.get_node_attribute(node, "disabled", False) != "0"
         if state:
             widgetid.configure(state="disabled")
-        self.handle_node_replacement(node, widgetid,
+        self.handle_node_replacement(
+            node,
+            widgetid,
             lambda widgetid=widgetid: self.handle_node_removal(widgetid),
-            lambda node=node, widgetid=widgetid, widgettype="text": self.handle_node_style(node, widgetid, widgettype))
+            lambda node=node, widgetid=widgetid, widgettype="text": self.handle_node_style(
+                node, widgetid, widgettype
+            ),
+        )
 
     def on_textarea(self, node):
-        """Handle <textarea> elements"""
+        "Handle <textarea> elements"
         if not self.forms_enabled:
             return
-        widgetid = ScrolledTextBox(self, scroll_overflow=self.scroll_overflow, borderwidth=0, selectborderwidth=0, highlightthickness=0)
+        widgetid = ScrolledTextBox(
+            self,
+            scroll_overflow=self.scroll_overflow,
+            borderwidth=0,
+            selectborderwidth=0,
+            highlightthickness=0,
+        )
         widgetid.bind("<<ScrollbarShown>>", widgetid.reset_bindtags)
-        widgetid.bind("<<ScrollbarHidden>>", lambda event, widgetid=widgetid: self.add_bindtags(widgetid))
-        self.form_get_commands[node] = lambda: widgetid.get("1.0", 'end-1c')
+        widgetid.bind(
+            "<<ScrollbarHidden>>",
+            lambda event, widgetid=widgetid: self.add_bindtags(widgetid),
+        )
+        self.form_get_commands[node] = lambda: widgetid.get("1.0", "end-1c")
         self.form_reset_commands[node] = lambda: widgetid.delete("0.0", "end")
         widgetid.insert("1.0", self.get_node_text(self.get_node_children(node), "-pre"))
         state = self.get_node_attribute(node, "disabled", False) != "0"
         if state:
             widgetid.configure(state="disabled")
-        self.handle_node_replacement(node, widgetid,
+        self.handle_node_replacement(
+            node,
+            widgetid,
             lambda widgetid=widgetid: self.handle_node_removal(widgetid),
-            lambda node=node, widgetid=widgetid, widgettype="text": self.handle_node_style(node, widgetid, widgettype))
+            lambda node=node, widgetid=widgetid, widgettype="text": self.handle_node_style(
+                node, widgetid, widgettype
+            ),
+        )
 
     def on_input(self, node):
-        """Handle <input> elements"""
+        "Handle <input> elements"
         if not self.forms_enabled:
             return
         self.tk.eval('set type ""')
         nodetype = self.tk.eval(
-            "set nodetype [string tolower [%s attr -default {} type]]" % node)
+            "set nodetype [string tolower [%s attr -default {} type]]" % node
+        )
         nodevalue = self.get_node_attribute(node, "value")
 
-        if any((nodetype == "image", nodetype == "submit", nodetype == "reset", nodetype == "button")):
+        if any(
+            (
+                nodetype == "image",
+                nodetype == "submit",
+                nodetype == "reset",
+                nodetype == "button",
+            )
+        ):
             widgetid = None
             self.form_get_commands[node] = self.placeholder
             self.form_reset_commands[node] = self.placeholder
         elif nodetype == "file":
             accept = self.get_node_attribute(node, "accept")
-            multiple = self.get_node_attribute(node, "multiple", self.token) != self.token
+            multiple = (
+                self.get_node_attribute(node, "multiple", self.radiobutton_token)
+                != self.radiobutton_token
+            )
             widgetid = FileSelector(self, accept, multiple)
             self.form_get_commands[node] = widgetid.get_value
             self.form_reset_commands[node] = widgetid.reset
-            self.handle_node_replacement(node, widgetid,
+            self.handle_node_replacement(
+                node,
+                widgetid,
                 lambda widgetid=widgetid: self.handle_node_removal(widgetid),
-                lambda node=node, widgetid=widgetid: self.handle_node_style(node, widgetid))
+                lambda node=node, widgetid=widgetid: self.handle_node_style(
+                    node, widgetid
+                ),
+            )
         elif nodetype == "color":
             widgetid = ColourSelector(self, nodevalue)
             self.form_get_commands[node] = widgetid.get_value
             self.form_reset_commands[node] = widgetid.reset
-            self.handle_node_replacement(node, widgetid,
+            self.handle_node_replacement(
+                node,
+                widgetid,
                 lambda widgetid=widgetid: self.handle_node_removal(widgetid),
-                self.placeholder)
+                self.placeholder,
+            )
         elif nodetype == "hidden":
             widgetid = None
             self.form_get_commands[node] = lambda node=node: self.get_node_attribute(
-                node, "value")
+                node, "value"
+            )
             self.form_reset_commands[node] = lambda: None
         elif nodetype == "checkbox":
             variable = tk.IntVar()
-            widgetid = tk.Checkbutton(self, borderwidth=0, padx=0, pady=0, highlightthickness=0, variable=variable)
-            variable.trace('w', lambda *_, widgetid=widgetid: self.on_input_change(widgetid))
+            widgetid = tk.Checkbutton(
+                self,
+                borderwidth=0,
+                padx=0,
+                pady=0,
+                highlightthickness=0,
+                variable=variable,
+            )
+            variable.trace(
+                "w", lambda *_, widgetid=widgetid: self.on_input_change(widgetid)
+            )
             self.form_get_commands[node] = lambda: variable.get()
             self.form_reset_commands[node] = lambda: variable.set(0)
-            self.handle_node_replacement(node, widgetid,
+            self.handle_node_replacement(
+                node,
+                widgetid,
                 lambda widgetid=widgetid: self.handle_node_removal(widgetid),
-                lambda node=node, widgetid=widgetid: self.handle_node_style(node, widgetid))
+                lambda node=node, widgetid=widgetid: self.handle_node_style(
+                    node, widgetid
+                ),
+            )
         elif nodetype == "range":
             variable = tk.IntVar()
             variable.set(nodevalue)
             from_ = self.get_node_attribute(node, "min", 0)
             to = self.get_node_attribute(node, "max", 100)
             widgetid = ttk.Scale(self, variable=variable, from_=from_, to=to)
-            variable.trace('w', lambda *_, widgetid=widgetid: self.on_input_change(widgetid))
+            variable.trace(
+                "w", lambda *_, widgetid=widgetid: self.on_input_change(widgetid)
+            )
             self.form_get_commands[node] = lambda: variable.get()
             self.form_reset_commands[node] = lambda: variable.set(0)
-            self.handle_node_replacement(node, widgetid,
+            self.handle_node_replacement(
+                node,
+                widgetid,
                 lambda widgetid=widgetid: self.handle_node_removal(widgetid),
-                lambda node=node, widgetid=widgetid, widgettype="range": self.handle_node_style(node, widgetid, widgettype))
+                lambda node=node, widgetid=widgetid, widgettype="range": self.handle_node_style(
+                    node, widgetid, widgettype
+                ),
+            )
         elif nodetype == "radio":
             name = self.tk.call(node, "attr", "-default", "", "name")
             if name in self.radio_buttons:
                 variable = self.radio_buttons[name]
-                widgetid = tk.Radiobutton(self, value=nodevalue, variable=variable, tristatevalue=self.token, borderwidth=0, padx=0, pady=0, highlightthickness=0)
+                widgetid = tk.Radiobutton(
+                    self,
+                    value=nodevalue,
+                    variable=variable,
+                    tristatevalue=self.radiobutton_token,
+                    borderwidth=0,
+                    padx=0,
+                    pady=0,
+                    highlightthickness=0,
+                )
             else:
                 variable = tk.StringVar(self)
-                widgetid = tk.Radiobutton(self, value=nodevalue, variable=variable, tristatevalue=self.token, borderwidth=0, padx=0, pady=0, highlightthickness=0)
-                variable.trace('w', lambda *_, widgetid=widgetid: self.on_input_change(widgetid))
+                widgetid = tk.Radiobutton(
+                    self,
+                    value=nodevalue,
+                    variable=variable,
+                    tristatevalue=self.radiobutton_token,
+                    borderwidth=0,
+                    padx=0,
+                    pady=0,
+                    highlightthickness=0,
+                )
+                variable.trace(
+                    "w", lambda *_, widgetid=widgetid: self.on_input_change(widgetid)
+                )
                 self.radio_buttons[name] = variable
             self.form_get_commands[node] = lambda: variable.get()
             self.form_reset_commands[node] = lambda: variable.set("")
-            self.handle_node_replacement(node, widgetid,
+            self.handle_node_replacement(
+                node,
+                widgetid,
                 lambda widgetid=widgetid: self.handle_node_removal(widgetid),
-                lambda node=node, widgetid=widgetid: self.handle_node_style(node, widgetid))
+                lambda node=node, widgetid=widgetid: self.handle_node_style(
+                    node, widgetid
+                ),
+            )
         else:
-            widgetid = tk.Entry(self, validate="key", borderwidth=0, highlightthickness=0)
-            widgetid.configure(validatecommand=lambda *_, widgetid=widgetid: self.on_input_change(widgetid))
+            widgetid = tk.Entry(
+                self, validate="key", borderwidth=0, highlightthickness=0
+            )
+            widgetid.configure(
+                validatecommand=lambda *_, widgetid=widgetid: self.on_input_change(
+                    widgetid
+                )
+            )
             if nodetype == "password":
-                widgetid.configure(show='*')
-            widgetid.bind("<Return>", lambda event, node=node: self.handle_form_submission(node=node, event=event))
+                widgetid.configure(show="*")
+            widgetid.bind(
+                "<Return>",
+                lambda event, node=node: self.handle_form_submission(
+                    node=node, event=event
+                ),
+            )
             self.form_get_commands[node] = lambda: widgetid.get()
-            self.form_reset_commands[node] = lambda widgetid=widgetid, content=nodevalue: self.handle_entry_reset(widgetid, content)
-            self.handle_node_replacement(node, widgetid,
+            self.form_reset_commands[node] = (
+                lambda widgetid=widgetid, content=nodevalue: self.handle_entry_reset(
+                    widgetid, content
+                )
+            )
+            self.handle_node_replacement(
+                node,
+                widgetid,
                 lambda widgetid=widgetid: self.handle_node_removal(widgetid),
-                lambda node=node, widgetid=widgetid, widgettype="text": self.handle_node_style(node, widgetid, widgettype))
+                lambda node=node, widgetid=widgetid, widgettype="text": self.handle_node_style(
+                    node, widgetid, widgettype
+                ),
+            )
 
         if widgetid:
-            state = self.get_node_attribute(node, "disabled", self.token)
-            if state != self.token:
+            state = self.get_node_attribute(node, "disabled", self.radiobutton_token)
+            if state != self.radiobutton_token:
                 widgetid.configure(state="disabled")
 
     def on_input_change(self, widgetid):
@@ -890,10 +1035,10 @@ class TkinterWeb(tk.Widget):
         return True
 
     def on_click(self, event):
-        """Set active element flags"""
+        "Set active element flags"
 
         if not self.current_node:
-            #register current node if mouse has never moved
+            # register current node if mouse has never moved
             self.on_mouse_motion(event)
 
         self.focus_set()
@@ -901,7 +1046,9 @@ class TkinterWeb(tk.Widget):
         node_handle = self.get_current_node(event)
 
         if node_handle:
-            self.selection_start_node, self.selection_start_offset = self.node(True, event.x, event.y)
+            self.selection_start_node, self.selection_start_offset = self.node(
+                True, event.x, event.y
+            )
 
             if node_handle and self.stylesheets_enabled:
                 if not self.get_node_tag(node_handle):
@@ -910,7 +1057,7 @@ class TkinterWeb(tk.Widget):
                 self.prev_active_node = node_handle
 
     def on_leave(self, event):
-        """Reset cursor and node states when leaving this widget"""
+        "Reset cursor and node states when leaving this widget"
         self.set_cursor("default")
         if self.stylesheets_enabled:
             for node in self.hovered_nodes:
@@ -923,7 +1070,7 @@ class TkinterWeb(tk.Widget):
         self.current_node = None
 
     def on_mouse_motion(self, event):
-        """Set hover flags and handle the CSS 'cursor' property"""
+        "Set hover flags and handle the CSS 'cursor' property"
         if self.is_selecting:
             return
         if self.on_embedded_node:
@@ -934,7 +1081,11 @@ class TkinterWeb(tk.Widget):
                 self.on_leave(None)
                 return
 
-        if node_handle and node_handle != self.current_node and self.stylesheets_enabled:
+        if (
+            node_handle
+            and node_handle != self.current_node
+            and self.stylesheets_enabled
+        ):
             old_handle = self.current_node
             self.current_node = node_handle
 
@@ -956,11 +1107,12 @@ class TkinterWeb(tk.Widget):
                     self.remove_node_flags(node, "hover")
 
                 self.hovered_nodes = []
-                self.handle_recursive_hovering(node_handle, self.recursive_hovering_count)
-
+                self.handle_recursive_hovering(
+                    node_handle, self.recursive_hovering_count
+                )
 
     def on_click_release(self, event):
-        """Handle click releases on <a> nodes"""
+        "Handle click releases on <a> nodes"
         if self.is_selecting:
             self.is_selecting = False
             self.current_node = None
@@ -1000,7 +1152,7 @@ class TkinterWeb(tk.Widget):
                             self.handle_link_click(node)
                             break
                         elif node_tag == "button":
-                            if self.get_node_attribute(node, "type").lower() == "submit":
+                            if (self.get_node_attribute(node, "type").lower() == "submit"):
                                 self.handle_form_submission(node)
                                 break
         except tk.TclError:
@@ -1013,17 +1165,25 @@ class TkinterWeb(tk.Widget):
         self.on_mouse_motion(event)
 
     def add_bindtags(self, widgetid, allowscrolling=True):
-        """Add bindtags to allow scrolling and on_embedded_mouse function calls"""
+        "Add bindtags to allow scrolling and on_embedded_mouse function calls"
         if allowscrolling:
-            tags = (self.node_tag, self.scrollable_node_tag,)
+            tags = (
+                self.node_tag,
+                self.scrollable_node_tag,
+            )
         else:
             tags = (self.node_tag,)
         widgetid.bindtags(widgetid.bindtags() + tags)
 
     def crash_prevention(self, data):
         if self.prevent_crashes:
-            data = ''.join(c for c in data if c <= u'\uFFFF')
-            data = re.sub("font-family:[^;']*(;)?", self.remove_noto_emoji, data, flags=re.IGNORECASE)
+            data = "".join(c for c in data if c <= "\uFFFF")
+            data = re.sub(
+                "font-family:[^;']*(;)?",
+                self.remove_noto_emoji,
+                data,
+                flags=re.IGNORECASE,
+            )
             data = re.sub(r"rgb\([^0-9](.*?)\)", "inherit", data, flags=re.IGNORECASE)
         return data
 
@@ -1039,7 +1199,7 @@ class TkinterWeb(tk.Widget):
             self.done_loading_func()
 
     def fix_css_urls(self, match, url):
-        """Make relative uris in CSS files absolute"""
+        "Make relative uris in CSS files absolute"
         newurl = match.group()
         newurl = strip_css_url(newurl)
         newurl = urljoin(url, newurl)
@@ -1047,7 +1207,7 @@ class TkinterWeb(tk.Widget):
         return newurl
 
     def remove_noto_emoji(self, match):
-        """Remove noto color emoji font, which causes Tkinter to crash"""
+        "Remove noto color emoji font, which causes Tkinter to crash"
         match = match.group().lower()
         match = match.replace("noto color emoji", "arial")
         return match
@@ -1065,13 +1225,22 @@ class TkinterWeb(tk.Widget):
         if self.max_thread_count == 0:
             self.fetch_images(url, name, url)
         elif len(self.active_threads) >= self.max_thread_count:
-            self.after(500, lambda url=url, name=name: self.image_thread_check(url, name))
+            self.after(
+                500, lambda url=url, name=name: self.image_thread_check(url, name)
+            )
         else:
-            thread = StoppableThread(target=self.fetch_images, args=(url, name, url,))
+            thread = StoppableThread(
+                target=self.fetch_images,
+                args=(
+                    url,
+                    name,
+                    url,
+                ),
+            )
             thread.start()
 
     def fetch_styles(self, sheetid, handler, errorurl="", url=None, data=None):
-        """Fetch stylesheets and parse the CSS code they contain"""
+        "Fetch stylesheets and parse the CSS code they contain"
         thread = self.begin_download()
 
         if url and self.unstoppable:
@@ -1085,8 +1254,7 @@ class TkinterWeb(tk.Widget):
                 data = re.sub(r"url\((.*?)\)", matcher, data)
 
             except Exception as error:
-                self.message_func(
-                    f"Error reading stylesheet {errorurl}: {error}.")
+                self.message_func(f"Error reading stylesheet {errorurl}: {error}.")
         if data and self.unstoppable:
 
             self.parse_css(f"{sheetid}.9999", handler, data)
@@ -1099,14 +1267,23 @@ class TkinterWeb(tk.Widget):
             nodebox = self.bbox(node)
             alt = self.get_node_attribute(self.image_directory[url], "alt")
             if alt:
-                image = textimage(name, alt, nodebox, self.image_alternate_text_font, self.image_alternate_text_size, self.image_alternate_text_threshold)
+                image = textimage(
+                    name,
+                    alt,
+                    nodebox,
+                    self.image_alternate_text_font,
+                    self.image_alternate_text_size,
+                    self.image_alternate_text_threshold,
+                )
                 self.loaded_images.add(image)
             elif not self.ignore_invalid_images:
-                image = newimage(self.broken_image, name, "image/png", self.image_inversion_enabled)
+                image = newimage(
+                    BROKENIMAGE, name, "image/png", self.image_inversion_enabled
+                )
                 self.loaded_images.add(image)
 
     def fetch_images(self, url, name, urltype):
-        """Fetch images and display them in the document"""
+        "Fetch images and display them in the document"
         thread = self.begin_download()
 
         self.message_func(f"Fetching image: {shorten(url)}.")
@@ -1115,64 +1292,69 @@ class TkinterWeb(tk.Widget):
             if url.startswith("file://") or (not self.caches_enabled):
                 data, newurl, filetype = download(url, insecure=self.insecure_https)
             else:
-                data, newurl, filetype = cachedownload(url, insecure=self.insecure_https)
+                data, newurl, filetype = cachedownload(
+                    url, insecure=self.insecure_https
+                )
 
-            if self.unstoppable and data:  
-                image, error = newimage(data, name, filetype, self.image_inversion_enabled)    
+            if self.unstoppable and data:
+                image, error = newimage(
+                    data, name, filetype, self.image_inversion_enabled
+                )
                 if image:
                     self.loaded_images.add(image)
                     self.image_setup_func(url, True)
                 elif error == "no_pycairo":
                     self.load_alt_image(url, name)
                     self.message_func(
-                        "Scalable Vector Graphics could not be shown because Pycairo is not installed but is required to parse .svg files.")
+                        "Scalable Vector Graphics could not be shown because Pycairo is not installed but is required to parse .svg files."
+                    )
                     self.image_setup_func(url, False)
                 elif error == "no_rsvg":
                     self.load_alt_image(url, name)
                     self.message_func(
-                        "Scalable Vector Graphics could not be shown because Rsvg is not installed but is required to parse .svg files.")
+                        "Scalable Vector Graphics could not be shown because Rsvg is not installed but is required to parse .svg files."
+                    )
                     self.image_setup_func(url, False)
                 elif error == "corrupt":
                     self.load_alt_image(url, name)
-                    self.message_func(
-                        f"The image {url} could not be shown.")
+                    self.message_func(f"The image {url} could not be shown.")
                     self.image_setup_func(url, False)
 
         except Exception:
             self.load_alt_image(url, name)
             self.message_func(
-                f"The image {url} could not be shown because it is corrupt or is not supported yet.")
+                f"The image {url} could not be shown because it is corrupt or is not supported yet."
+            )
             self.image_setup_func(url, False)
 
         self.finish_download(thread)
 
     def handle_link_click(self, node_handle):
-        """Handle link clicks"""
+        "Handle link clicks"
         href = self.get_node_attribute(node_handle, "href")
         url = self.resolve_url(href)
-        self.message_func(
-            f"A link to '{shorten(url)}' has been clicked.")
+        self.message_func(f"A link to '{shorten(url)}' has been clicked.")
         self.visited_links.append(url)
         self.link_click_func(url)
 
     def handle_entry_reset(self, widgetid, content):
-        """Reset tk.Entry widgets in HTML forms"""
+        "Reset tk.Entry widgets in HTML forms"
         widgetid.delete(0, "end")
         widgetid.insert(0, content)
 
     def handle_form_reset(self, node):
-        """Reset HTML forms"""
+        "Reset HTML forms"
         if (node not in self.form_elements) or (not self.forms_enabled):
             return
 
         form = self.form_elements[node]
-        action = self.get_node_attribute(form, "action")
+        #action = self.get_node_attribute(form, "action")
 
         for formelement in self.loaded_forms[form]:
             self.form_reset_commands[formelement]()
 
     def handle_form_submission(self, node, event=None):
-        """Submit HTML forms"""
+        "Submit HTML forms"
         if (node not in self.form_elements) or (not self.forms_enabled):
             return
 
@@ -1190,21 +1372,27 @@ class TkinterWeb(tk.Widget):
                     continue
                 elif nodetype == "file":
                     for value in nodevalue:
-                        data.append((nodeattrname, value),)
+                        data.append(
+                            (nodeattrname, value),
+                        )
                 else:
-                    data.append((nodeattrname, nodevalue),)
+                    data.append(
+                        (nodeattrname, nodevalue),
+                    )
         if not event:
             nodeattrname = self.get_node_attribute(node, "name")
             nodevalue = self.get_node_attribute(node, "value")
             if nodeattrname and nodevalue:
-                data.append((nodeattrname, nodevalue),)
+                data.append(
+                    (nodeattrname, nodevalue),
+                )
 
         data = urlencode(data)
 
         if action == "":
             url = list(urlparse(self.base_url))
             url = url[:-3]
-            url.extend(['', '', ''])
+            url.extend(["", "", ""])
             url = urlunparse(url)
         else:
             url = self.resolve_url(action)
@@ -1214,31 +1402,56 @@ class TkinterWeb(tk.Widget):
         else:
             data = data.encode()
 
-        self.message_func(
-            f"A form has been submitted to {shorten(url)}.")
+        self.message_func(f"A form has been submitted to {shorten(url)}.")
         self.form_submit_func(url, data, method)
 
-    def handle_node_replacement(self, node, widgetid, deletecmd, stylecmd=None, allowscrolling=True, handledelete=True):
-        """Replace a Tkhtml3 node with a Tkinter widget"""
+    def handle_node_replacement(
+        self,
+        node,
+        widgetid,
+        deletecmd,
+        stylecmd=None,
+        allowscrolling=True,
+        handledelete=True,
+    ):
+        "Replace a Tkhtml3 node with a Tkinter widget"
         if stylecmd:
             if handledelete:
-                self.tk.call(node, "replace", widgetid, "-deletecmd",
-                             self.register(deletecmd), "-stylecmd",
-                             self.register(stylecmd))
+                self.tk.call(
+                    node,
+                    "replace",
+                    widgetid,
+                    "-deletecmd",
+                    self.register(deletecmd),
+                    "-stylecmd",
+                    self.register(stylecmd),
+                )
             else:
-                self.tk.call(node, "replace", widgetid, "-stylecmd",
-                             self.register(stylecmd))
+                self.tk.call(
+                    node, "replace", widgetid, "-stylecmd", self.register(stylecmd)
+                )
         else:
             if handledelete:
-                self.tk.call(node, "replace", widgetid, "-deletecmd",
-                             self.register(deletecmd))
+                self.tk.call(
+                    node, "replace", widgetid, "-deletecmd", self.register(deletecmd)
+                )
             else:
                 self.tk.call(node, "replace", widgetid)
 
         self.add_bindtags(widgetid, allowscrolling)
 
-        widgetid.bind("<Enter>", lambda event, node_handle=node: self.on_embedded_mouse_motion(event, node_handle=node_handle))
-        widgetid.bind("<Leave>", lambda event, node_handle=None: self.on_embedded_mouse_motion(event, node_handle=node_handle))
+        widgetid.bind(
+            "<Enter>",
+            lambda event, node_handle=node: self.on_embedded_mouse_motion(
+                event, node_handle=node_handle
+            ),
+        )
+        widgetid.bind(
+            "<Leave>",
+            lambda event, node_handle=None: self.on_embedded_mouse_motion(
+                event, node_handle=node_handle
+            ),
+        )
 
     def handle_node_removal(self, widgetid):
         widgetid.destroy()
@@ -1246,16 +1459,20 @@ class TkinterWeb(tk.Widget):
     def handle_node_style(self, node, widgetid, widgettype="button"):
         if widgettype == "button":
             bg = "transparent"
-            while (bg == "transparent" and node != ""):
+            while bg == "transparent" and node != "":
                 bg = self.get_node_property(node, "background-color")
                 node = self.get_node_parent(node)
             if bg == "transparent":
                 bg = "white"
-            widgetid.configure(background=bg, highlightbackground=bg,
-                               highlightcolor=bg, activebackground=bg)
+            widgetid.configure(
+                background=bg,
+                highlightbackground=bg,
+                highlightcolor=bg,
+                activebackground=bg,
+            )
         elif widgettype == "range":
             bg = "transparent"
-            while (bg == "transparent" and node != ""):
+            while bg == "transparent" and node != "":
                 bg = self.get_node_property(node, "background-color")
                 node = self.get_node_parent(node)
             if bg == "transparent":
@@ -1275,7 +1492,7 @@ class TkinterWeb(tk.Widget):
             widgetid.configure(background=bg, foreground=fg, font=font)
 
     def set_cursor(self, cursor):
-        """Set document cursor"""
+        "Set document cursor"
 
         if self.current_cursor != cursor:
             cursor = self.cursors[cursor]
@@ -1283,35 +1500,40 @@ class TkinterWeb(tk.Widget):
             self.current_cursor = cursor
 
     def handle_recursive_hovering(self, node_handle, count):
-        """Set hover flags on the parents of the hovered element"""
+        "Set hover flags on the parents of the hovered element"
         self.set_node_flags(node_handle, "hover")
         self.hovered_nodes.append(node_handle)
 
         if count >= 1:
             parent = self.get_current_node_parent(node_handle)
             if parent:
-                self.handle_recursive_hovering(parent, count-1)
+                self.handle_recursive_hovering(parent, count - 1)
 
     def setup_widgets(self):
-        """Replace Tkhtml nodes with Tk widgets when needed"""
-        widgets = self.search("[widgetid]")
+        "Replace Tkhtml nodes with Tk widgets when needed"
+        widgets = self.search(f"[{self.embedded_widget_attr_name}]")
         for node in widgets:
-            widgetid = self.get_node_attribute(node, "widgetid")
-            allowscrolling = self.get_node_attribute(node, "allowscrolling")
+            widgetid = self.get_node_attribute(node, self.embedded_widget_attr_name)
             widgetid = self.nametowidget(widgetid)
+            if widgetid.winfo_ismapped():  # Don't display the same widget twice
+                continue
+            allowscrolling = self.get_node_attribute(node, "allowscrolling")
             self.stored_widgets[widgetid] = node
-            self.handle_node_replacement(node, widgetid,
-                                         lambda widgetid=widgetid: self.handle_node_removal(widgetid),
-                                         allowscrolling=(True if allowscrolling == "yes" else False),
-                                         handledelete=False)
+            self.handle_node_replacement(
+                node,
+                widgetid,
+                lambda widgetid=widgetid: self.handle_node_removal(widgetid),
+                allowscrolling=(True if allowscrolling == "yes" else False),
+                handledelete=False,
+            )
 
     def remove_widget(self, widgetid):
-        """Remove a stored widget"""
-        self.tk.call(self.stored_widgets[widgetid], "replace", "<p></p>")
+        "Remove a stored widget"
+        self.delete_node(self.stored_widgets[widgetid])
         del self.stored_widgets[widgetid]
 
     def replace_widget(self, widgetid, newwidgetid):
-        """Replace a stored widget"""
+        "Replace a stored widget"
         node = self.stored_widgets[widgetid]
         self.tk.call(node, "replace", newwidgetid)
 
@@ -1323,14 +1545,13 @@ class TkinterWeb(tk.Widget):
         self.stored_widgets[newwidgetid] = node
 
     def replace_html(self, selector, widgetid):
-        """Replace an HTML element with a widget"""
+        "Replace an HTML element with a widget"
         node = self.search(selector)[0]
         self.tk.call(node, "replace", widgetid)
         self.stored_widgets[widgetid] = node
 
-
     def find_text(self, searchtext, select, ignore_case, highlight_all):
-        """Search for and highlight specific text in the document"""
+        "Search for and highlight specific text in the document"
 
         self.clear_selection()
 
@@ -1348,42 +1569,61 @@ class TkinterWeb(tk.Widget):
         doctext = self.text("text")
 
         try:
-            #find matches
+            # find matches
             if ignore_case:
-                rmatches = re.finditer(searchtext, doctext, flags=re.IGNORECASE | re.MULTILINE)
+                rmatches = re.finditer(
+                    searchtext, doctext, flags=re.IGNORECASE | re.MULTILINE
+                )
             else:
                 rmatches = re.finditer(searchtext, doctext, flags=re.MULTILINE)
 
             for match in rmatches:
-                match_indexes.append((match.start(0), match.end(0),))
+                match_indexes.append(
+                    (
+                        match.start(0),
+                        match.end(0),
+                    )
+                )
                 nmatches += 1
 
             if len(match_indexes) > 0:
-                #highlight matches
-                self.message_func(f"{nmatches} results for the search key '{searchtext}' have been found.")
+                # highlight matches
+                self.message_func(
+                    f"{nmatches} results for the search key '{searchtext}' have been found."
+                )
                 if highlight_all:
                     for num, match in enumerate(match_indexes):
                         match = self.text("index", match_indexes[num][0])
                         match += self.text("index", match_indexes[num][1])
                         matches.append(match)
 
-                selected = self.text("index", match_indexes[select-1][0])
-                selected += self.text("index", match_indexes[select-1][1])
+                selected = self.text("index", match_indexes[select - 1][0])
+                selected += self.text("index", match_indexes[select - 1][1])
 
                 for match in matches:
                     node1, index1, node2, index2 = match
-                    self.tag("add", "findtext",
-                             node1, index1,
-                             node2, index2)
-                    self.tag("configure", "findtext",
-                             "-bg", self.find_match_highlight_color,
-                             "-fg", self.find_match_text_color)
+                    self.tag("add", "findtext", node1, index1, node2, index2)
+                    self.tag(
+                        "configure",
+                        "findtext",
+                        "-bg",
+                        self.find_match_highlight_color,
+                        "-fg",
+                        self.find_match_text_color,
+                    )
 
                 node1, index1, node2, index2 = selected
                 self.tag("add", "findtextselected", node1, index1, node2, index2)
-                self.tag("configure", "findtextselected", "-bg", self.find_current_highlight_color, "-fg", self.find_current_text_color)
+                self.tag(
+                    "configure",
+                    "findtextselected",
+                    "-bg",
+                    self.find_current_highlight_color,
+                    "-fg",
+                    self.find_current_text_color,
+                )
 
-                #scroll to node if selected match is not visible
+                # scroll to node if selected match is not visible
                 nodebox = self.text("bbox", node1, index1, node2, index2)
                 docheight = float(self.bbox()[3])
 
@@ -1393,13 +1633,20 @@ class TkinterWeb(tk.Widget):
                 node_bottom = float(nodebox[3])
 
                 if (node_top < view_top) or (node_bottom > view_bottom):
-                    self.yview("moveto", node_top/docheight)
+                    self.yview("moveto", node_top / docheight)
             else:
-                self.message_func("No results for the search key '{}' could be found.".format(searchtext))            
+                self.message_func(
+                    "No results for the search key '{}' could be found.".format(
+                        searchtext
+                    )
+                )
             return nmatches, selected, matches
         except Exception as error:
             self.message_func(
-            "An error has been encountered while searching the document for {}: {}.".format(searchtext, error))
+                "An error has been encountered while searching the document for {}: {}.".format(
+                    searchtext, error
+                )
+            )
             return nmatches, selected, matches
 
     def create_iframe(self, node, url, html=None):
@@ -1412,46 +1659,65 @@ class TkinterWeb(tk.Widget):
             widgetid.load_html("<p>Loading...</p>")
             widgetid.load_url(url, insecure=self.insecure_https)
 
-        self.handle_node_replacement(node, widgetid, lambda widgetid=widgetid: self.handle_node_removal(widgetid))
+        self.handle_node_replacement(
+            node, widgetid, lambda widgetid=widgetid: self.handle_node_removal(widgetid)
+        )
 
     def resolve_url(self, href):
-        """Get full url from partial url"""
+        "Get full url from partial url"
         return urljoin(self.base_url, href)
 
     def select_all(self):
-        """Select all of the text in the document"""
+        "Select all of the text in the document"
         self.clear_selection()
         beginning = self.text("index", 0)
         end = self.text("index", len(self.text("text")))
         self.tag("add", "selection", beginning[0], beginning[1], end[0], end[1])
-        self.tag("configure", "selection", "-bg", self.selected_text_highlight_color, "-fg", self.selected_text_color)
+        self.tag(
+            "configure",
+            "selection",
+            "-bg",
+            self.selected_text_highlight_color,
+            "-fg",
+            self.selected_text_color,
+        )
 
     def clear_selection(self):
-        """Clear current selection possible"""
+        "Clear current selection possible"
         self.tag("delete", "selection")
         self.selection_start_node = None
 
     def extend_selection(self, event):
-        """Alter selection and HTML element states based on mouse movement"""
+        "Alter selection and HTML element states based on mouse movement"
         if self.selection_start_node is None:
             self.tag("delete", "selection")
             return
 
         try:
-            self.selection_end_node, self.selection_end_offset = self.node(True, event.x, event.y)
+            self.selection_end_node, self.selection_end_offset = self.node(
+                True, event.x, event.y
+            )
 
             if self.selection_end_node is None:
                 return
 
             self.tag("delete", "selection")
-            self.tag("add", "selection",
-                    self.selection_start_node,
-                    self.selection_start_offset,
-                    self.selection_end_node,
-                    self.selection_end_offset)
-            self.tag("configure", "selection",
-                    "-bg", self.selected_text_highlight_color,
-                    "-fg", self.selected_text_color)
+            self.tag(
+                "add",
+                "selection",
+                self.selection_start_node,
+                self.selection_start_offset,
+                self.selection_end_node,
+                self.selection_end_offset,
+            )
+            self.tag(
+                "configure",
+                "selection",
+                "-bg",
+                self.selected_text_highlight_color,
+                "-fg",
+                self.selected_text_color,
+            )
 
             if not self.is_selecting and self.prev_active_node:
                 if len(self.get_selection()) > 0:
@@ -1467,22 +1733,23 @@ class TkinterWeb(tk.Widget):
             self.set_cursor("default")
 
     def get_selection(self):
-        """Return the currently selected text"""
+        "Return the currently selected text"
         if self.selection_start_node is None or self.selection_end_node is None:
             return
         start_index = self.text(
-            "offset", self.selection_start_node, self.selection_start_offset)
+            "offset", self.selection_start_node, self.selection_start_offset
+        )
         end_index = self.text(
-            "offset", self.selection_end_node, self.selection_end_offset)
+            "offset", self.selection_end_node, self.selection_end_offset
+        )
         if start_index > end_index:
             start_index, end_index = end_index, start_index
         whole_text = self.text("text")
         return whole_text[start_index:end_index]
 
     def copy_selection(self, event=None):
-        """Copy the selected text to the clipboard"""
+        "Copy the selected text to the clipboard"
         selected_text = self.get_selection()
         self.clipboard_clear()
         self.clipboard_append(selected_text)
-        self.message_func(
-            f"The text '{selected_text}' has been copied to the clipboard.")
+        self.message_func(f"The text '{selected_text}' has been copied to the clipboard.")

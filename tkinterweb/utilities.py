@@ -1,27 +1,7 @@
 """
-TkinterWeb v3.24
-This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
-which displays styled HTML documents in Tkinter.
+Various constants and utilities used by TkinterWeb
 
 Copyright (c) 2025 Andereoo
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
 """
 
 import mimetypes
@@ -44,171 +24,177 @@ except (ImportError, SyntaxError, ):
     # We simply replace functools' lru_cache with a fake lru_cache function that does nothing
     # We also write some extremely annoying messages to persuade users to not use a version of Python that is no longer supported
     sys.stderr.write(
-        "Warning: Caching has been disabled because you are using an outdated Python installation.\n")
-    sys.stderr.write(
-        "Consider installing Python 3.2+ for improved performance.\n\n")
+        "Warning: Caching has been disabled because you are using an outdated Python installation.\n"
+    )
+    sys.stderr.write("Consider installing Python 3.2+ for improved performance.\n\n")
 
     def lru_cache():
         def decorator(func):
             def wrapper(*args, **kwargs):
                 return func(*args, **kwargs)
+
             return wrapper
+
         return decorator
 
 
-
-HEADER = {'User-Agent': 'Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha'}
-BUILTINPAGES = {"about:blank": "<html><body></body></html>",
-                 "about:tkinterweb": "<html><head><title>about:tkinterweb</title></head><body>Maybe someday this page will become something interesting. For now it's totally useless. Good job finding it though.</body></html>"}
+HEADER = {
+    "User-Agent": "Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha"
+}
+BUILTINPAGES = {
+    "about:blank": "<html><body></body></html>",
+    "about:tkinterweb": "<html><head><title>about:tkinterweb</title></head><body>Maybe someday this page will become something interesting. For now it's totally useless. Good job finding it though.</body></html>",
+}
 DEFAULTPARSEMODE = "xml"
+BROKENIMAGE = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x19\x00\x00\x00\x1e\x08\x03\x00\x00\x00\xee2E\xe9\x00\x00\x03\x00PLTE\xc5\xd5\xf4\xcd\xdb\xf4\xdf\xe8\xfc\xd5\xdd\xf4\xa5\xa3\xa5\x85\x83\x85\xfc\xfe\xfc\xf4\xf6\xf9\x95\x93\x95S\xb39\x9d\x9f\x9d\xc5\xd3\xedo\xbbg\xd5\xe3\xf4\xd5\xdf\xfc\xd5\xe3\xfc\xb5\xcf\xd5\x9d\xc7\xb5\xc5\xdf\xe5S\xaf9\x8d\xc7\x8d\x15\x15\x15\x16\x16\x16\x17\x17\x17\x18\x18\x18\x19\x19\x19\x1a\x1a\x1a\x1b\x1b\x1b\x1c\x1c\x1c\x1d\x1d\x1d\x1e\x1e\x1e\x1f\x1f\x1f   !!!"""###$$$%%%&&&\'\'\'((()))***+++,,,---...///000111222333444555666777888999:::;;;<<<===>>>???@@@AAABBBCCCDDDEEEFFFGGGHHHIIIJJJKKKLLLMMMNNNOOOPPPQQQRRRSSSTTTUUUVVVWWWXXXYYYZZZ[[[\\\\\\]]]^^^___```aaabbbcccdddeeefffggghhhiiijjjkkklllmmmnnnooopppqqqrrrssstttuuuvvvwwwxxxyyyzzz{{{|||}}}~~~\x7f\x7f\x7f\x80\x80\x80\x81\x81\x81\x82\x82\x82\x83\x83\x83\x84\x84\x84\x85\x85\x85\x86\x86\x86\x87\x87\x87\x88\x88\x88\x89\x89\x89\x8a\x8a\x8a\x8b\x8b\x8b\x8c\x8c\x8c\x8d\x8d\x8d\x8e\x8e\x8e\x8f\x8f\x8f\x90\x90\x90\x91\x91\x91\x92\x92\x92\x93\x93\x93\x94\x94\x94\x95\x95\x95\x96\x96\x96\x97\x97\x97\x98\x98\x98\x99\x99\x99\x9a\x9a\x9a\x9b\x9b\x9b\x9c\x9c\x9c\x9d\x9d\x9d\x9e\x9e\x9e\x9f\x9f\x9f\xa0\xa0\xa0\xa1\xa1\xa1\xa2\xa2\xa2\xa3\xa3\xa3\xa4\xa4\xa4\xa5\xa5\xa5\xa6\xa6\xa6\xa7\xa7\xa7\xa8\xa8\xa8\xa9\xa9\xa9\xaa\xaa\xaa\xab\xab\xab\xac\xac\xac\xad\xad\xad\xae\xae\xae\xaf\xaf\xaf\xb0\xb0\xb0\xb1\xb1\xb1\xb2\xb2\xb2\xb3\xb3\xb3\xb4\xb4\xb4\xb5\xb5\xb5\xb6\xb6\xb6\xb7\xb7\xb7\xb8\xb8\xb8\xb9\xb9\xb9\xba\xba\xba\xbb\xbb\xbb\xbc\xbc\xbc\xbd\xbd\xbd\xbe\xbe\xbe\xbf\xbf\xbf\xc0\xc0\xc0\xc1\xc1\xc1\xc2\xc2\xc2\xc3\xc3\xc3\xc4\xc4\xc4\xc5\xc5\xc5\xc6\xc6\xc6\xc7\xc7\xc7\xc8\xc8\xc8\xc9\xc9\xc9\xca\xca\xca\xcb\xcb\xcb\xcc\xcc\xcc\xcd\xcd\xcd\xce\xce\xce\xcf\xcf\xcf\xd0\xd0\xd0\xd1\xd1\xd1\xd2\xd2\xd2\xd3\xd3\xd3\xd4\xd4\xd4\xd5\xd5\xd5\xd6\xd6\xd6\xd7\xd7\xd7\xd8\xd8\xd8\xd9\xd9\xd9\xda\xda\xda\xdb\xdb\xdb\xdc\xdc\xdc\xdd\xdd\xdd\xde\xde\xde\xdf\xdf\xdf\xe0\xe0\xe0\xe1\xe1\xe1\xe2\xe2\xe2\xe3\xe3\xe3\xe4\xe4\xe4\xe5\xe5\xe5\xe6\xe6\xe6\xe7\xe7\xe7\xe8\xe8\xe8\xe9\xe9\xe9\xea\xea\xea\xeb\xeb\xeb\xec\xec\xec\xed\xed\xed\xee\xee\xee\xef\xef\xef\xf0\xf0\xf0\xf1\xf1\xf1\xf2\xf2\xf2\xf3\xf3\xf3\xf4\xf4\xf4\xf5\xf5\xf5\xf6\xf6\xf6\xf7\xf7\xf7\xf8\xf8\xf8\xf9\xf9\xf9\xfa\xfa\xfa\xfb\xfb\xfb\xfc\xfc\xfc\xfd\xfd\xfd\xfe\xfe\xfe\xff\xff\xff\x01\xb3\x9a&\x00\x00\x01+IDATx\x9c\x9d\x91\xe9\x92\x84 \x0c\x84s (\x08A\xc6\xf7\x7f\xd6M8\x9c\x9d\xa9\xda?\xdb\x96W\x7f\xb6\xd5\x04\xf0\x7f\t\xdcT\x9c\xf7}\x0f\xf4I\x16U\x12\x16\t\x1f\xdaw\xe7\x16!\xcay\x9cL\xac\xc4\xfb\x18\x06\xc9\x81\x14\xd0\xd4o\xc2\x88\xa5X\x1e\x0b"\x1a\xf1\xd1\x05\x0f1f3\x06\xc9\x85\xb6Nb\x08\xe0\xa2d\x9cK\xd00\xefKF\x16\xf0E\ti?\xb2\x8aJ2\xf9\'\x83\xa8]Fy#\xa8\x1d\x00\x91\xa1\x01d\xad\x9e1h\x11m EM(\xa2vA\xe0\xc2,T,\xe3\x98$\xc1T\xd307 \xda6[)C\xea\x16\x1aK\x8c\rDv#BF\xd4\x03\xb4\x0b\xa4\x02,:\x83\xe8H i\xc2<\xec,%\xa2>\x1d\xc9)\x8dD\xad\xfd\x89a\xce\xad\x10\xdbw\xa0\xa0Z.\xa54v!\x8a@\x85\xeb:^\xaf\xe38\xcfZ\x19\xfc"E\xbf\xbf.\x03F\x1a\xf0 Q\xbbUM\xbc\xd5\xfd\xbeR\xa2\xda\x9d\xb3\x1f\xdd\x97\xbc\xf5Y\xf35\xc9\x93\xd0\x19\xe8\xdc\\k_\x7f\xf2g\xb6\x19\xc4\xf8\x90s\x91\x17\xe5\xbe\x0b\xf7\xf9\x99\xd0\x87\xfbV\xb2\xbd\xd5\xfd\xe7\xed?\xe4\x07\xca\xeb\x13o\x88}\xa9\x12\x00\x00\x00\x00IEND\xaeB`\x82'
 COLORMAPPINGS = {
-    'black': '#f0f0f0',
-    'silver': '#303030',
-    'lime': '#f001f0',
-    'gray': '#707070',
-    'olive': '#7070f0',
-    'white': '#010101',
-    'yellow': '#0101f0',
-    'maroon': '#70f0f0',
-    'navy': '#f0f070',
-    'red': '#01f0f0',
-    'blue': '#f0f001',
-    'purple': '#70f070',
-    'teal': '#f07070',
-    'fuchsia': '#01f001',
-    'aqua': '#f00101',
-    'green': '#f070f0',
-    'aliceblue': '#010101',
-    'antiquewhite': '#010519',
-    'aquamarine': '#71011c',
-    'azure': '#010101',
-    'beige': '#010114',
-    'bisque': '#010c2c',
-    'blanchedalmond': '#010523',
-    'blueviolet': '#66c50e',
-    'brown': '#4bc6c6',
-    'burlywood': '#123869',
-    'cadetblue': '#915250',
-    'chartreuse': '#7101f0',
-    'chocolate': '#1e87d2',
-    'coral': '#0171a0',
-    'cornflowerblue': '#8c5b03',
-    'cornsilk': '#010114',
-    'crimson': '#14dcb4',
-    'cyan': '#f00101',
-    'darkblue': '#f0f065',
-    'darkcyan': '#f06565',
-    'darkgoldenrod': '#386ae5',
-    'darkgray': '#474747',
-    'darkgreen': '#f08cf0',
-    'darkgrey': '#474747',
-    'darkkhaki': '#333985',
-    'darkmagenta': '#65f065',
-    'darkolivegreen': '#9b85c1',
-    'darkorange': '#0164f0',
-    'darkorchid': '#57be24',
-    'darkred': '#65f0f0',
-    'darksalmon': '#075a76',
-    'darkseagreen': '#613461',
-    'darkslateblue': '#a8b365',
-    'darkslategray': '#c1a1a1',
-    'darkslategrey': '#c1a1a1',
-    'darkturquoise': '#f0221f',
-    'darkviolet': '#5cf01d',
-    'deeppink': '#01dc5d',
-    'deepskyblue': '#f03101',
-    'dimgray': '#878787',
-    'dimgrey': '#878787',
-    'dodgerblue': '#d26001',
-    'firebrick': '#3ecece',
-    'floralwhite': '#010101',
-    'forestgreen': '#ce65ce',
-    'gainsboro': '#141414',
-    'ghostwhite': '#010101',
-    'gold': '#0119f0',
-    'goldenrod': '#164bd0',
-    'grey': '#707070',
-    'greenyellow': '#4301c1',
-    'honeydew': '#010101',
-    'hotpink': '#01873c',
-    'indianred': '#239494',
-    'indigo': '#a5f06e',
-    'ivory': '#010101',
-    'khaki': '#010a64',
-    'lavender': '#0a0a01',
-    'lavenderblush': '#010101',
-    'lawngreen': '#7401f0',
-    'lemonchiffon': '#010123',
-    'lightblue': '#43180a',
-    'lightcoral': '#017070',
-    'lightcyan': '#100101',
-    'lightgoldenrodyellow': '#01011e',
-    'lightgray': '#1d1d1d',
-    'lightgreen': '#600260',
-    'lightgrey': '#1d1d1d',
-    'lightpink': '#013a2f',
-    'lightsalmon': '#015076',
-    'lightseagreen': '#d03e46',
-    'lightskyblue': '#692201',
-    'lightslategray': '#796857',
-    'lightslategrey': '#796857',
-    'lightsteelblue': '#402c12',
-    'lightyellow': '#010110',
-    'limegreen': '#be23be',
-    'linen': '#01010a',
-    'magenta': '#01f001',
-    'mediumaquamarine': '#8a2346',
-    'mediumblue': '#f0f023',
-    'mediumorchid': '#369b1d',
-    'mediumpurple': '#5d8015',
-    'mediumseagreen': '#b43d7f',
-    'mediumslateblue': '#758802',
-    'mediumspringgreen': '#f00156',
-    'mediumturquoise': '#a81f24',
-    'mediumvioletred': '#29db6b',
-    'midnightblue': '#d7d780',
-    'mintcream': '#010101',
-    'mistyrose': '#010c0f',
-    'moccasin': '#010c3b',
-    'navajowhite': '#011243',
-    'oldlace': '#01010a',
-    'olivedrab': '#8562cd',
-    'orange': '#014bf0',
-    'orangered': '#01abf0',
-    'orchid': '#16801a',
-    'palegoldenrod': '#020846',
-    'palegreen': '#580158',
-    'paleturquoise': '#410202',
-    'palevioletred': '#15805d',
-    'papayawhip': '#01011b',
-    'peachpuff': '#011637',
-    'peru': '#236bb1',
-    'pink': '#013025',
-    'plum': '#135013',
-    'powderblue': '#40100a',
-    'rosybrown': '#346161',
-    'royalblue': '#af870f',
-    'saddlebrown': '#65abdd',
-    'salmon': '#01707e',
-    'sandybrown': '#014c90',
-    'seagreen': '#c26599',
-    'seashell': '#010102',
-    'sienna': '#509ec3',
-    'skyblue': '#692205',
-    'slateblue': '#869623',
-    'slategray': '#807060',
-    'slategrey': '#807060',
-    'snow': '#010101',
-    'springgreen': '#f00171',
-    'steelblue': '#aa6e3c',
-    'tan': '#1e3c64',
-    'thistle': '#183118',
-    'tomato': '#018da9',
-    'turquoise': '#b01020',
-    'violet': '#026e02',
-    'wheat': '#01123d',
-    'whitesmoke': '#010101',
-    'yellowgreen': '#5623be',
+    "black": "#f0f0f0",
+    "silver": "#303030",
+    "lime": "#f001f0",
+    "gray": "#707070",
+    "olive": "#7070f0",
+    "white": "#010101",
+    "yellow": "#0101f0",
+    "maroon": "#70f0f0",
+    "navy": "#f0f070",
+    "red": "#01f0f0",
+    "blue": "#f0f001",
+    "purple": "#70f070",
+    "teal": "#f07070",
+    "fuchsia": "#01f001",
+    "aqua": "#f00101",
+    "green": "#f070f0",
+    "aliceblue": "#010101",
+    "antiquewhite": "#010519",
+    "aquamarine": "#71011c",
+    "azure": "#010101",
+    "beige": "#010114",
+    "bisque": "#010c2c",
+    "blanchedalmond": "#010523",
+    "blueviolet": "#66c50e",
+    "brown": "#4bc6c6",
+    "burlywood": "#123869",
+    "cadetblue": "#915250",
+    "chartreuse": "#7101f0",
+    "chocolate": "#1e87d2",
+    "coral": "#0171a0",
+    "cornflowerblue": "#8c5b03",
+    "cornsilk": "#010114",
+    "crimson": "#14dcb4",
+    "cyan": "#f00101",
+    "darkblue": "#f0f065",
+    "darkcyan": "#f06565",
+    "darkgoldenrod": "#386ae5",
+    "darkgray": "#474747",
+    "darkgreen": "#f08cf0",
+    "darkgrey": "#474747",
+    "darkkhaki": "#333985",
+    "darkmagenta": "#65f065",
+    "darkolivegreen": "#9b85c1",
+    "darkorange": "#0164f0",
+    "darkorchid": "#57be24",
+    "darkred": "#65f0f0",
+    "darksalmon": "#075a76",
+    "darkseagreen": "#613461",
+    "darkslateblue": "#a8b365",
+    "darkslategray": "#c1a1a1",
+    "darkslategrey": "#c1a1a1",
+    "darkturquoise": "#f0221f",
+    "darkviolet": "#5cf01d",
+    "deeppink": "#01dc5d",
+    "deepskyblue": "#f03101",
+    "dimgray": "#878787",
+    "dimgrey": "#878787",
+    "dodgerblue": "#d26001",
+    "firebrick": "#3ecece",
+    "floralwhite": "#010101",
+    "forestgreen": "#ce65ce",
+    "gainsboro": "#141414",
+    "ghostwhite": "#010101",
+    "gold": "#0119f0",
+    "goldenrod": "#164bd0",
+    "grey": "#707070",
+    "greenyellow": "#4301c1",
+    "honeydew": "#010101",
+    "hotpink": "#01873c",
+    "indianred": "#239494",
+    "indigo": "#a5f06e",
+    "ivory": "#010101",
+    "khaki": "#010a64",
+    "lavender": "#0a0a01",
+    "lavenderblush": "#010101",
+    "lawngreen": "#7401f0",
+    "lemonchiffon": "#010123",
+    "lightblue": "#43180a",
+    "lightcoral": "#017070",
+    "lightcyan": "#100101",
+    "lightgoldenrodyellow": "#01011e",
+    "lightgray": "#1d1d1d",
+    "lightgreen": "#600260",
+    "lightgrey": "#1d1d1d",
+    "lightpink": "#013a2f",
+    "lightsalmon": "#015076",
+    "lightseagreen": "#d03e46",
+    "lightskyblue": "#692201",
+    "lightslategray": "#796857",
+    "lightslategrey": "#796857",
+    "lightsteelblue": "#402c12",
+    "lightyellow": "#010110",
+    "limegreen": "#be23be",
+    "linen": "#01010a",
+    "magenta": "#01f001",
+    "mediumaquamarine": "#8a2346",
+    "mediumblue": "#f0f023",
+    "mediumorchid": "#369b1d",
+    "mediumpurple": "#5d8015",
+    "mediumseagreen": "#b43d7f",
+    "mediumslateblue": "#758802",
+    "mediumspringgreen": "#f00156",
+    "mediumturquoise": "#a81f24",
+    "mediumvioletred": "#29db6b",
+    "midnightblue": "#d7d780",
+    "mintcream": "#010101",
+    "mistyrose": "#010c0f",
+    "moccasin": "#010c3b",
+    "navajowhite": "#011243",
+    "oldlace": "#01010a",
+    "olivedrab": "#8562cd",
+    "orange": "#014bf0",
+    "orangered": "#01abf0",
+    "orchid": "#16801a",
+    "palegoldenrod": "#020846",
+    "palegreen": "#580158",
+    "paleturquoise": "#410202",
+    "palevioletred": "#15805d",
+    "papayawhip": "#01011b",
+    "peachpuff": "#011637",
+    "peru": "#236bb1",
+    "pink": "#013025",
+    "plum": "#135013",
+    "powderblue": "#40100a",
+    "rosybrown": "#346161",
+    "royalblue": "#af870f",
+    "saddlebrown": "#65abdd",
+    "salmon": "#01707e",
+    "sandybrown": "#014c90",
+    "seagreen": "#c26599",
+    "seashell": "#010102",
+    "sienna": "#509ec3",
+    "skyblue": "#692205",
+    "slateblue": "#869623",
+    "slategray": "#807060",
+    "slategrey": "#807060",
+    "snow": "#010101",
+    "springgreen": "#f00171",
+    "steelblue": "#aa6e3c",
+    "tan": "#1e3c64",
+    "thistle": "#183118",
+    "tomato": "#018da9",
+    "turquoise": "#b01020",
+    "violet": "#026e02",
+    "wheat": "#01123d",
+    "whitesmoke": "#010101",
+    "yellowgreen": "#5623be",
 }
 DEFAULTSTYLE = r"""
 /* Default stylesheet to be loaded whenever HTML is parsed. */
@@ -557,7 +543,7 @@ INPUT[type="submit"],INPUT[type="button"], INPUT[type="reset"], BUTTON {
 """
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "tkhtml")
 WORKING_DIR = os.getcwd()
-    
+
 tkhtml_loaded = False
 combobox_loaded = False
 
@@ -594,8 +580,8 @@ class ScrolledTextBox(tk.Frame):
         tbox.grid(row=0, column=0, sticky="nsew")
 
         self.vsb = vsb = AutoScrollbar(self, command=tbox.yview)
-        vsb.grid(row=0, column=1, sticky='nsew')
-        tbox['yscrollcommand'] = self.check
+        vsb.grid(row=0, column=1, sticky="nsew")
+        tbox["yscrollcommand"] = self.check
 
         tbox.bind("<MouseWheel>", self.scroll)
         tbox.bind("<Button-4>", self.scroll_x11)
@@ -626,7 +612,7 @@ class ScrolledTextBox(tk.Frame):
         return self.tbox.bindtags(*args)
 
     def reset_bindtags(self, event=None):
-        self.tbox.bindtags((self.tbox, 'Text', '.', 'all'))
+        self.tbox.bindtags((self.tbox, "Text", ".", "all"))
 
     def configure(self, *args, **kwargs):
         self.tbox.configure(*args, **kwargs)
@@ -647,7 +633,8 @@ class FileSelector(tk.Frame):
     def __init__(self, parent, accept, multiple, **kwargs):
         tk.Frame.__init__(self, parent)
         self.selector = selector = tk.Button(
-            self, text="Browse", command=self.select_file)
+            self, text="Browse", command=self.select_file
+        )
         self.label = label = tk.Label(self, text="No files selected.")
 
         selector.pack(side="left")
@@ -660,36 +647,39 @@ class FileSelector(tk.Frame):
 
     def generate_filetypes(self, accept):
         if accept:
-            accept_list = [ a.strip() for a in accept.split(",") ]
+            accept_list = [a.strip() for a in accept.split(",")]
             all_extensions = set()
             filetypes = []
 
             # First find all the MIME types
-            for mimetype in [ a for a in accept_list if not a.startswith(".") ]:
+            for mimetype in [a for a in accept_list if not a.startswith(".")]:
                 # the HTML spec specifies these three wildcard cases only:
-                if mimetype in ('audio/*', 'video/*', 'image/*'):
+                if mimetype in ("audio/*", "video/*", "image/*"):
                     extensions = [
-                        k for k, v in mimetypes.types_map.items()
+                        k
+                        for k, v in mimetypes.types_map.items()
                         if v.startswith(mimetype[:-1])
                     ]
                 else:
                     extensions = mimetypes.guess_all_extensions(mimetype)
-                filetypes.append((mimetype, ' '.join(extensions)))
+                filetypes.append((mimetype, " ".join(extensions)))
                 all_extensions.update(extensions)
 
             # Now add any non-MIME types not already included as part of a MIME type.
-            for suffix in [ a for a in accept_list if a.startswith(".") ]:
+            for suffix in [a for a in accept_list if a.startswith(".")]:
                 if suffix not in all_extensions:
                     mimetype = mimetypes.guess_type(f" {suffix}", suffix)[0]
                     if mimetype:
                         extensions = mimetypes.guess_all_extensions(mimetype)
-                        filetypes.append((mimetype, ' '.join(extensions)))
+                        filetypes.append((mimetype, " ".join(extensions)))
                         all_extensions.update(extensions)
                     else:
                         filetypes.append((f"{suffix} files", suffix))
 
             if len(filetypes) > 1:
-                filetypes.insert(0, ("All Supported Types", ' '.join(sorted(all_extensions))))
+                filetypes.insert(
+                    0, ("All Supported Types", " ".join(sorted(all_extensions)))
+                )
 
             self.filetypes = filetypes
         else:
@@ -697,9 +687,13 @@ class FileSelector(tk.Frame):
 
     def select_file(self):
         if self.multiple:
-            self.files = files = filedialog.askopenfilenames(title="Select files", filetypes=self.filetypes)
+            self.files = files = filedialog.askopenfilenames(
+                title="Select files", filetypes=self.filetypes
+            )
         else:
-            files = filedialog.askopenfilename(title="Select file", filetypes=self.filetypes)
+            files = filedialog.askopenfilename(
+                title="Select file", filetypes=self.filetypes
+            )
             if files:
                 self.files = files = (files,)
         number = len(files)
@@ -735,7 +729,15 @@ class ColourSelector(tk.Frame):
     def __init__(self, parent, colour, **kwargs):
         tk.Frame.__init__(self, parent, bg="#ccc", highlightthickness=0)
         colour = colour if colour else "#000000"
-        self.selector = tk.Button(self, bg=colour, command=self.select_colour, activebackground=colour, width=5, highlightthickness=0, borderwidth=0)
+        self.selector = tk.Button(
+            self,
+            bg=colour,
+            command=self.select_colour,
+            activebackground=colour,
+            width=5,
+            highlightthickness=0,
+            borderwidth=0,
+        )
         self.selector.pack(expand=True, fill="both", padx=5, pady=5)
         self.bind("<Button-1>", self.on_click)
         self.bind("<ButtonRelease-1>", self.on_release)
@@ -759,7 +761,7 @@ class ColourSelector(tk.Frame):
             self.config(bg="#aaa")
 
     def select_colour(self):
-        colour = colorchooser.askcolor(title = "Choose color")[1]
+        colour = colorchooser.askcolor(title="Choose color")[1]
         self.colour = colour if colour else self.colour
         self.selector.config(bg=self.colour, activebackground=self.colour)
         self.event_generate("<<Modified>>")
@@ -783,13 +785,16 @@ class ColourSelector(tk.Frame):
 class Notebook(ttk.Frame):
     """Drop-in replacement for the ttk.Notebook widget,
     The ttk.Notebook widget is incompatable with Tkhtml on some platforms, causing crashes when selecting tabs
-    Workaround for Bug #19, this widget manages pages itself while a ttk.Notebook handles tabs. 
-    Designed to look and behave exactly like a ttk.Notebook, just without any crashes."""
+    Workaround for Bug #19, this widget manages pages itself while a ttk.Notebook handles tabs.
+    Designed to look and behave exactly like a ttk.Notebook, just without any crashes.
+    """
 
     def __init__(self, master, takefocus=True, **kwargs):
         ttk.Frame.__init__(self, master, **kwargs)
         self.notebook = notebook = ttk.Notebook(self, takefocus=takefocus)
-        self.blankframe = lambda: tk.Frame(notebook, height=0, bd=0, highlightthickness=0)
+        self.blankframe = lambda: tk.Frame(
+            notebook, height=0, bd=0, highlightthickness=0
+        )
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
@@ -868,7 +873,7 @@ class Notebook(ttk.Frame):
 class StoppableThread(threading.Thread):
     "A thread that stores a state flag that can be set and used to check if the thread is supposed to be running."
 
-    def __init__(self,  *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         threading.Thread.__init__(self, *args, **kwargs)
         self.daemon = True
         self.running = True
@@ -897,7 +902,7 @@ def download(url, data=None, method="GET", decode=None, insecure=False):
     "but as long as install_opener() is not called and a string is used as the url parameter we are okay."
 
     if url in BUILTINPAGES:
-        return BUILTINPAGES[url], url, 'text/html'
+        return BUILTINPAGES[url], url, "text/html"
 
     ctx = ssl.create_default_context()
     if insecure:
@@ -948,14 +953,14 @@ def shorten(string):
 def threadname():
     "Return the currently running thread."
     thread = threading.current_thread()
-    if thread.name == 'MainThread':
+    if thread.name == "MainThread":
         thread = PlaceholderThread()
     return thread
 
 
 def strip_css_url(url):
     "Extract the address from a css url"
-    return url[4:-1].replace("'", "").replace('"', '')
+    return url[4:-1].replace("'", "").replace('"', "")
 
 
 def get_alt_font():
@@ -967,23 +972,23 @@ def get_tkhtml_folder():
     "Get the location of the platform's tkhtml binary"
     # Universal sdist
     if platform.system() == "Linux":
-        if "arm" in os.uname()[-1]: # 32 bit arm Linux - Raspberry Pi and others
+        if "arm" in os.uname()[-1]:  # 32 bit arm Linux - Raspberry Pi and others
             return os.path.join(ROOT_DIR, "linux_armv71")
-        elif "aarch64" in os.uname()[-1]: # 64 bit arm Linux - Raspberry Pi and others
+        elif "aarch64" in os.uname()[-1]:  # 64 bit arm Linux - Raspberry Pi and others
             return os.path.join(ROOT_DIR, "manylinux2014_aarch64")
-        elif sys.maxsize > 2**32: # 64 bit Linux
+        elif sys.maxsize > 2**32:  # 64 bit Linux
             return os.path.join(ROOT_DIR, "manylinux1_x86_64")
-        else: # 32 bit Linux
+        else:  # 32 bit Linux
             return os.path.join(ROOT_DIR, "manylinux1_i686")
     elif platform.system() == "Darwin":
-        if "arm" in os.uname()[-1]: # M1 Mac
+        if "arm" in os.uname()[-1]:  # M1 Mac
             return os.path.join(ROOT_DIR, "macosx_11_0_arm64")
-        else: # other Macs
+        else:  # other Macs
             return os.path.join(ROOT_DIR, "macosx_10_6_x86_64")
     else:
-        if sys.maxsize > 2**32: # 64 bit Windows
+        if sys.maxsize > 2**32:  # 64 bit Windows
             return os.path.join(ROOT_DIR, "win_amd64")
-        else: # 32 bit Windows
+        else:  # 32 bit Windows
             return os.path.join(ROOT_DIR, "win32")
     # Platform-specific wheel
     return os.path.join(ROOT_DIR, "binaries")
@@ -994,7 +999,7 @@ def load_tkhtml(master, location=None, force=False):
     global tkhtml_loaded
     if (not tkhtml_loaded) or force:
         if location:
-            master.tk.eval("set auto_path [linsert $auto_path 0 {"+location+"}]")
+            master.tk.eval("set auto_path [linsert $auto_path 0 {" + location + "}]")
         master.tk.eval("package require Tkhtml")
         tkhtml_loaded = True
 
@@ -1011,7 +1016,7 @@ def load_combobox(master, force=False):
 def notifier(text):
     "Notifications printer."
     try:
-        sys.stdout.write(str(text)+"\n\n")
+        sys.stdout.write(str(text) + "\n\n")
     except Exception:
         "sys.stdout.write doesn't work in .pyw files."
         "Since .pyw files have no console, we can simply not bother printing messages."
@@ -1020,6 +1025,6 @@ def notifier(text):
 def tkhtml_notifier(name, text, *args):
     "Tkhtml -logcmd printer."
     try:
-        sys.stdout.write("DEBUG "+str(name)+": "+str(text)+"\n\n")
+        sys.stdout.write("DEBUG " + str(name) + ": " + str(text) + "\n\n")
     except Exception:
         pass

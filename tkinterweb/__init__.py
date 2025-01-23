@@ -1,27 +1,9 @@
 """
-TkinterWeb v3.24
+TkinterWeb v3.25
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
 
 Copyright (c) 2025 Andereoo
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
 """
 
 import os
@@ -37,12 +19,11 @@ except (ImportError, ModuleNotFoundError):
     import traceback
 
     # Give useful troubleshooting information as a popup, as most bundled applications don't have a visible console
-    # Also print the message in case something is wrong with the Tkinter installation as well
-    error_message = "ModuleNotFoundError: The files required to run TkinterWeb could not be found. \
-This usually occurs when bundling TkinterWeb into an app without forcing the application maker to include all nessessary files or when some of TkinterWeb's dependencies are not installed. \
+    # Also print the message in case something is also wrong with the Tkinter installation
+    error_message = "Error: The files required to run TkinterWeb could not be found. \
+This typically occurs when bundling TkinterWeb into an app without forcing the application maker to include all nessessary files or when some of TkinterWeb's dependencies are not installed. \
 See https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/docs/FAQ.md for more information. \n\n\
-Error code: {} \n\
-If you think this is a bug, please file a bug report at https://github.com/Andereoo/TkinterWeb.".format(traceback.format_exc())
+{}".format(traceback.format_exc())
     sys.stdout.write(error_message)
 
     import tkinter as tk
@@ -56,7 +37,9 @@ If you think this is a bug, please file a bug report at https://github.com/Ander
 
 __title__ = 'TkinterWeb'
 ___author__ = "Andereoo"
-__version__ = '3.24'
+__copyright__ = "Copyright (c) 2025 Andereoo"
+__license__ = "MIT"
+__version__ = '3.25'
 __all__ = ['HtmlFrame', 'HtmlLabel', 'TkinterWeb', 'Demo']
 
 
@@ -64,7 +47,6 @@ class Demo():
     "TkinterWeb Demo"
 
     def __init__(self):
-
         import tkinter as tk
 
         self.root = root = tk.Tk()

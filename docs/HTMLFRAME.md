@@ -11,7 +11,7 @@ It combines the TkinterWeb browser, automatic scrollbars, cursor handling capabi
 
 The HtmlFrame widget behaves like any other Tkinter widget. This also means that Tkinter functions such as `grid()`, `destroy()`, or `pack()` work on the HtmlFrame. 
 
-Tkinter bindings (such as right-clicks or keyboard presses) can also be used on the HtmlFrame. See [Tips and Tricks](https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/docs/HTMLFRAME.md#tips-and-tricks) below for more information.
+Tkinter bindings (such as right-clicks or keyboard presses) can also be used on the HtmlFrame. See [Tips and Tricks](HTMLFRAME.md#tips-and-tricks) below for more information.
 
 Here is an example:
 
@@ -139,6 +139,11 @@ Setting the zoom of the HtmlFrame widget is very easy. This can be used to add a
 myhtmlframe.set_zoom(2)
 ```
 To zoom only the text, use `set_fontscale()` instead.
+
+---
+*Manipulating the DOM*
+
+Refer to [DOM.md](DOM.md).
 
 ---
 *Other methods can be found in the [useful methods section](#useful-methods) below.*

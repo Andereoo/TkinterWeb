@@ -13,14 +13,11 @@ new_header = yourframe.document.createElement("h1")
 new_header.textContent("Hello, world!")
 container.appendChild(new_header)
 ```
-The above code will replace the `<div>` element with the `mybutton` Button. This `<div>` element will still behave as it would normally. This means that it is very easy to set the location of the button, the size, and much more using CSS. For example, `<div style="width:50px" widgetid="+str(mybutton)+"></div>` would make the button exactly 50 pixels wide.
-  
-Add the attribute `allowscrolling="yes"` to allow scrolling the document when the mouse is over the button. Note that this has no effect on the HtmlLabel widget.
 
 ## API Reference
 
 #### `document.createElement(tagname)`
-Create a new HTML element with the specified tag name
+Create a new HTML element with the given tag name
 
 Parameters
 * **tagname** *(string)* - Specifies the new element's HTML tag
@@ -105,7 +102,7 @@ Return type
 ---
 
 #### `document.querySelectorAll(query)`
-Return a list of elements that matche a given CSS selector
+Return a list of elements that match a given CSS selector
 
 Parameters
 * **query** *(string)* - Specifies the CSS selector to be searched for 
@@ -118,7 +115,7 @@ Return type
 ## HtmlElement API 
 
 #### `HtmlElement.innerHTML(contents=None)`
-Get and set the inner HTML contents of an element
+Get and set the inner HTML of an element
 
 Parameters
 * **contents** *(string)* - If provided, specifies the new HTML content of the element
@@ -129,7 +126,7 @@ Return type
 ---
 
 #### `HtmlElement.textContent(contents=None)`
-"Get and set the text content of an element
+Get and set the text content of an element
 
 Parameters
 * **contents** *(string)* - If provided, specifies the new text content of the element
@@ -207,7 +204,7 @@ Delete the element
 ---
 
 #### `HtmlElement.appendChild(children)`
-Add the given children elements into the element
+Insert the specified children into the element
 
 Parameters
 * **children** *(list or HtmlElement)* - Specifies the element(s) to be added into the element 
@@ -215,7 +212,7 @@ Parameters
 ---
 
 #### `HtmlElement.insertBefore(children, before)`
-Insert the given children elements into the element
+Insert the specified children before a specified child element
 
 Parameters
 * **children** *(list or HtmlElement)* - Specifies the element(s) to be added into the element 

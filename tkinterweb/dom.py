@@ -265,7 +265,7 @@ class HtmlElement:
         "Return the tag name of the element"
         return self.html.get_node_tag(self.node)
 
-    def style(self, node_property, value=None):  # attr
+    def style(self, property, value=None):  # attr
         "Get and set the specified CSS property"
         if value:
             styles = self.html.get_node_attribute(self.node, "style")
@@ -275,16 +275,16 @@ class HtmlElement:
                 for style in styles:
                     style = style.strip()
                     parts = style.split(":")
-                    if style and parts[0] != node_property:
+                    if style and parts[0] != property:
                         newstyles.append(style)
-                newstyles.append(f"{node_property}:{value}")
+                newstyles.append(f"{property}:{value}")
             else:
-                newstyles = [f"{node_property}:{value}"]
+                newstyles = [f"{property}:{value}"]
             return self.html.set_node_attribute(
                 self.node, "style", "; ".join(newstyles)
             )
         else:
-            return self.html.get_node_property(self.node, node_property)
+            return self.html.get_node_property(self.node, property)
 
     def parentElement(self):  # attr
         "Return the element's parent element"
@@ -302,7 +302,7 @@ class HtmlElement:
 
     def remove(self):
         "Delete the element"
-        return self.html.delete_node(self.node)
+        self.html.delete_node(self.node)
 
     def appendChild(self, children):
         "Insert the specified children into the element"
@@ -313,7 +313,7 @@ class HtmlElement:
         except TypeError:
             tkhtml_children_nodes = [children.node]
             children = [children]
-        res = self.html.insert_node(self.node, tkhtml_children_nodes)
+        self.html.insert_node(self.node, tkhtml_children_nodes)
 
         # only bother setting up widgets if visible; otherwise bad things can happen
         if self.html.bbox(self.node):  
@@ -321,7 +321,6 @@ class HtmlElement:
                 if node.contains_widgets == True:
                     self.html.setup_widgets()
                     break
-        return res
 
     def insertBefore(self, children, before):
         "Insert the specified children before a specified child element"
@@ -332,12 +331,9 @@ class HtmlElement:
         except TypeError:
             tkhtml_children_nodes = [children.node]
             children = [children]
-        res = self.html.insert_node_before(self.node, tkhtml_children_nodes, before)
-        if self.html.bbox(
-            self.node
-        ):  # only bother setting up widgets if visible; won't work otherwise
+        self.html.insert_node_before(self.node, tkhtml_children_nodes, before.node)
+        if self.html.bbox(self.node):  # only bother setting up widgets if visible; won't work otherwise
             for node in children:
                 if node.contains_widgets == True:
                     self.html.setup_widgets()
                     break
-        return res

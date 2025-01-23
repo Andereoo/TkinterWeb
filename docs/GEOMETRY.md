@@ -1,4 +1,4 @@
-## *Geometry Management with TkinterWeb*
+## Geometry Management with TkinterWeb
 
 ## Overview
 By default, Tkinter provides three geometry managers: `pack`, `place`, and `grid`. While these geometry managers are very powerful, achieving certain layouts, especially with scrolling, can be very time-consuming. TkinterWeb provides it's own way to attach Tkinter widgets onto a screen, and handles layouts, images, scrolling, and much more for you. 

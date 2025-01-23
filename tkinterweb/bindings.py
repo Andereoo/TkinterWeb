@@ -1544,7 +1544,7 @@ class TkinterWeb(tk.Widget):
             del self.stored_widgets[widgetid]
         self.stored_widgets[newwidgetid] = node
 
-    def replace_html(self, selector, widgetid):
+    def replace_element(self, selector, widgetid):
         "Replace an HTML element with a widget"
         node = self.search(selector)[0]
         self.tk.call(node, "replace", widgetid)

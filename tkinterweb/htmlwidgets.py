@@ -119,6 +119,10 @@ class HtmlFrame(ttk.Frame):
         self.get_parsemode = self.html.get_parsemode
         self.resolve_url = self.html.resolve_url
 
+        self.replace_widget = self.html.replace_widget
+        self.replace_element = self.html.replace_element
+        self.remove_widget = self.html.remove_widget
+
         self.yview = self.html.yview
         self.yview_moveto = self.html.yview_moveto
         self.yview_scroll = self.html.yview_scroll
@@ -448,18 +452,6 @@ Otherwise, use 'insecure=True' when loading a page to ignore website certificate
     def get_currently_selected_text(self):
         "Get the text that is currently highlighted/selected."
         return self.html.get_selection()
-
-    def replace_widget(self, oldwidget, newwidget):
-        "Replace a stored widget"
-        self.html.replace_widget(oldwidget, newwidget)
-
-    def replace_element(self, cssselector, newwidget):
-        "Replace an HTML element with a widget"
-        self.html.replace_html(cssselector, newwidget)
-
-    def remove_widget(self, widget):
-        "Remove a stored widget"
-        self.html.remove_widget(widget)
 
     def scroll(self, event):
         "Handle mouse/touchpad scrolling"

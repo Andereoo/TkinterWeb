@@ -75,10 +75,10 @@ See https://github.com/Andereoo/TkinterWeb/blob/main/docs/FAQ.md.
 * Most CSS Pseudo-elements, such as `:hover` and `:active` are also supported. 
 
 **JavaScript:**
-* Javascript is not supported at the moment.
+* Javascript is not supported at the moment. It is possible to manipulate the DOM through Python. See [DOM Manipulation with TkinterWeb](/docs/DOM.md).
 
 **Images:**
-* TkinterWeb supports nearly 50 different image types through PIL. Scalable Vector Graphic support is not as straightforward, though. In order to load SVG images:
+* TkinterWeb supports nearly 50 different image types through PIL. However, in order to load Scalable Vector Graphic images:
     * PyCairo or PyGObject must be installed. 
     * Either Rsvg, PyGObject, or CairoSVG must also be installed. 
 * Without these packages, TkinterWeb will still function properly, but SVG files will not be shown.

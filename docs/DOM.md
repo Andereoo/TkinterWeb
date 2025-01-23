@@ -223,9 +223,4 @@ Parameters
 
 ---
 
-## Questions, bugs, and features
-Please report bugs or request new features in the [issues page](https://github.com/Andereoo/TkinterWeb/issues).
-
-If you need some help using TkinterWeb in your app, also feel free to ask for tips in the issues page.
-
----
+Please report bugs or request new features on the [issues page](https://github.com/Andereoo/TkinterWeb/issues).

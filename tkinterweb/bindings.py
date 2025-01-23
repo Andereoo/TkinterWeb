@@ -1196,7 +1196,9 @@ class TkinterWeb(tk.Widget):
     def finish_download(self, thread):
         self.active_threads.remove(thread)
         if len(self.active_threads) == 0:
-            self.done_loading_func()
+            # call done_loading_func outside of the thread 
+            # this stops bad things from happening when Tcl is also being called in the callback
+            self.after(1, self.done_loading_func)
 
     def fix_css_urls(self, match, url):
         "Make relative uris in CSS files absolute"

@@ -13,7 +13,7 @@ All major operating systems running Python 3+ are supported.
 ## Usage
 
 **TkinterWeb provides:**
-* [A frame to display websites in Tkinter](/docs/HTMLFRAME.md)
+* [A frame to display websites, help files, and any other styled HTML in Tkinter](/docs/HTMLFRAME.md)
 * [A label that can display styled HTML](/docs/HTMLLABEL.md)
 * [A geometry manager to display Tkinter widgets *and HTML elements* together in a Tkinter application](/docs/GEOMETRY.md)
 

@@ -1,5 +1,5 @@
 # TkinterWeb 
-**A fast and lightweight cross-platform webbrowser widget for Tkinter.**
+**A fast and lightweight web browser widget for Tkinter.**
 
 &nbsp;
 &nbsp;
@@ -13,9 +13,9 @@ All major operating systems running Python 3+ are supported.
 ## Usage
 
 **TkinterWeb provides:**
-* [a webbrowser frame to display websites in Tkinter](/docs/HTMLFRAME.md)
-* [a label that can display styled text, tables, and images](/docs/HTMLLABEL.md)
-* [a geometry manager to display Tkinter widgets *and HTML elements* together in a Tkinter application](/docs/GEOMETRY.md)
+* [A webbrowser frame to display websites in Tkinter](/docs/HTMLFRAME.md)
+* [A label that can display styled text, tables, and images](/docs/HTMLLABEL.md)
+* [A geometry manager to display Tkinter widgets *and HTML elements* together in a Tkinter application](/docs/GEOMETRY.md)
 
 **TkinterWeb can be used in any Tkinter application. Here is an example:**
 ```
@@ -75,7 +75,7 @@ See https://github.com/Andereoo/TkinterWeb/blob/main/docs/FAQ.md.
 * Most CSS Pseudo-elements, such as `:hover` and `:active` are also supported. 
 
 **JavaScript:**
-* Javascript is not supported at the moment. It is possible to manipulate the DOM through Python. See [DOM Manipulation with TkinterWeb](/docs/DOM.md).
+* Javascript is not supported, but it is possible to manipulate the DOM through Python. See [DOM Manipulation with TkinterWeb](/docs/DOM.md).
 
 **Images:**
 * TkinterWeb supports nearly 50 different image types through PIL. However, in order to load Scalable Vector Graphic images:

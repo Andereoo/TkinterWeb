@@ -6,16 +6,16 @@
 ## Overview
 **TkinterWeb offers bindings for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, which enables loading HTML and CSS code into Tkinter applications.**
 
-All [major operating systems](https://github.com/Andereoo/TkinterWeb/blob/main/docs/FAQ.md#a-note-on-tkhtml-binaries) running Python 3+ are supported. 
+All [major operating systems](/docs/FAQ.md#a-note-on-tkhtml-binaries) running Python 3+ are supported. 
 
 &nbsp;
 &nbsp;
 ## Usage
 
 **TkinterWeb provides:**
-* [A frame to display websites, help files, and any other styled HTML in Tkinter](/docs/HTMLFRAME.md)
-* [A label that can display styled HTML](/docs/HTMLLABEL.md)
-* [A geometry manager to display Tkinter widgets *and HTML elements* together in a Tkinter application](/docs/GEOMETRY.md)
+* A [frame](/docs/HTMLFRAME.md) widget to display websites, help files, and any other styled HTML in Tkinter
+* A [label](/docs/HTMLLABEL.md) widget that can display styled HTML
+* A [geometry manager](/docs/GEOMETRY.md) to display Tkinter widgets *and HTML elements* together in a Tkinter application
 
 **TkinterWeb can be used in any Tkinter application. Here is an example:**
 ```

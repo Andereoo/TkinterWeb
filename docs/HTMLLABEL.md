@@ -12,21 +12,19 @@ It behaves as a Tkinter Label widget, but allows for displaying HTML documents a
 Here is an example:
 
 ```
+import tkinter as tk
 from tkinterweb import HtmlLabel #import the HtmlLabel widget
-try:
-  import tkinter as tk #python3
-except ImportError:
-  import Tkinter as tk #python2
+
 root = tk.Tk() #create the Tkinter window
 
 ### The important part: create the html widget and attach it to the window
-myhtmllabel = HtmlLabel(root, text='<b style="color:blue">Wow! Tkinter Labels can actually show HTML!</b>') #create the label
+myhtmllabel = HtmlLabel(root, text='<b style="color:blue">Wow! Tkinter Labels can actually show HTML!</b>') # create the label
 
-myhtmllabel.pack() #attach the HtmlLabel widget to the parent window
+myhtmllabel.pack() # attach the HtmlLabel widget to the window
 
 root.mainloop()
 ```
-HTML can also be loaded using the `load_html` command to dynamically change the content of the label.
+HTML can also be loaded using the `load_html` command to change the content of the label on demand.
 
 
 ## Class API 

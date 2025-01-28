@@ -9,5 +9,6 @@ To use the TkinterWeb Demo, simply call the class. Here is an example:
 from tkinterweb import Demo
 Demo()
 ```
+![TkinterWeb](/images/tkinterweb-tkinter.png)
 
 To embed the TkinterWeb browser into your own application, instead use the [HtmlFrame widget](HTMLFRAME.md).

@@ -16,17 +16,15 @@ Tkinter bindings (such as right-clicks or keyboard presses) can also be used on 
 Here is an example:
 
 ```
-from tkinterweb import HtmlFrame #import the HtmlFrame widget
-try:
-  import tkinter as tk #python3
-except ImportError:
-  import Tkinter as tk #python2
-root = tk.Tk() #create the Tkinter window
+import tkinter as tk
+from tkinterweb import HtmlFrame # import the HtmlFrame widget
+
+root = tk.Tk() # create the Tkinter window
 
 ### The important part: create the html widget and attach it to the window
-myhtmlframe = HtmlFrame(root) #create HTML browser
-myhtmlframe.load_html("<h1>Hello, World!</h1>") #Load some HTML code
-myhtmlframe.pack(fill="both", expand=True) #attach the HtmlFrame widget to the parent window
+myhtmlframe = HtmlFrame(root) # create the HtmlFrame widget
+myhtmlframe.load_html("<h1>Hello, World!</h1>") # load some HTML code
+myhtmlframe.pack(fill="both", expand=True) # attach the HtmlFrame widget to the window
 
 root.mainloop()
 ```

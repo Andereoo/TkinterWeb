@@ -20,10 +20,10 @@ All [major operating systems](/docs/FAQ.md#a-note-on-tkhtml-binaries) running Py
 **TkinterWeb can be used in any Tkinter application. Here is an example:**
 ```
 import tkinter as tk
-from tkinterweb import HtmlFrame # import the HTML widget
+from tkinterweb import HtmlFrame # import the HtmlFrame widget
 
 root = tk.Tk() # create the Tkinter window
-frame = HtmlFrame(root) # create the HTML widget
+frame = HtmlFrame(root) # create the HtmlFrame widget
 frame.load_website("http://tkhtml.tcl.tk/tkhtml.html") # load a website
 frame.pack(fill="both", expand=True) # attach the HtmlFrame widget to the window
 root.mainloop()

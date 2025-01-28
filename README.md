@@ -28,7 +28,7 @@ frame.load_website("http://tkhtml.tcl.tk/tkhtml.html") # load a website
 frame.pack(fill="both", expand=True) # attach the HtmlFrame widget to the window
 root.mainloop()
 ```
-![TkinterWeb](/images/tkinterweb.png)
+![TkinterWeb](/images/tkinterweb-tkhtml.png)
 
 Some other tricks, such as handling page title changes, link clicks, and navigation key presses, can be found in the [HtmlFrame documentation](/docs/HTMLFRAME.md#tips-and-tricks).
 

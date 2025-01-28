@@ -1,14 +1,14 @@
 ## *`TkinterWeb.Demo` Documentation*
 
 ## Overview
-**The `Demo` class provides a simple example of TkinterWeb in action. The class, when invoked, opens a Tkinter window with the Tkhtml3 website loaded.**
+**The `Demo` class provides a simple example of TkinterWeb in action by opening a Tkinter window with the Tkinter Wiki loaded.**
 
 ## Usage
-To use the TkinterWeb Demo, simply call the class. Here is an example:
+To test the TkinterWeb demo, use the following:
 ```
 from tkinterweb import Demo
 Demo()
 ```
 ![TkinterWeb](/images/tkinterweb-demo.png)
 
-To embed the TkinterWeb browser into your own application, instead use the [HtmlFrame](HTMLFRAME.md) widget.
+To embed TkinterWeb into your own application, instead use the [HtmlFrame](HTMLFRAME.md) or [HtmlLabel](HTMLLABEL.md) widget.

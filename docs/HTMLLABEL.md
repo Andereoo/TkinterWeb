@@ -63,5 +63,5 @@ Parameters
 
 ---
 
-#### Any other HtmlFrame commands can also be used for the HtmlLabel widget.
+#### All HtmlFrame commands can also be used on the HtmlLabel widget.
 #### For a complete list of avaliable commands, see the [HtmlFrame docs](HTMLFRAME.md#useful-methods)

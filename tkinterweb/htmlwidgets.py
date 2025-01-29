@@ -259,7 +259,8 @@ class HtmlFrame(ttk.Frame):
             if "CERTIFICATE_VERIFY_FAILED" in str(error):
                 python_version = ".".join(platform.python_version_tuple()[:2])
                 self.message_func(
-                    f"This may happen if your Python distribution does not come installed with website certificates.\n\
+                    f"Check that you are using the right url scheme. Some websites only support http.\n\
+This might also happen if your Python distribution does not come installed with website certificates.\n\
 This is a known Python bug on older MacOS systems. \
 Running something along the lines of \"/Applications/Python {python_version}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
 Otherwise, use 'insecure=True' when loading a page to ignore website certificates.")

@@ -72,7 +72,7 @@ See https://github.com/Andereoo/TkinterWeb/blob/main/docs/FAQ.md.
 * Most CSS Pseudo-elements, such as `:hover` and `:active` are also supported. 
 
 **JavaScript:**
-* Javascript is not supported at the moment, but it is possible to manipulate the DOM through Python. See [DOM Manipulation with TkinterWeb](/docs/DOM.md).
+* Javascript is not supported at the moment, but it is possible to manipulate the document through Python. See [DOM Manipulation with TkinterWeb](/docs/DOM.md).
 
 **Images:**
 * TkinterWeb supports nearly 50 different image types through PIL. However, in order to load Scalable Vector Graphic images:

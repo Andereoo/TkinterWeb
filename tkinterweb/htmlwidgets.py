@@ -19,7 +19,7 @@ from tkinter import ttk
 
 
 class HtmlFrame(ttk.Frame):
-    def __init__(self, master, messages_enabled=True, vertical_scrollbar="auto", horizontal_scrollbar=False, scroll_overflow=None, **kw):
+    def __init__(self, master, messages_enabled=True, vertical_scrollbar="auto", horizontal_scrollbar=False, overflow_scroll_frame=None, **kw):
         ttk.Frame.__init__(self, master, **kw)
 
         if messages_enabled:
@@ -28,36 +28,10 @@ class HtmlFrame(ttk.Frame):
             self.message_func = message_func = lambda message: None
 
         # setup scrollbars and HTML widget
-        self.html = html = TkinterWeb(self, message_func, HtmlFrame)
+        self.html = html = TkinterWeb(self, message_func, HtmlFrame, self.manage_vsb, overflow_scroll_frame)
         html.grid(row=0, column=0, sticky=tk.NSEW)
 
         self.document = TkwDocumentObjectModel(html)
-
-        if vertical_scrollbar:
-            if vertical_scrollbar == "auto":
-                self.vsb = vsb = AutoScrollbar(
-                    self, orient=tk.VERTICAL, command=html.yview)
-            else:
-                self.vsb = vsb = ttk.Scrollbar(
-                    self, orient=tk.VERTICAL, command=html.yview)
-
-            vsb.bind("<Enter>", html.on_leave)
-            vsb.bind("<MouseWheel>", self.scroll)
-            vsb.bind("<Button-4>", self.scroll_x11)
-            vsb.bind("<Button-5>", self.scroll_x11)
-            html.bind("<Button-4>", self.overflow_scroll_x11)
-            html.bind("<Button-5>", self.overflow_scroll_x11)
-            self.bind_class(f"{html}.document",
-                            "<MouseWheel>", self.scroll)
-            self.bind_class(html.scrollable_node_tag,
-                            "<MouseWheel>", self.scroll)
-            self.bind_class(html.scrollable_node_tag,
-                            "<Button-4>", self.scroll_x11)
-            self.bind_class(html.scrollable_node_tag,
-                            "<Button-5>", self.scroll_x11)
-
-            html.configure(yscrollcommand=vsb.set)
-            vsb.grid(row=0, column=1, sticky=tk.NSEW)
 
         if horizontal_scrollbar:
             if horizontal_scrollbar == "auto":
@@ -68,16 +42,36 @@ class HtmlFrame(ttk.Frame):
                     self, orient=tk.HORIZONTAL, command=html.xview)
 
             hsb.bind("<Enter>", html.on_leave)
-
             html.configure(xscrollcommand=hsb.set)
-            hsb.grid(row=1, column=0, sticky=tk.NSEW)
+            hsb.grid(row=1, column=0, sticky="nsew")
+
+        self.vsb = vsb = AutoScrollbar(
+            self, orient=tk.VERTICAL, command=self.html.yview)
+        self.vsb_type = None
+
+        vsb.bind("<Enter>", self.html.on_leave)
+        self.html.configure(yscrollcommand=vsb.set)
+        vsb.grid(row=0, column=1, sticky="nsew")
+
+        self.manage_vsb(vertical_scrollbar)
+
+        # for some reason, binding to Html only works on Linux and binding to html.document only works on Windows
+        # html.document only applies to the document it is bound to (which makes things easy)
+        # Html fires on all documents (i.e. <iframe> elements), so it has to be handled slightly differently
+        if not overflow_scroll_frame:
+            self.bind_class("Html", "<Button-4>", self.html.scroll_x11)
+            self.bind_class("Html", "<Button-5>", self.html.scroll_x11)
+        self.bind_class(f"{self.html}.document", "<MouseWheel>", self.html.scroll)
+
+        self.bind_class(self.html.scrollable_node_tag, "<Button-4>", lambda event, widget=html: self.html.scroll_x11(event, widget))
+        self.bind_class(self.html.scrollable_node_tag, "<Button-5>", lambda event, widget=html: self.html.scroll_x11(event, widget))
+        self.bind_class(self.html.scrollable_node_tag, "<MouseWheel>", self.html.scroll)
 
         self.bind("<Leave>", html.on_leave)
         self.bind("<Enter>", html.on_mouse_motion)
 
         # state and settings variables
         self.master = master
-        self.scroll_overflow = scroll_overflow
         self.current_url = ""
         self.cursor = ""
         self.accumulated_styles = []
@@ -127,6 +121,14 @@ class HtmlFrame(ttk.Frame):
         self.yview_moveto = self.html.yview_moveto
         self.yview_scroll = self.html.yview_scroll
 
+    def manage_vsb(self, allow):
+        "Show or hide the scrollbars"
+        if allow == "auto":
+            allow = 2
+        if self.vsb_type != allow:
+            self.vsb.set_type(allow)
+            self.vsb_type = allow
+
     def yview_toelement(self, selector, index=0):
         "Find an element that matches a given CSS selectors and scroll to it"
         nodes = self.html.search(selector)
@@ -154,8 +156,8 @@ class HtmlFrame(ttk.Frame):
     def load_url(self, url, decode=None, force=False, insecure=None):
         """Load a website (https:// or http://) or a file (file://) from the specified URL.
         We use threading here to prevent the GUI from freezing while fetching the website.
-        Technically Tkinter isn't threadsafe and will crash when doing this, but under certain circumstances we can get away with it.
-        As long as we do not use the .join() method and no errors are raised in the mainthread, we should be okay.
+        Technically Tkinter isn't threadsafe, 
+        but as long as we do not use the .join() method and no errors are raised in the mainthread, we can get away with it.
         """
         self.waiting_for_reset = True
 
@@ -452,38 +454,6 @@ Otherwise, use 'insecure=True' when loading a page to ignore website certificate
     def get_currently_selected_text(self):
         "Get the text that is currently highlighted/selected."
         return self.html.get_selection()
-
-    def scroll(self, event):
-        "Handle mouse/touchpad scrolling"
-        yview = self.html.yview()
-        if self.scroll_overflow and yview[0] == 0 and event.delta > 0:
-            self.scroll_overflow.scroll(event)
-        elif self.scroll_overflow and yview[1] == 1 and event.delta < 0:
-            self.scroll_overflow.scroll(event)
-        elif platform.system() == "Darwin":
-            self.html.yview_scroll(int(-1*event.delta), "units")
-        else:
-            self.html.yview_scroll(int(-1*event.delta/30), "units")
-
-    def scroll_x11(self, event):
-        yview = self.html.yview()
-        if event.num == 4:
-            if self.scroll_overflow and yview[0] == 0:
-                self.scroll_overflow.scroll_x11(event)
-            else:
-                self.html.yview_scroll(-4, "units")
-        else:
-            if self.scroll_overflow and yview[1] == 1:
-                self.scroll_overflow.scroll_x11(event)
-            else:
-                self.html.yview_scroll(4, "units")
-
-    def overflow_scroll_x11(self, event):
-        yview = self.html.yview()
-        if event.num == 4 and self.scroll_overflow and yview[0] == 0:
-            self.scroll_overflow.scroll_x11(event)
-        elif self.scroll_overflow and yview[1] == 1:
-            self.scroll_overflow.scroll_x11(event)
 
     def load_html(self, html_source, base_url=None):
         "Reset parser and send html code to it"

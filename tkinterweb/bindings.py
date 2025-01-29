@@ -60,10 +60,11 @@ class Combobox(tk.Widget):
 class TkinterWeb(tk.Widget):
     "Bindings for the Tkhtml3 HTML widget"
 
-    def __init__(
-        self, master, message_func, embed_obj, scroll_overflow=True, cfg={}, **kwargs
-    ):
+    def __init__(self, master, message_func, embed_obj, manage_vsb_func, overflow_scroll_frame=None, cfg={}, **kwargs):
         self.message_func = message_func
+        self.manage_vsb_func = manage_vsb_func
+        self.overflow_scroll_frame = overflow_scroll_frame
+
         folder = get_tkhtml_folder()
 
         # provide OS information for troubleshooting
@@ -138,11 +139,6 @@ class TkinterWeb(tk.Widget):
         self.insecure_https = False
         self.embedded_widget_attr_name = "widgetid"
 
-        if scroll_overflow:
-            self.scroll_overflow = master
-        else:
-            self.scroll_overflow = None
-
         # widget status variables
         self.embed_obj = embed_obj
         self.style_count = 0
@@ -163,6 +159,8 @@ class TkinterWeb(tk.Widget):
         self.current_node = None
         self.hovered_nodes = []
         self.current_cursor = ""
+        self.root_nodes = []
+        self.vsb_type = 2
 
         # enable form resetting and submission
         self.form_get_commands = {}
@@ -216,6 +214,8 @@ class TkinterWeb(tk.Widget):
         self.register_handler("node", "iframe", self.on_iframe)
         self.register_handler("node", "table", self.on_table)
         self.register_handler("node", "img", self.on_image_node)
+        self.register_handler("parse", "body", self.on_body) # for some reason using "node" and "body" doesn't return anyting
+        self.register_handler("parse", "html", self.on_body) # for some reason using "node" and "html" doesn't return anyting
 
     def placeholder(self, *args, **kwargs):
         """Blank placeholder function. The only purpose of this is to
@@ -223,6 +223,7 @@ class TkinterWeb(tk.Widget):
 
     def parse(self, html):
         "Parse HTML code"
+        self.root_nodes = []
         self.downloads_have_occured = False
         self.unstoppable = True
         html = self.crash_prevention(html)
@@ -231,6 +232,7 @@ class TkinterWeb(tk.Widget):
             self.setup_widgets()
         # We assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
         if not self.downloads_have_occured:
+            self.set_overflow()
             self.done_loading_func()
 
     def update_default_style(self, stylesheet=None):
@@ -436,12 +438,14 @@ class TkinterWeb(tk.Widget):
         A document fragment isn't part of the active document but is comprised of nodes like the active document.
         Changes made to the fragment don't affect the document.
         Returns a root node."""
+        self.root_nodes = []
         self.downloads_have_occured = False
         self.unstoppable = True
         html = self.crash_prevention(html)
         fragment = self.tk.call(self._w, "fragment", html)
         # We assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
         if not self.downloads_have_occured:
+            self.set_overflow()
             self.done_loading_func()
         return fragment
 
@@ -832,16 +836,11 @@ class TkinterWeb(tk.Widget):
             return
         widgetid = ScrolledTextBox(
             self,
-            scroll_overflow=self.scroll_overflow,
             borderwidth=0,
             selectborderwidth=0,
             highlightthickness=0,
         )
-        widgetid.bind("<<ScrollbarShown>>", widgetid.reset_bindtags)
-        widgetid.bind(
-            "<<ScrollbarHidden>>",
-            lambda event, widgetid=widgetid: self.add_bindtags(widgetid),
-        )
+
         self.form_get_commands[node] = lambda: widgetid.get("1.0", "end-1c")
         self.form_reset_commands[node] = lambda: widgetid.delete("0.0", "end")
         widgetid.insert("1.0", self.get_node_text(self.get_node_children(node), "-pre"))
@@ -1030,6 +1029,11 @@ class TkinterWeb(tk.Widget):
             if state != self.radiobutton_token:
                 widgetid.configure(state="disabled")
 
+    def on_body(self, node, index):
+        "Note the document's root nodes"
+        "Once the document is loaded, they will be checked for the overflow property"
+        self.root_nodes.append(node)
+
     def on_input_change(self, widgetid):
         widgetid.event_generate("<<Modified>>")
         return True
@@ -1199,6 +1203,7 @@ class TkinterWeb(tk.Widget):
             # call done_loading_func outside of the thread 
             # this stops bad things from happening when Tcl is also being called in the callback
             self.after(1, self.done_loading_func)
+            self.after(1, self.set_overflow)
 
     def fix_css_urls(self, match, url):
         "Make relative uris in CSS files absolute"
@@ -1407,15 +1412,7 @@ class TkinterWeb(tk.Widget):
         self.message_func(f"A form has been submitted to {shorten(url)}.")
         self.form_submit_func(url, data, method)
 
-    def handle_node_replacement(
-        self,
-        node,
-        widgetid,
-        deletecmd,
-        stylecmd=None,
-        allowscrolling=True,
-        handledelete=True,
-    ):
+    def handle_node_replacement(self, node, widgetid, deletecmd, stylecmd=None, allowscrolling=True, handledelete=True, ):
         "Replace a Tkhtml3 node with a Tkinter widget"
         if stylecmd:
             if handledelete:
@@ -1493,6 +1490,26 @@ class TkinterWeb(tk.Widget):
                 fg = "white"
             widgetid.configure(background=bg, foreground=fg, font=font)
 
+    def set_overflow(self):
+        "Look for and handle the overflow property"
+        changed = False
+        for node in self.root_nodes:
+            overflow = self.get_node_property(node, "overflow")
+            if overflow != "visible": # visible is the tkhtml default, so it's largely meaningless
+                overflow_map = {"hidden": 0,
+                                "auto": 2,
+                                "visible": 1,
+                                "scroll": 1,
+                                "clip": 0}
+                overflow = overflow_map[overflow]
+                self.manage_vsb_func(overflow)
+                self.vsb_type = overflow
+                changed = True
+                break
+        if not changed: # assume auto if nothing is set
+            self.manage_vsb_func(2)
+            self.vsb_type = 2
+
     def set_cursor(self, cursor):
         "Set document cursor"
 
@@ -1554,7 +1571,6 @@ class TkinterWeb(tk.Widget):
 
     def find_text(self, searchtext, select, ignore_case, highlight_all):
         "Search for and highlight specific text in the document"
-
         self.clear_selection()
 
         nmatches = 0
@@ -1652,7 +1668,7 @@ class TkinterWeb(tk.Widget):
             return nmatches, selected, matches
 
     def create_iframe(self, node, url, html=None):
-        widgetid = self.embed_obj(self, False, scroll_overflow=self.scroll_overflow)
+        widgetid = self.embed_obj(self, False, overflow_scroll_frame=self)
         widgetid.copy_settings(self)
 
         if html:
@@ -1755,3 +1771,38 @@ class TkinterWeb(tk.Widget):
         self.clipboard_clear()
         self.clipboard_append(selected_text)
         self.message_func(f"The text '{selected_text}' has been copied to the clipboard.")
+        
+    def scroll_x11(self, event, widget=None):
+        "Manage scrolling on Linux"
+        if not widget:
+            widget = event.widget
+        if widget.vsb_type == 0:
+            return
+            
+        yview = widget.yview()  
+
+        if event.num == 4:
+            if widget.overflow_scroll_frame and yview[0] == 0:
+                widget.overflow_scroll_frame.scroll_x11(event, widget.overflow_scroll_frame)
+            else:
+                widget.yview_scroll(-4, "units")
+        else:
+            if widget.overflow_scroll_frame and yview[1] == 1:
+                widget.overflow_scroll_frame.scroll_x11(event, widget.overflow_scroll_frame)
+            else:
+                widget.yview_scroll(4, "units")
+
+    def scroll(self, event):
+        "Manage scrolling on Windows/MacOS"
+        if self.vsb_type == 0:
+            return
+        yview = self.yview()      
+
+        if self.overflow_scroll_frame and yview[0] == 0 and event.delta > 0:
+            self.overflow_scroll_frame.scroll(event)
+        elif self.overflow_scroll_frame and yview[1] == 1 and event.delta < 0:
+            self.overflow_scroll_frame.scroll(event)
+        elif platform.system() == "Darwin":
+            self.yview_scroll(int(-1*event.delta), "units")
+        else:
+            self.yview_scroll(int(-1*event.delta/30), "units")

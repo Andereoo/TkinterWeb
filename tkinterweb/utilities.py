@@ -39,7 +39,7 @@ except (ImportError, SyntaxError, ):
 
 
 HEADER = {
-    "User-Agent": "Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha"
+    "User-Agent": "Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha" #Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 Firefox/4.0
 }
 BUILTINPAGES = {
     "about:blank": "<html><body></body></html>",
@@ -550,13 +550,32 @@ combobox_loaded = False
 
 class AutoScrollbar(ttk.Scrollbar):
     "Scrollbar that hides itself when not needed."
+    def __init__(self, *args, scroll=2, **kwargs):
+        ttk.Scrollbar.__init__(self, *args, **kwargs)
+        self.scroll = scroll
+        self.visible = True
 
     def set(self, lo, hi):
-        if float(lo) <= 0.0 and float(hi) >= 1.0:
+        if self.visible and (self.scroll == 0):
             self.tk.call("grid", "remove", self)
-        else:
+            self.visible = False
+        elif (self.visible == False) and (self.scroll == 1):
             self.grid()
+            self.visible = True
+        elif self.scroll == 2:
+            if float(lo) <= 0.0 and float(hi) >= 1.0:
+                self.tk.call("grid", "remove", self)
+                self.visible = False
+            else:
+                self.grid()
+                self.visible = True
         ttk.Scrollbar.set(self, lo, hi)
+    
+    def set_type(self, scroll):
+        if self.scroll != scroll:
+            self.scroll = scroll
+            lo, hi = self.get()
+            self.set(lo, hi)
 
     def pack(self, **kw):
         raise tk.TclError("cannot use pack with this widget")
@@ -568,20 +587,19 @@ class AutoScrollbar(ttk.Scrollbar):
 class ScrolledTextBox(tk.Frame):
     "Text widget with a scrollbar."
 
-    def __init__(self, parent, scroll_overflow=None, **kwargs):
+    def __init__(self, parent, **kwargs):
 
         tk.Frame.__init__(self, parent)
-
-        self.scroll_overflow = scroll_overflow
+        self.parent = parent
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.tbox = tbox = tk.Text(self, **kwargs)
         tbox.grid(row=0, column=0, sticky="nsew")
-
+    
         self.vsb = vsb = AutoScrollbar(self, command=tbox.yview)
         vsb.grid(row=0, column=1, sticky="nsew")
-        tbox["yscrollcommand"] = self.check
+        tbox.configure(yscrollcommand=vsb.set)
 
         tbox.bind("<MouseWheel>", self.scroll)
         tbox.bind("<Button-4>", self.scroll_x11)
@@ -589,30 +607,17 @@ class ScrolledTextBox(tk.Frame):
 
     def scroll(self, event):
         yview = self.tbox.yview()
-        if self.scroll_overflow and yview[0] == 0 and event.delta > 0:
-            self.scroll_overflow.scroll(event)
-        elif self.scroll_overflow and yview[1] == 1 and event.delta < 0:
-            self.scroll_overflow.scroll(event)
+        if yview[0] == 0 and event.delta > 0:
+            self.parent.scroll(event)
+        elif yview[1] == 1 and event.delta < 0:
+            self.parent.scroll(event)
 
     def scroll_x11(self, event):
         yview = self.tbox.yview()
-        if event.num == 4 and self.scroll_overflow and yview[0] == 0:
-            self.scroll_overflow.scroll_x11(event)
-        elif event.num == 5 and self.scroll_overflow and yview[1] == 1:
-            self.scroll_overflow.scroll_x11(event)
-
-    def check(self, *args):
-        self.vsb.set(*args)
-        if self.vsb.winfo_ismapped():
-            self.event_generate("<<ScrollbarShown>>")
-        else:
-            self.event_generate("<<ScrollbarHidden>>")
-
-    def bindtags(self, *args):
-        return self.tbox.bindtags(*args)
-
-    def reset_bindtags(self, event=None):
-        self.tbox.bindtags((self.tbox, "Text", ".", "all"))
+        if event.num == 4 and yview[0] == 0:
+            self.parent.scroll_x11(event, self.parent)
+        elif event.num == 5 and yview[1] == 1:
+            self.parent.scroll_x11(event, self.parent)
 
     def configure(self, *args, **kwargs):
         self.tbox.configure(*args, **kwargs)

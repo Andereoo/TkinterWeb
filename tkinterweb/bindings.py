@@ -159,7 +159,6 @@ class TkinterWeb(tk.Widget):
         self.current_node = None
         self.hovered_nodes = []
         self.current_cursor = ""
-        self.root_nodes = []
         self.vsb_type = 2
 
         # enable form resetting and submission
@@ -223,16 +222,16 @@ class TkinterWeb(tk.Widget):
 
     def parse(self, html):
         "Parse HTML code"
-        self.root_nodes = []
         self.downloads_have_occured = False
         self.unstoppable = True
+        self.vsb_type = 2 # reset the scrollbars
+        self.manage_vsb_func(2)
         html = self.crash_prevention(html)
         self.tk.call(self._w, "parse", html)
         if self.embedded_widget_attr_name in html:
             self.setup_widgets()
-        # We assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
+        # we assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
         if not self.downloads_have_occured:
-            self.set_overflow()
             self.done_loading_func()
 
     def update_default_style(self, stylesheet=None):
@@ -438,14 +437,12 @@ class TkinterWeb(tk.Widget):
         A document fragment isn't part of the active document but is comprised of nodes like the active document.
         Changes made to the fragment don't affect the document.
         Returns a root node."""
-        self.root_nodes = []
         self.downloads_have_occured = False
         self.unstoppable = True
         html = self.crash_prevention(html)
         fragment = self.tk.call(self._w, "fragment", html)
         # We assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
         if not self.downloads_have_occured:
-            self.set_overflow()
             self.done_loading_func()
         return fragment
 
@@ -1030,9 +1027,12 @@ class TkinterWeb(tk.Widget):
                 widgetid.configure(state="disabled")
 
     def on_body(self, node, index):
-        "Note the document's root nodes"
-        "Once the document is loaded, they will be checked for the overflow property"
-        self.root_nodes.append(node)
+        "Wait for style changes on the root node"
+        self.tk.call(node,
+                    "replace",
+                    node,
+                    "-stylecmd",
+                    self.register(lambda node=node: self.set_overflow(node)))
 
     def on_input_change(self, widgetid):
         widgetid.event_generate("<<Modified>>")
@@ -1203,7 +1203,6 @@ class TkinterWeb(tk.Widget):
             # call done_loading_func outside of the thread 
             # this stops bad things from happening when Tcl is also being called in the callback
             self.after(1, self.done_loading_func)
-            self.after(1, self.set_overflow)
 
     def fix_css_urls(self, match, url):
         "Make relative uris in CSS files absolute"
@@ -1412,7 +1411,7 @@ class TkinterWeb(tk.Widget):
         self.message_func(f"A form has been submitted to {shorten(url)}.")
         self.form_submit_func(url, data, method)
 
-    def handle_node_replacement(self, node, widgetid, deletecmd, stylecmd=None, allowscrolling=True, handledelete=True, ):
+    def handle_node_replacement(self, node, widgetid, deletecmd, stylecmd=None, allowscrolling=True, handledelete=True):
         "Replace a Tkhtml3 node with a Tkinter widget"
         if stylecmd:
             if handledelete:
@@ -1490,25 +1489,18 @@ class TkinterWeb(tk.Widget):
                 fg = "white"
             widgetid.configure(background=bg, foreground=fg, font=font)
 
-    def set_overflow(self):
+    def set_overflow(self, node):
         "Look for and handle the overflow property"
-        changed = False
-        for node in self.root_nodes:
-            overflow = self.get_node_property(node, "overflow")
-            if overflow != "visible": # visible is the tkhtml default, so it's largely meaningless
-                overflow_map = {"hidden": 0,
-                                "auto": 2,
-                                "visible": 1,
-                                "scroll": 1,
-                                "clip": 0}
-                overflow = overflow_map[overflow]
-                self.manage_vsb_func(overflow)
-                self.vsb_type = overflow
-                changed = True
-                break
-        if not changed: # assume auto if nothing is set
-            self.manage_vsb_func(2)
-            self.vsb_type = 2
+        overflow = self.get_node_property(node, "overflow")
+        if overflow != "visible": # visible is the tkhtml default, so it's largely meaningless
+            overflow_map = {"hidden": 0,
+                            "auto": 2,
+                            "visible": 1,
+                            "scroll": 1,
+                            "clip": 0}
+            overflow = overflow_map[overflow]
+            self.manage_vsb_func(overflow)
+            self.vsb_type = overflow
 
     def set_cursor(self, cursor):
         "Set document cursor"

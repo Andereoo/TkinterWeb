@@ -4,7 +4,7 @@
 &nbsp;
 &nbsp;
 ## Overview
-**TkinterWeb offers bindings for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, which enables loading HTML and CSS code into Tkinter applications.**
+**TkinterWeb offers bindings for the Tkhtml3 widget from http://tkhtml.tcl.tk, which enables displaying HTML and CSS code in Tkinter applications.**
 
 All [major operating systems](/docs/FAQ.md#a-note-on-tkhtml-binaries) running Python 3+ are supported. 
 
@@ -99,3 +99,4 @@ Thanks to the [BRL-CAD project](https://github.com/BRL-CAD/brlcad) for providing
 Thanks to [Google Fonts](https://github.com/google/fonts) for providing the font used for generating alternate text when images fail to load.
 
 A special thanks to everyone else who helped this project by reporting bugs, creating pull requests, and providing suggestions!
+

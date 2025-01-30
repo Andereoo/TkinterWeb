@@ -37,31 +37,6 @@ else:
             except Exception:
                 rsvgimport = None
 
-def textimage(name, alt, nodebox, font_type, font_size, threshold):
-    font = ImageFont.truetype(font_type, font_size)
-    if len(nodebox) == 4:
-        width = nodebox[2]-nodebox[0]
-        height = nodebox[3]-nodebox[1]
-        if (width < threshold) or (height < threshold):
-            try:
-                width, height = font.getsize(alt)
-            except AttributeError:
-                left, top, right, bottom = font.getbbox(alt)
-                width = right - left
-                height = bottom
-    else:
-        try:
-            width, height = font.getsize(alt)
-        except AttributeError:
-            left, top, right, bottom = font.getbbox(alt)
-            width = right - left
-            height = bottom
-            
-    image = Image.new('RGBA', (width, height))
-    draw = ImageDraw.Draw(image)
-    draw.text((0,0), alt, fill=(0, 0, 0), font=font)
-    image = PhotoImage(image, name=name)
-    return image
 
 def newimage(data, name, imagetype, invert):
     image = None

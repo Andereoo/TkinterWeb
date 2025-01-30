@@ -729,7 +729,7 @@ class TkinterWeb(tk.Widget):
                     self.image_thread_check(url, name)
                     done = True
             if not done:
-                self.load_alt_image(url, name)
+                self.load_alt_text(url, name)
                 self.message_func(
                     f"The image {shorten(url)} could not be shown because it is not supported yet."
                 )
@@ -1267,26 +1267,14 @@ class TkinterWeb(tk.Widget):
 
         self.finish_download(thread)
 
-    def load_alt_image(self, url, name):
-        if (url in self.image_directory) and self.image_alternate_text_enabled:
+    def load_alt_text(self, url, name):
+        if (url in self.image_directory):
             node = self.image_directory[url]
-            nodebox = self.bbox(node)
-            alt = self.get_node_attribute(self.image_directory[url], "alt")
-            if alt:
-                image = textimage(
-                    name,
-                    alt,
-                    nodebox,
-                    self.image_alternate_text_font,
-                    self.image_alternate_text_size,
-                    self.image_alternate_text_threshold,
-                )
-                self.loaded_images.add(image)
-            elif not self.ignore_invalid_images:
-                image = newimage(
-                    BROKENIMAGE, name, "image/png", self.image_inversion_enabled
-                )
-                self.loaded_images.add(image)
+            alt = self.get_node_attribute(node, "alt")
+            if alt and self.image_alternate_text_enabled: self.insert_node(node, self.parse_fragment(alt))
+        elif not self.ignore_invalid_images:
+            image = newimage(BROKENIMAGE, name, "image/png", self.image_inversion_enabled)
+            self.loaded_images.add(image)
 
     def fetch_images(self, url, name, urltype):
         "Fetch images and display them in the document"
@@ -1309,25 +1297,29 @@ class TkinterWeb(tk.Widget):
                 if image:
                     self.loaded_images.add(image)
                     self.image_setup_func(url, True)
+                    for node in self.search("img"):
+                        if self.get_node_attribute(node, "src") == url:
+                            if self.get_node_children(node): self.delete_node(self.get_node_children(node))
+                            break
                 elif error == "no_pycairo":
-                    self.load_alt_image(url, name)
+                    self.load_alt_text(url, name)
                     self.message_func(
                         "Scalable Vector Graphics could not be shown because Pycairo is not installed but is required to parse .svg files."
                     )
                     self.image_setup_func(url, False)
                 elif error == "no_rsvg":
-                    self.load_alt_image(url, name)
+                    self.load_alt_text(url, name)
                     self.message_func(
                         "Scalable Vector Graphics could not be shown because Rsvg is not installed but is required to parse .svg files."
                     )
                     self.image_setup_func(url, False)
                 elif error == "corrupt":
-                    self.load_alt_image(url, name)
+                    self.load_alt_text(url, name)
                     self.message_func(f"The image {url} could not be shown.")
                     self.image_setup_func(url, False)
 
         except Exception:
-            self.load_alt_image(url, name)
+            self.load_alt_text(url, name)
             self.message_func(
                 f"The image {url} could not be shown because it is corrupt or is not supported yet."
             )

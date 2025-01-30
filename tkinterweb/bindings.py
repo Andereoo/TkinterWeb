@@ -1798,3 +1798,7 @@ class TkinterWeb(tk.Widget):
             self.yview_scroll(int(-1*event.delta), "units")
         else:
             self.yview_scroll(int(-1*event.delta/30), "units")
+
+    def image(self, full=""):
+        image = self.tk.call(self._w, "image", full)
+        return {image: self.tk.call(image, "data")}

@@ -11,7 +11,7 @@ from urllib.parse import urldefrag, urlparse
 from bindings import TkinterWeb
 from utilities import (WORKING_DIR, AutoScrollbar, StoppableThread, cachedownload, download,
                        notifier, threadname)
-from imageutils import newimage
+from imageutils import newimage, createRGBimage
 from dom import TkwDocumentObjectModel
 
 import tkinter as tk
@@ -492,6 +492,14 @@ Otherwise, use 'insecure=True' when loading a page to ignore website certificate
             self.accumulated_styles.append(css_source)
         else:
             self.html.parse_css(data=css_source, override=True)
+
+    def screenshot(self, name="", full=False):
+        image = self.html.image("-full" if full else None)
+        data = image[next(iter(image))]
+        height = len(data)
+        width = len(data[0].split())
+        self.message_func(f"Screenshot taken: {name} {width}x{height}.")
+        return createRGBimage(data, name, width, height)
 
 
 class HtmlLabel(HtmlFrame):

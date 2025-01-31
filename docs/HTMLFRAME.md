@@ -187,7 +187,7 @@ Parameters
 
 ---
 #### `load_url(url, decode=None, force=False, insecure=False)`
-Loads and parses html from the given url. A local file will be loaded if the url begins with "file://". If the url begins with "https://" or "http://", a website will be loaded. 
+Loads and parses html from the given url. A local file will be loaded if the url begins with "file://". If the url begins with "https://" or "http://", a website will be loaded. If the url begins with "view-source:", the source code of the webpage will be displayed. Loading "about:tkinterweb" will open a page with debugging information.
 
 Parameters
 * **url** *(string)* - Specifies the url to load.

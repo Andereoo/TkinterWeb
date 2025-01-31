@@ -16,9 +16,16 @@ try:
     import cairo
     cairoimport = True
 except ImportError:
-    cairoimport = False
-    rsvgimport = None
-else:
+    try:
+        import gi
+        gi.require_version('cairo', '1.0')
+        from gi.repository import cairo
+        cairoimport = True
+    except ImportError:
+        cairoimport = False
+        rsvgimport = None
+
+if cairoimport:
     try:
         import rsvg
         rsvgimport = "rsvg"
@@ -85,7 +92,8 @@ def newimage(data, name, imagetype, invert, return_image=False):
             png_io = BytesIO()
             img.write_to_png(png_io)
             svg.close()
-            photoimage = PhotoImage(name=name, data=png_io.getvalue())
+            image = Image.open(png_io)
+            photoimage = PhotoImage(image, name=name)
         elif rsvgimport == 'rsvg':
             svg = rsvg.Handle(data=data)
             img = cairo.ImageSurface(
@@ -95,7 +103,8 @@ def newimage(data, name, imagetype, invert, return_image=False):
             png_io = BytesIO()
             img.write_to_png(png_io)
             svg.close()
-            photoimage = PhotoImage(name=name, data=png_io.getvalue())
+            image = Image.open(png_io)
+            photoimage = PhotoImage(image, name=name)
         elif rsvgimport == 'cairosvg':
             image_data = cairosvg.svg2png(bytestring=data)
             image = Image.open(BytesIO(image_data))
@@ -134,16 +143,17 @@ def blankimage(name):
     return image
 
 class ImageLabel(Label):
-    def __init__(self, parent, bg, *args, **kwargs):
-        Label.__init__(self, parent, *args, bg=bg, **kwargs)
+    def __init__(self, parent, *args, **kwargs):
+        Label.__init__(self, parent, *args, **kwargs)
 
         self.html = parent
-        self.background = bg
         self.original_image = None
         self.old_height = 0
         self.old_width = 0
         self.page_zoom = 1.0
         self.image_count = 0
+
+        self.image_padding = 10
     
     def set_zoom(self, multiplier):
         self.page_zoom = multiplier
@@ -152,20 +162,18 @@ class ImageLabel(Label):
     def load_image(self, data, filetype):
         self.image_count += 1
         self.image, error, self.current_image = newimage(data, f"_htmlframe_img_{id(self)}_{self.image_count}_", filetype, self.html.image_inversion_enabled, True)
+        if not self.image:
+            raise Exception("The image requested is either corrupt or not supported")
         self.original_image = self.current_image
         self.original_width, self.original_height = self.original_image.size
         self.current_width, self.current_height = self.original_image.size
         
-        self.configure(image=self.image)
+        self.config(image=self.image)
         self.handle_resize(None, self.html.winfo_width(), self.html.winfo_height(), True)
         self.html.bind("<Configure>", self.handle_resize)
         
-        # respect dark mode
-        # a bit patchy but more foolproof than getting the body background color
-        if self.html.dark_theme_enabled: 
-            self.config(bg="#0d0b1a")
-        else:
-            self.config(bg=self.background)
+        body = self.html.search("body")[0]
+        self.config(bg=self.html.get_node_property(body, "background-color"))
     
     def reset(self):
         if self.original_image:
@@ -178,30 +186,27 @@ class ImageLabel(Label):
         if not height:
             height = event.height
 
-        if height > 15 and width > 15 and self.original_image:
+        if height > self.image_padding+5 and width > self.image_padding+5 and self.original_image:
             if force or height != self.old_height or width != self.old_width:
                 self.configure(height=height)
                 self.configure(width=width)
                 self.old_height = height
                 self.old_width = width
 
-                try:
-                    if self.old_width < self.original_width * self.page_zoom or self.old_height < self.original_height * self.page_zoom:
-                        scale_factor = min(self.old_width / self.original_width, self.old_height / self.original_height)
-                        new_width = int(float(self.original_width) * scale_factor)
-                        new_height = int(float(self.original_height) * scale_factor)
-                        current_image = self.original_image.resize((new_width - 10, new_height - 10), Image.NEAREST)
-                        self.current_width = new_width
-                        self.current_height = new_height
-                        self.image = PhotoImage(current_image)
-                        self.config(image=self.image)
-                    elif force or self.current_width != self.original_width or self.current_height != self.original_height:
-                        new_width = int(float(self.original_width) * self.page_zoom)
-                        new_height = int(float(self.original_height) * self.page_zoom)
-                        current_image = self.original_image.resize((new_width - 10, new_height - 10), Image.NEAREST)
-                        self.current_width = self.original_width
-                        self.current_height = self.original_height
-                        self.image = PhotoImage(current_image)
-                        self.config(image=self.image)
-                except ValueError:
-                    return
+                if self.old_width < self.original_width * self.page_zoom or self.old_height < self.original_height * self.page_zoom:
+                    scale_factor = min(self.old_width / self.original_width, self.old_height / self.original_height)
+                    new_width = int(float(self.original_width) * scale_factor)
+                    new_height = int(float(self.original_height) * scale_factor)
+                    current_image = self.original_image.resize((new_width - self.image_padding, new_height - self.image_padding), Image.NEAREST)
+                    self.current_width = new_width
+                    self.current_height = new_height
+                    self.image = PhotoImage(current_image)
+                    self.config(image=self.image)
+                elif force or self.current_width != self.original_width or self.current_height != self.original_height:
+                    new_width = int(float(self.original_width) * self.page_zoom)
+                    new_height = int(float(self.original_height) * self.page_zoom)
+                    current_image = self.original_image.resize((new_width - self.image_padding, new_height - self.image_padding), Image.NEAREST)
+                    self.current_width = self.original_width
+                    self.current_height = self.original_height
+                    self.image = PhotoImage(current_image)
+                    self.config(image=self.image)

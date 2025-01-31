@@ -35,7 +35,7 @@ class HtmlFrame(ttk.Frame):
 
         self.background = ttk.Style().lookup('TFrame', 'background')
 
-        self.image_label = ImageLabel(self.html, self.background, anchor='center')
+        self.image_label = ImageLabel(self.html, anchor='center')
 
         self.hsb = hsb = AutoScrollbar(self, orient=tk.HORIZONTAL, command=html.xview)
         self.hsb_type = None
@@ -249,11 +249,11 @@ class HtmlFrame(ttk.Frame):
                         self.load_html(BUILTINPAGES["about:view-source"].format(self.background, length*9, data), newurl)
                     elif "image" in filetype:
                         self.url_change_func(newurl)
-                        # arguably it's much easier to simply pass the image straight to the HTML engine
-                        # however, it isn't possible to vertically align an image of unknown height in Tkhtml
+                        # arguably it's much easier to simply pass the image to the HTML engine
+                        # but I like centered content and it's not possible to vertically align an image in Tkhtml without explicitly setting its height
                         # so instead we embed a label widget in the page and deal with page resizing and zooming ourselves
-                        # since we're only loading an image it doesn't matter if it doesn't support find_text, selection, etc.
-                        # it's a bit hacky, but hey, it works and looks very snazzy
+                        # since we're loading an image it doesn't matter if it's a Label widget that doesn't support find_text, selection, etc.
+                        # its a bit hacky, but hey, it works and looks very snazzy
                         self.load_html(BUILTINPAGES["about:image"].format(self.background, str(self.image_label)))
                         self.image_label.load_image(data, filetype)
                     else:

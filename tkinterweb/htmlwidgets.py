@@ -35,7 +35,7 @@ class HtmlFrame(ttk.Frame):
 
         self.background = ttk.Style().lookup('TFrame', 'background')
 
-        self.image_label = ImageLabel(self.html, bg=self.background, anchor='center')
+        self.image_label = ImageLabel(self.html, self.background, anchor='center')
 
         self.hsb = hsb = AutoScrollbar(self, orient=tk.HORIZONTAL, command=html.xview)
         self.hsb_type = None

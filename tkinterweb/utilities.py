@@ -333,7 +333,7 @@ PRE, PLAINTEXT, XMP {
   display: block;
   white-space: pre;
   margin: 1em 0;
-  font-family: courier;
+  font-family: monospace;
 }
 /* Formatting for <mark> */
 MARK {
@@ -523,7 +523,7 @@ SPAN[spancontent]:after {
 DARKSTYLE = """
 /* Additional stylesheet to be loaded whenever dark mode is enabled. */
 /* Display properties document body. */
-BODY {
+HTML, BODY {
   background-color: #0d0b1a;
   color: #ffffff;
 }
@@ -546,16 +546,17 @@ ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "tkhtml")
 WORKING_DIR = os.getcwd()
 PLATFORM = platform.uname()
 BUILTINPAGES = {
-    "about:blank": "<html style='background-color:{}'><head><title>about:blank</title></head><body></body></html>",
-    "about:tkinterweb": "<html style='background-color:{}'><head><title>about:tkinterweb</title><style>code{{display:block}}</style></head><body> \
+    "about:blank": "<html><head><style>html{{background-color:{}}}</style><title>about:blank</title></head><body></body></html>",
+    "about:tkinterweb": "<html><head><style>html{{background-color:{}}}</style><title>about:tkinterweb</title><style>code{{display:block}}</style></head><body> \
         <code>Welcome to "+__title__+"!</code><code>Licenced under the "+__license__+" licence</code><code>"+__copyright__+"</code> \
         <code style='display:block;text-decoration:underline;margin-top:35px'>Debugging information</code> \
         <code>Version: "+__version__+"</code><code>Header: "+HEADER["User-Agent"]+"</code><code>Default parse mode: "+DEFAULTPARSEMODE+"</code><code style='display: block'>Root directory: "+ROOT_DIR+"</code><code style='display: block'>Working directory: "+WORKING_DIR+"</code> \
         <code style='display:block;text-decoration:underline;margin-top:35px'>System specs</code> \
         <code>Python version: "+str(sys.version)+"</code><code>Tcl version: "+str(tk.TclVersion)+"</code><code>Tk version: "+str(tk.TkVersion)+"</code><code>Platform: "+str(PLATFORM.system)+"</code><code>Machine: "+str(PLATFORM.machine)+"</code><code>Processor: "+str(PLATFORM.processor)+"</code></body></html>",
-    "about:error": """<html style='background-color:{};overflow:hidden;'><head><title>Error {}</title></head><body style='text-align:center;margin:0;padding:0;position:fixed;top:50%;bottom:50%;left:0;right:0;'><table style="display:table;text-align:center;width:100%;margin-top:-40px;height:80px;overflow:hidden"><td style="vertical-align: middle;"><h2 style='margin:0;padding:0;font-weight:normal'>Oops.</h2><p></p><h3 style='margin:0;padding:0;font-weight:normal'>The page you've requested could not be found :(</h3></td></table></body></html>""",
-    "about:image": "<html style='margin:0;padding:0;background-color:{};overflow:hidden'><body style='margin:0;padding:0;' widgetid='{}'><div style='margin: 8px'><code>No image selected</code></div></body></html>",
-    "about:view-source": "<html style='background-color:{}' scroll-x=true><head><style>\
+    "about:error": """<html style='overflow:hidden;height:100%;width:100%'><head><style>html{{background-color:{}}}</style><title>Error {}</title></head><body style='text-align:center;margin:0;padding:0;position:fixed;top:50%;bottom:50%;left:0;right:0;'><table style="display:table;text-align:center;width:100%;margin-top:-40px;height:80px;overflow:hidden"><td style="vertical-align: middle;"><h2 style='margin:0;padding:0;font-weight:normal'>Oops.</h2><p></p><h3 style='margin:0;padding:0;font-weight:normal'>The page you've requested could not be found :(</h3></td></table></body></html>""",
+    "about:image": "<html style='margin:0;padding:0;overflow:hidden'><head><style>html{{background-color:{}}}</style></head><body style='margin:0;padding:0;' widgetid='{}'><div style='margin: 8px'><code>No image selected</code></div></body></html>",
+    "about:view-source": "<html scroll-x=true><head><style>\
+        html{{background-color:{}}}\
         pre::before{{counter-reset:listing}}\
         code{{counter-increment:listing}}\
         code::before{{content:counter(listing);display:inline-block;width:{}px;margin-left:5px;padding-right:5px;margin-right:5px;text-align:right;border-right:1px solid grey60;color:grey60}} \

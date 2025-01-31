@@ -134,10 +134,11 @@ def blankimage(name):
     return image
 
 class ImageLabel(Label):
-    def __init__(self, parent, *args, **kwargs):
-        Label.__init__(self, parent, *args, **kwargs)
+    def __init__(self, parent, bg, *args, **kwargs):
+        Label.__init__(self, parent, *args, bg=bg, **kwargs)
 
         self.html = parent
+        self.background = bg
         self.original_image = None
         self.old_height = 0
         self.old_width = 0
@@ -158,6 +159,13 @@ class ImageLabel(Label):
         self.configure(image=self.image)
         self.handle_resize(None, self.html.winfo_width(), self.html.winfo_height(), True)
         self.html.bind("<Configure>", self.handle_resize)
+        
+        # respect dark mode
+        # a bit patchy but more foolproof than getting the body background color
+        if self.html.dark_theme_enabled: 
+            self.config(bg="#0d0b1a")
+        else:
+            self.config(bg=self.background)
     
     def reset(self):
         if self.original_image:

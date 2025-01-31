@@ -154,7 +154,12 @@ Refer to [DOM.md](DOM.md).
 * `master` Parent (tkinter widget)
 * `messages_enabled` Enable messages (boolean) **Default: True**
 * `vertical_scrollbar` Show the vertical scrollbar (True, False, or "auto") **Default: "auto"**
+
+   New since version 3.25.3: consider using the CSS property `overflow` on your `<html>` or `<body>` element instead.
 * `horizontal_scrollbar` Show the horizontal scrollbar (True, False, or "auto)" **Default: False**
+  
+   New since version 3.25.5: consider adding the attribute `scroll-x=true` on your `<html>` or `<body>` element to switch modes to auto.
+   Generally speaking, it is best to keep the horizontal scrollbar hidden.
 * `**kw` Other optional `ttk.Frame` arguments
 
 ### Useful Methods:

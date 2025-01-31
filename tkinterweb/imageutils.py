@@ -9,6 +9,7 @@ from PIL.ImageTk import PhotoImage
 from io import BytesIO
 
 from tkinter import PhotoImage as TkinterPhotoImage
+from tkinter import Label
 
 
 try:
@@ -63,14 +64,16 @@ def textimage(name, alt, nodebox, font_type, font_size, threshold):
     image = PhotoImage(image, name=name)
     return image
 
-def newimage(data, name, imagetype, invert):
+def newimage(data, name, imagetype, invert, return_image=False):
     image = None
     error = None
     if "svg" in imagetype:
         if not cairoimport:
-            error = "pycairo"
+            photoimage = None
+            error = "no_pycairo"
         elif not rsvgimport:
-            error = "rsvg"
+            photoimage = None
+            error = "no_rsvg"
         elif rsvgimport == 'girsvg':
             handle = Rsvg.Handle()
             svg = handle.new_from_data(data.encode("utf-8"))
@@ -82,7 +85,7 @@ def newimage(data, name, imagetype, invert):
             png_io = BytesIO()
             img.write_to_png(png_io)
             svg.close()
-            image = PhotoImage(name=name, data=png_io.getvalue())
+            photoimage = PhotoImage(name=name, data=png_io.getvalue())
         elif rsvgimport == 'rsvg':
             svg = rsvg.Handle(data=data)
             img = cairo.ImageSurface(
@@ -92,12 +95,13 @@ def newimage(data, name, imagetype, invert):
             png_io = BytesIO()
             img.write_to_png(png_io)
             svg.close()
-            image = PhotoImage(name=name, data=png_io.getvalue())
+            photoimage = PhotoImage(name=name, data=png_io.getvalue())
         elif rsvgimport == 'cairosvg':
             image_data = cairosvg.svg2png(bytestring=data)
             image = Image.open(BytesIO(image_data))
-            image = PhotoImage(image, name=name)
+            photoimage = PhotoImage(image, name=name)
         else:
+            photoimage = None
             error = "corrupt"
     elif invert:
         image = Image.open(BytesIO(data))
@@ -110,15 +114,86 @@ def newimage(data, name, imagetype, invert):
         else:
             image = image.convert("RGB")
             image = ImageOps.invert(image)
-        image = PhotoImage(image=image, name=name)
+        photoimage = PhotoImage(image=image, name=name)
+    elif return_image:
+        image = Image.open(BytesIO(data))
+        photoimage = PhotoImage(image=image, name=name)
     elif imagetype == "image/png" or imagetype == "image/gif" or imagetype == "image/ppm" or imagetype == "image/bmp":
-        image = TkinterPhotoImage(name=name, data=data)
+        photoimage = TkinterPhotoImage(name=name, data=data)
     else:
-        image = PhotoImage(data=data, name=name)
+        photoimage = PhotoImage(data=data, name=name)
 
-    return image, error
+    if return_image:
+        return photoimage, error, image
+    else:
+        return photoimage, error
 
 def blankimage(name):
     image = Image.new("RGBA", (1, 1))
     image = PhotoImage(image, name=name)
     return image
+
+class ImageLabel(Label):
+    def __init__(self, parent, *args, **kwargs):
+        Label.__init__(self, parent, *args, **kwargs)
+
+        self.html = parent
+        self.original_image = None
+        self.old_height = 0
+        self.old_width = 0
+        self.page_zoom = 1.0
+        self.image_count = 0
+    
+    def set_zoom(self, multiplier):
+        self.page_zoom = multiplier
+        self.handle_resize(None, self.html.winfo_width(), self.html.winfo_height(), True)
+
+    def load_image(self, data, filetype):
+        self.image_count += 1
+        self.image, error, self.current_image = newimage(data, f"_htmlframe_img_{id(self)}_{self.image_count}_", filetype, self.html.image_inversion_enabled, True)
+        self.original_image = self.current_image
+        self.original_width, self.original_height = self.original_image.size
+        self.current_width, self.current_height = self.original_image.size
+        
+        self.configure(image=self.image)
+        self.handle_resize(None, self.html.winfo_width(), self.html.winfo_height(), True)
+        self.html.bind("<Configure>", self.handle_resize)
+    
+    def reset(self):
+        if self.original_image:
+            self.original_image = None
+            self.html.unbind("<Configure>")
+
+    def handle_resize(self, event, width=None, height=None, force=False):
+        if not width:
+            width = event.width
+        if not height:
+            height = event.height
+
+        if height > 15 and width > 15 and self.original_image:
+            if force or height != self.old_height or width != self.old_width:
+                self.configure(height=height)
+                self.configure(width=width)
+                self.old_height = height
+                self.old_width = width
+
+                try:
+                    if self.old_width < self.original_width * self.page_zoom or self.old_height < self.original_height * self.page_zoom:
+                        scale_factor = min(self.old_width / self.original_width, self.old_height / self.original_height)
+                        new_width = int(float(self.original_width) * scale_factor)
+                        new_height = int(float(self.original_height) * scale_factor)
+                        current_image = self.original_image.resize((new_width - 10, new_height - 10), Image.NEAREST)
+                        self.current_width = new_width
+                        self.current_height = new_height
+                        self.image = PhotoImage(current_image)
+                        self.config(image=self.image)
+                    elif force or self.current_width != self.original_width or self.current_height != self.original_height:
+                        new_width = int(float(self.original_width) * self.page_zoom)
+                        new_height = int(float(self.original_height) * self.page_zoom)
+                        current_image = self.original_image.resize((new_width - 10, new_height - 10), Image.NEAREST)
+                        self.current_width = self.original_width
+                        self.current_height = self.original_height
+                        self.image = PhotoImage(current_image)
+                        self.config(image=self.image)
+                except ValueError:
+                    return

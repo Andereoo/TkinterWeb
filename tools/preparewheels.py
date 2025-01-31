@@ -31,7 +31,7 @@ def get_platname():
 
 setup(
     name="tkinterweb",
-    version="3.25.4",
+    version="3.25.5",
     description="HTML/CSS viewer for Tkinter",
     long_description=README,
     long_description_content_type="text/markdown",

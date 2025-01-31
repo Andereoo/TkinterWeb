@@ -14,7 +14,7 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 try:
     from bindings import TkinterWeb
     from htmlwidgets import HtmlFrame, HtmlLabel
-    from utilities import Notebook
+    from utilities import Notebook, __title__, ___author__, __copyright__, __license__, __version__
 except (ImportError, ModuleNotFoundError):
     import traceback
 
@@ -35,11 +35,6 @@ See https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/docs/FAQ.md for 
     sys.exit()
 
 
-__title__ = 'TkinterWeb'
-___author__ = "Andereoo"
-__copyright__ = "Copyright (c) 2025 Andereoo"
-__license__ = "MIT"
-__version__ = '3.25'
 __all__ = ['HtmlFrame', 'HtmlLabel', 'TkinterWeb', 'Demo']
 
 

@@ -60,16 +60,17 @@ class Combobox(tk.Widget):
 class TkinterWeb(tk.Widget):
     "Bindings for the Tkhtml3 HTML widget"
 
-    def __init__(self, master, message_func, embed_obj, manage_vsb_func, overflow_scroll_frame=None, cfg={}, **kwargs):
+    def __init__(self, master, message_func, embed_obj, manage_vsb_func, manage_hsb_func, overflow_scroll_frame=None, cfg={}, **kwargs):
         self.message_func = message_func
         self.manage_vsb_func = manage_vsb_func
+        self.manage_hsb_func = manage_hsb_func
         self.overflow_scroll_frame = overflow_scroll_frame
 
         folder = get_tkhtml_folder()
 
         # provide OS information for troubleshooting
         self.message_func(
-            "Starting TkinterWeb for {} {} with Python {}.".format(
+            "Starting TkinterWeb for {} {} with Python {}".format(
                 "64-bit" if sys.maxsize > 2**32 else "32-bit",
                 platform.system(),
                 str(sys.version_info[0:3])
@@ -101,7 +102,7 @@ class TkinterWeb(tk.Widget):
             load_tkhtml(master, folder, force=True)
             tk.Widget.__init__(self, master, "html", cfg, kwargs)
 
-        self.message_func(f"Tkhtml3 successfully loaded from {folder}.")
+        self.message_func(f"Tkhtml3 successfully loaded from {folder}")
 
         # widget settings
         self.stylesheets_enabled = True
@@ -224,8 +225,6 @@ class TkinterWeb(tk.Widget):
         "Parse HTML code"
         self.downloads_have_occured = False
         self.unstoppable = True
-        self.vsb_type = 2 # reset the scrollbars
-        self.manage_vsb_func(2)
         html = self.crash_prevention(html)
         self.tk.call(self._w, "parse", html)
         if self.embedded_widget_attr_name in html:
@@ -337,6 +336,8 @@ class TkinterWeb(tk.Widget):
         self.hovered_nodes = []
         self.current_node = None
         self.on_embedded_node = None
+        self.vsb_type = self.manage_vsb_func()
+        self.manage_hsb_func()
         self.tk.call(self._w, "reset")
 
     def stop(self):
@@ -539,7 +540,6 @@ class TkinterWeb(tk.Widget):
                 parent_url, new_url
             )
         )
-        self.message_func("Loading <style> element.")
         self.style_thread_check(sheetid=ids, handler=handler_proc, data=tagcontents)
 
     def on_link(self, node):
@@ -560,7 +560,7 @@ class TkinterWeb(tk.Widget):
             href = self.get_node_attribute(node, "href")
             try:
                 url = self.resolve_url(href)
-                self.message_func(f"Loading stylesheet from {shorten(url)}.")
+                self.message_func(f"Fetching stylesheet from {shorten(url)}")
                 self.style_count += 1
                 ids = "user." + str(self.style_count).zfill(4)
                 handler_proc = self.register(
@@ -572,7 +572,7 @@ class TkinterWeb(tk.Widget):
                     sheetid=ids, handler=handler_proc, errorurl=href, url=url
                 )
             except Exception as error:
-                self.message_func(f"Error reading stylesheet {href}: {error}.")
+                self.message_func(f"Error reading stylesheet {href}: {error}")
         elif "icon" in rel:
             href = self.get_node_attribute(node, "href")
             url = self.resolve_url(href)
@@ -586,7 +586,7 @@ class TkinterWeb(tk.Widget):
         self.style_count += 1
         try:
             url = urljoin(parent_url, new_url)
-            self.message_func(f"Loading stylesheet from {shorten(url)}.")
+            self.message_func(f"Loading stylesheet from {shorten(url)}")
             ids = "user." + str(self.style_count).zfill(4)
             handler_proc = self.register(
                 lambda new_url, parent_url=url: self.on_atimport(parent_url, new_url)
@@ -597,7 +597,7 @@ class TkinterWeb(tk.Widget):
             )
 
         except Exception as error:
-            self.message_func(f"Error reading stylesheet {new_url}: {error}.")
+            self.message_func(f"Error loading stylesheet {new_url}: {error}")
 
     def on_title(self, node):
         "Handle <title> elements"
@@ -611,7 +611,7 @@ class TkinterWeb(tk.Widget):
             self.base_url = self.resolve_url(href)
         except Exception:
             self.message_func(
-                "Error setting base url: a <base> element has been found without an href attribute."
+                "Error setting base url: a <base> element has been found without an href attribute"
             )
 
     def on_a(self, node):
@@ -633,11 +633,11 @@ class TkinterWeb(tk.Widget):
         src = self.get_node_attribute(node, "src")
         srcdoc = self.get_node_attribute(node, "srcdoc")
 
-        self.message_func("Loading <iframe> element.")
         if srcdoc:
             self.create_iframe(node, None, srcdoc)
         elif src and (src != self.base_url):
             src = self.resolve_url(src)
+            self.message_func(f"Creating iframe from {shorten(src)}")
             self.create_iframe(node, src)
 
     def on_object(self, node):
@@ -647,6 +647,7 @@ class TkinterWeb(tk.Widget):
 
         name = self.image_name_prefix + str(len(self.loaded_images))
         url = self.get_node_attribute(node, "data")
+        code = 404
 
         try:
             url = self.resolve_url(url)
@@ -655,15 +656,15 @@ class TkinterWeb(tk.Widget):
                 # Otherwise the page will load the same object indefinitely and freeze the GUI forever
                 return
 
-            self.message_func(f"Loading object: {shorten(url)}.")
+            self.message_func(f"Creating object from {shorten(url)}")
 
             # Download the data and display it if it is an image or html file
             # Ideally threading would be used here, but at the moment threading <object> elements breaks some images
             # It doesn't really matter though, since very few webpages use <object> elements anyway
             if url.startswith("file://") or (not self.caches_enabled):
-                data, newurl, filetype = download(url, insecure=self.insecure_https)
+                data, newurl, filetype, code = download(url, insecure=self.insecure_https)
             elif url:
-                data, newurl, filetype = cachedownload(
+                data, newurl, filetype, code = cachedownload(
                     url, insecure=self.insecure_https
                 )
             else:
@@ -681,7 +682,7 @@ class TkinterWeb(tk.Widget):
                 self.create_iframe(node, newurl, data)
         except Exception as error:
             self.message_func(
-                f"An error has been encountered while loading an <object> element: {error}."
+                f"Error loading object element: {error} (error {code})"
             )
 
     def on_drawcleanupcrash(self):
@@ -721,7 +722,7 @@ class TkinterWeb(tk.Widget):
             ]
         ):
             done = False
-            self.message_func(f"Fetching image: {shorten(url)}.")
+            self.message_func(f"Fetching image: {shorten(url)}")
             for image in url.split(","):
                 if image.startswith("url("):
                     image = strip_css_url(image)
@@ -731,7 +732,7 @@ class TkinterWeb(tk.Widget):
             if not done:
                 self.load_alt_image(url, name)
                 self.message_func(
-                    f"The image {shorten(url)} could not be shown because it is not supported yet."
+                    f"The image {shorten(url)} could not be shown because it is not supported yet"
                 )
                 self.image_setup_func(url, True)
         else:
@@ -760,7 +761,7 @@ class TkinterWeb(tk.Widget):
             self.waiting_forms += 1
         else:
             self.loaded_forms[node] = inputs
-            self.message_func("Successfully setup <form> element.")
+            self.message_func("Successfully setup form")
 
     def on_table(self, node):
         "Handle <form> elements in tables; workaround for Bug #48"
@@ -787,7 +788,7 @@ class TkinterWeb(tk.Widget):
             scan(node, node)
             for form in inputs:
                 self.loaded_forms[form] = inputs[form]
-                self.message_func("Successfully setup table <form> element.")
+                self.message_func("Successfully setup table form")
                 self.waiting_forms -= 1
 
     def on_select(self, node):
@@ -1250,21 +1251,23 @@ class TkinterWeb(tk.Widget):
         thread = self.begin_download()
 
         if url and self.unstoppable:
+            code = 404
             try:
                 if url.startswith("file://") or (not self.caches_enabled):
-                    data = download(url, insecure=self.insecure_https)[0]
+                    data, newurl, filetype, code = download(url, insecure=self.insecure_https)
                 else:
-                    data = cachedownload(url, insecure=self.insecure_https)[0]
+                    data, newurl, filetype, code = cachedownload(url, insecure=self.insecure_https)
 
                 matcher = lambda match, url=url: self.fix_css_urls(match, url)
                 data = re.sub(r"url\((.*?)\)", matcher, data)
 
             except Exception as error:
-                self.message_func(f"Error reading stylesheet {errorurl}: {error}.")
+                self.message_func(f"Error loading stylesheet {errorurl}: {error} (error {code})")
+
         if data and self.unstoppable:
-
             self.parse_css(f"{sheetid}.9999", handler, data)
-
+            if url:
+                self.message_func(f"Successfully loaded {shorten(url)}")
         self.finish_download(thread)
 
     def load_alt_image(self, url, name):
@@ -1283,7 +1286,7 @@ class TkinterWeb(tk.Widget):
                 )
                 self.loaded_images.add(image)
             elif not self.ignore_invalid_images:
-                image = newimage(
+                image, error = newimage(
                     BROKENIMAGE, name, "image/png", self.image_inversion_enabled
                 )
                 self.loaded_images.add(image)
@@ -1292,13 +1295,14 @@ class TkinterWeb(tk.Widget):
         "Fetch images and display them in the document"
         thread = self.begin_download()
 
-        self.message_func(f"Fetching image: {shorten(url)}.")
+        self.message_func(f"Fetching image from {shorten(url)}")
+        code = 404
 
         try:
             if url.startswith("file://") or (not self.caches_enabled):
-                data, newurl, filetype = download(url, insecure=self.insecure_https)
+                data, newurl, filetype, code = download(url, insecure=self.insecure_https)
             else:
-                data, newurl, filetype = cachedownload(
+                data, newurl, filetype, code = cachedownload(
                     url, insecure=self.insecure_https
                 )
 
@@ -1306,30 +1310,33 @@ class TkinterWeb(tk.Widget):
                 image, error = newimage(
                     data, name, filetype, self.image_inversion_enabled
                 )
+                
                 if image:
                     self.loaded_images.add(image)
+                    self.message_func(f"Successfully loaded {shorten(url)}")
                     self.image_setup_func(url, True)
                 elif error == "no_pycairo":
                     self.load_alt_image(url, name)
                     self.message_func(
-                        "Scalable Vector Graphics could not be shown because Pycairo is not installed but is required to parse .svg files."
+                        f"Error loading image {url}: Pycairo is not installed but is required to parse .svg files"
                     )
                     self.image_setup_func(url, False)
                 elif error == "no_rsvg":
                     self.load_alt_image(url, name)
                     self.message_func(
-                        "Scalable Vector Graphics could not be shown because Rsvg is not installed but is required to parse .svg files."
+                        f"Error loading image {url}: Rsvg is not installed but is required to parse .svg files"
                     )
                     self.image_setup_func(url, False)
                 elif error == "corrupt":
                     self.load_alt_image(url, name)
-                    self.message_func(f"The image {url} could not be shown.")
+                    self.message_func(f"The image {url} could not be shown")
                     self.image_setup_func(url, False)
 
-        except Exception:
+        except Exception as error:
             self.load_alt_image(url, name)
+
             self.message_func(
-                f"The image {url} could not be shown because it is corrupt or is not supported yet."
+                f"Error loading image {url}: {error} (error {code})"
             )
             self.image_setup_func(url, False)
 
@@ -1339,7 +1346,7 @@ class TkinterWeb(tk.Widget):
         "Handle link clicks"
         href = self.get_node_attribute(node_handle, "href")
         url = self.resolve_url(href)
-        self.message_func(f"A link to '{shorten(url)}' has been clicked.")
+        self.message_func(f"A link to '{shorten(url)}' has been clicked")
         self.visited_links.append(url)
         self.link_click_func(url)
 
@@ -1408,7 +1415,7 @@ class TkinterWeb(tk.Widget):
         else:
             data = data.encode()
 
-        self.message_func(f"A form has been submitted to {shorten(url)}.")
+        self.message_func(f"A form has been submitted to {shorten(url)}")
         self.form_submit_func(url, data, method)
 
     def handle_node_replacement(self, node, widgetid, deletecmd, stylecmd=None, allowscrolling=True, handledelete=True):
@@ -1499,8 +1506,10 @@ class TkinterWeb(tk.Widget):
                             "scroll": 1,
                             "clip": 0}
             overflow = overflow_map[overflow]
-            self.manage_vsb_func(overflow)
-            self.vsb_type = overflow
+            self.vsb_type = self.manage_vsb_func(overflow)
+        
+        if self.get_node_attribute(node, "scroll-x"): # tkhtml doesn't support overflow-x
+            self.manage_hsb_func(2)
 
     def set_cursor(self, cursor):
         "Set document cursor"
@@ -1525,6 +1534,8 @@ class TkinterWeb(tk.Widget):
         widgets = self.search(f"[{self.embedded_widget_attr_name}]")
         for node in widgets:
             widgetid = self.get_node_attribute(node, self.embedded_widget_attr_name)
+            if widgetid == "None":
+                continue
             widgetid = self.nametowidget(widgetid)
             if widgetid.winfo_ismapped():  # Don't display the same widget twice
                 continue
@@ -1599,7 +1610,7 @@ class TkinterWeb(tk.Widget):
             if len(match_indexes) > 0:
                 # highlight matches
                 self.message_func(
-                    f"{nmatches} results for the search key '{searchtext}' have been found."
+                    f"{nmatches} results for the search key '{searchtext}' have been found"
                 )
                 if highlight_all:
                     for num, match in enumerate(match_indexes):
@@ -1646,14 +1657,14 @@ class TkinterWeb(tk.Widget):
                     self.yview("moveto", node_top / docheight)
             else:
                 self.message_func(
-                    "No results for the search key '{}' could be found.".format(
+                    "No results for the search key '{}' could be found".format(
                         searchtext
                     )
                 )
             return nmatches, selected, matches
         except Exception as error:
             self.message_func(
-                "An error has been encountered while searching the document for {}: {}.".format(
+                "Error searching for {}: {}".format(
                     searchtext, error
                 )
             )
@@ -1762,39 +1773,43 @@ class TkinterWeb(tk.Widget):
         selected_text = self.get_selection()
         self.clipboard_clear()
         self.clipboard_append(selected_text)
-        self.message_func(f"The text '{selected_text}' has been copied to the clipboard.")
+        self.message_func(f"The text '{selected_text}' has been copied to the clipboard")
         
     def scroll_x11(self, event, widget=None):
         "Manage scrolling on Linux"
         if not widget:
             widget = event.widget
-        if widget.vsb_type == 0:
-            return
             
         yview = widget.yview()  
 
         if event.num == 4:
-            if widget.overflow_scroll_frame and yview[0] == 0:
+            if widget.overflow_scroll_frame and (yview[0] == 0 or widget.vsb_type == 0):
                 widget.overflow_scroll_frame.scroll_x11(event, widget.overflow_scroll_frame)
             else:
+                if widget.vsb_type == 0:
+                    return
                 widget.yview_scroll(-4, "units")
         else:
-            if widget.overflow_scroll_frame and yview[1] == 1:
+            if widget.overflow_scroll_frame and (yview[1] == 1 or widget.vsb_type == 0):
                 widget.overflow_scroll_frame.scroll_x11(event, widget.overflow_scroll_frame)
             else:
+                if widget.vsb_type == 0:
+                    return
                 widget.yview_scroll(4, "units")
 
     def scroll(self, event):
         "Manage scrolling on Windows/MacOS"
-        if self.vsb_type == 0:
-            return
         yview = self.yview()      
 
-        if self.overflow_scroll_frame and yview[0] == 0 and event.delta > 0:
+        if self.overflow_scroll_frame and event.delta > 0 and (yview[0] == 0 or self.vsb_type == 0):
             self.overflow_scroll_frame.scroll(event)
-        elif self.overflow_scroll_frame and yview[1] == 1 and event.delta < 0:
+        elif self.overflow_scroll_frame and event.delta < 0 and (yview[1] == 1 or self.vsb_type == 0):
             self.overflow_scroll_frame.scroll(event)
         elif platform.system() == "Darwin":
+            if self.vsb_type == 0:
+                return
             self.yview_scroll(int(-1*event.delta), "units")
         else:
+            if self.vsb_type == 0:
+                return
             self.yview_scroll(int(-1*event.delta/30), "units")

@@ -9,9 +9,9 @@ import platform
 from urllib.parse import urldefrag, urlparse
 
 from bindings import TkinterWeb
-from utilities import (WORKING_DIR, AutoScrollbar, StoppableThread, cachedownload, download,
-                       notifier, threadname)
-from imageutils import newimage
+from utilities import (WORKING_DIR, BUILTINPAGES, AutoScrollbar, StoppableThread, cachedownload, download,
+                       notifier, threadname, __version__)
+from imageutils import ImageLabel
 from dom import TkwDocumentObjectModel
 
 import tkinter as tk
@@ -28,31 +28,29 @@ class HtmlFrame(ttk.Frame):
             self.message_func = message_func = lambda message: None
 
         # setup scrollbars and HTML widget
-        self.html = html = TkinterWeb(self, message_func, HtmlFrame, self.manage_vsb, overflow_scroll_frame)
+        self.html = html = TkinterWeb(self, message_func, HtmlFrame, self.manage_vsb, self.manage_hsb, overflow_scroll_frame)
         html.grid(row=0, column=0, sticky=tk.NSEW)
 
         self.document = TkwDocumentObjectModel(html)
 
-        if horizontal_scrollbar:
-            if horizontal_scrollbar == "auto":
-                self.hsb = hsb = AutoScrollbar(
-                    self, orient=tk.HORIZONTAL, command=html.xview)
-            else:
-                self.hsb = hsb = ttk.Scrollbar(
-                    self, orient=tk.HORIZONTAL, command=html.xview)
+        self.background = ttk.Style().lookup('TFrame', 'background')
 
-            hsb.bind("<Enter>", html.on_leave)
-            html.configure(xscrollcommand=hsb.set)
-            hsb.grid(row=1, column=0, sticky="nsew")
+        self.image_label = ImageLabel(self.html, bg=self.background, anchor='center')
 
-        self.vsb = vsb = AutoScrollbar(
-            self, orient=tk.VERTICAL, command=self.html.yview)
+        self.hsb = hsb = AutoScrollbar(self, orient=tk.HORIZONTAL, command=html.xview)
+        self.hsb_type = None
+        self.original_hsb_type = horizontal_scrollbar
+        hsb.bind("<Enter>", self.html.on_leave)
+        html.configure(xscrollcommand=hsb.set)
+        hsb.grid(row=1, column=0, sticky="nsew")
+        self.manage_hsb(horizontal_scrollbar)
+
+        self.vsb = vsb = AutoScrollbar(self, orient=tk.VERTICAL, command=self.html.yview)
         self.vsb_type = None
-
+        self.original_vsb_type = vertical_scrollbar
         vsb.bind("<Enter>", self.html.on_leave)
-        self.html.configure(yscrollcommand=vsb.set)
+        html.configure(yscrollcommand=vsb.set)
         vsb.grid(row=0, column=1, sticky="nsew")
-
         self.manage_vsb(vertical_scrollbar)
 
         # for some reason, binding to Html only works on Linux and binding to html.document only works on Windows
@@ -67,6 +65,10 @@ class HtmlFrame(ttk.Frame):
         self.bind_class(self.html.scrollable_node_tag, "<Button-5>", lambda event, widget=html: self.html.scroll_x11(event, widget))
         self.bind_class(self.html.scrollable_node_tag, "<MouseWheel>", self.html.scroll)
 
+        vsb.bind("<Button-4>", lambda event, widget=html: self.html.scroll_x11(event, widget))
+        vsb.bind("<Button-5>", lambda event, widget=html: self.html.scroll_x11(event, widget))
+        vsb.bind("<MouseWheel>", self.html.scroll)
+
         self.bind("<Leave>", html.on_leave)
         self.bind("<Enter>", html.on_mouse_motion)
 
@@ -76,16 +78,9 @@ class HtmlFrame(ttk.Frame):
         self.cursor = ""
         self.accumulated_styles = []
         self.waiting_for_reset = False
-        self.image_count = 0
         self.image = None
         self.thread_in_progress = None
-        self.broken_page_msg = """<html>
-                                    <head><title>Error 404</title></head>
-                                    <body style="text-align:center;">
-                                        <h2>Oops.</h2><p></p>
-                                        <h3>The page you've requested could not be found.</h3>
-                                    </body>
-                                  </html>"""
+        self.broken_page_msg = ""
         html.cursor_change_func = self.change_cursor
         html.link_click_func = self.load_url
         html.form_submit_func = self.load_form_data
@@ -94,10 +89,10 @@ class HtmlFrame(ttk.Frame):
         self.html.done_loading_func = self.done_loading
 
         self.message_func(
-            "Welcome to TkinterWeb v3.25! \nhttps://github.com/Andereoo/TkinterWeb")
+            f"Welcome to TkinterWeb v{__version__}! \nhttps://github.com/Andereoo/TkinterWeb")
 
         self.message_func(
-            "Debugging messages are enabled. \nUse the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLabel() to disable these messages.")
+            "Debugging messages are enabled \nUse the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLabel() to disable these messages")
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
@@ -105,13 +100,12 @@ class HtmlFrame(ttk.Frame):
         # redirected commands
         self.select_all = self.html.select_all
         self.bind = self.html.bind
-        self.set_zoom = self.html.set_zoom
-        self.get_zoom = self.html.get_zoom
         self.set_fontscale = self.html.set_fontscale
         self.get_fontscale = self.html.get_fontscale
         self.set_parsemode = self.html.set_parsemode
         self.get_parsemode = self.html.get_parsemode
         self.resolve_url = self.html.resolve_url
+        self.get_zoom = self.html.get_zoom
 
         self.replace_widget = self.html.replace_widget
         self.replace_element = self.html.replace_element
@@ -121,13 +115,27 @@ class HtmlFrame(ttk.Frame):
         self.yview_moveto = self.html.yview_moveto
         self.yview_scroll = self.html.yview_scroll
 
-    def manage_vsb(self, allow):
+    def manage_vsb(self, allow=None):
         "Show or hide the scrollbars"
+        if allow == None:
+            allow = self.original_vsb_type
         if allow == "auto":
-            allow = 2
+            allow = 2 
         if self.vsb_type != allow:
             self.vsb.set_type(allow)
             self.vsb_type = allow
+        return allow
+    
+    def manage_hsb(self, allow=None):
+        "Show or hide the scrollbars"
+        if allow == None:
+            allow = self.original_hsb_type
+        if allow == "auto":
+            allow = 2
+        if self.hsb_type != allow:
+            self.hsb.set_type(allow)
+            self.hsb_type = allow
+        return allow
 
     def yview_toelement(self, selector, index=0):
         "Find an element that matches a given CSS selectors and scroll to it"
@@ -158,7 +166,11 @@ class HtmlFrame(ttk.Frame):
         We use threading here to prevent the GUI from freezing while fetching the website.
         Technically Tkinter isn't threadsafe, 
         but as long as we do not use the .join() method and no errors are raised in the mainthread, we can get away with it.
-        """
+        """                        
+        if url in BUILTINPAGES:
+            self.load_html(BUILTINPAGES[url].format(self.background, None, "No file selected"))
+            return
+
         self.waiting_for_reset = True
 
         # workaround for Bug #40, where urllib.urljoin constructs improperly formatted urls on Linux when url starts with file:///
@@ -193,6 +205,7 @@ class HtmlFrame(ttk.Frame):
             insecure = self.html.insecure_https
         else:
             self.html.insecure_https = insecure
+        code = 404
 
         self.html.downloading_resource_func()
         self.url_change_func(url)
@@ -206,27 +219,45 @@ class HtmlFrame(ttk.Frame):
 
             # if url is different than the current one, load the new site
             if force or (method == "POST") or (self.skim(urldefrag(url)[0]) != self.skim(urldefrag(self.current_url)[0])):
-                self.message_func("Connecting to {0}.".format(parsed.netloc))
+                view_source = False
+                if url.startswith("view-source:"):
+                    view_source = True
+                    url = url.replace("view-source:", "")
+                    parsed = urlparse(url)
+                self.message_func("Connecting to {0}".format(parsed.netloc))
                 if insecure:
                     self.message_func("WARNGING: Using insecure HTTPS session")
                 if (parsed.scheme == "file") or (not self.html.caches_enabled):
-                    data, newurl, filetype = download(
+                    data, newurl, filetype, code = download(
                         url, data, method, decode, insecure)
                 else:
-                    data, newurl, filetype = cachedownload(
+                    data, newurl, filetype, code = cachedownload(
                         url, data, method, decode, insecure)
                 if threadname().isrunning():
-                    self.url_change_func(newurl)
-                    if "image" in filetype:
-                        image, error = newimage(data, f"_htmlframe_img_{id(self)}_{self.image_count}_", filetype, self.html.image_inversion_enabled)
-                        if error:
-                            self.html.image_setup_func(url, False)
+                    if view_source:
+                        newurl = "view-source:"+newurl
+                        self.url_change_func(newurl)
+                        data = str(data).replace("<","&lt;").replace(">", "&gt;")
+                        data = data.splitlines()
+                        length = int(len(str(len(data))))
+                        if len(data) > 1:
+                            data = "</code><br><code>".join(data)
+                            data = data.rsplit("<br><code>", 1)[0]
+                            data = data.split("</code><br>", 1)[1]
                         else:
-                            self.html.image_setup_func(url, True)
-                        self.load_html(f"<img style='max-width:100%' src='replace:{image}'></img")
-                        self.image_count += 1
-                        self.image = image
+                            data = "".join(data)
+                        self.load_html(BUILTINPAGES["about:view-source"].format(self.background, length*9, data), newurl)
+                    elif "image" in filetype:
+                        self.url_change_func(newurl)
+                        # arguably it's much easier to simply pass the image to the HTML engine
+                        # but I like centered content and it's not possible to vertically align an image in Tkhtml without explicitly setting its height
+                        # so instead we embed a label widget in the page and deal with page resizing and zooming ourselves
+                        # since we're loading an image it doesn't matter if it's a Label widget that doesn't support find_text, selection, etc.
+                        # its a bit hacky, but hey, it works and looks very snazzy
+                        self.load_html(BUILTINPAGES["about:image"].format(self.background, str(self.image_label)))
+                        self.image_label.load_image(data, filetype)
                     else:
+                        self.url_change_func(newurl)
                         self.load_html(data, newurl)
                     self.current_url = newurl
             else:
@@ -252,8 +283,11 @@ class HtmlFrame(ttk.Frame):
                     pass
         except Exception as error:
             self.message_func(
-                f"An error has been encountered while loading {url}: {error}.")
-            self.load_html(self.broken_page_msg)
+                f"Error loading {url}: {error} (error {code})")
+            if self.broken_page_msg:
+                self.load_html(self.broken_page_msg)
+            else:
+                self.load_html(BUILTINPAGES["about:error"].format(self.background, code))
             self.current_url = ""
             
             if "CERTIFICATE_VERIFY_FAILED" in str(error):
@@ -266,6 +300,10 @@ Running something along the lines of \"/Applications/Python {python_version}/Ins
 Otherwise, use 'insecure=True' when loading a page to ignore website certificates.")
 
         self.thread_in_progress = None
+
+    def set_zoom(self, multiplier):
+        self.html.set_zoom(multiplier)
+        self.image_label.set_zoom(float(multiplier))
 
     def skim(self, url):
         return url.replace("/", "")
@@ -373,7 +411,7 @@ Otherwise, use 'insecure=True' when loading a page to ignore website certificate
         This will cause page colours to be 'inverted' if enabled is set to True
         This will also cause images to be inverted if 'invert_images' is also set to True"""
         if (enabled or invert_images):
-            self.message_func("Warning: dark theme has been enabled. This feature is highly experimental and may cause freezes or crashes.")
+            self.message_func("WARNING: dark theme has been enabled. This feature is highly experimental and may cause freezes or crashes.")
         self.html.dark_theme_enabled = enabled
         self.html.image_inversion_enabled = invert_images
         self.html.update_default_style()
@@ -453,11 +491,12 @@ Otherwise, use 'insecure=True' when loading a page to ignore website certificate
         return attr
 
     def get_currently_selected_text(self):
-        "Get the text that is currently highlighted/selected."
+        "Get the text that is currently highlighted/selected"
         return self.html.get_selection()
 
     def load_html(self, html_source, base_url=None):
         "Reset parser and send html code to it"
+        self.image_label.reset()
         self.html.reset()
         if not base_url:
             path = WORKING_DIR
@@ -477,7 +516,7 @@ Otherwise, use 'insecure=True' when loading a page to ignore website certificate
             self.accumulated_styles = []
 
     def add_html(self, html_source):
-        "Parse HTML and add it to the end of the current document."
+        "Parse HTML and add it to the end of the current document"
         if not self.current_url:
             path = WORKING_DIR
             if not path.startswith("/"):

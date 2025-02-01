@@ -37,10 +37,10 @@ except (ImportError, SyntaxError, ):
     
 # we need this information here so the builtin pages can access it
 __title__ = 'TkinterWeb'
-__author__ = "Andereoo"
+___author__ = "Andereoo"
 __copyright__ = "Copyright (c) 2025 Andereoo"
 __license__ = "MIT"
-__version__ = '3.25.8'
+__version__ = '3.25.9'
 
 
 HEADER = {
@@ -554,7 +554,7 @@ BUILTINPAGES = {
         <code style='display:block;text-decoration:underline;margin-top:35px'>System specs</code> \
         <code>Python version: "+str(sys.version)+"</code><code>Tcl version: "+str(tk.TclVersion)+"</code><code>Tk version: "+str(tk.TkVersion)+"</code><code>Platform: "+str(PLATFORM.system)+"</code><code>Machine: "+str(PLATFORM.machine)+"</code><code>Processor: "+str(PLATFORM.processor)+"</code></body></html>",
     "about:error": """<html style='overflow:hidden;height:100%;width:100%'><head><style>html,body{{background-color:{}}}</style><title>Error {}</title></head><body style='text-align:center;margin:0;padding:0;position:fixed;top:50%;bottom:50%;left:0;right:0;'><table style="display:table;text-align:center;width:100%;margin-top:-40px;height:80px;overflow:hidden"><td style="vertical-align: middle;"><h2 style='margin:0;padding:0;font-weight:normal'>Oops.</h2><p></p><h3 style='margin:0;padding:0;font-weight:normal'>The page you've requested could not be found :(</h3></td></table></body></html>""",
-    "about:image": "<html style='margin:0;padding:0;overflow:hidden'><head><style>html,body{{background-color:{}}}</style></head><body style='margin:0;padding:0;' widgetid='{}'><div style='margin: 8px'><code>No image selected</code></div></body></html>",
+    "about:image": "<html style='margin:0;padding:0;overflow:hidden'><head><style>html,body,object{{background-color:{}}}</style></head><body style='margin:0;padding:0;'><object allowstyling data='{}'><code style='margin: 8px'>No image selected</code></object></body></html>",
     "about:view-source": "<html scroll-x=true><head><style>\
         html,body{{background-color:{}}}\
         pre::before{{counter-reset:listing}}\

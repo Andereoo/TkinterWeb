@@ -231,7 +231,7 @@ class TkinterWeb(tk.Widget):
             self.setup_widgets()
         # we assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
         if not self.downloads_have_occured:
-            self.done_loading_func()
+            self.after(0, self.done_loading_func)
 
     def update_default_style(self, stylesheet=None):
         "Update the default stylesheet based on color theme"
@@ -647,43 +647,68 @@ class TkinterWeb(tk.Widget):
 
         name = self.image_name_prefix + str(len(self.loaded_images))
         url = self.get_node_attribute(node, "data")
-        code = 404
 
-        try:
-            url = self.resolve_url(url)
-            if url == self.base_url:
-                # Don't load the object if it is the same as the current file
-                # Otherwise the page will load the same object indefinitely and freeze the GUI forever
-                return
+        if url != "":
+            try:
+                # stylecmd behaviour is iffy when using the 'widgetid' attribute because sometimes the styling is done by the time setup_widgets fires
+                # instead we try to load widgets presented at <object> elements at runtime
+                widgetid = self.nametowidget(url)
+                if widgetid.winfo_ismapped():  # Don't display the same widget twice
+                    return
 
-            self.message_func(f"Creating object from {shorten(url)}")
+                allowscrolling = self.get_node_attribute(node, "allowscrolling", "false") != "false"
+                allowstyling = self.get_node_attribute(node, "allowstyling", "false") != "false"
+                handleremoval = self.get_node_attribute(node, "handleremoval", "false") != "false"
+                if allowstyling:
+                    allowstyling = lambda node=node, widgetid=widgetid, widgettype="text": self.handle_node_style(node, widgetid, widgettype)
+                else:
+                    allowstyling = None
+                if handleremoval:
+                    handleremoval = lambda widgetid=widgetid: self.handle_node_removal(widgetid)
+                else:
+                    handleremoval = None
 
-            # Download the data and display it if it is an image or html file
-            # Ideally threading would be used here, but at the moment threading <object> elements breaks some images
-            # It doesn't really matter though, since very few webpages use <object> elements anyway
-            if url.startswith("file://") or (not self.caches_enabled):
-                data, newurl, filetype, code = download(url, insecure=self.insecure_https)
-            elif url:
-                data, newurl, filetype, code = cachedownload(
-                    url, insecure=self.insecure_https
+                self.stored_widgets[widgetid] = node
+                self.handle_node_replacement(
+                    node,
+                    widgetid,
+                    handleremoval,
+                    allowstyling,
+                    allowscrolling,
+                    False,
                 )
-            else:
-                return
+            except KeyError:
+                url = self.resolve_url(url)
+                if url == self.base_url:
+                    # Don't load the object if it is the same as the current file
+                    # Otherwise the page will load the same object indefinitely and freeze the GUI forever
+                    return
 
-            if data and filetype.startswith("image"):
-                image, error = newimage(
-                    data, name, filetype, self.image_inversion_enabled
-                )
-                self.loaded_images.add(image)
-                self.tk.call(
-                    node, "override", f"-tkhtml-replacement-image url(replace:{image})"
-                )
-            elif data and filetype == "text/html":
-                self.create_iframe(node, newurl, data)
-        except Exception as error:
-            self.message_func(
-                f"Error loading object element: {error} (error {code})"
-            )
+                self.message_func(f"Creating object from {shorten(url)}")
+                try:
+                    if url.startswith("file://") or (not self.caches_enabled):
+                        data, newurl, filetype, code = download(url, insecure=self.insecure_https)
+                    elif url:
+                        data, newurl, filetype, code = cachedownload(
+                            url, insecure=self.insecure_https
+                        )
+                    else:
+                        return
+
+                    if data and filetype.startswith("image"):
+                        image, error = newimage(
+                            data, name, filetype, self.image_inversion_enabled
+                        )
+                        self.loaded_images.add(image)
+                        self.tk.call(
+                            node, "override", f"-tkhtml-replacement-image url(replace:{image})"
+                        )
+                    elif data and filetype == "text/html":
+                        self.create_iframe(node, newurl, data)
+                except Exception as error:
+                    self.message_func(
+                        f"Error loading object element: {error}"
+                    )
 
     def on_drawcleanupcrash(self):
         if self.prevent_crashes:
@@ -725,6 +750,7 @@ class TkinterWeb(tk.Widget):
             self.message_func(f"Fetching image: {shorten(url)}")
             for image in url.split(","):
                 if image.startswith("url("):
+                    url = url.split("'), url('", 1)[0]
                     image = strip_css_url(image)
                     url = self.resolve_url(image)
                     self.image_thread_check(url, name)
@@ -736,6 +762,7 @@ class TkinterWeb(tk.Widget):
                 )
                 self.image_setup_func(url, True)
         else:
+            url = url.split("'), url('", 1)[0]
             url = self.resolve_url(url)
             self.image_thread_check(url, name)
         return name
@@ -1195,7 +1222,7 @@ class TkinterWeb(tk.Widget):
     def begin_download(self):
         thread = threadname()
         self.active_threads.append(thread)
-        self.downloading_resource_func()
+        self.after(0, self.downloading_resource_func)
         return thread
 
     def finish_download(self, thread):
@@ -1203,7 +1230,7 @@ class TkinterWeb(tk.Widget):
         if len(self.active_threads) == 0:
             # call done_loading_func outside of the thread 
             # this stops bad things from happening when Tcl is also being called in the callback
-            self.after(1, self.done_loading_func)
+            self.after(0, self.done_loading_func)
 
     def fix_css_urls(self, match, url):
         "Make relative uris in CSS files absolute"
@@ -1251,18 +1278,17 @@ class TkinterWeb(tk.Widget):
         thread = self.begin_download()
 
         if url and self.unstoppable:
-            code = 404
             try:
                 if url.startswith("file://") or (not self.caches_enabled):
-                    data, newurl, filetype, code = download(url, insecure=self.insecure_https)
+                    data = download(url, insecure=self.insecure_https)[0]
                 else:
-                    data, newurl, filetype, code = cachedownload(url, insecure=self.insecure_https)
+                    data = cachedownload(url, insecure=self.insecure_https)[0]
 
                 matcher = lambda match, url=url: self.fix_css_urls(match, url)
                 data = re.sub(r"url\((.*?)\)", matcher, data)
 
             except Exception as error:
-                self.message_func(f"Error loading stylesheet {errorurl}: {error} (error {code})")
+                self.message_func(f"Error loading stylesheet {errorurl}: {error}")
 
         if data and self.unstoppable:
             self.parse_css(f"{sheetid}.9999", handler, data)
@@ -1296,7 +1322,6 @@ class TkinterWeb(tk.Widget):
         thread = self.begin_download()
 
         self.message_func(f"Fetching image from {shorten(url)}")
-        code = 404
 
         try:
             if url.startswith("file://") or (not self.caches_enabled):
@@ -1307,40 +1332,50 @@ class TkinterWeb(tk.Widget):
                 )
 
             if self.unstoppable and data:
-                image, error = newimage(
-                    data, name, filetype, self.image_inversion_enabled
-                )
-                
-                if image:
-                    self.loaded_images.add(image)
-                    self.message_func(f"Successfully loaded {shorten(url)}")
-                    self.image_setup_func(url, True)
-                elif error == "no_pycairo":
-                    self.load_alt_image(url, name)
-                    self.message_func(
-                        f"Error loading image {url}: Pycairo is not installed but is required to parse .svg files"
-                    )
-                    self.image_setup_func(url, False)
-                elif error == "no_rsvg":
-                    self.load_alt_image(url, name)
-                    self.message_func(
-                        f"Error loading image {url}: Rsvg is not installed but is required to parse .svg files"
-                    )
-                    self.image_setup_func(url, False)
-                elif error == "corrupt":
-                    self.load_alt_image(url, name)
-                    self.message_func(f"The image {url} could not be shown")
-                    self.image_setup_func(url, False)
+                # thread safety
+                self.after(0, self.finish_fetching_images, data, name, filetype, url)
 
         except Exception as error:
             self.load_alt_image(url, name)
-
             self.message_func(
-                f"Error loading image {url}: {error} (error {code})"
+                f"Error loading image {url}: {error}"
             )
             self.image_setup_func(url, False)
 
         self.finish_download(thread)
+
+    def finish_fetching_images(self, data, name, filetype, url):
+        try:
+            image, error = newimage(
+                data, name, filetype, self.image_inversion_enabled
+            )
+            
+            if image:
+                self.loaded_images.add(image)
+                self.message_func(f"Successfully loaded {shorten(url)}")
+                self.image_setup_func(url, True)
+            elif error == "no_pycairo":
+                self.load_alt_image(url, name)
+                self.message_func(
+                    f"Error loading image {url}: Pycairo is not installed but is required to parse .svg files"
+                )
+                self.image_setup_func(url, False)
+            elif error == "no_rsvg":
+                self.load_alt_image(url, name)
+                self.message_func(
+                    f"Error loading image {url}: Rsvg is not installed but is required to parse .svg files"
+                )
+                self.image_setup_func(url, False)
+            elif error == "corrupt":
+                self.load_alt_image(url, name)
+                self.message_func(f"The image {url} could not be shown")
+                self.image_setup_func(url, False)
+        except Exception as error:
+            self.load_alt_image(url, name)
+            self.message_func(
+                f"Error loading image {url}: {error}"
+            )
+            self.image_setup_func(url, False)
 
     def handle_link_click(self, node_handle):
         "Handle link clicks"
@@ -1534,20 +1569,34 @@ class TkinterWeb(tk.Widget):
         widgets = self.search(f"[{self.embedded_widget_attr_name}]")
         for node in widgets:
             widgetid = self.get_node_attribute(node, self.embedded_widget_attr_name)
-            if widgetid == "None":
+            if widgetid == "":
                 continue
             widgetid = self.nametowidget(widgetid)
-            if widgetid.winfo_ismapped():  # Don't display the same widget twice
+            if widgetid.winfo_ismapped():  
+                # don't display a widget that is already visible 
                 continue
-            allowscrolling = self.get_node_attribute(node, "allowscrolling")
+            if widgetid in self.stored_widgets:
+                # don't display a widget that is already embedded or about to be embedded
+                # this prevents this code from firing after a widget has been embedded by the <object> tag
+                continue
+
+            allowscrolling = self.get_node_attribute(node, "allowscrolling", "false") != "false"
+            handleremoval = self.get_node_attribute(node, "handleremoval", "false") != "false"
+            if handleremoval:
+                handleremoval = lambda widgetid=widgetid: self.handle_node_removal(widgetid)
+            else:
+                handleremoval = None
+
             self.stored_widgets[widgetid] = node
             self.handle_node_replacement(
                 node,
                 widgetid,
-                lambda widgetid=widgetid: self.handle_node_removal(widgetid),
-                allowscrolling=(True if allowscrolling == "yes" else False),
-                handledelete=False,
+                handleremoval,
+                None,
+                allowscrolling,
+                False,
             )
+            
 
     def remove_widget(self, widgetid):
         "Remove a stored widget"

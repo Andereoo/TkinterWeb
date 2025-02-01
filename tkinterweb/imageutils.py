@@ -143,7 +143,7 @@ def blankimage(name):
     return image
 
 class ImageLabel(Label):
-    def __init__(self, parent, *args, **kwargs):
+    def __init__(self, parent, error_func, *args, **kwargs):
         Label.__init__(self, parent, *args, **kwargs)
 
         self.html = parent
@@ -151,7 +151,7 @@ class ImageLabel(Label):
         self.old_height = 0
         self.old_width = 0
         self.page_zoom = 1.0
-        self.image_count = 0
+        self.error_func = error_func
 
         self.image_padding = 10
     
@@ -159,22 +159,22 @@ class ImageLabel(Label):
         self.page_zoom = multiplier
         self.handle_resize(None, self.html.winfo_width(), self.html.winfo_height(), True)
 
-    def load_image(self, data, filetype):
-        self.image_count += 1
-        self.image, error, self.current_image = newimage(data, f"_htmlframe_img_{id(self)}_{self.image_count}_", filetype, self.html.image_inversion_enabled, True)
-        if not self.image:
-            raise Exception("The image requested is either corrupt or not supported")
-        self.original_image = self.current_image
-        self.original_width, self.original_height = self.original_image.size
-        self.current_width, self.current_height = self.original_image.size
-        
-        self.config(image=self.image)
-        self.handle_resize(None, self.html.winfo_width(), self.html.winfo_height(), True)
-        self.html.bind("<Configure>", self.handle_resize)
-        
-        body = self.html.search("body")[0]
-        self.config(bg=self.html.get_node_property(body, "background-color"))
-    
+    def load_image(self, newurl, data, filetype):
+        try:
+            self.image, error, self.current_image = newimage(data, None, filetype, self.html.image_inversion_enabled, True)
+            if not self.image: # because load_image is called using after() to ensure thread safety, exceptions aren't caught
+                self.error_func(newurl, "The image requested is either corrupt or not supported", "")
+                return
+            self.original_image = self.current_image
+            self.original_width, self.original_height = self.original_image.size
+            self.current_width, self.current_height = self.original_image.size
+
+            self.config(image=self.image)
+            self.handle_resize(None, self.html.winfo_width(), self.html.winfo_height(), True)
+            self.html.bind("<Configure>", self.handle_resize)
+        except Exception:
+            self.error_func(newurl, "The image requested is either corrupt or not supported", "")
+
     def reset(self):
         if self.original_image:
             self.original_image = None

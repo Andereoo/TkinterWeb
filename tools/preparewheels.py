@@ -6,7 +6,6 @@ import os, shutil, sys
 import subprocess
 import re
 
-
 ROOT_PATH = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 WHEELS_ROOT_PATH = os.path.join(ROOT_PATH, "wheels")
 DIST_ROOT_PATH = os.path.join(ROOT_PATH, "dist")
@@ -31,7 +30,7 @@ def get_platname():
 
 setup(
     name="tkinterweb",
-    version="3.25.8",
+    version="3.25.9",
     description="HTML/CSS viewer for Tkinter",
     long_description=README,
     long_description_content_type="text/markdown",

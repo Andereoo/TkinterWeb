@@ -35,7 +35,7 @@ class HtmlFrame(ttk.Frame):
 
         self.background = ttk.Style().lookup('TFrame', 'background')
 
-        self.image_label = ImageLabel(self.html, anchor='center')
+        self.image_label = ImageLabel(html, self.on_error, anchor='center')
 
         self.hsb = hsb = AutoScrollbar(self, orient=tk.HORIZONTAL, command=html.xview)
         self.hsb_type = None
@@ -168,7 +168,7 @@ class HtmlFrame(ttk.Frame):
         but as long as we do not use the .join() method and no errors are raised in the mainthread, we can get away with it.
         """                        
         if url in BUILTINPAGES:
-            self.load_html(BUILTINPAGES[url].format(self.background, None, "No file selected"))
+            self.load_html(BUILTINPAGES[url].format(self.background, "", "No file selected"))
             return
 
         self.waiting_for_reset = True
@@ -233,6 +233,7 @@ class HtmlFrame(ttk.Frame):
                 else:
                     data, newurl, filetype, code = cachedownload(
                         url, data, method, decode, insecure)
+                self.message_func(f"Successfully connected to {parsed.netloc}")
                 if threadname().isrunning():
                     if view_source:
                         newurl = "view-source:"+newurl
@@ -255,7 +256,7 @@ class HtmlFrame(ttk.Frame):
                         # since we're loading an image it doesn't matter if it's a Label widget that doesn't support find_text, selection, etc.
                         # its a bit hacky, but hey, it works and looks very snazzy
                         self.load_html(BUILTINPAGES["about:image"].format(self.background, str(self.image_label)))
-                        self.image_label.load_image(data, filetype)
+                        self.after(0, self.image_label.load_image, newurl, data, filetype)
                     else:
                         self.url_change_func(newurl)
                         self.load_html(data, newurl)
@@ -282,24 +283,27 @@ class HtmlFrame(ttk.Frame):
                 except Exception:
                     pass
         except Exception as error:
+            self.on_error(url, error, code)
+
+        self.thread_in_progress = None
+
+    def on_error(self, url, error, code):
+        self.message_func(
+            f"Error loading {url}: {error}")
+        if self.broken_page_msg:
+            self.load_html(self.broken_page_msg)
+        else:
+            self.load_html(BUILTINPAGES["about:error"].format(self.background, code))
+        self.current_url = ""
+        
+        if "CERTIFICATE_VERIFY_FAILED" in str(error):
+            python_version = ".".join(platform.python_version_tuple()[:2])
             self.message_func(
-                f"Error loading {url}: {error} (error {code})")
-            if self.broken_page_msg:
-                self.load_html(self.broken_page_msg)
-            else:
-                self.load_html(BUILTINPAGES["about:error"].format(self.background, code))
-            self.current_url = ""
-            
-            if "CERTIFICATE_VERIFY_FAILED" in str(error):
-                python_version = ".".join(platform.python_version_tuple()[:2])
-                self.message_func(
-                    f"Check that you are using the right url scheme. Some websites only support http.\n\
+                f"Check that you are using the right url scheme. Some websites only support http.\n\
 This might also happen if your Python distribution does not come installed with website certificates.\n\
 This is a known Python bug on older MacOS systems. \
 Running something along the lines of \"/Applications/Python {python_version}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
 Otherwise, use 'insecure=True' when loading a page to ignore website certificates.")
-
-        self.thread_in_progress = None
 
     def set_zoom(self, multiplier):
         self.html.set_zoom(multiplier)

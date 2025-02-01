@@ -25,7 +25,7 @@ yourframe.load_html(source_html) # or use add_html to add onto the existing docu
 Widget position and sizing can be modified through CSS styling on the containing element.
 
 ## Widget Handling
-Use the methods outlined in [DOM Manipulation with TkinterWeb](/docs/DOM.md) and in the [HtmlFrame docs](/docs/HTMLFRAME.md#replace_widgetoldwidget-newwidget) to dynamically change the location of Tkinter widgets in the document after loading
+Use the methods outlined in [DOM Manipulation with TkinterWeb](/docs/DOM.md) (new since version 3.25) and in the [HtmlFrame docs](/docs/HTMLFRAME.md#replace_widgetoldwidget-newwidget) to dynamically change the location of Tkinter widgets in the document after loading
 
 ## Example
 This code will display a blue button on the left, an image in the center, and an orange button on the right. Clicking a button will flip it's location with the other button:
@@ -105,7 +105,5 @@ mybutton2.grid(row=0, column=4, sticky="n")
 container.pack(expand=True, fill="both")
 root.mainloop()
 ```
-
----
 
 Please report bugs or request new features on the [issues page](https://github.com/Andereoo/TkinterWeb/issues).

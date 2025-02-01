@@ -540,10 +540,11 @@ Get the text content that is currently highlighted/selected in the HtmlFrame.
 Return type
 * *string*
 
+
 ---
 
-#### `replace_widget(oldwidget, newwidget)`
-Removes the `oldwidget` from the document, and replaces it with the `newwidget`. Note that if both `oldwidget` and `newwidget` are currently shown in the document, their locations will be swapped. See the [geometry management docs](GEOMETRY.md) for more information.
+#### **replace_widget**(oldwidget, newwidget)
+Removes the `oldwidget` from the document, and replaces it with the `newwidget`. Note that if both `oldwidget` and `newwidget` are currently shown in the document, their locations will be swapped.
 
 Parameters
 * **oldwidget** *(tkinter.Widget)* - Specifies the Tkinter widget to replace. This must be a valid Tkinter widget that is currently managed by TkinterWeb.
@@ -551,18 +552,21 @@ Parameters
 
 ---
 
-#### `replace_element(cssselector, newwidget)`
-Replaces the content of the element matching the specified CSS selector with the `newwidget`. See the [geometry management docs](GEOMETRY.md) for more information.
-
+#### **replace_element**(cssselector, newwidget)
+Replaces the content of the element matching the specified CSS selector with the specified widget. This command will scan the document for any elements that match the specified CSS selector. If multiple elements match the specified selector, only the first element will be replaced. For example, the following code will replace the 'text' HTML element with a button. 
+```
+yourbutton = tkinter.Button(yourframe)
+yourframe.load_html("<p id='text'>some text</p>")
+yourframe.replace_element("#text", yourbutton)
+```
 Parameters
 * **cssselector** *(string)* - Specifies the CSS selector to search for.
 * **newwidget** *(tkinter.Widget)* - Specifies the new Tkinter widget to show. This may be any Tkinter widget.
 
 ---
 
-#### `remove_widget(oldwidget)`
-Removes the `oldwidget` from the document. 
-This method is experimental and may cause issues. If you encounter any issues, please [report them](https://github.com/Andereoo/TkinterWeb/issues). See the [geometry management docs](GEOMETRY.md) for more information.
+#### **remove_widget**(oldwidget)
+Removes the specified widget from the document. 
 
 Parameters
 * **oldwidget** *(tkinter.Widget)* - Specifies the Tkinter widget to remove. This must be a valid Tkinter widget that is currently managed by TkinterWeb.

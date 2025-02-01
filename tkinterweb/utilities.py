@@ -37,10 +37,10 @@ except (ImportError, SyntaxError, ):
     
 # we need this information here so the builtin pages can access it
 __title__ = 'TkinterWeb'
-__author__ = "Andereoo"
+___author__ = "Andereoo"
 __copyright__ = "Copyright (c) 2025 Andereoo"
 __license__ = "MIT"
-__version__ = '3.25.7'
+__version__ = '3.25'
 
 
 HEADER = {

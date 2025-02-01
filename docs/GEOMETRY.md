@@ -25,39 +25,7 @@ yourframe.load_html(source_html) # or use add_html to add onto the existing docu
 Widget position and sizing can be modified through CSS styling on the containing element.
 
 ## Widget Handling
-Alongside the methods above and those outlined in [DOM Manipulation with TkinterWeb](/docs/DOM.md), the [HtmlFrame](HTMLFRAME.md) and [HtmlLabel](HTMLLABEL.md) widgets also provide three other commands to dynamically change the location of Tkinter widgets inside the HTML document after loading:
-
----
-
-#### **replace_widget**(oldwidget, newwidget)
-Removes the `oldwidget` from the document, and replaces it with the `newwidget`. Note that if both `oldwidget` and `newwidget` are currently shown in the document, their locations will be swapped.
-
-Parameters
-* **oldwidget** *(tkinter.Widget)* - Specifies the Tkinter widget to replace. This must be a valid Tkinter widget that is currently managed by TkinterWeb.
-* **newwidget** *(tkinter.Widget)* - Specifies the new Tkinter widget to show. This may be any Tkinter widget.
-
----
-
-#### **replace_element**(cssselector, newwidget)
-Replaces the content of the element matching the specified CSS selector with the specified widget. This command will scan the document for any elements that match the specified CSS selector. If multiple elements match the specified selector, only the first element will be replaced. For example, the following code will replace the 'text' HTML element with a button. 
-```
-yourbutton = tkinter.Button(yourframe)
-yourframe.load_html("<p id='text'>some text</p>")
-yourframe.replace_element("#text", yourbutton)
-```
-Parameters
-* **cssselector** *(string)* - Specifies the CSS selector to search for.
-* **newwidget** *(tkinter.Widget)* - Specifies the new Tkinter widget to show. This may be any Tkinter widget.
-
----
-
-#### **remove_widget**(oldwidget)
-Removes the specified widget from the document. 
-
-Parameters
-* **oldwidget** *(tkinter.Widget)* - Specifies the Tkinter widget to remove. This must be a valid Tkinter widget that is currently managed by TkinterWeb.
-
----
+Use the methods outlined in [DOM Manipulation with TkinterWeb](/docs/DOM.md) and in the [HtmlFrame docs](/docs/HTMLFRAME.md#replace_widgetoldwidget-newwidget) to dynamically change the location of Tkinter widgets in the document after loading
 
 ## Example
 This code will display a blue button on the left, an image in the center, and an orange button on the right. Clicking a button will flip it's location with the other button:

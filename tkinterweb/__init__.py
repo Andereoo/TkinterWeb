@@ -14,7 +14,7 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 try:
     from bindings import TkinterWeb
     from htmlwidgets import HtmlFrame, HtmlLabel
-    from utilities import Notebook, __title__, ___author__, __copyright__, __license__, __version__
+    from utilities import Notebook, __title__, __author__, __copyright__, __license__, __version__
 except (ImportError, ModuleNotFoundError):
     import traceback
 

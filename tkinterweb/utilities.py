@@ -37,10 +37,10 @@ except (ImportError, SyntaxError, ):
     
 # we need this information here so the builtin pages can access it
 __title__ = 'TkinterWeb'
-___author__ = "Andereoo"
+__author__ = "Andereoo"
 __copyright__ = "Copyright (c) 2025 Andereoo"
 __license__ = "MIT"
-__version__ = '3.25'
+__version__ = '3.25.7'
 
 
 HEADER = {
@@ -923,8 +923,6 @@ class PlaceholderThread:
 
 def download(url, data=None, method="GET", decode=None, insecure=False):
     "Fetch files."
-    "Technically this isn't thread-safe (even though it is being used inside threads by Tkinterweb, "
-    "but as long as install_opener() is not called and a string is used as the url parameter we are okay."
 
     ctx = ssl.create_default_context()
     if insecure:

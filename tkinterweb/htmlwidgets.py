@@ -10,7 +10,7 @@ from urllib.parse import urldefrag, urlparse
 
 from bindings import TkinterWeb
 from utilities import (WORKING_DIR, AutoScrollbar, StoppableThread, cachedownload, download,
-                       notifier, threadname)
+                       notifier, threadname, extract_nested)
 from imageutils import newimage, createRGBimage
 from dom import TkwDocumentObjectModel
 
@@ -120,6 +120,8 @@ class HtmlFrame(ttk.Frame):
         self.yview = self.html.yview
         self.yview_moveto = self.html.yview_moveto
         self.yview_scroll = self.html.yview_scroll
+
+        self.html.tk.createcommand("node_to_html", self.node_to_html)
 
     def manage_vsb(self, allow):
         "Show or hide the scrollbars"
@@ -500,6 +502,90 @@ Otherwise, use 'insecure=True' when loading a page to ignore website certificate
         width = len(data[0].split())
         self.message_func(f"Screenshot taken: {name} {width}x{height}.")
         return createRGBimage(data, name, width, height)
+
+    def node_to_html(self, node, deep=True):  # internal
+        return self.html.tk.eval(r"""
+            proc TclNode_to_html {node} {
+                set tag [$node tag]
+                if {$tag eq ""} {
+                    append ret [$node text -pre]
+                } else {
+                    append ret <$tag
+                    foreach {zKey zVal} [$node attribute] {
+                        set zEscaped [string map [list "\x22" "\x5C\x22"] $zVal]
+                        append ret " $zKey=\"$zEscaped\""
+                    }
+                    append ret >
+                    if {%s} {
+                        append ret [node_to_childrenHtml $node]
+                    }
+                    append ret </$tag>
+                }
+            }
+            proc node_to_childrenHtml {node} {
+                set ret ""
+                foreach child [$node children] {
+                    append ret [TclNode_to_html $child]
+                }
+                return $ret
+            }
+            return [TclNode_to_html %s]
+            """ % (deep, extract_nested(node))
+        )
+
+    def create_snapshot(self, filename=None):
+        htmltext = self.html.tk.eval(r"""
+            set zTitle ""
+            set zStyle "\n"
+            set zBody ""
+            set html %s
+
+            foreach rule [$html _styleconfig] {
+                foreach {selector properties origin} $rule {}
+                if {$origin eq "agent"} continue
+                append zStyle "$selector { $properties }\n"
+            }
+            set titlenode [$html search title]
+            if {$titlenode ne ""} {
+                set child [lindex [$titlenode children] 0]
+                if {$child ne ""} { set zTitle [$child text] }
+            }
+            set bodynode [$html search body]
+            set zBody ""
+            foreach child [$bodynode children] {
+                append zBody [node_to_html $child 1]
+            }
+            return [subst {<html>
+    <head>
+        <title>$zTitle</title>
+        <style>$zStyle</style>
+    </head>
+    <body>
+        $zBody
+    </body>
+</html>}]
+        """ % self.html)
+        if not filename: return htmltext
+        file = open(filename, "w")
+        file.write(htmltext)
+        file.close()
+
+    def print_page(self, cnf={}, **kw):
+        cnf |= kw
+        if "pagesize" in cnf:
+            pagesizes = {
+                "A3": "842x1191", "A4": "595x842", "A5": "420x595",
+                "Legal": "612x792", "Letter": "612x1008"
+            }
+            cnf["pagesize"] = pagesizes[cnf["pagesize"].upper()]
+            self.message_func(cnf["pagesize"])
+
+        self.html.update()  # Update the root window to ensure HTML is rendered
+        self.message_func("Printing...")
+        file = self.html.postscript(cnf)
+        self.message_func("Printed.")
+        if "file" in cnf and not file: file = cnf["file"]
+        return file
 
 
 class HtmlLabel(HtmlFrame):

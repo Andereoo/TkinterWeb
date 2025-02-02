@@ -363,13 +363,10 @@ class TkinterWeb(tk.Widget):
         document node, or an empty string if the node is a text node"""
         return self.tk.call(self._w, "tag", subcommand, tag_name, *args)
 
-    def search(self, selector, **kw):
+    def search(self, selector, cnf={}, **kw):
         """Search the document for the specified CSS
         selector; return a Tkhtml3 node if found"""
-        opt = ()
-        for k, v in kw.items():
-            opt = opt + (f"-{k}", v)
-        return self.tk.call((self._w, "search", selector) + opt)
+        return self.tk.call((self._w, "search", selector)+self._options(cnf, kw))
 
     def set_zoom(self, multiplier):
         "Set the page zoom"
@@ -1792,5 +1789,13 @@ class TkinterWeb(tk.Widget):
             self.yview_scroll(int(-1*event.delta/30), "units")
 
     def image(self, full=""):
-        image = self.tk.call(self._w, "image", full)
-        return {image: self.tk.call(image, "data")}
+        name = self.tk.call(self._w, "image", full)
+        return {name: self.tk.call(name, "data")}
+
+    def postscript(self, cnf={}, **kw):
+        """Print the contents of the canvas to a postscript
+        file. Valid options: colormap, colormode, file, fontmap,
+        height, pageanchor, pageheight, pagesize, pagewidth, pagex, pagey, nobg, noimages,
+        rotate, width, x and y"""
+        return self.tk.call((self._w, "postscript")+self._options(cnf, kw))
+

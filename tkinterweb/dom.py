@@ -7,11 +7,7 @@ Some of the Tcl code in this file is borrowed from the Tkhtml/Hv3 project. See t
 Copyright (c) 2025 Andereoo
 """
 
-
-def extract_nested(nested):
-    if isinstance(nested, tuple) and len(nested):
-        return extract_nested(nested[0])
-    return nested
+from utilities import extract_nested
 
 
 def escape_Tcl(string):
@@ -25,9 +21,8 @@ def escape_Tcl(string):
     return escaped
 
 
-def generate_text_node(htmlwidget, text):
-    return htmlwidget.tk.eval(
-        """
+def generate_text_node(htmlwidget, text):  # Taken from hv3_dom_core.tcl line 219
+    return htmlwidget.tk.eval("""
         set tkw %s
         set text "%s"
         if {$text eq ""} {
@@ -41,8 +36,7 @@ def generate_text_node(htmlwidget, text):
             set node [parse_fragment $escaped]
         }
         return $node
-        """
-        % (htmlwidget, escape_Tcl(text))
+        """ % (htmlwidget, escape_Tcl(text))
     )
 
 
@@ -51,25 +45,23 @@ class TkwDocumentObjectModel:
         self.html = htmlwidget
         self.html.tk.createcommand("parse_fragment", self.html.parse_fragment)
 
-    def createElement(self, tagname):
+    def createElement(self, tagname):  # Taken from hv3_dom_core.tcl line 214
         "Create a new HTML element with the given tag name"
         return HtmlElement(
             self.html,
-            self.html.tk.eval(
-            """
+            self.html.tk.eval("""
             set node [%s fragment "<%s>"]
             if {$node eq ""} {error "DOMException NOT_SUPPORTED_ERR"}
             return $node
-            """
-                % (self.html, tagname)
-            ),
+            """ % (self.html, tagname)),
         )
 
     def createTextNode(self, text):
         "Create a new text node with the given text conent"
         return HtmlElement(self.html, generate_text_node(self.html, text))
 
-    def body(self):  # attr
+    @property  # attr
+    def body(self):  # Taken from hv3_dom_html.tcl line 161
         "Return the document body element"
         return HtmlElement(
             self.html,
@@ -121,60 +113,71 @@ class TkwDocumentObjectModel:
         return [HtmlElement(self.html, node) for node in nodes]
 
 
+class CSSStyleDeclaration:
+    def __init__(self, node, htmlwidget):
+        self.node = node
+        self.html = htmlwidget
+        self.style = dict(
+            (j.strip() for j in i.split(":")) for i in self.cssText.split(";") if i
+        )
+
+    def __getitem__(self, prop):
+        if prop in self.style:
+            return self.style[prop]
+        else:
+            raise KeyError(f"Property '{prop}' not found.")
+
+    def __setitem__(self, prop, value):
+        self.style[prop] = value
+        style = "; ".join(f"{p}: {v}" for p, v in self.style.items()) + ";"
+        self.html.set_node_attribute(self.node, "style", style)
+        self.__getitem__(prop)
+
+    @property
+    def cssText(self):
+        return self.html.get_node_attribute(self.node, "style")
+
+    @property
+    def length(self):
+        return len(self.style)
+
+
 class HtmlElement:
     def __init__(self, htmlwidget, node):
         self.html = htmlwidget
         self.node = node
         self.contains_widgets = False
+        self.style = CSSStyleDeclaration(node, htmlwidget)
 
-        self.html.tk.createcommand("node_to_html", self.node_to_html)
-        self.html.tk.createcommand("text_content_get", self.textContent)
-        self.html.tk.createcommand("parse_fragment", self.html.parse_fragment)
+    def setup_elem_widgets(self):  # internal
+        if self.html.bbox(self.node):  # only bother setting up widgets if visible; otherwise bad things can happen
+            for node in children:
+                if node.contains_widgets == True:
+                    self.html.setup_widgets()
+                    break
 
-    def node_to_html(self, node, deep=True):  # internal
-        return self.html.tk.eval(
-            r"""
-            proc TclNode_to_html {node} {
-                set tag [$node tag]
-                if {$tag eq ""} {
-                    append ret [$node text -pre]
-                } else {
-                    append ret <$tag
-                    foreach {zKey zVal} [$node attribute] {
-                        set zEscaped [string map [list "\x22" "\x5C\x22"] $zVal]
-                        append ret " $zKey=\"$zEscaped\""
-                    }
-                    append ret >
-                    if {%s} {
-                        append ret [node_to_childrenHtml $node]
-                    }
-                    append ret </$tag>
-                }
+    @property
+    def innerHTML(self):  # Taken from hv3_dom2.tcl line 61
+        "Get the inner HTML of an element"
+        return self.html.tk.eval("""
+            set node %s
+            if {[$node tag] eq ""} {error "$node is not an HTMLElement"}
+
+            set ret ""
+            foreach child [$node children] {
+                append ret [node_to_html $child 1]
             }
-            proc node_to_childrenHtml {node} {
-                set ret ""
-                foreach child [$node children] {
-                    append ret [TclNode_to_html $child]
-                }
-                return $ret
-            }
-            return [TclNode_to_html %s]
-            """
-            % (deep, extract_nested(node))
+            update
+            return $ret
+            """ % extract_nested(self.node)
         )
 
-    def find_nested_children(self, node):  # internal
-        children = []
-        for child in self.html.get_node_children(node):
-            children.append(HtmlElement(self.html, child))
-            children += self.find_nested_children(child)
-        return children
-
-    def innerHTML(self, contents=None):  # attr
-        "Get and set the inner HTML of an element"
+    @innerHTML.setter
+    def innerHTML(self, contents):  # Taken from hv3_dom2.tcl line 88
+        "Set the inner HTML of an element"
         if contents:
-            self.html.tk.eval(
-                """
+            contents = str(contents)
+            self.html.tk.eval("""
                 set tkw %s
                 set node %s
                 
@@ -186,71 +189,54 @@ class HtmlElement:
                 foreach child $children {
                     $child destroy
                 }
-
+                
                 set newHtml "%s"
-                set oldmode [$tkw cget -parsemode]
-                $tkw configure -parsemode html
-                # Insert the new descendants, created by parseing $newHtml.
+                # Insert the new descendants, created by parsing $newHtml.
                 set children [parse_fragment $newHtml]
                 $node insert $children
-
-                $tkw configure -parsemode $oldmode
-                update
-                """
-                % (self.html, extract_nested(self.node), escape_Tcl(contents))
+                update  ;# This must be done to see changes on-screen
+                """ % (self.html, extract_nested(self.node), escape_Tcl(contents))
             )
             if self.html.embedded_widget_attr_name in contents:
                 self.contains_widgets = True
-                if self.html.bbox(
-                    self.node
-                ):  # only bother setting up widgets if visible; won't work otherwise
+                if self.html.bbox(self.node):  # only bother setting up widgets if visible; won't work otherwise
                     self.html.setup_widgets()
             else:
                 self.contains_widgets = False
-        else:
-            return self.html.tk.eval(
-                """
-                set node %s
-                if {[$node tag] eq ""} {error "$node is not an HTMLElement"}
 
-                set ret ""
-                foreach child [$node children] {
-                    append ret [node_to_html $child 1]
-                }
-                update
-                return $ret
-                """
-                % extract_nested(self.node)
-            )
-
-    def textContent(self, contents=None):  # attr
-        "Get and set the text content of an element"
-        return self.html.tk.eval(
-            """
+    @property
+    def textContent(self):  # Original for this project
+        "Get the text content of an element."
+        return self.html.tk.eval("""
             proc get_child_text {node} {
-                set t ""
+                set z ""
                 foreach child [$node children] {
                     if {[$child tag] eq ""} {
-                        append t [$child text -pre]
+                        append z [$child text -pre]
                     } else {
-                        append t [get_child_text $child]
+                        append z [get_child_text $child]
                     }
                 }
-                return $t
+                return $z
             }
             set node %s
-            if {$node eq ""} {error "DOMException NOT_SUPPORTED_ERR"}
+            return [get_child_text $node]
+            """ % extract_nested(self.node)
+        )
+
+    @textContent.setter
+    def textContent(self, contents):  # Ditto
+        "Set the text content of an element."
+        self.html.tk.eval("""
+            set node %s
             set textnode %s
-            if {$textnode ne ""} {
-                foreach child [$node children] {
-                    $child destroy
-                }
-                $node insert $textnode
-            } else {
-                return [get_child_text $node]
+            if {$textnode eq ""} {error "$node is empty"}
+            foreach child [$node children] {
+                $child destroy
             }
-            """
-            % (extract_nested(self.node), generate_text_node(self.html, contents) if contents else '""')
+            $node insert $textnode
+            update  ;# This must be done to see changes on-screen
+            """ % (extract_nested(self.node), generate_text_node(self.html, contents))
         )
 
     def getAttribute(self, attribute):
@@ -261,44 +247,31 @@ class HtmlElement:
         "Set the value of the given attribute"
         return self.html.set_node_attribute(self.node, attribute, value)
 
+    @property
     def tagName(self):  # attr
         "Return the tag name of the element"
         return self.html.get_node_tag(self.node)
 
-    def style(self, property, value=None):  # attr
+    def _style(self, property, value=None):  # attr
         "Get and set the value of the given CSS property"
         if value:
-            styles = self.html.get_node_attribute(self.node, "style")
-            newstyles = []
-            if styles:
-                styles = styles.split(";")
-                for style in styles:
-                    style = style.strip()
-                    parts = style.split(":")
-                    if style and parts[0] != property:
-                        newstyles.append(style)
-                newstyles.append(f"{property}:{value}")
-            else:
-                newstyles = [f"{property}:{value}"]
-            return self.html.set_node_attribute(
-                self.node, "style", "; ".join(newstyles)
-            )
+            style = self.html.get_node_attribute(self.node, "style")
+            style = dict((j.strip() for j in i.split(":")) for i in style.split(";") if i)
+            style[property] = value
+            style = "; ".join(": ".join(i) for i in style.items()) + ";"
+            return self.html.set_node_attribute(self.node, "style", style)
         else:
             return self.html.get_node_property(self.node, property)
 
+    @property
     def parentElement(self):  # attr
         "Return the element's parent element"
         return HtmlElement(self.html, self.html.get_node_parent(self.node))
 
-    def children(self, deep=True):  # attr
+    @property
+    def children(self):  # attr
         "Return the element's children elements"
-        if deep:
-            return self.find_nested_children(self.node)
-        else:
-            return [
-                HtmlElement(self.html, child)
-                for child in self.html.get_node_children(self.node)
-            ]
+        return [HtmlElement(self.html, i) for i in self.html.get_node_children(self.node)]
 
     def remove(self):
         "Delete the element"
@@ -314,13 +287,7 @@ class HtmlElement:
             tkhtml_children_nodes = [children.node]
             children = [children]
         self.html.insert_node(self.node, tkhtml_children_nodes)
-
-        # only bother setting up widgets if visible; otherwise bad things can happen
-        if self.html.bbox(self.node):  
-            for node in children:
-                if node.contains_widgets == True:
-                    self.html.setup_widgets()
-                    break
+        self.setup_elem_widgets()
 
     def insertBefore(self, children, before):
         "Insert the specified children before a specified child element"
@@ -332,8 +299,4 @@ class HtmlElement:
             tkhtml_children_nodes = [children.node]
             children = [children]
         self.html.insert_node_before(self.node, tkhtml_children_nodes, before.node)
-        if self.html.bbox(self.node):  # only bother setting up widgets if visible; won't work otherwise
-            for node in children:
-                if node.contains_widgets == True:
-                    self.html.setup_widgets()
-                    break
+        self.setup_elem_widgets()

@@ -68,11 +68,14 @@ class TkwDocumentObjectModel:
             self.html.tk.eval(f"""set body [lindex [[{self.html} node] children] 1]"""),
         )
 
-    def getElementById(self, query):
+    def getElementById(self, query):  # Taken from hv3_dom_html.tcl line 127
         "Return an element given an id"
-        if not query.startswith("#"):
-            query = f"#{query}"
-        node = self.html.search(query)
+        node = self.html.tk.eval("""
+            set selector [subst -nocommands {[id="%s"]}]
+            set node [%s search $selector -index 0]
+            if {$node ne ""} { return  $node }
+            return null
+            """ % (escape_Tcl(query), self.html))
         return HtmlElement(self.html, node)
 
     def getElementsByClassName(self, query):
@@ -83,18 +86,15 @@ class TkwDocumentObjectModel:
                 newquery.append(classname)
             else:
                 newquery.append(f".{classname}")
-        nodes = self.html.search(" ".join(newquery))
+        nodes = self.html.tk.eval(" ".join(newquery))
         return [HtmlElement(self.html, node) for node in nodes]
 
-    def getElementsByName(self, query):
+    def getElementsByName(self, query):  # Taken from hv3_dom_html.tcl line 110
         "Return a list of elements matching a given name attribute"
-        newquery = []
-        for classname in query.split():
-            if classname.startswith("[name=") and classname.endswith("]"):
-                newquery.append(classname)
-            else:
-                newquery.append(f"[name={classname}]")
-        nodes = self.html.search(" ".join(newquery))
+        nodes = self.html.tk.eval("""
+            set selector [subst -nocommands {[name="%s"]}]
+            return search $selector
+            """ % (escape_Tcl(query), self.html))
         return [HtmlElement(self.html, node) for node in nodes]
 
     def getElementsByTagName(self, query):

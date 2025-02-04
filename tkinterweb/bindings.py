@@ -336,6 +336,8 @@ class TkinterWeb(tk.Widget):
         self.hovered_nodes = []
         self.current_node = None
         self.on_embedded_node = None
+        self.selection_start_node = None
+        self.selection_end_node = None
         self.vsb_type = self.manage_vsb_func()
         self.manage_hsb_func()
         self.tk.call(self._w, "reset")
@@ -392,7 +394,7 @@ class TkinterWeb(tk.Widget):
         "Set the font zoom"
         self.tk.call(self._w, "configure", "-fontscale", multiplier)
 
-    def get_fontscale(self, multiplier):
+    def get_fontscale(self):
         "Return the font zoom"
         return self.tk.call(self._w, "cget", "-fontscale")
 
@@ -1742,6 +1744,10 @@ class TkinterWeb(tk.Widget):
         self.clear_selection()
         beginning = self.text("index", 0)
         end = self.text("index", len(self.text("text")))
+        self.selection_start_node = beginning[0]
+        self.selection_start_offset = beginning[1]
+        self.selection_end_node = end[0]
+        self.selection_end_offset = end[1]
         self.tag("add", "selection", beginning[0], beginning[1], end[0], end[1])
         self.tag(
             "configure",

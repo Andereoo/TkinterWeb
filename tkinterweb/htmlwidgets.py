@@ -17,6 +17,8 @@ from dom import TkwDocumentObjectModel
 import tkinter as tk
 from tkinter import ttk
 
+import pathlib
+
 
 class HtmlFrame(ttk.Frame):
     def __init__(self, master, messages_enabled=True, vertical_scrollbar="auto", horizontal_scrollbar=False, overflow_scroll_frame=None, **kw):
@@ -121,6 +123,7 @@ class HtmlFrame(ttk.Frame):
         self.yview_moveto = self.html.yview_moveto
         self.yview_scroll = self.html.yview_scroll
 
+        self.html.tk.createcommand("resolve_uri", self.resolve_uri)
         self.html.tk.createcommand("node_to_html", self.node_to_html)
 
     def manage_vsb(self, allow):
@@ -271,6 +274,12 @@ Otherwise, use 'insecure=True' when loading a page to ignore website certificate
 
     def skim(self, url):
         return url.replace("/", "")
+
+    def resolve_uri(self):
+        base = urlparse(self.html.base_url)
+        uri = f"{base.scheme}://{base.netloc}{base.path}"
+        print(uri)
+        return uri
 
     def stop(self):
         "Stop loading a page"
@@ -516,7 +525,7 @@ Otherwise, use 'insecure=True' when loading a page to ignore website certificate
                         append ret " $zKey=\"$zEscaped\""
                     }
                     append ret >
-                    if {%s} {
+                    if {%d} {
                         append ret [node_to_childrenHtml $node]
                     }
                     append ret </$tag>
@@ -530,15 +539,17 @@ Otherwise, use 'insecure=True' when loading a page to ignore website certificate
                 return $ret
             }
             return [TclNode_to_html %s]
-            """ % (deep, extract_nested(node))
+            """ % (int(deep), extract_nested(node))
         )
 
     def create_snapshot(self, filename=None):
         htmltext = self.html.tk.eval(r"""
+            set html %s
             set zTitle ""
             set zStyle "\n"
             set zBody ""
-            set html %s
+
+            set zBase [resolve_uri]
 
             foreach rule [$html _styleconfig] {
                 foreach {selector properties origin} $rule {}
@@ -555,10 +566,12 @@ Otherwise, use 'insecure=True' when loading a page to ignore website certificate
             foreach child [$bodynode children] {
                 append zBody [node_to_html $child 1]
             }
+            # It has to be writen like this because it outputs the indention
             return [subst {<html>
     <head>
         <title>$zTitle</title>
         <style>$zStyle</style>
+        <base href="$zBase"></base>
     </head>
     <body>
         $zBody
@@ -566,6 +579,8 @@ Otherwise, use 'insecure=True' when loading a page to ignore website certificate
 </html>}]
         """ % self.html)
         if not filename: return htmltext
+        if not pathlib.Path(filename).suffix:
+            filename = f"{filename}.{self.html.get_parsemode()}"
         file = open(filename, "w")
         file.write(htmltext)
         file.close()

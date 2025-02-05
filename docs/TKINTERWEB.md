@@ -247,5 +247,3 @@ Shifts the view vertically to the specified position.
 ---
 #### `yview_scroll(number, what)`
 Shifts the view in the window up or down, according to number and  what. "number" is an integer, and "what" is either "units" or "pages".
-
----

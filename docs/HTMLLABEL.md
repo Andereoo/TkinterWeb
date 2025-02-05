@@ -7,7 +7,7 @@
 It behaves as a Tkinter Label widget, but allows for displaying HTML documents and rich text.
 
 ## Usage
-**The HtmlLabel widget is extremely easy to use.**
+**The HtmlLabel widget is very easy to use.**
 
 Here is an example:
 
@@ -37,8 +37,6 @@ HTML can also be loaded using the `load_html` command to change the content of t
 
 
 ### Useful Methods:
-
----
 #### `load_html(html_source, base_url="")`
 Parses the supplied HTML code.
 
@@ -63,5 +61,4 @@ Parameters
 
 ---
 
-#### All HtmlFrame commands can also be used on the HtmlLabel widget.
-#### For a complete list of avaliable commands, see the [HtmlFrame docs](HTMLFRAME.md#useful-methods)
+All HtmlFrame methods can also be used on the HtmlLabel widget. For a complete list of avaliable methods, see the [HtmlFrame docs](HTMLFRAME.md#useful-methods).

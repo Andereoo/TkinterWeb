@@ -23,7 +23,7 @@ The HtmlFrame widget is built on top of this widget, so variables and functions 
 * `**kw` Other optional arguments
 
 ### Widget settings variables:
-*The following are the major variables that can be changed to alter the behaviour of the TkinterWeb widget. Please refer to the [source code](../bindings.py) for more details.*
+*The following are the major variables that can be changed to alter the behaviour of the TkinterWeb widget. Please refer to the [source code](../tkinterweb/bindings.py) for more details.*
 ```
 stylesheets_enabled = True
 images_enabled = True
@@ -54,7 +54,7 @@ downloading_resource_func = self.placeholder
  ```
 
 ### Useful Methods:
-*This is a subset of the functions provided by the TkinterWeb widget. Please refer to the [source code](../bindings.py) for more details.*
+*This is a subset of the functions provided by the TkinterWeb widget. Please refer to the [source code](../tkinterweb/bindings.py) for more details.*
 
 ---
 #### `clear_selection()`

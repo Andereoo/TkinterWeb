@@ -1,6 +1,12 @@
-### This script will generate a universal wheel, a universal sdist, and platform-specific wheels for TkinterWeb
-### It's a pretty messy solution but makes it possible to only bundle only the tkhtml binary needed in each platform-specific wheel
-### This avoids the need to have a seperate copy of the repository for each platform
+"""
+A wheel and sdist generator for TkinterWeb
+
+This script will generate a universal wheel, a universal sdist, and platform-specific wheels for TkinterWeb
+It's a pretty messy solution but makes it possible to only bundle only the tkhtml binary needed in each platform-specific wheel
+This avoids the need to have a seperate copy of the repository for each platform
+
+Copyright (c) 2025 Andereoo
+"""
 
 import os, shutil, sys
 import subprocess
@@ -9,28 +15,28 @@ import re
 ROOT_PATH = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 WHEELS_ROOT_PATH = os.path.join(ROOT_PATH, "wheels")
 DIST_ROOT_PATH = os.path.join(ROOT_PATH, "dist")
+BUILD_ROOT_PATH = os.path.join(ROOT_PATH, "build")
 EGG_ROOT_PATH = os.path.join(ROOT_PATH, "tkinterweb.egg-info")
 TKINTERWEB_ROOT_PATH = os.path.join(ROOT_PATH, "tkinterweb")
 TKINTERWEB_NEW_ROOT_PATH = os.path.join(WHEELS_ROOT_PATH, "tkinterweb_")
 TKHTML_ROOT_PATH = os.path.join(TKINTERWEB_ROOT_PATH, "tkhtml")
 README_PATH = os.path.join(ROOT_PATH, "README.md")
 LICENCE_PATH = os.path.join(ROOT_PATH, "LICENSE.md")
+SETUP_PATH = os.path.join(ROOT_PATH, "setup.py")
+MANIFEST_PATH = os.path.join(ROOT_PATH, "MANIFEST.in")
 TKHTML_SUBFOLDER_NAME = "binaries"
 
 manifest_in_contents = "recursive-include tkinterweb/tkhtml *"
-setup_py_contents = """ # The actual setup.py file in this directory is the one used for the universal wheel
-import pathlib
-from setuptools import setup, find_packages
+setup_py_contents_generic = """import pathlib
+from setuptools import setup, find_namespace_packages
 
 HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
-
-def get_platname():
-    return "{}"
+{}
 
 setup(
     name="tkinterweb",
-    version="3.25.11",
+    version="3.25.12",
     description="HTML/CSS viewer for Tkinter",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -46,22 +52,29 @@ setup(
         "Topic :: Software Development",
       ],
     keywords="tkinter, Tkinter, tkhtml, Tkhtml, Tk, HTML, CSS, webbrowser",
-    packages=find_packages(),
+    packages=find_namespace_packages(include=["tkinterweb", "tkinterweb.*"]),
     include_package_data=True,
-    install_requires=["pillow"],
+    install_requires=["pillow"],{}
+)
+"""
+setup_py_contents = setup_py_contents_generic.format("""
+def get_platname():
+    return "{}"                                                      
+""", """
     options={{
         "bdist_wheel": {{
             "plat_name": get_platname(),
         }},
     }}, 
-)
-"""
+""")
 
 existing_folders = []
 if os.path.exists(WHEELS_ROOT_PATH):
     existing_folders.append(WHEELS_ROOT_PATH)
 if os.path.exists(DIST_ROOT_PATH):
     existing_folders.append(DIST_ROOT_PATH)
+if os.path.exists(BUILD_ROOT_PATH):
+    existing_folders.append(BUILD_ROOT_PATH)
 if os.path.exists(EGG_ROOT_PATH):
     existing_folders.append(EGG_ROOT_PATH)
 
@@ -74,7 +87,7 @@ if existing_folders:
             shutil.rmtree(path)
     else:
         print("Cancelling")
-        exit()
+        #exit()
 
 print()
 
@@ -143,19 +156,28 @@ for folder in tkhtml_folders:
     setup_path = os.path.join(folder_path, "setup.py")
     with open(setup_path, "w+") as handle:
         handle.write(setup_py_contents.format(folder))
-    
-    manifest_path = os.path.join(folder_path, "MANIFEST.in")
-    with open(manifest_path, "w+") as handle:
-        handle.write(manifest_in_contents.format(folder))
 
     shutil.copy2(README_PATH, folder_path)
     shutil.copy2(LICENCE_PATH, folder_path)
+    shutil.copy2(MANIFEST_PATH, folder_path)
     
     print(f"Creating wheel for {folder}...", end="")
     run_shell("python3", "-m", "build", "--no-isolation", "--wheel", cwd=folder_path, is_wheel=True)    
     wheel_folders_to_copy.append(os.path.join(folder_path, "dist"))
     
-# Create a generic wheel and sdistprint
+# Check if setup.py exises
+if os.path.exists(SETUP_PATH) :
+    should_continue = input("The generic setup.py file already exists. Update and continue (Y/N)? ")
+    if should_continue.upper() == "Y":
+        print()
+        os.remove(SETUP_PATH)
+    else:
+        print("Cancelling")
+        exit()
+
+with open(SETUP_PATH, "w+") as handle:
+    handle.write(setup_py_contents_generic.format("", ""))
+
 print(f"Creating wheel and sdist for {TKINTERWEB_ROOT_PATH}...", end="")
 run_shell("python3", "-m", "build", "--no-isolation", is_wheel=True)
 

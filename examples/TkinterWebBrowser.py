@@ -19,7 +19,7 @@ Copyright (c) 2025 Andereoo
 import tkinter as tk
 from tkinter import ttk
 
-from tkinterweb import HtmlFrame, Notebook
+from tkinterweb import HtmlFrame, Notebook, __version__
 from tkinterweb.utilities import BUILTINPAGES
 
 import os
@@ -28,6 +28,12 @@ import os
 if os.name == "nt":
 	from ctypes import windll
 	windll.shcore.SetProcessDpiAwareness(1)
+
+version = []
+for letter in __version__.split("."):
+    version.append(int(letter))
+if tuple(version) < (3, 25, 12):
+    raise RuntimeError("This demo needs TkinterWeb version 3.25.12 or higher.")
 
 
 NEW_TAB = "https://wiki.python.org/moin/TkInter"
@@ -532,4 +538,3 @@ class Browser(tk.Tk):
 
 if __name__ == "__main__":   
     Browser()
-

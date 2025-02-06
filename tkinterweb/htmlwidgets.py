@@ -578,12 +578,14 @@ Otherwise, use 'insecure=True' when loading a page to ignore website certificate
     </body>
 </html>}]
         """ % self.html)
-        if not filename: return htmltext
-        if not pathlib.Path(filename).suffix:
-            filename = f"{filename}.{self.html.get_parsemode()}"
-        file = open(filename, "w")
-        file.write(htmltext)
-        file.close()
+        if filename:
+            if not pathlib.Path(filename).suffix:
+                filename = f"{filename}.{self.html.get_parsemode()}"
+            file = open(filename, "w")
+            file.write(htmltext)
+            file.close()
+            
+        return htmltext
 
     def print_page(self, cnf={}, **kw):
         cnf |= kw

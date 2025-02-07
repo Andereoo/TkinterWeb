@@ -2,7 +2,7 @@
 A thin wrapper on top of bindings.py that offers some JavaScript-like functions 
 and converts Tkhtml nodes into Python objects
 
-Some of the Tcl code in this file is borrowed from the Tkhtml/Hv3 project. See the copyright at tkhtml/COPYRIGHT.
+Some of the Tcl code in this file is borrowed from the Tkhtml/Hv3 project. See tkhtml/COPYRIGHT.
 
 Copyright (c) 2025 Andereoo
 """

@@ -121,6 +121,7 @@ class TkinterWeb(tk.Widget):
         self.image_alternate_text_font = get_alt_font()
         self.image_alternate_text_size = 14
         self.image_alternate_text_threshold = 10
+        self.selection_enabled = True
         self.find_match_highlight_color = "#ef0fff"
         self.find_match_text_color = "#fff"
         self.find_current_highlight_color = "#38d878"
@@ -161,6 +162,8 @@ class TkinterWeb(tk.Widget):
         self.hovered_nodes = []
         self.current_cursor = ""
         self.vsb_type = 2
+        self.selection_type = 0
+        self.selection_timer = None
 
         # enable form resetting and submission
         self.form_get_commands = {}
@@ -196,6 +199,7 @@ class TkinterWeb(tk.Widget):
         self.bind("<<Copy>>", self.copy_selection, True)
         self.bind("<B1-Motion>", self.extend_selection, True)
         self.bind("<Button-1>", self.on_click, True)
+        self.bind("<Double-Button-1>", self.on_double_click, True)
         self.bind("<ButtonRelease-1>", self.on_click_release, True)
         self.bind_class(self.node_tag, "<Motion>", self.on_mouse_motion, True)
 
@@ -1068,147 +1072,6 @@ class TkinterWeb(tk.Widget):
         widgetid.event_generate("<<Modified>>")
         return True
 
-    def on_click(self, event):
-        "Set active element flags"
-
-        if not self.current_node:
-            # register current node if mouse has never moved
-            self.on_mouse_motion(event)
-
-        self.focus_set()
-        self.tag("delete", "selection")
-        node_handle = self.get_current_node(event)
-
-        if node_handle:
-            self.selection_start_node, self.selection_start_offset = self.node(
-                True, event.x, event.y
-            )
-
-            if node_handle and self.stylesheets_enabled:
-                if not self.get_node_tag(node_handle):
-                    node_handle = self.get_current_node_parent(node_handle)
-                self.set_node_flags(node_handle, "active")
-                self.prev_active_node = node_handle
-
-    def on_leave(self, event):
-        "Reset cursor and node states when leaving this widget"
-        self.set_cursor("default")
-        if self.stylesheets_enabled:
-            for node in self.hovered_nodes:
-                try:
-                    self.remove_node_flags(node, "hover")
-                    self.remove_node_flags(node, "active")
-                except tk.TclError:
-                    pass
-        self.hovered_nodes = []
-        self.current_node = None
-
-    def on_mouse_motion(self, event):
-        "Set hover flags and handle the CSS 'cursor' property"
-        if self.is_selecting:
-            return
-        if self.on_embedded_node:
-            node_handle = self.on_embedded_node
-        else:
-            node_handle = self.get_current_node(event)
-            if not node_handle:
-                self.on_leave(None)
-                return
-
-        if (
-            node_handle
-            and node_handle != self.current_node
-            and self.stylesheets_enabled
-        ):
-            old_handle = self.current_node
-            self.current_node = node_handle
-
-            if node_handle != old_handle:
-                is_text_node = False
-                if not self.get_node_tag(node_handle):
-                    node_handle = self.get_current_node_parent(node_handle)
-                    is_text_node = True
-
-                cursor = self.get_node_property(node_handle, "cursor")
-                if cursor in self.cursors:
-                    self.set_cursor(cursor)
-                elif is_text_node:
-                    self.set_cursor("text")
-                else:
-                    self.set_cursor("default")
-
-                for node in self.hovered_nodes:
-                    self.remove_node_flags(node, "hover")
-
-                self.hovered_nodes = []
-                self.handle_recursive_hovering(
-                    node_handle, self.recursive_hovering_count
-                )
-
-    def on_click_release(self, event):
-        "Handle click releases on <a> nodes"
-        if self.is_selecting:
-            self.is_selecting = False
-            self.current_node = None
-            self.on_mouse_motion(event)
-            return
-
-        node_handle = self.get_current_node(event)
-
-        try:
-            if node_handle:
-                node_tag = self.get_node_tag(node_handle).lower()
-
-                if not node_tag:
-                    node_handle = self.get_node_parent(node_handle)
-                    node_tag = self.get_node_tag(node_handle).lower()
-
-                node_type = self.get_node_attribute(node_handle, "type").lower()
-
-                if self.prev_active_node and self.stylesheets_enabled:
-                    self.remove_node_flags(self.prev_active_node, "active")
-                if node_tag == "a":
-                    self.set_node_flags(node_handle, "visited")
-                    self.handle_link_click(node_handle)
-                elif node_tag == "input" and node_type == "reset":
-                    self.handle_form_reset(node_handle)
-                elif node_tag == "input" and node_type == "submit":
-                    self.handle_form_submission(node_handle)
-                elif node_tag == "input" and node_type == "image":
-                    self.handle_form_submission(node_handle)
-                elif node_tag == "button" and node_type == "submit":
-                    self.handle_form_submission(node_handle)
-                else:
-                    for node in self.hovered_nodes:
-                        node_tag = self.get_node_tag(node).lower()
-                        if node_tag == "a":
-                            self.set_node_flags(node, "visited")
-                            self.handle_link_click(node)
-                            break
-                        elif node_tag == "button":
-                            if (self.get_node_attribute(node, "type").lower() == "submit"):
-                                self.handle_form_submission(node)
-                                break
-        except tk.TclError:
-            pass
-
-        self.prev_active_node = None
-
-    def on_embedded_mouse_motion(self, event, node_handle):
-        self.on_embedded_node = node_handle
-        self.on_mouse_motion(event)
-
-    def add_bindtags(self, widgetid, allowscrolling=True):
-        "Add bindtags to allow scrolling and on_embedded_mouse function calls"
-        if allowscrolling:
-            tags = (
-                self.node_tag,
-                self.scrollable_node_tag,
-            )
-        else:
-            tags = (self.node_tag,)
-        widgetid.bindtags(widgetid.bindtags() + tags)
-
     def crash_prevention(self, data):
         if self.prevent_crashes:
             data = "".join(c for c in data if c <= "\uFFFF")
@@ -1738,6 +1601,237 @@ class TkinterWeb(tk.Widget):
     def resolve_url(self, href):
         "Get full url from partial url"
         return urljoin(self.base_url, href)
+    
+    def on_click(self, event):
+        "Set active element flags"
+
+        if not self.current_node:
+            # register current node if mouse has never moved
+            self.on_mouse_motion(event)
+
+        self.focus_set()
+        self.tag("delete", "selection")
+        node_handle = self.get_current_node(event)
+
+        if node_handle:
+            self.selection_start_node, self.selection_start_offset = self.node(
+                True, event.x, event.y
+            )
+
+            if node_handle and self.stylesheets_enabled:
+                if not self.get_node_tag(node_handle):
+                    node_handle = self.get_current_node_parent(node_handle)
+                self.set_node_flags(node_handle, "active")
+                self.prev_active_node = node_handle
+
+        if self.selection_type != 0:
+            self.on_double_click(event)
+
+    def on_leave(self, event):
+        "Reset cursor and node states when leaving this widget"
+        self.set_cursor("default")
+        if self.stylesheets_enabled:
+            for node in self.hovered_nodes:
+                try:
+                    self.remove_node_flags(node, "hover")
+                    self.remove_node_flags(node, "active")
+                except tk.TclError:
+                    pass
+        self.hovered_nodes = []
+        self.current_node = None
+
+    def on_mouse_motion(self, event):
+        "Set hover flags and handle the CSS 'cursor' property"
+        if self.is_selecting:
+            return
+        if self.on_embedded_node:
+            node_handle = self.on_embedded_node
+        else:
+            node_handle = self.get_current_node(event)
+            if not node_handle:
+                self.on_leave(None)
+                return
+
+        if (
+            node_handle
+            and node_handle != self.current_node
+            and self.stylesheets_enabled
+        ):
+            old_handle = self.current_node
+            self.current_node = node_handle
+
+            if node_handle != old_handle:
+                is_text_node = False
+                if not self.get_node_tag(node_handle):
+                    node_handle = self.get_current_node_parent(node_handle)
+                    is_text_node = True
+
+                cursor = self.get_node_property(node_handle, "cursor")
+                if cursor in self.cursors:
+                    self.set_cursor(cursor)
+                elif is_text_node:
+                    self.set_cursor("text")
+                else:
+                    self.set_cursor("default")
+                
+                for node in self.hovered_nodes:
+                    try:
+                        self.remove_node_flags(node, "hover")
+                    except tk.TclError:
+                        # sometimes errors are thrown if the mouse is moving while the page is loading
+                        pass
+
+                self.hovered_nodes = []
+                self.handle_recursive_hovering(
+                    node_handle, self.recursive_hovering_count
+                )
+
+    def on_click_release(self, event):
+        "Handle click releases on <a> nodes"
+        if self.is_selecting:
+            self.is_selecting = False
+            self.current_node = None
+            self.on_mouse_motion(event)
+            return
+
+        node_handle = self.get_current_node(event)
+
+        try:
+            if node_handle:
+                node_tag = self.get_node_tag(node_handle).lower()
+
+                if not node_tag:
+                    node_handle = self.get_node_parent(node_handle)
+                    node_tag = self.get_node_tag(node_handle).lower()
+
+                node_type = self.get_node_attribute(node_handle, "type").lower()
+
+                if self.prev_active_node and self.stylesheets_enabled:
+                    self.remove_node_flags(self.prev_active_node, "active")
+                if node_tag == "a":
+                    self.set_node_flags(node_handle, "visited")
+                    self.handle_link_click(node_handle)
+                elif node_tag == "input" and node_type == "reset":
+                    self.handle_form_reset(node_handle)
+                elif node_tag == "input" and node_type == "submit":
+                    self.handle_form_submission(node_handle)
+                elif node_tag == "input" and node_type == "image":
+                    self.handle_form_submission(node_handle)
+                elif node_tag == "button" and node_type == "submit":
+                    self.handle_form_submission(node_handle)
+                else:
+                    for node in self.hovered_nodes:
+                        node_tag = self.get_node_tag(node).lower()
+                        if node_tag == "a":
+                            self.set_node_flags(node, "visited")
+                            self.handle_link_click(node)
+                            break
+                        elif node_tag == "button":
+                            if (self.get_node_attribute(node, "type").lower() == "submit"):
+                                self.handle_form_submission(node)
+                                break
+        except tk.TclError:
+            pass
+
+        self.prev_active_node = None
+        if not self.selection_timer:
+            self.clear_selection_type()
+
+    def word_in_node(self, node, offset):
+        text = self.get_node_text(node)
+        letters = list(text)
+
+        beg = 0
+        end = 0
+        for index, letter in enumerate(reversed(letters[:offset])):
+            beg = index + 1
+            if letter == " ":
+                beg = index
+                break
+        for index, letter in enumerate(letters[offset:]):
+            end = index + 1
+            if letter == " ":
+                end = index
+                break
+
+        pre = len(letters[:offset])
+        return pre - beg, pre + end
+
+    def on_double_click(self, event):
+        "Cycle between normal selection, text selection, and element selection on multi-clicks"
+        if not self.selection_enabled:
+            return
+        
+        if self.selection_timer:
+            self.after_cancel(self.selection_timer)
+            self.selection_timer = None
+
+        try:
+            self.selection_start_node, self.selection_start_offset = self.node(
+                True, event.x, event.y
+            )
+
+            if self.selection_start_node is None:
+                return
+                
+            if self.selection_type == 1:
+                text = self.get_node_text(self.selection_start_node)
+                self.tag(
+                    "add",
+                    "selection",
+                    self.selection_start_node,
+                    0,
+                    self.selection_start_node,
+                    len(text),
+                )
+                self.selection_type = 2
+
+            elif self.selection_type == 2:
+                self.clear_selection()
+                self.selection_type = 3
+
+            else:
+                start_offset, end_offset = self.word_in_node(self.selection_start_node, self.selection_start_offset)
+                self.tag(
+                    "add",
+                    "selection",
+                    self.selection_start_node,
+                    start_offset,
+                    self.selection_start_node,
+                    end_offset,
+                )
+                self.selection_type = 1
+
+            self.tag(
+                "configure",
+                "selection",
+                "-bg",
+                self.selected_text_highlight_color,
+                "-fg",
+                self.selected_text_color,
+            )
+            
+            self.selection_timer = self.after(500, self.clear_selection_type)
+        except tk.TclError:
+            self.set_cursor("default")
+
+    def clear_selection_type(self):
+        self.selection_type = 0
+
+    def on_embedded_mouse_motion(self, event, node_handle):
+        self.on_embedded_node = node_handle
+        self.on_mouse_motion(event)
+
+    def add_bindtags(self, widgetid, allowscrolling=True):
+        "Add bindtags to allow scrolling and on_embedded_mouse function calls"
+        if allowscrolling:
+            tags = (
+                self.node_tag,
+                self.scrollable_node_tag,
+            )
+        else:
+            tags = (self.node_tag,)
+        widgetid.bindtags(widgetid.bindtags() + tags)
 
     def select_all(self):
         "Select all of the text in the document"
@@ -1765,9 +1859,16 @@ class TkinterWeb(tk.Widget):
 
     def extend_selection(self, event):
         "Alter selection and HTML element states based on mouse movement"
+        if not self.selection_enabled:
+            return
+        
         if self.selection_start_node is None:
             self.tag("delete", "selection")
             return
+        
+        if self.selection_timer:
+            self.after_cancel(self.selection_timer)
+            self.selection_timer = None
 
         try:
             self.selection_end_node, self.selection_end_offset = self.node(
@@ -1778,14 +1879,57 @@ class TkinterWeb(tk.Widget):
                 return
 
             self.tag("delete", "selection")
-            self.tag(
-                "add",
-                "selection",
-                self.selection_start_node,
-                self.selection_start_offset,
-                self.selection_end_node,
-                self.selection_end_offset,
-            )
+
+            if self.selection_type == 1:
+                start_offset, end_offset = self.word_in_node(self.selection_start_node, self.selection_start_offset)
+                start_offset2, end_offset2 = self.word_in_node(self.selection_end_node, self.selection_end_offset)
+                self.tag(
+                    "add",
+                    "selection",
+                    self.selection_start_node,
+                    start_offset,
+                    self.selection_end_node,
+                    end_offset2,
+                )
+                self.tag(
+                    "add",
+                    "selection",
+                    self.selection_start_node,
+                    end_offset,
+                    self.selection_end_node,
+                    start_offset2,
+                )
+
+            elif self.selection_type == 2:
+                text = self.get_node_text(self.selection_end_node)
+                text2 = self.get_node_text(self.selection_start_node)
+                self.tag(
+                    "add",
+                    "selection",
+                    self.selection_start_node,
+                    0,
+                    self.selection_end_node,
+                    len(text),
+                )
+                self.tag(
+                    "add",
+                    "selection",
+                    self.selection_start_node,
+                    0,
+                    self.selection_start_node,
+                    len(text2),
+                )
+                
+            else:
+                self.tag(
+                    "add",
+                    "selection",
+                    self.selection_start_node,
+                    self.selection_start_offset,
+                    self.selection_end_node,
+                    self.selection_end_offset,
+                )
+
             self.tag(
                 "configure",
                 "selection",

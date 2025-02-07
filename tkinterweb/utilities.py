@@ -1,6 +1,8 @@
 """
 Various constants and utilities used by TkinterWeb
 
+Some of the CSS code in this file is modified from the Tkhtml/Hv3 project. See tkhtml/COPYRIGHT.
+
 Copyright (c) 2025 Andereoo
 """
 
@@ -40,7 +42,7 @@ __title__ = 'TkinterWeb'
 __author__ = "Andereoo"
 __copyright__ = "Copyright (c) 2025 Andereoo"
 __license__ = "MIT"
-__version__ = '3.25.12'
+__version__ = '3.25.13'
 
 
 HEADER = {

@@ -104,7 +104,7 @@ class TkwDocumentObjectModel:
 
     def querySelector(self, query):
         "Return the first element that matches a given CSS selector"
-        node = self.html.search(query)
+        node = self.html.search(query, index=1)
         return HtmlElement(self.html, node)
 
     def querySelectorAll(self, query):
@@ -147,7 +147,7 @@ class HtmlElement:
         self.html = htmlwidget
         self.node = node
         self.contains_widgets = False
-        self.style = CSSStyleDeclaration(node, htmlwidget)
+        self.styleCache = None  # Initialize style as None
 
     def setup_elem_widgets(self):  # internal
         if self.html.bbox(self.node):  # only bother setting up widgets if visible; otherwise bad things can happen
@@ -155,6 +155,12 @@ class HtmlElement:
                 if node.contains_widgets == True:
                     self.html.setup_widgets()
                     break
+
+    @property
+    def style(self):
+        if self.styleCache is None:  # Lazy loading of style
+            self.styleCache = CSSStyleDeclaration(self.node, self.html)
+        return self.styleCache
 
     @property
     def innerHTML(self):  # Taken from hv3_dom2.tcl line 61
@@ -300,3 +306,13 @@ class HtmlElement:
             children = [children]
         self.html.insert_node_before(self.node, tkhtml_children_nodes, before.node)
         self.setup_elem_widgets()
+
+    def querySelector(self, query):
+        "Return the first element that matches a given CSS selector"
+        node = self.html.search(query, index=1, root=self.node)
+        return HtmlElement(self.html, node)
+
+    def querySelectorAll(self, query):
+        "Return a list of elements that match a given CSS selector"
+        nodes = self.html.search(query, root=self.node)
+        return [HtmlElement(self.html, node) for node in nodes]

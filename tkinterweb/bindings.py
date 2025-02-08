@@ -1604,7 +1604,6 @@ class TkinterWeb(tk.Widget):
     
     def on_click(self, event):
         "Set active element flags"
-
         if not self.current_node:
             # register current node if mouse has never moved
             self.on_mouse_motion(event)
@@ -1623,9 +1622,6 @@ class TkinterWeb(tk.Widget):
                     node_handle = self.get_current_node_parent(node_handle)
                 self.set_node_flags(node_handle, "active")
                 self.prev_active_node = node_handle
-
-        if self.selection_type != 0:
-            self.on_double_click(event)
 
     def on_leave(self, event):
         "Reset cursor and node states when leaving this widget"
@@ -1759,6 +1755,8 @@ class TkinterWeb(tk.Widget):
 
     def on_double_click(self, event):
         "Cycle between normal selection, text selection, and element selection on multi-clicks"
+        self.on_click(event)
+
         if not self.selection_enabled:
             return
         
@@ -1901,23 +1899,24 @@ class TkinterWeb(tk.Widget):
                 )
 
             elif self.selection_type == 2:
-                text = self.get_node_text(self.selection_end_node)
-                text2 = self.get_node_text(self.selection_start_node)
+                text = self.get_node_text(self.selection_start_node)
+                text2 = self.get_node_text(self.selection_end_node)
                 self.tag(
                     "add",
                     "selection",
                     self.selection_start_node,
                     0,
                     self.selection_end_node,
-                    len(text),
+                    len(text2),
                 )
+
                 self.tag(
                     "add",
                     "selection",
                     self.selection_start_node,
+                    len(text),
+                    self.selection_end_node,
                     0,
-                    self.selection_start_node,
-                    len(text2),
                 )
                 
             else:

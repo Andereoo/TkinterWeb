@@ -52,6 +52,7 @@ class Page(tk.Frame):
         self.bottombar = bottombar = ttk.Frame(self)
         self.findbar = findbar = ttk.Frame(self)
         self.sidebar = sidebar = HtmlFrame(frame, messages_enabled=False, width=250)
+        sidebar.html.selection_enabled = False
         sidebar.grid_propagate(False)
         sidebar.set_fontscale(0.8)
         self.linklabel = linklabel = ttk.Label(bottombar, text="Welcome to TkinterWeb!", cursor="hand2")
@@ -134,7 +135,7 @@ class Page(tk.Frame):
         frame.grid(column=0, row=1, sticky="nsew")
         bottombar.grid(column=0, row=4, sticky="ew")
 
-        self.sidebar.load_html(f"""<style>body {{background-color: {self.sidebar.background}}} p, span {{margin-top: 5px; margin-bottom: 5px}} object {{width: 100%; cursor: pointer}}</style>
+        self.sidebar.load_html(f"""<style>body {{background-color: {self.sidebar.background}}} p, span {{margin-top: 5px; margin-bottom: 5px; cursor: default}} object {{width: 100%; cursor: pointer}}</style>
                                <object allowscrolling data={images_enabled}></object><br>
                                <object allowscrolling data={styles_enabled}></object><br>
                                <object allowscrolling data={forms_enabled}></object><br>

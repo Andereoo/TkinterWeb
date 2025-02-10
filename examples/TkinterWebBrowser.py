@@ -369,7 +369,7 @@ class Page(tk.Frame):
         self.frame.load_url(url)
         if len(self.back_history) <= 1:
             self.backbutton.config(state="disabled", cursor="arrow")
-        self.handle_view_source_button(url)
+        self.url_change(url)
 
     def on_downloading(self):
         self.reloadbutton.config(text="Stop", command=self.frame.stop)
@@ -384,7 +384,7 @@ class Page(tk.Frame):
         self.backbutton.config(state="normal", cursor="hand2")
         self.back_history.append(url)
         self.frame.load_url(url)
-        self.handle_view_source_button(url)
+        self.url_change(url)
 
     def cut_text(self, text, limit):
         if (len(text) > limit):

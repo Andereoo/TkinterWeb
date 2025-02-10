@@ -93,6 +93,10 @@ Return the font zoom.
 Get the value of a specified attribute of the given node. If provided, the value of the specified attribute will be set to `value`.
 
 ---
+#### `get_node_attributes(node_handle, attribute, default='', value=None)`
+Get the attributes of the given node.
+
+---
 #### `get_node_children(node_handle)`
 Get the children of the given node.
 
@@ -103,6 +107,14 @@ Get the parent of the given node.
 ---
 #### `get_node_property(node_handle, node_property)`
 Get the calculated value of a node's CSS property. If the node is a text node, return the value of the property as assigned to the parent node.
+
+---
+#### `get_node_properties(node_handle)`
+Get the CSS properties of the given node.
+
+---
+#### `override_node_properties(node_handle, *props)`
+Get/set the CSS property override list.
 
 ---
 #### `get_node_tag(node_handle)`

@@ -220,4 +220,26 @@ Parameters
 
 ---
 
+#### `document.querySelector(query)`
+Return the first descendant element that matches a given CSS selector
+
+Parameters
+* **query** *(string)* - Specifies the CSS selector to be searched for 
+
+Return type
+* *HtmlElement*
+
+---
+
+#### `document.querySelectorAll(query)`
+Return a list of descendant elements that match a given CSS selector
+
+Parameters
+* **query** *(string)* - Specifies the CSS selector to be searched for 
+
+Return type
+* *list*
+
+---
+
 Please report bugs or request new features on the [issues page](https://github.com/Andereoo/TkinterWeb/issues).

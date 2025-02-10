@@ -477,7 +477,7 @@ class TkinterWeb(tk.Widget):
         return self.tk.call(node_handle, "attribute", attribute, value)
 
     def get_node_attributes(self, node_handle):
-        "Set the attributes of the given node"
+        "Get the attributes of the given node"
         attr = self.tk.call(node_handle, "attribute")
         return dict(zip(attr[0::2], attr[1::2]))
 

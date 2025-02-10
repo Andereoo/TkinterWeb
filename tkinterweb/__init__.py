@@ -22,7 +22,7 @@ except (ImportError, ModuleNotFoundError):
     # Also print the message in case something is also wrong with the Tkinter installation
     error_message = "Error: The files required to run TkinterWeb could not be found. \
 This typically occurs when bundling TkinterWeb into an app without forcing the application maker to include all nessessary files or when some of TkinterWeb's dependencies are not installed. \
-See https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/docs/FAQ.md for more information. \n\n\
+See https://github.com/Andereoo/TkinterWeb/blob/main/docs/FAQ.md for more information. \n\n\
 {}".format(traceback.format_exc())
     sys.stdout.write(error_message)
 

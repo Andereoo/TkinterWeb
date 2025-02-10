@@ -10,7 +10,7 @@ from urllib.parse import urldefrag, urlparse
 
 from bindings import TkinterWeb
 from utilities import (WORKING_DIR, BUILTINPAGES, AutoScrollbar, StoppableThread, cachedownload, download,
-                       notifier, threadname, __version__)
+                       notifier, threadname, rgb_to_hex, __version__)
 from imageutils import ImageLabel
 from dom import TkwDocumentObjectModel
 
@@ -33,7 +33,7 @@ class HtmlFrame(ttk.Frame):
 
         self.document = TkwDocumentObjectModel(html)
 
-        self.background = ttk.Style().lookup('TFrame', 'background')
+        self.background = background = ttk.Style().lookup('TFrame', 'background')
 
         self.image_label = ImageLabel(html, self.on_error, anchor='center')
 
@@ -89,7 +89,7 @@ class HtmlFrame(ttk.Frame):
         self.html.done_loading_func = self.done_loading
 
         self.message_func(
-            f"Welcome to TkinterWeb v{__version__}! \nhttps://github.com/Andereoo/TkinterWeb")
+            f"Welcome to TkinterWeb {__version__}! \nhttps://github.com/Andereoo/TkinterWeb")
 
         self.message_func(
             "Debugging messages are enabled \nUse the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLabel() to disable these messages")

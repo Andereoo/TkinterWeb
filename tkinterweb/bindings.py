@@ -20,8 +20,8 @@ class Combobox(tk.Widget):
     "Bindings for Bryan Oakley's combobox widget"
 
     def __init__(self, master):
-        load_combobox(master)
         try:
+            load_combobox(master)
             tk.Widget.__init__(self, master, "::combobox::combobox")
         except tk.TclError:
             load_combobox(master, force=True)
@@ -70,13 +70,12 @@ class TkinterWeb(tk.Widget):
 
         # provide OS information for troubleshooting
         self.message_func(
-            "Starting TkinterWeb for {} {} with Python {}".format(
+            "Starting TkinterWeb for {} {} with Python {}.{}.{}".format(
                 "64-bit" if sys.maxsize > 2**32 else "32-bit",
                 platform.system(),
-                str(sys.version_info[0:3])
-                .replace(", ", ".")
-                .replace(")", "")
-                .replace("(", ""),
+                sys.version_info.major,
+                sys.version_info.minor,
+                sys.version_info.micro
             )
         )
 
@@ -164,6 +163,7 @@ class TkinterWeb(tk.Widget):
         self.vsb_type = 2
         self.selection_type = 0
         self.selection_timer = None
+        self.motion_frame_bg = "white"
 
         # enable form resetting and submission
         self.form_get_commands = {}
@@ -174,21 +174,14 @@ class TkinterWeb(tk.Widget):
         self.waiting_forms = 0
 
         # other UI variables
-        self.cursors = {
-            "crosshair": "crosshair",
-            "default": "",
-            "pointer": "hand2",
-            "move": "fleur",
-            "text": "xterm",
-            "wait": "watch",
-            "progress": "box_spiral",
-            "help": "question_arrow",
-            "none": "none",
-        }
-        self.dark_theme_regex = re.compile(
-            r"([^:;\s{]+)\s?:\s?([^;{!]+)(?=!|;|})"
-        )  # ([^:;\s{]+)\s?:\s?([^;{]+)(?=;|})')
+        self.style_dark_theme_regex = r"([^:;\s{]+)\s?:\s?([^;{!]+)(?=!|;|})"
+        self.general_dark_theme_regexes = [r'(<[^>]+bgcolor=")([^"]*)',r'(<[^>]+text=")([^"]*)',r'(<[^>]+link=")([^"]*)']
+        self.inline_dark_theme_regexes = [r'(<[^>]+style=")([^"]*)', r'([a-zA-Z-]+:)([^;]*)']
         self.dark_theme_limit = 160
+
+        # create a tiny, blank frame for cursor updating
+        self.motion_frame = tk.Frame(self, bg=self.motion_frame_bg, width=0, height=0)
+        self.motion_frame.place(x=0, y=0)
 
         # set up bindtags
         self.node_tag = f"tkinterweb.{id(self)}.nodes"
@@ -230,6 +223,7 @@ class TkinterWeb(tk.Widget):
         self.downloads_have_occured = False
         self.unstoppable = True
         html = self.crash_prevention(html)
+        html = self.dark_mode(html)
         self.tk.call(self._w, "parse", html)
         if self.embedded_widget_attr_name in html:
             self.setup_widgets()
@@ -246,23 +240,19 @@ class TkinterWeb(tk.Widget):
         else:
             self.config(defaultstyle=DEFAULTSTYLE)
 
-    def rgb_to_hex(self, red, green, blue, *args):
-        "Convert RGB colour code to HEX"
-        return f"#{red:02x}{green:02x}{blue:02x}"
-
     def check_colors(self, rgb, match):
         "Check colour, invert if necessary, and convert"
         if ("background" in match and sum(rgb) < self.dark_theme_limit) or (
             match == "color" and sum(rgb) > self.dark_theme_limit
         ):
-            return self.rgb_to_hex(*rgb)
+            return rgb_to_hex(*rgb)
         else:
             rgb[0] = max(1, min(255, 240 - rgb[0]))
             rgb[1] = max(1, min(255, 240 - rgb[1]))
             rgb[2] = max(1, min(255, 240 - rgb[2]))
-            return self.rgb_to_hex(*rgb)
+            return rgb_to_hex(*rgb)
 
-    def generate_altered_colour(self, match):
+    def generate_altered_colour(self, match, matchtype=1):
         "Invert document colours. Highly experimental."
         colors = match.group(2).replace("\n", "")
         colors = re.split(r"\s(?![^()]*\))", colors)
@@ -271,7 +261,6 @@ class TkinterWeb(tk.Widget):
         for count, color in enumerate(colors):
             try:
                 if color.startswith("#"):
-                    changed = True
                     color = color.lstrip("#")
                     lv = len(color)
                     if lv == 3:
@@ -284,8 +273,8 @@ class TkinterWeb(tk.Widget):
                         ),
                         match.group(1),
                     )
-                elif color.startswith("rgb(") or color.startswith("rgba("):
                     changed = True
+                elif color.startswith("rgb(") or color.startswith("rgba("):
                     colors[count] = self.check_colors(
                         list(
                             map(
@@ -299,22 +288,37 @@ class TkinterWeb(tk.Widget):
                         ),
                         match.group(1),
                     )
-                elif color in COLORMAPPINGS:
                     changed = True
-                    colors[count] = COLORMAPPINGS[color]
+                else:
+                    try:
+                        color = list(self.winfo_rgb(color))
+                        colors[count] = self.check_colors(color, match.group(1))
+                        changed = True
+                    except tk.TclError:
+                        pass
             except ValueError as error:
-                changed = False
-
+                pass
+        
         if changed:
-            return match.group(1) + ": " + " ".join(colors)
+            if matchtype:
+                return match.group(1) + " ".join(colors)
+            else:
+                return match.group(1) + ": " + " ".join(colors)
         else:
             return match.group()
+            
+    def dark_mode(self, html):
+        if self.dark_theme_enabled:
+            html = re.sub(self.inline_dark_theme_regexes[0], lambda match: match.group(1) + re.sub(self.inline_dark_theme_regexes[1], self.generate_altered_colour, match.group(2)), html)
+            for regex in self.general_dark_theme_regexes:
+                html = re.sub(regex, self.generate_altered_colour, html, flags=re.IGNORECASE)
+        return html
 
     def parse_css(self, sheetid=None, importcmd=None, data="", override=False):
         "Parse CSS code"
         data = self.crash_prevention(data)
         if self.dark_theme_enabled:
-            data = re.sub(self.dark_theme_regex, self.generate_altered_colour, data)
+            data = re.sub(self.style_dark_theme_regex, lambda match, matchtype=0: self.generate_altered_colour(match, matchtype), data)
         if sheetid and importcmd:
             self.tk.call(
                 self._w, "style", "-id", sheetid, "-importcmd", importcmd, data
@@ -344,6 +348,8 @@ class TkinterWeb(tk.Widget):
         self.selection_end_node = None
         self.vsb_type = self.manage_vsb_func()
         self.manage_hsb_func()
+        self.motion_frame_bg = "white"
+        self.set_cursor("default")
         self.tk.call(self._w, "reset")
 
     def stop(self):
@@ -447,6 +453,7 @@ class TkinterWeb(tk.Widget):
         self.downloads_have_occured = False
         self.unstoppable = True
         html = self.crash_prevention(html)
+        html = self.dark_mode(html)
         fragment = self.tk.call(self._w, "fragment", html)
         # We assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
         if not self.downloads_have_occured:
@@ -531,8 +538,10 @@ class TkinterWeb(tk.Widget):
         Does not work on Windows."""
         return self.tk.call(self._w, "image", full)
 
-    def on_script(self, *args):
-        "Currently just ignoring script"
+    def on_script(self, attributes, tagcontents):
+        """Currently ignoring script.
+        A javascript engine could be used here to parse the script.
+        Returning any HTMl code here causes it to be parsed in place of the script tag."""
 
     def on_style(self, attributes, tagcontents):
         "Handle <style> elements"
@@ -1411,13 +1420,23 @@ class TkinterWeb(tk.Widget):
         if self.get_node_attribute(node, "scroll-x"): # tkhtml doesn't support overflow-x
             self.manage_hsb_func(2)
 
+        background = self.get_node_property(node, "background-color")
+        if background != "transparent" and self.motion_frame_bg != background: # transparent is the tkhtml default, so it's largely meaningless
+            self.motion_frame_bg = background
+            self.motion_frame.config(bg=background)
+
     def set_cursor(self, cursor):
         "Set document cursor"
-
         if self.current_cursor != cursor:
-            cursor = self.cursors[cursor]
+            cursor = CURSORMAPPINGS[cursor]
             self.cursor_change_func(cursor=cursor)
             self.current_cursor = cursor
+            # I've noticed that the cursor won't always update when the binding is tied to a different widget than the one we are changing the cursor of
+            # however, the html widget doesn't support the cursor property so there's not much we can do about this
+            # update_idletasks() or update() have no effect, but print() and updating the color or text of another widget does
+            # therefore we update the background color of a tiny frame that is barely visible to match the background color of the page whenever we need to change te cursor
+            # it's wierd but hey, it works
+            self.motion_frame.config(bg=self.motion_frame_bg)
 
     def handle_recursive_hovering(self, node_handle, count):
         "Set hover flags on the parents of the hovered element"
@@ -1663,7 +1682,7 @@ class TkinterWeb(tk.Widget):
                     is_text_node = True
 
                 cursor = self.get_node_property(node_handle, "cursor")
-                if cursor in self.cursors:
+                if cursor in CURSORMAPPINGS:
                     self.set_cursor(cursor)
                 elif is_text_node:
                     self.set_cursor("text")
@@ -1833,6 +1852,9 @@ class TkinterWeb(tk.Widget):
 
     def select_all(self):
         "Select all of the text in the document"
+        if not self.selection_enabled:
+            return
+        
         self.clear_selection()
         beginning = self.text("index", 0)
         end = self.text("index", len(self.text("text")))

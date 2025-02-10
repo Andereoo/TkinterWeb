@@ -3,7 +3,7 @@ A proof-of-concept web browser using TkinterWeb
 
 Note that TkinterWeb is not necessarily intended to be a full-blown modern web browser
 These already exist and are generally resource-hungry and not highly integratable with Tkinter
-Being based on Tkhtml, TkinterWeb is intended to be fast, lightweight, and highly integrated with Tkinter while providing far more control over layouts and styling than is feasible than Tkinter
+Being based on Tkhtml, TkinterWeb is intended to be fast, lightweight, and highly integrated with Tkinter while providing far more control over layouts and styling than is feasable than Tkinter
 TkinterWeb displays older or simpler websites well but may be found lacking on more modern websites
 
 This file was originally created for testing TkinterWeb and could be cleaned up a bit, but nonetheless is a great example of some of the things that can be done with the software, including:
@@ -52,9 +52,9 @@ class Page(tk.Frame):
         self.bottombar = bottombar = ttk.Frame(self)
         self.findbar = findbar = ttk.Frame(self)
         self.sidebar = sidebar = HtmlFrame(frame, messages_enabled=False, width=250)
-        sidebar.html.selection_enabled = False
         sidebar.grid_propagate(False)
         sidebar.set_fontscale(0.8)
+        sidebar.html.selection_enabled = False
         self.linklabel = linklabel = ttk.Label(bottombar, text="Welcome to TkinterWeb!", cursor="hand2")
 
         self.backbutton = backbutton = ttk.Button(topbar, text="Back", command=self.back, state="disabled")
@@ -85,14 +85,12 @@ class Page(tk.Frame):
         self.invert_images_var = invert_images_var = tk.IntVar(value=0)
         invert_images_enabled = ttk.Checkbutton(sidebar, text="Image inverter", variable=invert_images_var, command=self.toggle_theme)
         
-        vcmd = (self.register(self.validate),
-                 '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
         self.ignoreimages_var = ignoreimages_var = tk.IntVar(value=1)
         ignore_invalid_images = ttk.Checkbutton(sidebar, text="Ignore invalid images", variable=ignoreimages_var, command=self.toggle_ignore_invalid_images)
         self.zoom_var = zoom_var = tk.StringVar(value=self.frame.get_zoom())
-        self.zoom_box = zoom_box = ttk.Scale(sidebar, from_=0.1, to=5, orient="horizontal", variable=zoom_var, command=self.set_zoom)#tk.Entry(sidebar, validate='key', validatecommand=vcmd, textvariable=zoom_var)
+        self.zoom_box = zoom_box = ttk.Scale(sidebar, from_=0.1, to=5, orient="horizontal", variable=zoom_var, command=self.set_zoom)
         self.fontscale_var = fontscale_var = tk.StringVar(value=frame.get_fontscale())
-        self.fontscale_box = fontscale_box = ttk.Scale(sidebar, from_=0.1, to=5, orient="horizontal", variable=fontscale_var, command=self.set_fontscale)#tk.Entry(sidebar, validate='key', validatecommand=vcmd, textvariable=fontscale_var)
+        self.fontscale_box = fontscale_box = ttk.Scale(sidebar, from_=0.1, to=5, orient="horizontal", variable=fontscale_var, command=self.set_fontscale)
         self.parsemode_var = parsemode_var = tk.StringVar(value=frame.get_parsemode())
         self.parsemode_box = parsemode_box = tk.Entry(sidebar, textvariable=parsemode_var)
         self.broken_page_msg_box = broken_page_msg_box = tk.Text(sidebar, wrap=tk.WORD, width=30, undo=True)
@@ -179,7 +177,7 @@ class Page(tk.Frame):
         findbox_var.trace("w", self.search_in_page)
         parsemode_var.trace("w", self.set_parsemode)
 
-        broken_page_msg_box.insert("end", BUILTINPAGES["about:error"].format(frame.background, "").replace("</", "\n</").replace(">", ">\n").replace("\n\n", "\n"))
+        broken_page_msg_box.insert("end", BUILTINPAGES["about:error"].format(frame.background, "").replace("</", "\n</").replace(">", ">\n").replace("\n\n", "\n").replace("</html>\n", "</html>"))
 
         frame.bind("<Button-3>", self.on_right_click)
         for widget in [urlbar, find_box, parsemode_box, zoom_box, fontscale_box]:
@@ -269,16 +267,6 @@ class Page(tk.Frame):
         if f"Error loading {self.urlbar.get()}" in message:
             self.handle_view_source_button("about:error")
         self.linklabel.config(text=self.cut_text(message, 80))
-
-    def validate(self, action, index, value_if_allowed, *args):
-        try:
-            value = float(value_if_allowed)
-            if value >= 0:
-                return True
-            else:
-                return False
-        except ValueError:
-            return False
 
     def recursive_depth_change(self, *args):
         self.frame.set_recursive_hover_depth(self.recursive_depth_var.get())

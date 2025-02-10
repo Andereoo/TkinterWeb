@@ -42,7 +42,7 @@ __title__ = 'TkinterWeb'
 __author__ = "Andereoo"
 __copyright__ = "Copyright (c) 2025 Andereoo"
 __license__ = "MIT"
-__version__ = '3.25.14'
+__version__ = '3.25.15'
 
 
 HEADER = {
@@ -50,154 +50,24 @@ HEADER = {
 }
 DEFAULTPARSEMODE = "xml"
 BROKENIMAGE = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x19\x00\x00\x00\x1e\x08\x03\x00\x00\x00\xee2E\xe9\x00\x00\x03\x00PLTE\xc5\xd5\xf4\xcd\xdb\xf4\xdf\xe8\xfc\xd5\xdd\xf4\xa5\xa3\xa5\x85\x83\x85\xfc\xfe\xfc\xf4\xf6\xf9\x95\x93\x95S\xb39\x9d\x9f\x9d\xc5\xd3\xedo\xbbg\xd5\xe3\xf4\xd5\xdf\xfc\xd5\xe3\xfc\xb5\xcf\xd5\x9d\xc7\xb5\xc5\xdf\xe5S\xaf9\x8d\xc7\x8d\x15\x15\x15\x16\x16\x16\x17\x17\x17\x18\x18\x18\x19\x19\x19\x1a\x1a\x1a\x1b\x1b\x1b\x1c\x1c\x1c\x1d\x1d\x1d\x1e\x1e\x1e\x1f\x1f\x1f   !!!"""###$$$%%%&&&\'\'\'((()))***+++,,,---...///000111222333444555666777888999:::;;;<<<===>>>???@@@AAABBBCCCDDDEEEFFFGGGHHHIIIJJJKKKLLLMMMNNNOOOPPPQQQRRRSSSTTTUUUVVVWWWXXXYYYZZZ[[[\\\\\\]]]^^^___```aaabbbcccdddeeefffggghhhiiijjjkkklllmmmnnnooopppqqqrrrssstttuuuvvvwwwxxxyyyzzz{{{|||}}}~~~\x7f\x7f\x7f\x80\x80\x80\x81\x81\x81\x82\x82\x82\x83\x83\x83\x84\x84\x84\x85\x85\x85\x86\x86\x86\x87\x87\x87\x88\x88\x88\x89\x89\x89\x8a\x8a\x8a\x8b\x8b\x8b\x8c\x8c\x8c\x8d\x8d\x8d\x8e\x8e\x8e\x8f\x8f\x8f\x90\x90\x90\x91\x91\x91\x92\x92\x92\x93\x93\x93\x94\x94\x94\x95\x95\x95\x96\x96\x96\x97\x97\x97\x98\x98\x98\x99\x99\x99\x9a\x9a\x9a\x9b\x9b\x9b\x9c\x9c\x9c\x9d\x9d\x9d\x9e\x9e\x9e\x9f\x9f\x9f\xa0\xa0\xa0\xa1\xa1\xa1\xa2\xa2\xa2\xa3\xa3\xa3\xa4\xa4\xa4\xa5\xa5\xa5\xa6\xa6\xa6\xa7\xa7\xa7\xa8\xa8\xa8\xa9\xa9\xa9\xaa\xaa\xaa\xab\xab\xab\xac\xac\xac\xad\xad\xad\xae\xae\xae\xaf\xaf\xaf\xb0\xb0\xb0\xb1\xb1\xb1\xb2\xb2\xb2\xb3\xb3\xb3\xb4\xb4\xb4\xb5\xb5\xb5\xb6\xb6\xb6\xb7\xb7\xb7\xb8\xb8\xb8\xb9\xb9\xb9\xba\xba\xba\xbb\xbb\xbb\xbc\xbc\xbc\xbd\xbd\xbd\xbe\xbe\xbe\xbf\xbf\xbf\xc0\xc0\xc0\xc1\xc1\xc1\xc2\xc2\xc2\xc3\xc3\xc3\xc4\xc4\xc4\xc5\xc5\xc5\xc6\xc6\xc6\xc7\xc7\xc7\xc8\xc8\xc8\xc9\xc9\xc9\xca\xca\xca\xcb\xcb\xcb\xcc\xcc\xcc\xcd\xcd\xcd\xce\xce\xce\xcf\xcf\xcf\xd0\xd0\xd0\xd1\xd1\xd1\xd2\xd2\xd2\xd3\xd3\xd3\xd4\xd4\xd4\xd5\xd5\xd5\xd6\xd6\xd6\xd7\xd7\xd7\xd8\xd8\xd8\xd9\xd9\xd9\xda\xda\xda\xdb\xdb\xdb\xdc\xdc\xdc\xdd\xdd\xdd\xde\xde\xde\xdf\xdf\xdf\xe0\xe0\xe0\xe1\xe1\xe1\xe2\xe2\xe2\xe3\xe3\xe3\xe4\xe4\xe4\xe5\xe5\xe5\xe6\xe6\xe6\xe7\xe7\xe7\xe8\xe8\xe8\xe9\xe9\xe9\xea\xea\xea\xeb\xeb\xeb\xec\xec\xec\xed\xed\xed\xee\xee\xee\xef\xef\xef\xf0\xf0\xf0\xf1\xf1\xf1\xf2\xf2\xf2\xf3\xf3\xf3\xf4\xf4\xf4\xf5\xf5\xf5\xf6\xf6\xf6\xf7\xf7\xf7\xf8\xf8\xf8\xf9\xf9\xf9\xfa\xfa\xfa\xfb\xfb\xfb\xfc\xfc\xfc\xfd\xfd\xfd\xfe\xfe\xfe\xff\xff\xff\x01\xb3\x9a&\x00\x00\x01+IDATx\x9c\x9d\x91\xe9\x92\x84 \x0c\x84s (\x08A\xc6\xf7\x7f\xd6M8\x9c\x9d\xa9\xda?\xdb\x96W\x7f\xb6\xd5\x04\xf0\x7f\t\xdcT\x9c\xf7}\x0f\xf4I\x16U\x12\x16\t\x1f\xdaw\xe7\x16!\xcay\x9cL\xac\xc4\xfb\x18\x06\xc9\x81\x14\xd0\xd4o\xc2\x88\xa5X\x1e\x0b"\x1a\xf1\xd1\x05\x0f1f3\x06\xc9\x85\xb6Nb\x08\xe0\xa2d\x9cK\xd00\xefKF\x16\xf0E\ti?\xb2\x8aJ2\xf9\'\x83\xa8]Fy#\xa8\x1d\x00\x91\xa1\x01d\xad\x9e1h\x11m EM(\xa2vA\xe0\xc2,T,\xe3\x98$\xc1T\xd307 \xda6[)C\xea\x16\x1aK\x8c\rDv#BF\xd4\x03\xb4\x0b\xa4\x02,:\x83\xe8H i\xc2<\xec,%\xa2>\x1d\xc9)\x8dD\xad\xfd\x89a\xce\xad\x10\xdbw\xa0\xa0Z.\xa54v!\x8a@\x85\xeb:^\xaf\xe38\xcfZ\x19\xfc"E\xbf\xbf.\x03F\x1a\xf0 Q\xbbUM\xbc\xd5\xfd\xbeR\xa2\xda\x9d\xb3\x1f\xdd\x97\xbc\xf5Y\xf35\xc9\x93\xd0\x19\xe8\xdc\\k_\x7f\xf2g\xb6\x19\xc4\xf8\x90s\x91\x17\xe5\xbe\x0b\xf7\xf9\x99\xd0\x87\xfbV\xb2\xbd\xd5\xfd\xe7\xed?\xe4\x07\xca\xeb\x13o\x88}\xa9\x12\x00\x00\x00\x00IEND\xaeB`\x82'
-COLORMAPPINGS = {
-    "black": "#f0f0f0",
-    "silver": "#303030",
-    "lime": "#f001f0",
-    "gray": "#707070",
-    "olive": "#7070f0",
-    "white": "#010101",
-    "yellow": "#0101f0",
-    "maroon": "#70f0f0",
-    "navy": "#f0f070",
-    "red": "#01f0f0",
-    "blue": "#f0f001",
-    "purple": "#70f070",
-    "teal": "#f07070",
-    "fuchsia": "#01f001",
-    "aqua": "#f00101",
-    "green": "#f070f0",
-    "aliceblue": "#010101",
-    "antiquewhite": "#010519",
-    "aquamarine": "#71011c",
-    "azure": "#010101",
-    "beige": "#010114",
-    "bisque": "#010c2c",
-    "blanchedalmond": "#010523",
-    "blueviolet": "#66c50e",
-    "brown": "#4bc6c6",
-    "burlywood": "#123869",
-    "cadetblue": "#915250",
-    "chartreuse": "#7101f0",
-    "chocolate": "#1e87d2",
-    "coral": "#0171a0",
-    "cornflowerblue": "#8c5b03",
-    "cornsilk": "#010114",
-    "crimson": "#14dcb4",
-    "cyan": "#f00101",
-    "darkblue": "#f0f065",
-    "darkcyan": "#f06565",
-    "darkgoldenrod": "#386ae5",
-    "darkgray": "#474747",
-    "darkgreen": "#f08cf0",
-    "darkgrey": "#474747",
-    "darkkhaki": "#333985",
-    "darkmagenta": "#65f065",
-    "darkolivegreen": "#9b85c1",
-    "darkorange": "#0164f0",
-    "darkorchid": "#57be24",
-    "darkred": "#65f0f0",
-    "darksalmon": "#075a76",
-    "darkseagreen": "#613461",
-    "darkslateblue": "#a8b365",
-    "darkslategray": "#c1a1a1",
-    "darkslategrey": "#c1a1a1",
-    "darkturquoise": "#f0221f",
-    "darkviolet": "#5cf01d",
-    "deeppink": "#01dc5d",
-    "deepskyblue": "#f03101",
-    "dimgray": "#878787",
-    "dimgrey": "#878787",
-    "dodgerblue": "#d26001",
-    "firebrick": "#3ecece",
-    "floralwhite": "#010101",
-    "forestgreen": "#ce65ce",
-    "gainsboro": "#141414",
-    "ghostwhite": "#010101",
-    "gold": "#0119f0",
-    "goldenrod": "#164bd0",
-    "grey": "#707070",
-    "greenyellow": "#4301c1",
-    "honeydew": "#010101",
-    "hotpink": "#01873c",
-    "indianred": "#239494",
-    "indigo": "#a5f06e",
-    "ivory": "#010101",
-    "khaki": "#010a64",
-    "lavender": "#0a0a01",
-    "lavenderblush": "#010101",
-    "lawngreen": "#7401f0",
-    "lemonchiffon": "#010123",
-    "lightblue": "#43180a",
-    "lightcoral": "#017070",
-    "lightcyan": "#100101",
-    "lightgoldenrodyellow": "#01011e",
-    "lightgray": "#1d1d1d",
-    "lightgreen": "#600260",
-    "lightgrey": "#1d1d1d",
-    "lightpink": "#013a2f",
-    "lightsalmon": "#015076",
-    "lightseagreen": "#d03e46",
-    "lightskyblue": "#692201",
-    "lightslategray": "#796857",
-    "lightslategrey": "#796857",
-    "lightsteelblue": "#402c12",
-    "lightyellow": "#010110",
-    "limegreen": "#be23be",
-    "linen": "#01010a",
-    "magenta": "#01f001",
-    "mediumaquamarine": "#8a2346",
-    "mediumblue": "#f0f023",
-    "mediumorchid": "#369b1d",
-    "mediumpurple": "#5d8015",
-    "mediumseagreen": "#b43d7f",
-    "mediumslateblue": "#758802",
-    "mediumspringgreen": "#f00156",
-    "mediumturquoise": "#a81f24",
-    "mediumvioletred": "#29db6b",
-    "midnightblue": "#d7d780",
-    "mintcream": "#010101",
-    "mistyrose": "#010c0f",
-    "moccasin": "#010c3b",
-    "navajowhite": "#011243",
-    "oldlace": "#01010a",
-    "olivedrab": "#8562cd",
-    "orange": "#014bf0",
-    "orangered": "#01abf0",
-    "orchid": "#16801a",
-    "palegoldenrod": "#020846",
-    "palegreen": "#580158",
-    "paleturquoise": "#410202",
-    "palevioletred": "#15805d",
-    "papayawhip": "#01011b",
-    "peachpuff": "#011637",
-    "peru": "#236bb1",
-    "pink": "#013025",
-    "plum": "#135013",
-    "powderblue": "#40100a",
-    "rosybrown": "#346161",
-    "royalblue": "#af870f",
-    "saddlebrown": "#65abdd",
-    "salmon": "#01707e",
-    "sandybrown": "#014c90",
-    "seagreen": "#c26599",
-    "seashell": "#010102",
-    "sienna": "#509ec3",
-    "skyblue": "#692205",
-    "slateblue": "#869623",
-    "slategray": "#807060",
-    "slategrey": "#807060",
-    "snow": "#010101",
-    "springgreen": "#f00171",
-    "steelblue": "#aa6e3c",
-    "tan": "#1e3c64",
-    "thistle": "#183118",
-    "tomato": "#018da9",
-    "turquoise": "#b01020",
-    "violet": "#026e02",
-    "wheat": "#01123d",
-    "whitesmoke": "#010101",
-    "yellowgreen": "#5623be",
+CURSORMAPPINGS = {
+    # these are the only cursors supported by Tkhtml :(
+    "crosshair": "crosshair",
+    "default": "",
+    "pointer": "hand2",
+    "move": "fleur",
+    "text": "xterm",
+    "wait": "watch",
+    "progress": "watch",
+    "help": "question_arrow",
+    "e-resize": "right_side",
+    "ne-resize": "top_right_corner",
+    "nw-resize": "top_left_corner",
+    "n-resize": "top_side",
+    "se-resize": "bottom_right_corner",
+    "sw-resize": "bottom_left_corner",
+    "s-resize": "bottom_side",
+    "w-resize": "left_side",
 }
 DEFAULTSTYLE = r"""
 /* Default stylesheet to be loaded whenever HTML is parsed. */
@@ -549,20 +419,27 @@ WORKING_DIR = os.getcwd()
 PLATFORM = platform.uname()
 BUILTINPAGES = {
     "about:blank": "<html><head><style>html,body{{background-color:{}}}</style><title>about:blank</title></head><body></body></html>",
-    "about:tkinterweb": "<html><head><style>html,body{{background-color:{}}}</style><title>about:tkinterweb</title><style>code{{display:block}}</style></head><body> \
-        <code>Welcome to "+__title__+"!</code><code>Licenced under the "+__license__+" licence</code><code>"+__copyright__+"</code> \
-        <code style='display:block;text-decoration:underline;margin-top:35px'>Debugging information</code> \
-        <code>Version: "+__version__+"</code><code>Header: "+HEADER["User-Agent"]+"</code><code>Default parse mode: "+DEFAULTPARSEMODE+"</code><code style='display: block'>Root directory: "+ROOT_DIR+"</code><code style='display: block'>Working directory: "+WORKING_DIR+"</code> \
-        <code style='display:block;text-decoration:underline;margin-top:35px'>System specs</code> \
-        <code>Python version: "+str(sys.version)+"</code><code>Tcl version: "+str(tk.TclVersion)+"</code><code>Tk version: "+str(tk.TkVersion)+"</code><code>Platform: "+str(PLATFORM.system)+"</code><code>Machine: "+str(PLATFORM.machine)+"</code><code>Processor: "+str(PLATFORM.processor)+"</code></body></html>",
-    "about:error": """<html style='overflow:hidden;height:100%;width:100%'><head><style>html,body{{background-color:{}}}</style><title>Error {}</title></head><body style='text-align:center;margin:0;padding:0;position:fixed;top:50%;bottom:50%;left:0;right:0;'><table style="display:table;text-align:center;width:100%;margin-top:-40px;height:80px;overflow:hidden"><td style="vertical-align: middle;"><h2 style='margin:0;padding:0;font-weight:normal'>Oops.</h2><p></p><h3 style='margin:0;padding:0;font-weight:normal'>The page you've requested could not be found :(</h3></td></table></body></html>""",
-    "about:image": "<html style='margin:0;padding:0;overflow:hidden'><head><style>html,body,object{{background-color:{}}}</style></head><body style='margin:0;padding:0;'><object allowstyling data='{}'><code style='margin: 8px'>No image selected</code></object></body></html>",
+    "about:tkinterweb": "<html><head><style>html,body{{background-color:{}}}</style><title>about:tkinterweb</title><style>code{{display:block}}</style></head><body>\
+<code>Welcome to "+__title__+"!</code><code>Licenced under the "+__license__+" licence</code><code>"+__copyright__+"</code>\
+<code style=\"display:block;text-decoration:underline;margin-top:35px\">Debugging information</code>\
+<code>Version: "+__version__+"</code><code>Header: "+HEADER["User-Agent"]+"</code><code>Default parse mode: "+DEFAULTPARSEMODE+"</code>\
+<code style=\"display:block\">Root directory: "+ROOT_DIR+"</code><code style=\"display:block\">Working directory: "+WORKING_DIR+"</code>\
+<code style=\"display:block;text-decoration:underline;margin-top:35px\">System specs</code>\
+<code>Python version: "+str(sys.version)+"</code><code>Tcl version: "+str(tk.TclVersion)+"</code><code>Tk version: "+str(tk.TkVersion)+"</code>\
+<code>Platform: "+str(PLATFORM.system)+"</code><code>Machine: "+str(PLATFORM.machine)+"</code><code>Processor: "+str(PLATFORM.processor)+"</code></body></html>",
+    "about:error": "<html style=\"overflow:hidden;height:100%;width:100%\"><head><style>html,body{{background-color:{}}}</style><title>Error {}</title></head>\
+<body style=\"text-align:center;margin:0;padding:0;position:fixed;top:50%;bottom:50%;left:0;right:0;\">\
+<table style=\"display:table;text-align:center;width:100%;margin-top:-40px;height:80px;overflow:hidden\"><tr><td style=\"vertical-align:middle\">\
+<h2 style=\"margin:0;padding:0;font-weight:normal\">Oops.</h2><p></p><h3 style=\"margin:0;padding:0;font-weight:normal\">The page you've requested could not be found :(</h3>\
+</td></tr></table></body></html>",
+    "about:image": "<html style=\"margin:0;padding:0;overflow:hidden\"><head><style>html,body,object{{background-color:{}}}</style></head>\
+<body style=\"margin:0;padding:0\"><object allowstyling data=\"{}\"><code style=\"display:block;margin:8px\">No image selected</code></object></body></html>",
     "about:view-source": "<html scroll-x=true><head><style>\
-        html,body{{background-color:{}}}\
-        pre::before{{counter-reset:listing}}\
-        code{{counter-increment:listing}}\
-        code::before{{content:counter(listing);display:inline-block;width:{}px;margin-left:5px;padding-right:5px;margin-right:5px;text-align:right;border-right:1px solid grey60;color:grey60}} \
-        </style></head><body><pre style='margin:0;padding:0'>{}</pre></body></html>",
+html,body{{background-color:{}}}\
+pre::before{{counter-reset:listing}}\
+code{{counter-increment:listing}}\
+code::before{{content:counter(listing);display:inline-block;width:{}px;margin-left:5px;padding-right:5px;margin-right:5px;text-align:right;border-right:1px solid grey60;color:grey60}}\
+</style></head><body><pre style=\"margin:0;padding:0\">{}</pre></body></html>",
 }
 
 
@@ -571,7 +448,7 @@ combobox_loaded = False
 
 
 class AutoScrollbar(ttk.Scrollbar):
-    "Scrollbar that hides itself when not needed."
+    "Scrollbar that hides itself when not needed"
     def __init__(self, *args, scroll=2, **kwargs):
         ttk.Scrollbar.__init__(self, *args, **kwargs)
         self.scroll = scroll
@@ -607,7 +484,7 @@ class AutoScrollbar(ttk.Scrollbar):
 
 
 class ScrolledTextBox(tk.Frame):
-    "Text widget with a scrollbar."
+    "Text widget with a scrollbar"
 
     def __init__(self, parent, **kwargs):
 
@@ -655,7 +532,7 @@ class ScrolledTextBox(tk.Frame):
 
 
 class FileSelector(tk.Frame):
-    "File selector widget."
+    "File selector widget"
 
     def __init__(self, parent, accept, multiple, **kwargs):
         tk.Frame.__init__(self, parent)
@@ -751,7 +628,7 @@ class FileSelector(tk.Frame):
 
 
 class ColourSelector(tk.Frame):
-    "Colour selector widget."
+    "Colour selector widget"
 
     def __init__(self, parent, colour, **kwargs):
         tk.Frame.__init__(self, parent, bg="#ccc", highlightthickness=0)
@@ -898,7 +775,7 @@ class Notebook(ttk.Frame):
 
 
 class StoppableThread(threading.Thread):
-    "A thread that stores a state flag that can be set and used to check if the thread is supposed to be running."
+    "A thread that stores a state flag that can be set and used to check if the thread is supposed to be running"
 
     def __init__(self, *args, **kwargs):
         threading.Thread.__init__(self, *args, **kwargs)
@@ -922,10 +799,12 @@ class PlaceholderThread:
     def isrunning(self):
         return True
 
+def rgb_to_hex(red, green, blue, *args):
+    "Convert RGB colour code to HEX"
+    return f"#{red:02x}{green:02x}{blue:02x}"
 
 def download(url, data=None, method="GET", decode=None, insecure=False):
-    "Fetch files."
-
+    "Fetch files"
     ctx = ssl.create_default_context()
     if insecure:
         ctx.check_hostname = False
@@ -963,19 +842,19 @@ def download(url, data=None, method="GET", decode=None, insecure=False):
 
 @lru_cache()
 def cachedownload(*args, **kwargs):
-    "Fetch files and add them to the lru cache."
+    "Fetch files and add them to the lru cache"
     return download(*args, **kwargs)
 
 
 def shorten(string):
-    "Shorten text to avoid overloading the terminal."
+    "Shorten text to avoid overloading the terminal"
     if len(string) > 100:
         string = string[:100] + "..."
     return string
 
 
 def threadname():
-    "Return the currently running thread."
+    "Return the currently running thread"
     thread = threading.current_thread()
     if thread.name == "MainThread":
         thread = PlaceholderThread()
@@ -1038,7 +917,7 @@ def load_combobox(master, force=False):
 
 
 def notifier(text):
-    "Notifications printer."
+    "Notifications printer"
     try:
         sys.stdout.write(str(text) + "\n\n")
     except Exception:
@@ -1047,7 +926,7 @@ def notifier(text):
 
 
 def tkhtml_notifier(name, text, *args):
-    "Tkhtml -logcmd printer."
+    "Tkhtml -logcmd printer"
     try:
         sys.stdout.write("DEBUG " + str(name) + ": " + str(text) + "\n\n")
     except Exception:

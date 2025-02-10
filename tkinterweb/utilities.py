@@ -42,7 +42,7 @@ __title__ = 'TkinterWeb'
 __author__ = "Andereoo"
 __copyright__ = "Copyright (c) 2025 Andereoo"
 __license__ = "MIT"
-__version__ = '3.25.15'
+__version__ = '3.25.16'
 
 
 HEADER = {
@@ -419,7 +419,7 @@ WORKING_DIR = os.getcwd()
 PLATFORM = platform.uname()
 BUILTINPAGES = {
     "about:blank": "<html><head><style>html,body{{background-color:{}}}</style><title>about:blank</title></head><body></body></html>",
-    "about:tkinterweb": "<html><head><style>html,body{{background-color:{}}}</style><title>about:tkinterweb</title><style>code{{display:block}}</style></head><body>\
+    "about:tkinterweb": "<html scroll-x=true><head><style>html,body{{background-color:{}}}</style><title>about:tkinterweb</title><style>code{{display:block}}</style></head><body>\
 <code>Welcome to "+__title__+"!</code><code>Licenced under the "+__license__+" licence</code><code>"+__copyright__+"</code>\
 <code style=\"display:block;text-decoration:underline;margin-top:35px\">Debugging information</code>\
 <code>Version: "+__version__+"</code><code>Header: "+HEADER["User-Agent"]+"</code><code>Default parse mode: "+DEFAULTPARSEMODE+"</code>\

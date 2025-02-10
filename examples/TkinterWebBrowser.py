@@ -3,7 +3,7 @@ A proof-of-concept web browser using TkinterWeb
 
 Note that TkinterWeb is not necessarily intended to be a full-blown modern web browser
 These already exist and are generally resource-hungry and not highly integratable with Tkinter
-Being based on Tkhtml, TkinterWeb is intended to be fast, lightweight, and highly integrated with Tkinter while providing far more control over layouts and styling than is feasable than Tkinter
+Being based on Tkhtml, TkinterWeb is intended to be fast, lightweight, and highly integrated with Tkinter while providing far more control over layouts and styling than is feasible than Tkinter
 TkinterWeb displays older or simpler websites well but may be found lacking on more modern websites
 
 This file was originally created for testing TkinterWeb and could be cleaned up a bit, but nonetheless is a great example of some of the things that can be done with the software, including:

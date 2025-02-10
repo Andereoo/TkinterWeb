@@ -102,7 +102,7 @@ Get the parent of the given node.
 
 ---
 #### `get_node_property(node_handle, node_property)`
-Get the specified property of the given node. May be used to get CSS properties (Inline/Internal/External)
+Get the calculated value of a node's CSS property. If the node is a text node, return the value of the property as assigned to the parent node.
 
 ---
 #### `get_node_tag(node_handle)`

@@ -87,7 +87,7 @@ class TkwDocumentObjectModel:
             else:
                 newquery.append(f".{classname}")
         nodes = self.html.tk.eval(" ".join(newquery))
-        return [HtmlElement(self.html, node) for node in nodes]
+        return tuple(HtmlElement(self.html, node) for node in nodes)
 
     def getElementsByName(self, query):  # Taken from hv3_dom_html.tcl line 110
         "Return a list of elements matching a given name attribute"
@@ -95,12 +95,12 @@ class TkwDocumentObjectModel:
             set selector [subst -nocommands {[name="%s"]}]
             return search $selector
             """ % (escape_Tcl(query), self.html))
-        return [HtmlElement(self.html, node) for node in nodes]
+        return tuple(HtmlElement(self.html, node) for node in nodes)
 
     def getElementsByTagName(self, query):
         "Return a list of elements given a tag name"
         nodes = self.html.search(query)
-        return [HtmlElement(self.html, node) for node in nodes]
+        return tuple(HtmlElement(self.html, node) for node in nodes)
 
     def querySelector(self, query):
         "Return the first element that matches a given CSS selector"
@@ -110,7 +110,7 @@ class TkwDocumentObjectModel:
     def querySelectorAll(self, query):
         "Return a list of elements that match a given CSS selector"
         nodes = self.html.search(query)
-        return [HtmlElement(self.html, node) for node in nodes]
+        return tuple(HtmlElement(self.html, node) for node in nodes)
 
 
 class CSSStyleDeclaration:
@@ -122,10 +122,7 @@ class CSSStyleDeclaration:
         )
 
     def __getitem__(self, prop):
-        if prop in self.style:
-            return self.style[prop]
-        else:
-            raise KeyError(f"Property '{prop}' not found.")
+        return self.style[prop]
 
     def __setitem__(self, prop, value):
         self.style[prop] = value

@@ -255,17 +255,6 @@ class HtmlElement:
         "Return the tag name of the element"
         return self.html.get_node_tag(self.node)
 
-    def _style(self, property, value=None):  # attr
-        "Get and set the value of the given CSS property"
-        if value:
-            style = self.html.get_node_attribute(self.node, "style")
-            style = dict((j.strip() for j in i.split(":")) for i in style.split(";") if i)
-            style[property] = value
-            style = "; ".join(": ".join(i) for i in style.items()) + ";"
-            return self.html.set_node_attribute(self.node, "style", style)
-        else:
-            return self.html.get_node_property(self.node, property)
-
     @property
     def parentElement(self):  # attr
         "Return the element's parent element"
@@ -281,27 +270,20 @@ class HtmlElement:
         self.html.delete_node(self.node)
 
     def appendChild(self, children):
-        "Insert the specified children into the element"
-        try:
-            tkhtml_children_nodes = []
-            for node in children:
-                tkhtml_children_nodes.append(node.node)
-        except TypeError:
-            tkhtml_children_nodes = [children.node]
-            children = [children]
-        self.html.insert_node(self.node, tkhtml_children_nodes)
-        self.setup_elem_widgets()
+        """Insert the specified children into the element."""
+        self._insert_children(children)
 
     def insertBefore(self, children, before):
-        "Insert the specified children before a specified child element"
-        try:
-            tkhtml_children_nodes = []
-            for node in children:
-                tkhtml_children_nodes.append(node.node)
-        except TypeError:
-            tkhtml_children_nodes = [children.node]
-            children = [children]
-        self.html.insert_node_before(self.node, tkhtml_children_nodes, before.node)
+        """Insert the specified children before a specified child element."""
+        self._insert_children(children, before.node)
+
+    def _insert_children(self, children, before=None):
+        """Helper method to insert children, optionally before a specified node."""
+        tkhtml_children_nodes = [i.node for i in children] if isinstance(children, list) else [children.node]
+        if before:
+            self.html.insert_node_before(self.node, tkhtml_children_nodes, before)
+        else:
+            self.html.insert_node(self.node, tkhtml_children_nodes)
         self.setup_elem_widgets()
 
     def querySelector(self, query):

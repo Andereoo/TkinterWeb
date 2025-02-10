@@ -477,16 +477,26 @@ class TkinterWeb(tk.Widget):
         return self.tk.call(node_handle, "attribute", attribute, value)
 
     def get_node_property(self, node_handle, node_property):
-        "Get the specified attribute of the given node"
+        "Get the specified CSS property of the given node"
         return self.tk.call(node_handle, "property", node_property)
 
-    def insert_node(self, node_handle, children_nodes):
-        "Experimental, insert the specified nodes into the parent node"
-        return self.tk.call(node_handle, "insert", children_nodes)
+    def get_node_properties(self, node_handle):
+        "Get the CSS properties of the given node"
+        prop = self.tk.call(node_handle, "property")
+        return dict(zip(prop[0::2], prop[1::2]))
 
-    def insert_node_before(self, node_handle, children_nodes, before):
+    def override_node_properties(self, node_handle, *props):
+        """Get/set the CSS property override list"""
+        if props: return self.tk.call(node_handle, "override", " ".join(props))
+        return self.tk.call(node_handle, "override")
+
+    def insert_node(self, node_handle, child_nodes):
+        "Experimental, insert the specified nodes into the parent node"
+        return self.tk.call(node_handle, "insert", child_nodes)
+
+    def insert_node_before(self, node_handle, child_nodes, before):
         "Experimental, place the specified nodes is before another node"
-        return self.tk.call(node_handle, "insert", "-before", before, children_nodes)
+        return self.tk.call(node_handle, "insert", "-before", before, child_nodes)
 
     def delete_node(self, node_handle):
         "Delete the given node"

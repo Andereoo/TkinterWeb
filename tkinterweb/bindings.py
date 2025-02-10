@@ -139,6 +139,10 @@ class TkinterWeb(tk.Widget):
         self.radiobutton_token = "TKWtsvLKac1"
         self.insecure_https = False
         self.embedded_widget_attr_name = "widgetid"
+        self.dark_theme_limit = 160
+        self.style_dark_theme_regex = r"([^:;\s{]+)\s?:\s?([^;{!]+)(?=!|;|})"
+        self.general_dark_theme_regexes = [r'(<[^>]+bgcolor=")([^"]*)',r'(<[^>]+text=")([^"]*)',r'(<[^>]+link=")([^"]*)']
+        self.inline_dark_theme_regexes = [r'(<[^>]+style=")([^"]*)', r'([a-zA-Z-]+:)([^;]*)']
 
         # widget status variables
         self.embed_obj = embed_obj
@@ -173,14 +177,8 @@ class TkinterWeb(tk.Widget):
         self.radio_buttons = {}
         self.waiting_forms = 0
 
-        # other UI variables
-        self.style_dark_theme_regex = r"([^:;\s{]+)\s?:\s?([^;{!]+)(?=!|;|})"
-        self.general_dark_theme_regexes = [r'(<[^>]+bgcolor=")([^"]*)',r'(<[^>]+text=")([^"]*)',r'(<[^>]+link=")([^"]*)']
-        self.inline_dark_theme_regexes = [r'(<[^>]+style=")([^"]*)', r'([a-zA-Z-]+:)([^;]*)']
-        self.dark_theme_limit = 160
-
         # create a tiny, blank frame for cursor updating
-        self.motion_frame = tk.Frame(self, bg=self.motion_frame_bg, width=0, height=0)
+        self.motion_frame = tk.Frame(self, bg=self.motion_frame_bg, width=1, height=1)
         self.motion_frame.place(x=0, y=0)
 
         # set up bindtags

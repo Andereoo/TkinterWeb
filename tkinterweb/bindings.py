@@ -1309,10 +1309,8 @@ class TkinterWeb(tk.Widget):
                 if image:
                     self.loaded_images.add(image)
                     self.image_setup_func(url, True)
-                    for node in self.search("img"):
-                        if self.get_node_attribute(node, "src") == url:
-                            if self.get_node_children(node): self.delete_node(self.get_node_children(node))
-                            break
+                    node = self.search(f"img[src='{url}']")
+                    if self.get_node_children(node): self.delete_node(self.get_node_children(node))
                 elif error == "no_pycairo":
                     self.load_alt_text(url, name)
                     self.message_func(

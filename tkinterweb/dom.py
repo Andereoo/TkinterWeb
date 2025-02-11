@@ -104,7 +104,7 @@ class TkwDocumentObjectModel:
 
     def querySelector(self, query):
         "Return the first element that matches a given CSS selector"
-        node = self.html.search(query, index=1)
+        node = self.html.search(query, index=0)
         return HtmlElement(self.html, node)
 
     def querySelectorAll(self, query):
@@ -178,34 +178,32 @@ class HtmlElement:
     @innerHTML.setter
     def innerHTML(self, contents):  # Taken from hv3_dom2.tcl line 88
         "Set the inner HTML of an element"
-        if contents:
-            contents = str(contents)
-            self.html.tk.eval("""
-                set tkw %s
-                set node %s
+        self.html.tk.eval("""
+            set node %s
                 
-                if {[$node tag] eq ""} {error "$node is not an HTMLElement"}
+            if {[$node tag] eq ""} {error "$node is not an HTMLElement"}
 
-                # Destroy the existing children (and their descendants) of $node.
-                set children [$node children]
-                $node remove $children
-                foreach child $children {
-                    $child destroy
-                }
-                
-                set newHtml "%s"
-                # Insert the new descendants, created by parsing $newHtml.
-                set children [parse_fragment $newHtml]
-                $node insert $children
-                update  ;# This must be done to see changes on-screen
-                """ % (self.html, extract_nested(self.node), escape_Tcl(contents))
-            )
-            if self.html.embedded_widget_attr_name in contents:
-                self.contains_widgets = True
-                if self.html.bbox(self.node):  # only bother setting up widgets if visible; won't work otherwise
-                    self.html.setup_widgets()
-            else:
-                self.contains_widgets = False
+            # Destroy the existing children (and their descendants) of $node.
+            set children [$node children]
+            $node remove $children
+            foreach child $children {
+                $child destroy
+            }
+
+            set newHtml "%s"
+            # Insert the new descendants, created by parseing $newHtml.
+            set children [parse_fragment $newHtml]
+            $node insert $children
+
+            update
+            """ % (extract_nested(self.node), escape_Tcl(contents))
+        )
+        if self.html.embedded_widget_attr_name in str(contents):
+            self.contains_widgets = True
+            if self.html.bbox(self.node):  # only bother setting up widgets if visible; won't work otherwise
+                self.html.setup_widgets()
+        else:
+            self.contains_widgets = False
 
     @property
     def textContent(self):  # Original for this project

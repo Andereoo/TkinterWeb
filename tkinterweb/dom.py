@@ -139,6 +139,10 @@ class CSSStyleDeclaration:
     def length(self):
         return len(self.style)
 
+    def getPropertyPriority(self, prop):
+        v = self.__getitem__(prop)
+        return "important" if v.endswith("!important") else ""
+
 
 class HtmlElement:
     def __init__(self, htmlwidget, node):
@@ -248,6 +252,10 @@ class HtmlElement:
     def setAttribute(self, attribute, value):
         "Set the value of the given attribute"
         return self.html.set_node_attribute(self.node, attribute, value)
+
+    @property
+    def attributes(self):  # attr
+        return self.html.get_node_attributes(self.node)
 
     @property
     def tagName(self):  # attr

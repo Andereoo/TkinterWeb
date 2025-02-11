@@ -167,6 +167,14 @@ Return type
 
 ---
 
+#### `HtmlElement.attributes`
+Get the attributes of the element
+
+Return type
+* *string*
+
+---
+
 #### `HtmlElement.style(property, value=None)`
 Get and set the value of the given CSS property
 

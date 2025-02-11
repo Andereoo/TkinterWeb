@@ -122,7 +122,8 @@ class CSSStyleDeclaration:
         )
 
     def __getitem__(self, prop):
-        return self.style[prop]
+        try: return self.style[prop]
+        except KeyError: raise KeyError(f"Property '{prop}' not found.")
 
     def __setitem__(self, prop, value):
         self.style[prop] = value

@@ -38,7 +38,7 @@ Return type
 
 ---
 
-#### `document.body()`
+#### `document.body`
 Return the document's body element
 
 Return type
@@ -159,7 +159,7 @@ Return type
 
 ---
 
-#### `HtmlElement.tagName()`
+#### `HtmlElement.tagName`
 Get the tag name of the element
 
 Return type
@@ -179,7 +179,7 @@ Return type
 
 ---
 
-#### `HtmlElement.parentElement()`
+#### `HtmlElement.parentElement`
 Get the element's parent element
 
 Return type
@@ -187,11 +187,8 @@ Return type
 
 ---
 
-#### `HtmlElement.children(deep=True)`
+#### `HtmlElement.children`
 Get the element's children elements
-
-Parameters
-* **deep** *(boolean)* - If False, only return the element's direct children. If True, return all children. 
 
 Return type
 * *list*
@@ -220,7 +217,7 @@ Parameters
 
 ---
 
-#### `document.querySelector(query)`
+#### `HtmlElement.querySelector(query)`
 Return the first descendant element that matches a given CSS selector
 
 Parameters
@@ -231,7 +228,7 @@ Return type
 
 ---
 
-#### `document.querySelectorAll(query)`
+#### `HtmlElement.querySelectorAll(query)`
 Return a list of descendant elements that match a given CSS selector
 
 Parameters

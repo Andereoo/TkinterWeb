@@ -1,4 +1,4 @@
-## *`TkinterWeb.Demo` Documentation*
+## *`tkinterweb.Demo` Documentation*
 
 ## Overview
 **The `Demo` class provides a simple example of TkinterWeb in action by opening a Tkinter window with the Tkinter Wiki loaded.**

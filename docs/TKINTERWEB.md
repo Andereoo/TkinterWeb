@@ -1,4 +1,4 @@
-## *`TkinterWeb.TkinterWeb` Documentation*
+## *`tkinterweb.TkinterWeb` Documentation*
 
 ## Overview
 **The `TkinterWeb` class is the low-level widget that bridges the gap between the underlying Tkhtml3 widget and Tkinter. It provides the basic functionality nessessary for accessing Tkhtml3 from Python scripts.**

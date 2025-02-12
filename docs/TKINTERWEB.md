@@ -8,7 +8,7 @@
 **Do not use this widget unless absolutely nessessary. Instead use the [HtmlFrame widget](HTMLFRAME.md).**
 
 
-This API reference is provided becasue the HtmlFrame and HtmlLabel widgets are built on top of this widget. The underlying TkinterWeb widget can be accessed through the `html` property of the HtmlFrame and HtmlLabel widgets to access underlying settings and commands that are not a part of the HtmlFrame API.
+This API reference is provided becasue the HtmlFrame and HtmlLabel widgets are built on top of the TkinterWeb widget. This widget widget can be accessed through the `html` property of the HtmlFrame and HtmlLabel widgets to access underlying settings and commands that are not a part of the HtmlFrame API.
 
 ## Class API 
 

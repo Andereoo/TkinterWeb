@@ -53,11 +53,12 @@ Pip will automatically install PIL when installing TkinterWeb.
 ## API Documentation
 **TkinterWeb ships with a few classes that make it quick and easy to use.**
 
-Documentation and additional information for these classes can be found in the corresponding API refrence pages:
+Documentation and additional information for these classes can be found in the corresponding API reference pages:
 * [`TkinterWeb.HtmlFrame`](/docs/HTMLFRAME.md)
 * [`TkinterWeb.HtmlLabel`](/docs/HTMLLABEL.md)
 * [`TkinterWeb.Demo`](/docs/DEMO.md)
 * [`TkinterWeb.TkinterWeb`](/docs/TKINTERWEB.md)
+* [`TkinterWeb.Notebook`](/docs/FAQ.md))
 
 &nbsp;
 &nbsp;

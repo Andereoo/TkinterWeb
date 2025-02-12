@@ -1,5 +1,5 @@
 
-## *`TkinterWeb.HtmlFrame` Documentation*
+## *`tkinterWeb.htmlFrame` Documentation*
 
 ## Overview
 **The `HtmlFrame` class is a Tkinter frame that provides additional functionality to the [TkinterWeb widget](TKINTERWEB.md).**
@@ -159,8 +159,8 @@ Refer to [DOM Manipulation with TkinterWeb](DOM.md).
 * `**kw` Other optional `ttk.Frame` arguments
 
 ### Useful Subclasses:
-* `document` (`dom.TkwDocumentObjectModel` instance): see [DOM Manipulation with TkinterWeb](DOM.md)
-* `html` (`TkinterWeb` instance): see the [TkinterWeb widget documentation](TKINTERWEB.md)
+* `document` (`tkinterweb.dom.TkwDocumentObjectModel` instance): see [DOM Manipulation with TkinterWeb](DOM.md)
+* `html` (`tkinterweb.TkinterWeb` instance): see the [TkinterWeb widget documentation](TKINTERWEB.md)
 
 ### Useful Methods:
 

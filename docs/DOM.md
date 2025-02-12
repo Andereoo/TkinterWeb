@@ -4,7 +4,7 @@
 **TkinterWeb provides a handful of functions that allow for manipulation of the webpage. They are fashioned after common JavaScript functions.**
 
 ## How-To
-To manipulate the Document Object Model, use `yourframe.document` (new since version 3.25). For example, to create a heading inside of a container with the id 'container', one can use the following:
+To manipulate the Document Object Model, use `HtmlFrame.document` (new since version 3.25). For example, to create a heading inside of a container with the id 'container', one can use the following:
 ```
 yourframe = tkinterweb.HtmlFrame(root)
 yourframe.load_html("<div id='container'><p>Test</p></div>")

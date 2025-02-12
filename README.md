@@ -58,7 +58,7 @@ Documentation and additional information for these classes can be found in the c
 * [`TkinterWeb.HtmlLabel`](/docs/HTMLLABEL.md)
 * [`TkinterWeb.Demo`](/docs/DEMO.md)
 * [`TkinterWeb.TkinterWeb`](/docs/TKINTERWEB.md)
-* [`TkinterWeb.Notebook`](/docs/FAQ.md))
+* [`TkinterWeb.Notebook`](/docs/NOTEBOOK.md)
 
 &nbsp;
 &nbsp;

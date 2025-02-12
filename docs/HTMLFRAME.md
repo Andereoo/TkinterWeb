@@ -9,10 +9,6 @@ It combines the TkinterWeb browser, automatic scrollbars, cursor handling capabi
 ## Usage
 **The HtmlFrame widget is extremely easy to use.**
 
-The HtmlFrame widget behaves like any other Tkinter widget. This also means that Tkinter functions such as `grid()`, `destroy()`, or `pack()` work on the HtmlFrame. 
-
-Tkinter bindings (such as right-clicks or keyboard presses) can also be used on the HtmlFrame. See [Tips and Tricks](HTMLFRAME.md#tips-and-tricks) below for more information.
-
 Here is an example:
 
 ```
@@ -30,7 +26,7 @@ root.mainloop()
 ```
 To load a website, call `myhtmlframe.load_website("www.yourwebsite.com")`
 
-The HtmlFrame widget can also load files and custom HTML code. It also supports clicking on links, submitting forms, and handling website titles. In order to use these features, refer to the API refrence below.
+The HtmlFrame widget behaves like any other Tkinter widget and supports bindings. It can also load files and custom HTML code. It also supports clicking on links, submitting forms, and handling website titles. In order to use these features, refer to the API refrence below.
 
 ## Tips and Tricks
 *Bindings*
@@ -101,7 +97,7 @@ Searching the page for specific text is very straightfoward. To search the docum
 ```
 number_of_matches = myhtmlframe.find_text("python")
 ```
-Refer to the API reference for more information and [Bug 18](https://github.com/Andereoo/TkinterWeb/issues/18#issuecomment-881649007) for sample code.
+Refer to the API reference for more information and [Bug 18](https://github.com/Andereoo/TkinterWeb/issues/18#issuecomment-881649007) or the [sample web browser](https://github.com/Andereoo/TkinterWeb/blob/main/examples/TkinterWebBrowser.py) for sample code.
 
 ---
 *Done loading?*
@@ -141,7 +137,7 @@ To zoom only the text, use `set_fontscale()` instead.
 ---
 *Manipulating the DOM*
 
-Refer to [DOM.md](DOM.md).
+Refer to [DOM Manipulation with TkinterWeb](DOM.md).
 
 ---
 *Other methods can be found in the [useful methods section](#useful-methods) below.*
@@ -161,6 +157,10 @@ Refer to [DOM.md](DOM.md).
    **New since version 3.25.5:** consider adding the attribute `scroll-x=true` on your `<html>` or `<body>` element to switch modes to auto.
    Generally speaking, it is best to keep the horizontal scrollbar hidden.
 * `**kw` Other optional `ttk.Frame` arguments
+
+### Useful Subclasses:
+* `document` (`dom.TkwDocumentObjectModel` instance): see [DOM Manipulation with TkinterWeb](DOM.md)
+* `html` (`TkinterWeb` instance): see the [TkinterWeb widget documentation](TKINTERWEB.md)
 
 ### Useful Methods:
 

@@ -166,7 +166,6 @@ class TkinterWeb(tk.Widget):
         self.current_cursor = ""
         self.vsb_type = 2
         self.selection_type = 0
-        self.selection_timer = None
         self.motion_frame_bg = "white"
 
         # enable form resetting and submission
@@ -1619,11 +1618,14 @@ class TkinterWeb(tk.Widget):
         "Get full url from partial url"
         return urljoin(self.base_url, href)
     
-    def on_click(self, event):
+    def on_click(self, event, redirected=False):
         "Set active element flags"
         if not self.current_node:
             # register current node if mouse has never moved
             self.on_mouse_motion(event)
+
+        if not redirected:
+            self.selection_type = 0
 
         self.focus_set()
         self.tag("delete", "selection")
@@ -1700,7 +1702,7 @@ class TkinterWeb(tk.Widget):
                 )
 
     def on_click_release(self, event):
-        "Handle click releases on <a> nodes"
+        "Handle click releases on hyperlinks and form elements"
         if self.is_selecting:
             self.is_selecting = False
             self.current_node = None
@@ -1747,8 +1749,6 @@ class TkinterWeb(tk.Widget):
             pass
 
         self.prev_active_node = None
-        if not self.selection_timer:
-            self.clear_selection_type()
 
     def word_in_node(self, node, offset):
         text = self.get_node_text(node)
@@ -1772,23 +1772,15 @@ class TkinterWeb(tk.Widget):
 
     def on_double_click(self, event):
         "Cycle between normal selection, text selection, and element selection on multi-clicks"
-        self.on_click(event)
+        self.on_click(event, True)
 
         if not self.selection_enabled:
             return
         
-        if self.selection_timer:
-            self.after_cancel(self.selection_timer)
-            self.selection_timer = None
-
+        if not self.selection_start_node:
+            return
+        
         try:
-            self.selection_start_node, self.selection_start_offset = self.node(
-                True, event.x, event.y
-            )
-
-            if self.selection_start_node is None:
-                return
-                
             if self.selection_type == 1:
                 text = self.get_node_text(self.selection_start_node)
                 self.tag(
@@ -1802,8 +1794,8 @@ class TkinterWeb(tk.Widget):
                 self.selection_type = 2
 
             elif self.selection_type == 2:
-                self.clear_selection()
-                self.selection_type = 3
+                self.tag("delete", "selection")
+                self.selection_type = 0
 
             else:
                 start_offset, end_offset = self.word_in_node(self.selection_start_node, self.selection_start_offset)
@@ -1825,13 +1817,8 @@ class TkinterWeb(tk.Widget):
                 "-fg",
                 self.selected_text_color,
             )
-            
-            self.selection_timer = self.after(500, self.clear_selection_type)
         except tk.TclError:
             self.set_cursor("default")
-
-    def clear_selection_type(self):
-        self.selection_type = 0
 
     def on_embedded_mouse_motion(self, event, node_handle):
         self.on_embedded_node = node_handle
@@ -1879,14 +1866,10 @@ class TkinterWeb(tk.Widget):
         "Alter selection and HTML element states based on mouse movement"
         if not self.selection_enabled:
             return
-        
+                
         if self.selection_start_node is None:
             self.tag("delete", "selection")
             return
-        
-        if self.selection_timer:
-            self.after_cancel(self.selection_timer)
-            self.selection_timer = None
 
         try:
             self.selection_end_node, self.selection_end_offset = self.node(
@@ -1975,14 +1958,49 @@ class TkinterWeb(tk.Widget):
         "Return the currently selected text"
         if self.selection_start_node is None or self.selection_end_node is None:
             return
-        start_index = self.text(
-            "offset", self.selection_start_node, self.selection_start_offset
-        )
-        end_index = self.text(
-            "offset", self.selection_end_node, self.selection_end_offset
-        )
-        if start_index > end_index:
-            start_index, end_index = end_index, start_index
+        if self.selection_type == 1:
+            start_offset, end_offset = self.word_in_node(self.selection_start_node, self.selection_start_offset)
+            start_offset2, end_offset2 = self.word_in_node(self.selection_end_node, self.selection_end_offset)
+            start_index = self.text(
+                "offset", self.selection_start_node, start_offset
+            )
+            end_index = self.text(
+                "offset", self.selection_end_node, end_offset2
+            )
+            if start_index > end_index:
+                end_index = self.text(
+                    "offset", self.selection_start_node, end_offset
+                )
+                start_index = self.text(
+                    "offset", self.selection_end_node, start_offset2
+                )
+
+        elif self.selection_type == 2:
+            text = self.get_node_text(self.selection_start_node)
+            text2 = self.get_node_text(self.selection_end_node)
+            start_index = self.text(
+                "offset", self.selection_start_node, 0
+            )
+            end_index = self.text(
+                "offset", self.selection_end_node, len(text2)
+            )
+            if start_index > end_index:
+                start_index = self.text(
+                    "offset", self.selection_end_node, 0
+                )
+                end_index = self.text(
+                    "offset", self.selection_start_node, len(text)
+                )
+        else:
+            start_index = self.text(
+                "offset", self.selection_start_node, self.selection_start_offset
+            )
+            end_index = self.text(
+                "offset", self.selection_end_node, self.selection_end_offset
+            )
+            if start_index > end_index:
+                start_index, end_index = end_index, start_index
+                
         whole_text = self.text("text")
         return whole_text[start_index:end_index]
 

@@ -1,5 +1,5 @@
 
-## *`TkinterWeb.HtmlLabel` Documentation*
+## *`tkinterweb.HtmlLabel` Documentation*
 
 ## Overview
 **The `HtmlLabel` class is a Tkinter widget that provides HTML parsing abilities to a label-like widget.**

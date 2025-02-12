@@ -69,7 +69,7 @@ See https://github.com/Andereoo/TkinterWeb/blob/main/docs/FAQ.md.
 ## Webpage Compatability
 **HTML/CSS:**
 * TkinterWeb supports HTML 4.01 and CSS 2.1. A full list of supported CSS declarations can be found at http://tkhtml.tcl.tk/support.html. 
-* Most CSS Pseudo-elements, such as `:hover` and `:active` are also supported. 
+* Most CSS pseudo-elements, such as `:hover` and `:active` are also supported. 
 
 **JavaScript:**
 * Javascript is not supported at the moment, but it is possible to manipulate the document through Python. See [DOM Manipulation with TkinterWeb](/docs/DOM.md).

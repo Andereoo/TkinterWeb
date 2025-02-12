@@ -17,9 +17,9 @@
 
 **My app crashes when I open a tab with an HtmlFrame in it.**
 
-* Tkhtml (the underlying HTML engine) and the ttk.Notebook widget aren't compatable on 64-bit Windows.
+* Tkhtml (the underlying HTML engine) and the `ttk.Notebook` widget aren't compatable on 64-bit Windows.
 * This is a known issue. Fixing this is beyond the scope of this project, but working around it is easy.
-* Instead of using ttk.Notebook, use tkinterweb.Notebook. This is a wrapper around ttk.Notebook that is designed to be a drop-in replacement for the ttk.Notebook widget. It should look and behave exactly like a ttk.Notebook widget, but without the crashes. See [Bug #19](https://github.com/Andereoo/TkinterWeb/issues/19) for more information.
+* Instead of using `ttk.Notebook`, use `tkinterweb.Notebook`. This is a wrapper around ttk.Notebook that is designed to be a drop-in replacement for the `ttk.Notebook` widget. It should look and behave exactly like a `ttk.Notebook` widget, but without the crashes. See [Bug #19](https://github.com/Andereoo/TkinterWeb/issues/19) for more information.
 * Please note that after adding a widget to the Notebook (eg. `mynotebook.add(mywidget)`) there is no need to `pack` or `grid` the widget. This may raise errors. TkinterWeb's Notebook widget handles all this on its own.
 * If TkinterWeb's Notebook widget isn't working properly, [file a bug report](https://github.com/Andereoo/TkinterWeb/issues/new) so that it can be fixed!
 

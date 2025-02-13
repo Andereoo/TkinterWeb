@@ -117,19 +117,16 @@ class CSSStyleDeclaration:
     def __init__(self, node, htmlwidget):
         self.node = node
         self.html = htmlwidget
-        self.style = dict(
-            (j.strip() for j in i.split(":")) for i in self.cssText.split(";") if i
-        )
 
     def __getitem__(self, prop):
-        try: return self.style[prop]
-        except KeyError: raise KeyError(f"Property '{prop}' not found.")
+        return self.html.get_node_property(self.node, prop, "-inline")
 
     def __setitem__(self, prop, value):
-        self.style[prop] = value
-        style = "; ".join(f"{p}: {v}" for p, v in self.style.items()) + ";"
-        self.html.set_node_attribute(self.node, "style", style)
-        self.__getitem__(prop)
+        style = self.html.get_node_properties(self.node, "-inline")
+        style[prop] = value
+        sStr = "; ".join(f"{p}: {v}" for p, v in style.items()) + ";"
+        self.html.set_node_attribute(self.node, "style", sStr)
+        return style[prop]
 
     @property
     def cssText(self):
@@ -137,11 +134,7 @@ class CSSStyleDeclaration:
 
     @property
     def length(self):
-        return len(self.style)
-
-    def getPropertyPriority(self, prop):
-        v = self.__getitem__(prop)
-        return "important" if v.endswith("!important") else ""
+        return len(self.html.get_node_properties(self.node, "-inline"))
 
 
 class HtmlElement:

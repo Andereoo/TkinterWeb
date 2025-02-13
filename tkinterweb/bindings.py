@@ -481,13 +481,13 @@ class TkinterWeb(tk.Widget):
         attr = self.tk.call(node_handle, "attribute")
         return dict(zip(attr[0::2], attr[1::2]))
 
-    def get_node_property(self, node_handle, node_property):
+    def get_node_property(self, node_handle, node_property, *args):
         "Get the specified CSS property of the given node"
-        return self.tk.call(node_handle, "property", node_property)
+        return self.tk.call(node_handle, "property", *args, node_property)
 
-    def get_node_properties(self, node_handle):
+    def get_node_properties(self, node_handle, *args):
         "Get the CSS properties of the given node"
-        prop = self.tk.call(node_handle, "property")
+        prop = self.tk.call(node_handle, "property", *args)
         return dict(zip(prop[0::2], prop[1::2]))
 
     def override_node_properties(self, node_handle, *props):
@@ -514,6 +514,10 @@ class TkinterWeb(tk.Widget):
     def remove_node_flags(self, node, name):
         "Set dynamic flags on the given node"
         self.tk.call(node, "dynamic", "clear", name)
+
+    def get_node_tkhtml(self, node_handle):
+        "Get pathName of node (I think)"
+        return self.tk.call(node_handle, "html")
 
     def get_current_node(self, event):
         "Get current node"

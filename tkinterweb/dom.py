@@ -86,7 +86,7 @@ class TkwDocumentObjectModel:
                 newquery.append(classname)
             else:
                 newquery.append(f".{classname}")
-        nodes = self.html.tk.eval(" ".join(newquery))
+        nodes = self.html.search(" ".join(newquery))
         return tuple(HtmlElement(self.html, node) for node in nodes)
 
     def getElementsByName(self, query):  # Taken from hv3_dom_html.tcl line 110
@@ -143,6 +143,7 @@ class HtmlElement:
         self.node = node
         self.contains_widgets = False
         self.styleCache = None  # Initialize style as None
+        self.html.bbox(node)  # Check if the node is valid
 
     def setup_elem_widgets(self):  # internal
         if self.html.bbox(self.node):  # only bother setting up widgets if visible; otherwise bad things can happen

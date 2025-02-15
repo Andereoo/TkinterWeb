@@ -21,7 +21,7 @@ except ImportError:
         gi.require_version('cairo', '1.0')
         from gi.repository import cairo
         cairoimport = True
-    except ImportError:
+    except (ValueError, ImportError,):
         cairoimport = False
         rsvgimport = None
 
@@ -42,7 +42,7 @@ if cairoimport:
                     gi.require_version('Rsvg', '2.0')
                 from gi.repository import Rsvg
                 rsvgimport = "girsvg"
-            except Exception:
+            except (ValueError, ImportError,):
                 rsvgimport = None
 
 def textimage(name, alt, nodebox, font_type, font_size, threshold):

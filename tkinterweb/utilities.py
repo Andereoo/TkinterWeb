@@ -42,7 +42,7 @@ __title__ = 'TkinterWeb'
 __author__ = "Andereoo"
 __copyright__ = "Copyright (c) 2025 Andereoo"
 __license__ = "MIT"
-__version__ = '3.25.18'
+__version__ = '3.25.19'
 
 
 HEADER = {

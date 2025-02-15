@@ -1635,6 +1635,8 @@ class TkinterWeb(tk.Widget):
             self.selection_start_node, self.selection_start_offset = self.node(
                 True, event.x, event.y
             )
+            self.selection_end_node = None
+            self.selection_end_offset = None
 
             if node_handle and self.stylesheets_enabled:
                 if not self.get_node_tag(node_handle):
@@ -1779,6 +1781,9 @@ class TkinterWeb(tk.Widget):
         
         if not self.selection_start_node:
             return
+
+        self.selection_end_node = self.selection_start_node
+        self.selection_end_offset = self.selection_start_offset
         
         try:
             if self.selection_type == 1:
@@ -1968,11 +1973,11 @@ class TkinterWeb(tk.Widget):
                 "offset", self.selection_end_node, end_offset2
             )
             if start_index > end_index:
-                end_index = self.text(
-                    "offset", self.selection_start_node, end_offset
-                )
                 start_index = self.text(
                     "offset", self.selection_end_node, start_offset2
+                )
+                end_index = self.text(
+                    "offset", self.selection_start_node, end_offset
                 )
 
         elif self.selection_type == 2:

@@ -124,7 +124,7 @@ class CSSStyleDeclaration:
     def __setitem__(self, prop, value):
         style = self.html.get_node_properties(self.node, "-inline")
         style[prop] = value
-        sStr = "; ".join(f"{p}: {v}" for p, v in style.items()) + ";"
+        sStr = " ".join(f"{p}: {v};" for p, v in style.items())
         self.html.set_node_attribute(self.node, "style", sStr)
         return style[prop]
 
@@ -143,7 +143,7 @@ class HtmlElement:
         self.node = node
         self.contains_widgets = False
         self.styleCache = None  # Initialize style as None
-        self.html.bbox(node)  # Check if the node is valid
+        self.html.get_node_tkhtml(node)  # Check if the node is valid
 
     def setup_elem_widgets(self):  # internal
         if self.html.bbox(self.node):  # only bother setting up widgets if visible; otherwise bad things can happen

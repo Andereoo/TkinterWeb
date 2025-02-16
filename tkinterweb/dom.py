@@ -145,13 +145,6 @@ class HtmlElement:
         self.styleCache = None  # Initialize style as None
         self.html.get_node_tkhtml(node)  # Check if the node is valid
 
-    def setup_elem_widgets(self):  # internal
-        if self.html.bbox(self.node):  # only bother setting up widgets if visible; otherwise bad things can happen
-            for node in children:
-                if node.contains_widgets == True:
-                    self.html.setup_widgets()
-                    break
-
     @property
     def style(self):
         if self.styleCache is None:  # Lazy loading of style
@@ -271,21 +264,29 @@ class HtmlElement:
         self.html.delete_node(self.node)
 
     def appendChild(self, children):
-        """Insert the specified children into the element."""
+        "Insert the specified children into the element"
         self._insert_children(children)
 
     def insertBefore(self, children, before):
-        """Insert the specified children before a specified child element."""
-        self._insert_children(children, before.node)
+        "Insert the specified children before a specified child element"
+        self._insert_children(children, before)
 
-    def _insert_children(self, children, before=None):
-        """Helper method to insert children, optionally before a specified node."""
-        tkhtml_children_nodes = [i.node for i in children] if isinstance(children, list) else [children.node]
+    def _insert_children(self, children, before=None):  # internal
+        "Helper method to insert children at a specified position"
+        # Ensure children is a list
+        children = children if isinstance(children, list) else [children]
+        # Extract node commands
+        tkhtml_children_nodes = [i.node for i in children]
+        # Insert the nodes based on the position
         if before:
-            self.html.insert_node_before(self.node, tkhtml_children_nodes, before)
+            self.html.insert_node_before(self.node, tkhtml_children_nodes, before.node)
         else:
             self.html.insert_node(self.node, tkhtml_children_nodes)
-        self.setup_elem_widgets()
+
+        # Set up widgets if the element is visible
+        if self.html.bbox(self.node):
+            if any(node.contains_widgets for node in children):
+                self.html.setup_widgets()
 
     def querySelector(self, query):
         "Return the first element that matches a given CSS selector"

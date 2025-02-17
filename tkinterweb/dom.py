@@ -80,14 +80,9 @@ class TkwDocumentObjectModel:
 
     def getElementsByClassName(self, query):
         "Return a list of elements given a class name"
-        newquery = []
-        for classname in query.split():
-            if classname.startswith("."):
-                newquery.append(classname)
-            else:
-                newquery.append(f".{classname}")
+        newquery = [f".{i}" for i in query.split()]
         nodes = self.html.search(" ".join(newquery))
-        return tuple(HtmlElement(self.html, node) for node in nodes)
+        return [HtmlElement(self.html, node) for node in nodes]
 
     def getElementsByName(self, query):  # Taken from hv3_dom_html.tcl line 110
         "Return a list of elements matching a given name attribute"
@@ -95,12 +90,12 @@ class TkwDocumentObjectModel:
             set selector [subst -nocommands {[name="%s"]}]
             return search $selector
             """ % (escape_Tcl(query), self.html))
-        return tuple(HtmlElement(self.html, node) for node in nodes)
+        return [HtmlElement(self.html, node) for node in nodes]
 
     def getElementsByTagName(self, query):
         "Return a list of elements given a tag name"
         nodes = self.html.search(query)
-        return tuple(HtmlElement(self.html, node) for node in nodes)
+        return [HtmlElement(self.html, node) for node in nodes]
 
     def querySelector(self, query):
         "Return the first element that matches a given CSS selector"
@@ -143,7 +138,7 @@ class HtmlElement:
         self.node = node
         self.contains_widgets = False
         self.styleCache = None  # Initialize style as None
-        self.html.get_node_tkhtml(node)  # Check if the node is valid
+        self.html.bbox(node)  # Check if the node is valid
 
     @property
     def style(self):

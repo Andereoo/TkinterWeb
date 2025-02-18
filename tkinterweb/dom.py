@@ -291,4 +291,4 @@ class HtmlElement:
     def querySelectorAll(self, query):
         "Return a list of elements that match a given CSS selector"
         nodes = self.html.search(query, root=self.node)
-        return [HtmlElement(self.html, node) for node in nodes]
+        return tuple(HtmlElement(self.html, node) for node in nodes)

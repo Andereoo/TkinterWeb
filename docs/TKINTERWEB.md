@@ -93,7 +93,7 @@ Return the font zoom.
 Get the value of a specified attribute of the given node. If provided, the value of the specified attribute will be set to `value`.
 
 ---
-#### `get_node_attributes(node_handle, attribute, default='', value=None)`
+#### `get_node_attributes(node_handle)`
 Get the attributes of the given node.
 
 ---
@@ -110,10 +110,10 @@ Get the calculated value of a node's CSS property. If the node is a text node, r
 
 ---
 #### `get_node_properties(node_handle)`
-Get the CSS properties of the given node.
+Get the calculated values of a node's CSS properties. If the node is a text node, return the values of the properties as assigned to the parent node.
 
 ---
-#### `override_node_properties(node_handle, *props)`
+#### `override_node_properties(node_handle, *properties)`
 Get/set the CSS property override list.
 
 ---
@@ -137,11 +137,11 @@ Return the current selection.
 Return the page zoom.
 
 ---
-#### `insert_node(node_handle, children_nodes)`
+#### `insert_node(node_handle, child_nodes)`
 Experimental, insert the specified nodes into the parent node.
 
 ---
-#### `insert_node_before(node_handle, children_nodes, before)`
+#### `insert_node_before(node_handle, child_nodes, before)`
 Same as the last one except node is placed before another node.
 
 ---
@@ -189,8 +189,12 @@ Reset the widget.
 Get full url from partial url.
 
 ---
-#### `search(selector)`
-Search the document for the specified CSS  selector; return a Tkhtml3 node if found.
+#### `search(selector, cnf={}, **kw)`
+Search the document for the specified CSS selector; return a TkHTML-3 node if found.
+	-root NODE	Search the sub-tree at NODE
+	-index IDX	return the idx'th list entry only
+	-length		return the length of the result only
+The -index and -length options are mutually exclusive.
 
 ---
 #### `select_all(self)`

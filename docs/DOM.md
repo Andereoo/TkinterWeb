@@ -108,7 +108,7 @@ Parameters
 * **query** *(string)* - Specifies the CSS selector to be searched for 
 
 Return type
-* *list*
+* *tuple*
 
 ---
 

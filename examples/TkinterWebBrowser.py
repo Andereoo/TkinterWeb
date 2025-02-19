@@ -20,7 +20,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from tkinterweb import HtmlFrame, Notebook, __version__
-from tkinterweb.utilities import BUILTINPAGES
+from tkinterweb.utilities import BUILTIN_PAGES
 
 import os
 
@@ -177,7 +177,7 @@ class Page(tk.Frame):
         findbox_var.trace("w", self.search_in_page)
         parsemode_var.trace("w", self.set_parsemode)
 
-        broken_page_msg_box.insert("end", BUILTINPAGES["about:error"].format(frame.background, "").replace("</", "\n</").replace(">", ">\n").replace("\n\n", "\n").replace("</html>\n", "</html>"))
+        broken_page_msg_box.insert("end", BUILTIN_PAGES["about:error"].format(frame.background, "").replace("</", "\n</").replace(">", ">\n").replace("\n\n", "\n").replace("</html>\n", "</html>"))
 
         frame.bind("<Button-3>", self.on_right_click)
         for widget in [urlbar, find_box, parsemode_box, zoom_box, fontscale_box]:
@@ -424,7 +424,7 @@ class Page(tk.Frame):
         self.reloadbutton.config(text="Reload", command=self.reload)
 
     def handle_view_source_button(self, url):
-        if url in BUILTINPAGES or url.startswith("view-source:"):
+        if url in BUILTIN_PAGES or url.startswith("view-source:"):
             self.view_source_button.config(state="disabled", cursor="arrow")
         else:
             self.view_source_button.config(state="normal", cursor="hand2")

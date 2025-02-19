@@ -1406,20 +1406,28 @@ class TkinterWeb(tk.Widget):
                 fg = "white"
             widgetid.configure(background=bg, foreground=fg, font=font)
 
-    def set_overflow(self, node):
-        "Look for and handle the overflow property"
-        overflow = self.get_node_property(node, "overflow")
+    def handle_overflow_property(self, node, overflow_type, overflow_function):
+        overflow = self.get_node_property(node, overflow_type) 
         if overflow != "visible": # visible is the tkhtml default, so it's largely meaningless
             overflow_map = {"hidden": 0,
                             "auto": 2,
-                            "visible": 1,
                             "scroll": 1,
                             "clip": 0}
             overflow = overflow_map[overflow]
-            self.vsb_type = self.manage_vsb_func(overflow)
-        
-        if self.get_node_attribute(node, "scroll-x"): # tkhtml doesn't support overflow-x
-            self.manage_hsb_func(2)
+            return overflow_function(overflow)
+        return None
+
+    def set_overflow(self, node):
+        "Look for and handle the overflow property"
+        # Eventually we'll make overflow a composite property of overflow-x and overflow-y
+        # But for now it's its own thing and the only one of the three that is actually respected by Tkhtml in rendering
+        for overflow_type in ("overflow", "overflow-y"):
+            overflow = self.handle_overflow_property(node, overflow_type, self.manage_vsb_func)
+            if overflow:
+                self.vsb_type = overflow
+                break
+
+        self.handle_overflow_property(node, "overflow-x", self.manage_hsb_func)
 
         background = self.get_node_property(node, "background-color")
         if background != "transparent" and self.motion_frame_bg != background: # transparent is the tkhtml default, so it's largely meaningless

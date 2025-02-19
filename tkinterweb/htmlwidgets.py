@@ -9,7 +9,7 @@ import platform
 from urllib.parse import urldefrag, urlparse
 
 from bindings import TkinterWeb
-from utilities import (WORKING_DIR, BUILTINPAGES, AutoScrollbar, StoppableThread, cachedownload, download,
+from utilities import (WORKING_DIR, BUILTIN_PAGES, AutoScrollbar, StoppableThread, cachedownload, download,
                        notifier, threadname, extract_nested, rgb_to_hex, __version__)
 from imageutils import ImageLabel, createRGBimage
 from dom import TkwDocumentObjectModel
@@ -172,8 +172,8 @@ class HtmlFrame(ttk.Frame):
         Technically Tkinter isn't threadsafe, 
         but as long as we do not use the .join() method and no errors are raised in the mainthread, we can get away with it.
         """                        
-        if url in BUILTINPAGES:
-            self.load_html(BUILTINPAGES[url].format(self.background, "", "No file selected"))
+        if url in BUILTIN_PAGES:
+            self.load_html(BUILTIN_PAGES[url].format(self.background, "", "No file selected"))
             return
 
         self.waiting_for_reset = True
@@ -252,7 +252,7 @@ class HtmlFrame(ttk.Frame):
                             data = data.split("</code><br>", 1)[1]
                         else:
                             data = "".join(data)
-                        self.load_html(BUILTINPAGES["about:view-source"].format(self.background, length*9, data), newurl)
+                        self.load_html(BUILTIN_PAGES["about:view-source"].format(self.background, length*9, data), newurl)
                     elif "image" in filetype:
                         self.url_change_func(newurl)
                         # arguably it's much easier to simply pass the image to the HTML engine
@@ -260,7 +260,7 @@ class HtmlFrame(ttk.Frame):
                         # so instead we embed a label widget in the page and deal with page resizing and zooming ourselves
                         # since we're loading an image it doesn't matter if it's a Label widget that doesn't support find_text, selection, etc.
                         # its a bit hacky, but hey, it works and looks very snazzy
-                        self.load_html(BUILTINPAGES["about:image"].format(self.background, str(self.image_label)))
+                        self.load_html(BUILTIN_PAGES["about:image"].format(self.background, str(self.image_label)))
                         self.after(0, self.image_label.load_image, newurl, data, filetype)
                     else:
                         self.url_change_func(newurl)
@@ -298,7 +298,7 @@ class HtmlFrame(ttk.Frame):
         if self.broken_page_msg:
             self.load_html(self.broken_page_msg)
         else:
-            self.load_html(BUILTINPAGES["about:error"].format(self.background, code))
+            self.load_html(BUILTIN_PAGES["about:error"].format(self.background, code))
         self.current_url = ""
         
         if "CERTIFICATE_VERIFY_FAILED" in str(error):

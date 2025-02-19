@@ -60,12 +60,20 @@ class TkwDocumentObjectModel:
         "Create a new text node with the given text conent"
         return HtmlElement(self.html, generate_text_node(self.html, text))
 
-    @property  # attr
+    @property
     def body(self):  # Taken from hv3_dom_html.tcl line 161
         "Return the document body element"
         return HtmlElement(
             self.html,
             self.html.tk.eval(f"""set body [lindex [[{self.html} node] children] 1]"""),
+        )
+
+    @property
+    def documentElement(self):
+        "Return the document body element"
+        return HtmlElement(
+            self.html,
+            self.html.tk.eval(f"""set body [lindex [{self.html} node] 0]"""),
         )
 
     def getElementById(self, query):  # Taken from hv3_dom_html.tcl line 127

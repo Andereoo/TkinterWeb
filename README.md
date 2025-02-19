@@ -97,7 +97,5 @@ Thanks to the [TkinterHtml package](https://bitbucket.org/aivarannamaa/tkinterht
 
 Thanks to the [BRL-CAD project](https://github.com/BRL-CAD/brlcad) for providing modifications for Tkhtml on 64-bit Windows platforms.
 
-Thanks to [Google Fonts](https://github.com/google/fonts) for providing the font used for generating alternate text when images fail to load.
-
 A special thanks to everyone else who helped this project by reporting bugs, creating pull requests, and providing suggestions!
 

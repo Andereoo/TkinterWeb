@@ -38,7 +38,7 @@ Return type
 
 ---
 
-#### `document.body()`
+#### `document.body`
 Return the document's body element
 
 Return type
@@ -108,7 +108,7 @@ Parameters
 * **query** *(string)* - Specifies the CSS selector to be searched for 
 
 Return type
-* *list*
+* *tuple*
 
 ---
 
@@ -159,8 +159,16 @@ Return type
 
 ---
 
-#### `HtmlElement.tagName()`
+#### `HtmlElement.tagName`
 Get the tag name of the element
+
+Return type
+* *string*
+
+---
+
+#### `HtmlElement.attributes`
+Get the attributes of the element
 
 Return type
 * *string*
@@ -179,7 +187,7 @@ Return type
 
 ---
 
-#### `HtmlElement.parentElement()`
+#### `HtmlElement.parentElement`
 Get the element's parent element
 
 Return type
@@ -187,11 +195,8 @@ Return type
 
 ---
 
-#### `HtmlElement.children(deep=True)`
+#### `HtmlElement.children`
 Get the element's children elements
-
-Parameters
-* **deep** *(boolean)* - If False, only return the element's direct children. If True, return all children. 
 
 Return type
 * *list*
@@ -217,6 +222,28 @@ Insert the specified children before a specified child element
 Parameters
 * **children** *(list or HtmlElement)* - Specifies the element(s) to be added into the element 
 * **before** *(HtmlElement)* - Specifies the child element that the added elements should be placed before
+
+---
+
+#### `HtmlElement.querySelector(query)`
+Return the first descendant element that matches a given CSS selector
+
+Parameters
+* **query** *(string)* - Specifies the CSS selector to be searched for 
+
+Return type
+* *HtmlElement*
+
+---
+
+#### `HtmlElement.querySelectorAll(query)`
+Return a list of descendant elements that match a given CSS selector
+
+Parameters
+* **query** *(string)* - Specifies the CSS selector to be searched for 
+
+Return type
+* *tuple*
 
 ---
 

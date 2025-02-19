@@ -45,31 +45,6 @@ if cairoimport:
             except (ValueError, ImportError,):
                 rsvgimport = None
 
-def textimage(name, alt, nodebox, font_type, font_size, threshold):
-    font = ImageFont.truetype(font_type, font_size)
-    if len(nodebox) == 4:
-        width = nodebox[2]-nodebox[0]
-        height = nodebox[3]-nodebox[1]
-        if (width < threshold) or (height < threshold):
-            try:
-                width, height = font.getsize(alt)
-            except AttributeError:
-                left, top, right, bottom = font.getbbox(alt)
-                width = right - left
-                height = bottom
-    else:
-        try:
-            width, height = font.getsize(alt)
-        except AttributeError:
-            left, top, right, bottom = font.getbbox(alt)
-            width = right - left
-            height = bottom
-            
-    image = Image.new('RGBA', (width, height))
-    draw = ImageDraw.Draw(image)
-    draw.text((0,0), alt, fill=(0, 0, 0), font=font)
-    image = PhotoImage(image, name=name)
-    return image
 
 def newimage(data, name, imagetype, invert, return_image=False):
     image = None
@@ -140,6 +115,17 @@ def newimage(data, name, imagetype, invert, return_image=False):
 def blankimage(name):
     image = Image.new("RGBA", (1, 1))
     image = PhotoImage(image, name=name)
+    return image
+
+
+def createRGBimage(data, name, w, h):
+    image = Image.new("RGB", (w, h))
+    for y, row in enumerate(data):
+        for x, hexc in enumerate(row.split()):
+            rgb = tuple(int(hexc[1:][i:i+2], 16) for i in (0, 2, 4))
+            image.putpixel((x, y), rgb)
+
+    if name: image.save(name)
     return image
 
 class ImageLabel(Label):

@@ -373,13 +373,10 @@ class TkinterWeb(tk.Widget):
         document node, or an empty string if the node is a text node"""
         return self.tk.call(self._w, "tag", subcommand, tag_name, *args)
 
-    def search(self, selector, **kw):
+    def search(self, selector, cnf={}, **kw):
         """Search the document for the specified CSS
         selector; return a Tkhtml3 node if found"""
-        opt = ()
-        for k, v in kw.items():
-            opt = opt + (f"-{k}", v)
-        return self.tk.call((self._w, "search", selector) + opt)
+        return self.tk.call((self._w, "search", selector)+self._options(cnf, kw))
 
     def set_zoom(self, multiplier):
         "Set the page zoom"
@@ -490,17 +487,32 @@ class TkinterWeb(tk.Widget):
         "Set the specified attribute of the given node"
         return self.tk.call(node_handle, "attribute", attribute, value)
 
-    def get_node_property(self, node_handle, node_property):
-        "Get the specified attribute of the given node"
-        return self.tk.call(node_handle, "property", node_property)
+    def get_node_attributes(self, node_handle):
+        "Get the attributes of the given node"
+        attr = self.tk.call(node_handle, "attribute")
+        return dict(zip(attr[0::2], attr[1::2]))
 
-    def insert_node(self, node_handle, children_nodes):
+    def get_node_property(self, node_handle, node_property, *args):
+        "Get the specified CSS property of the given node"
+        return self.tk.call(node_handle, "property", *args, node_property)
+
+    def get_node_properties(self, node_handle, *args):
+        "Get the CSS properties of the given node"
+        prop = self.tk.call(node_handle, "property", *args)
+        return dict(zip(prop[0::2], prop[1::2]))
+
+    def override_node_properties(self, node_handle, *props):
+        """Get/set the CSS property override list"""
+        if props: return self.tk.call(node_handle, "override", " ".join(props))
+        return self.tk.call(node_handle, "override")
+
+    def insert_node(self, node_handle, child_nodes):
         "Experimental, insert the specified nodes into the parent node"
-        return self.tk.call(node_handle, "insert", children_nodes)
+        return self.tk.call(node_handle, "insert", child_nodes)
 
-    def insert_node_before(self, node_handle, children_nodes, before):
+    def insert_node_before(self, node_handle, child_nodes, before):
         "Experimental, place the specified nodes is before another node"
-        return self.tk.call(node_handle, "insert", "-before", before, children_nodes)
+        return self.tk.call(node_handle, "insert", "-before", before, child_nodes)
 
     def delete_node(self, node_handle):
         "Delete the given node"
@@ -513,6 +525,10 @@ class TkinterWeb(tk.Widget):
     def remove_node_flags(self, node, name):
         "Set dynamic flags on the given node"
         self.tk.call(node, "dynamic", "clear", name)
+
+    def get_node_tkhtml(self, node_handle):
+        "Get pathName of node (I think)"
+        return self.tk.call(node_handle, "html")
 
     def get_current_node(self, event):
         "Get current node"
@@ -768,7 +784,7 @@ class TkinterWeb(tk.Widget):
                     self.image_thread_check(url, name)
                     done = True
             if not done:
-                self.load_alt_image(url, name)
+                self.load_alt_text(url, name)
                 self.message_func(
                     f"The image {shorten(url)} could not be shown because it is not supported yet"
                 )
@@ -1167,26 +1183,14 @@ class TkinterWeb(tk.Widget):
                 self.message_func(f"Successfully loaded {shorten(url)}")
         self.finish_download(thread)
 
-    def load_alt_image(self, url, name):
-        if (url in self.image_directory) and self.image_alternate_text_enabled:
+    def load_alt_text(self, url, name):
+        if (url in self.image_directory):
             node = self.image_directory[url]
-            nodebox = self.bbox(node)
-            alt = self.get_node_attribute(self.image_directory[url], "alt")
-            if alt:
-                image = textimage(
-                    name,
-                    alt,
-                    nodebox,
-                    self.image_alternate_text_font,
-                    self.image_alternate_text_size,
-                    self.image_alternate_text_threshold,
-                )
-                self.loaded_images.add(image)
-            elif not self.ignore_invalid_images:
-                image, error = newimage(
-                    BROKENIMAGE, name, "image/png", self.image_inversion_enabled
-                )
-                self.loaded_images.add(image)
+            alt = self.get_node_attribute(node, "alt")
+            if alt and self.image_alternate_text_enabled: self.insert_node(node, self.parse_fragment(alt))
+        elif not self.ignore_invalid_images:
+            image = newimage(BROKENIMAGE, name, "image/png", self.image_inversion_enabled)
+            self.loaded_images.add(image)
 
     def fetch_images(self, url, name, urltype):
         "Fetch images and display them in the document"
@@ -1207,7 +1211,7 @@ class TkinterWeb(tk.Widget):
                 self.after(0, self.finish_fetching_images, data, name, filetype, url)
 
         except Exception as error:
-            self.load_alt_image(url, name)
+            self.load_alt_text(url, name)
             self.message_func(
                 f"Error loading image {url}: {error}"
             )
@@ -1226,23 +1230,23 @@ class TkinterWeb(tk.Widget):
                 self.message_func(f"Successfully loaded {shorten(url)}")
                 self.image_setup_func(url, True)
             elif error == "no_pycairo":
-                self.load_alt_image(url, name)
+                self.load_alt_text(url, name)
                 self.message_func(
                     f"Error loading image {url}: Pycairo is not installed but is required to parse .svg files"
                 )
                 self.image_setup_func(url, False)
             elif error == "no_rsvg":
-                self.load_alt_image(url, name)
+                self.load_alt_text(url, name)
                 self.message_func(
                     f"Error loading image {url}: Rsvg is not installed but is required to parse .svg files"
                 )
                 self.image_setup_func(url, False)
             elif error == "corrupt":
-                self.load_alt_image(url, name)
+                self.load_alt_text(url, name)
                 self.message_func(f"The image {url} could not be shown")
                 self.image_setup_func(url, False)
         except Exception as error:
-            self.load_alt_image(url, name)
+            self.load_alt_text(url, name)
             self.message_func(
                 f"Error loading image {url}: {error}"
             )
@@ -2054,3 +2058,14 @@ class TkinterWeb(tk.Widget):
             if self.vsb_type == 0:
                 return
             self.yview_scroll(int(-1*event.delta/30), "units")
+
+    def image(self, full=""):
+        name = self.tk.call(self._w, "image", full)
+        return {name: self.tk.call(name, "data")}
+
+    def postscript(self, cnf={}, **kw):
+        """Print the contents of the canvas to a postscript
+        file. Valid options: colormap, colormode, file, fontmap,
+        height, pageanchor, pageheight, pagesize, pagewidth, pagex, pagey, nobg, noimages,
+        rotate, width, x and y"""
+        return self.tk.call((self._w, "postscript")+self._options(cnf, kw))

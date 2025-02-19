@@ -416,7 +416,7 @@ SPAN[spancontent]:after {
 }
 """
 
-DARKSTYLE = """
+DARK_STYLE = """
 /* Additional stylesheet to be loaded whenever dark mode is enabled. */
 /* Display properties document body. */
 HTML, BODY {
@@ -895,25 +895,25 @@ def get_alt_font():
 def get_tkhtml_folder():
     "Get the location of the platform's tkhtml binary"
     # Universal sdist
-    if platform.system() == "Linux":
-        if "arm" in PLATFORM.machine:  # 32 bit arm Linux - Raspberry Pi and others
-            return os.path.join(ROOT_DIR, "linux_armv71")
-        elif "aarch64" in PLATFORM.machine:  # 64 bit arm Linux - Raspberry Pi and others
-            return os.path.join(ROOT_DIR, "manylinux2014_aarch64")
-        elif sys.maxsize > 2**32:  # 64 bit Linux
-            return os.path.join(ROOT_DIR, "manylinux1_x86_64")
-        else:  # 32 bit Linux
-            return os.path.join(ROOT_DIR, "manylinux1_i686")
-    elif platform.system() == "Darwin":
-        if "arm" in PLATFORM.machine:  # M1 Mac
-            return os.path.join(ROOT_DIR, "macosx_11_0_arm64")
-        else:  # other Macs
-            return os.path.join(ROOT_DIR, "macosx_10_6_x86_64")
-    else:
-        if sys.maxsize > 2**32:  # 64 bit Windows
-            return os.path.join(ROOT_DIR, "win_amd64")
-        else:  # 32 bit Windows
-            return os.path.join(ROOT_DIR, "win32")
+    #if platform.system() == "Linux":
+    #    if "arm" in PLATFORM.machine:  # 32 bit arm Linux - Raspberry Pi and others
+    #        return os.path.join(ROOT_DIR, "linux_armv71")
+    #    elif "aarch64" in PLATFORM.machine:  # 64 bit arm Linux - Raspberry Pi and others
+    #        return os.path.join(ROOT_DIR, "manylinux2014_aarch64")
+    #    elif sys.maxsize > 2**32:  # 64 bit Linux
+    #        return os.path.join(ROOT_DIR, "manylinux1_x86_64")
+    #    else:  # 32 bit Linux
+    #        return os.path.join(ROOT_DIR, "manylinux1_i686")
+    #elif platform.system() == "Darwin":
+    #    if "arm" in PLATFORM.machine:  # M1 Mac
+    #        return os.path.join(ROOT_DIR, "macosx_11_0_arm64")
+    #    else:  # other Macs
+    #        return os.path.join(ROOT_DIR, "macosx_10_6_x86_64")
+    #else:
+    #    if sys.maxsize > 2**32:  # 64 bit Windows
+    #        return os.path.join(ROOT_DIR, "win_amd64")
+    #    else:  # 32 bit Windows
+    #        return os.path.join(ROOT_DIR, "win32")
     # Platform-specific wheel
     return os.path.join(ROOT_DIR, "binaries")
 
@@ -952,3 +952,8 @@ def tkhtml_notifier(name, text, *args):
         sys.stdout.write("DEBUG " + str(name) + ": " + str(text) + "\n\n")
     except Exception:
         pass
+
+def extract_nested(nested):
+    if isinstance(nested, tuple) and len(nested):
+        return extract_nested(nested[0])
+    return nested

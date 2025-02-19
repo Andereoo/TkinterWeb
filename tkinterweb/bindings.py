@@ -85,9 +85,9 @@ class TkinterWeb(tk.Widget):
         if "drawcleanupcrashcmd" not in kwargs:
             kwargs["drawcleanupcrashcmd"] = master.register(self.on_drawcleanupcrash)
         if "defaultstyle" not in kwargs:
-            kwargs["defaultstyle"] = DEFAULTSTYLE
+            kwargs["defaultstyle"] = DEFAULT_STYLE
         if "parsemode" not in kwargs:
-            kwargs["parsemode"] = DEFAULTPARSEMODE
+            kwargs["parsemode"] = DEFAULT_PARSE_MODE
         # if "enablelayout" not in kwargs:
         #    kwargs["enablelayout"] = True
         # if "logcmd" not in kwargs:
@@ -233,9 +233,9 @@ class TkinterWeb(tk.Widget):
         if stylesheet:
             self.config(defaultstyle=stylesheet)
         elif self.dark_theme_enabled:
-            self.config(defaultstyle=DEFAULTSTYLE + DARKSTYLE)
+            self.config(defaultstyle=DEFAULT_STYLE + DARK_STYLE)
         else:
-            self.config(defaultstyle=DEFAULTSTYLE)
+            self.config(defaultstyle=DEFAULT_STYLE)
 
     def check_colors(self, rgb, match):
         "Check colour, invert if necessary, and convert"
@@ -1437,7 +1437,7 @@ class TkinterWeb(tk.Widget):
     def set_cursor(self, cursor):
         "Set document cursor"
         if self.current_cursor != cursor:
-            cursor = CURSORMAPPINGS[cursor]
+            cursor = CURSOR_MAP[cursor]
             self.cursor_change_func(cursor=cursor)
             self.current_cursor = cursor
             # I've noticed that the cursor won't always update when the binding is tied to a different widget than the one we are changing the cursor of
@@ -1696,7 +1696,7 @@ class TkinterWeb(tk.Widget):
                     is_text_node = True
 
                 cursor = self.get_node_property(node_handle, "cursor")
-                if cursor in CURSORMAPPINGS:
+                if cursor in CURSOR_MAP:
                     self.set_cursor(cursor)
                 elif is_text_node:
                     self.set_cursor("text")

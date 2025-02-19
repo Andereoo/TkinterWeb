@@ -5,19 +5,17 @@ by adding scrolling, file loading, and many other convenience functions
 Copyright (c) 2025 Andereoo
 """
 
-import platform
 from urllib.parse import urldefrag, urlparse
 
 from bindings import TkinterWeb
-from utilities import (WORKING_DIR, BUILTIN_PAGES, AutoScrollbar, StoppableThread, cachedownload, download,
-                       notifier, threadname, extract_nested, rgb_to_hex, __version__)
+from utilities import (PLATFORM, WORKING_DIR, PYTHON_VERSION, BUILTIN_PAGES, 
+                       AutoScrollbar, StoppableThread, 
+                       cachedownload, download, notifier, threadname, __version__)
 from imageutils import ImageLabel, createRGBimage
 from dom import TkwDocumentObjectModel
 
 import tkinter as tk
 from tkinter import ttk
-
-import pathlib
 
 
 class HtmlFrame(ttk.Frame):
@@ -117,9 +115,6 @@ class HtmlFrame(ttk.Frame):
         self.yview_moveto = self.html.yview_moveto
         self.yview_scroll = self.html.yview_scroll
 
-        self.html.tk.createcommand("resolve_uri", self.resolve_uri)
-        self.html.tk.createcommand("node_to_html", self.node_to_html)
-
     def manage_vsb(self, allow=None):
         "Show or hide the scrollbars"
         if allow == None:
@@ -160,7 +155,7 @@ class HtmlFrame(ttk.Frame):
     def load_file(self, file_url, decode=None, force=False, insecure=None):
         "Load a locally stored file from the specified path"
         if not file_url.startswith("file://"):
-            if platform.system() == "Windows" and not file_url.startswith("/"):
+            if PLATFORM.system == "Windows" and not file_url.startswith("/"):
                 file_url = "file:///" + str(file_url)
             else:
                 file_url = "file://" + str(file_url)
@@ -178,7 +173,7 @@ class HtmlFrame(ttk.Frame):
 
         self.waiting_for_reset = True
 
-        # workaround for Bug #40, where urllib.urljoin constructs improperly formatted urls on Linux when url starts with file:///
+        # ugly workaround for Bug #40, where urllib.urljoin constructs improperly formatted urls on Linux when url starts with file:///
         if not url.startswith("file://///"):
             url = url.replace("file:////", "file:///")
 
@@ -302,12 +297,11 @@ class HtmlFrame(ttk.Frame):
         self.current_url = ""
         
         if "CERTIFICATE_VERIFY_FAILED" in str(error):
-            python_version = ".".join(platform.python_version_tuple()[:2])
             self.message_func(
                 f"Check that you are using the right url scheme. Some websites only support http.\n\
 This might also happen if your Python distribution does not come installed with website certificates.\n\
 This is a known Python bug on older MacOS systems. \
-Running something along the lines of \"/Applications/Python {python_version}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
+Running something along the lines of \"/Applications/Python {".".join(PYTHON_VERSION[:2])}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
 Otherwise, use 'insecure=True' when loading a page to ignore website certificates.")
 
     def set_zoom(self, multiplier):
@@ -316,12 +310,6 @@ Otherwise, use 'insecure=True' when loading a page to ignore website certificate
 
     def skim(self, url):
         return url.replace("/", "")
-
-    def resolve_uri(self):
-        base = urlparse(self.html.base_url)
-        uri = f"{base.scheme}://{base.netloc}{base.path}"
-        print(uri)
-        return uri
 
     def stop(self):
         "Stop loading a page"
@@ -547,52 +535,58 @@ Otherwise, use 'insecure=True' when loading a page to ignore website certificate
         else:
             self.html.parse_css(data=css_source, override=True)
 
-    def screenshot(self, name="", full=False):
-        image = self.html.image("-full" if full else None)
-        data = image[next(iter(image))]
+    def screenshot(self, file=None, full=False):
+        "Take a screenshot"
+        self.message_func(f"Taking a screenshot...")
+        image, data = self.html.image(full=full)
         height = len(data)
         width = len(data[0].split())
-        self.message_func(f"Screenshot taken: {name} {width}x{height}.")
-        return createRGBimage(data, name, width, height)
+        image = createRGBimage(data, width, height)
+        self.message_func(f"Screenshot taken: {file} {width}px by {height}px.")
+        if file: image.save(file)
+        return image
 
-    def node_to_html(self, node, deep=True):  # internal
-        return self.html.tk.eval(r"""
-            proc TclNode_to_html {node} {
-                set tag [$node tag]
-                if {$tag eq ""} {
-                    append ret [$node text -pre]
-                } else {
-                    append ret <$tag
-                    foreach {zKey zVal} [$node attribute] {
-                        set zEscaped [string map [list "\x22" "\x5C\x22"] $zVal]
-                        append ret " $zKey=\"$zEscaped\""
-                    }
-                    append ret >
-                    if {%d} {
-                        append ret [node_to_childrenHtml $node]
-                    }
-                    append ret </$tag>
-                }
+    def print_page(self, cnf={}, **kw):
+        "Print the page"
+        cnf |= kw
+        self.message_func(f"Printing {self.current_url}...")
+        if "pagesize" in cnf:
+            pageheights = {
+                "A3": "1191", "A4": "842", "A5": "595",
+                "LEGAL": "792", "LETTER": "1008"
             }
-            proc node_to_childrenHtml {node} {
-                set ret ""
-                foreach child [$node children] {
-                    append ret [TclNode_to_html $child]
-                }
-                return $ret
+            pagewidths = {
+                "A3": "842", "A4": "595", "A5": "420",
+                "LEGAL": "612", "LETTER": "612"
             }
-            return [TclNode_to_html %s]
-            """ % (int(deep), extract_nested(node))
-        )
+            try:
+                cnf["pageheight"] = pageheights[cnf["pagesize"].upper()]
+                cnf["pagewidth"] = pagewidths[cnf["pagesize"].upper()]
+                self.message_func(f"Setting printer page size to {cnf["pageheight"]}px by {cnf["pagewidth"]}px.")
+            except KeyError:
+                raise KeyError("Parameter 'pagesize' must be A3, A4, A5, Legal, or Letter")
+            del cnf["pagesize"]
 
-    def create_snapshot(self, filename=None):
-        htmltext = self.html.tk.eval(r"""
+        self.html.update()  # Update the root window to ensure HTML is rendered
+        file = self.html.postscript(cnf)
+        self.message_func("Printed!")
+        return file
+    
+    def save_page(self, file=None):
+        "Save the page"
+        html = self.document.documentElement.innerHTML
+        if file:
+            with open(file, "w+") as handle:
+                handle.write(html)
+        return html
+    
+    def create_snapshot(self, file=None):
+        self.html.tk.setvar("zBase", self.html.simplified_base_url)
+        html = self.html.tk.eval(r"""
             set html %s
             set zTitle ""
             set zStyle "\n"
             set zBody ""
-
-            set zBase [resolve_uri]
 
             foreach rule [$html _styleconfig] {
                 foreach {selector properties origin} $rule {}
@@ -621,31 +615,10 @@ Otherwise, use 'insecure=True' when loading a page to ignore website certificate
     </body>
 </html>}]
         """ % self.html)
-        if filename:
-            if not pathlib.Path(filename).suffix:
-                filename = f"{filename}.{self.html.get_parsemode()}"
-            file = open(filename, "w")
-            file.write(htmltext)
-            file.close()
-            
-        return htmltext
-
-    def print_page(self, cnf={}, **kw):
-        cnf |= kw
-        if "pagesize" in cnf:
-            pagesizes = {
-                "A3": "842x1191", "A4": "595x842", "A5": "420x595",
-                "Legal": "612x792", "Letter": "612x1008"
-            }
-            cnf["pagesize"] = pagesizes[cnf["pagesize"].upper()]
-            self.message_func(cnf["pagesize"])
-
-        self.html.update()  # Update the root window to ensure HTML is rendered
-        self.message_func("Printing...")
-        file = self.html.postscript(cnf)
-        self.message_func("Printed.")
-        if "file" in cnf and not file: file = cnf["file"]
-        return file
+        if file:
+            with open(file, "w+") as handle:
+                handle.write(html)
+        return html
 
 
 class HtmlLabel(HtmlFrame):

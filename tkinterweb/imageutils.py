@@ -4,7 +4,7 @@ Generate Tk images and alt text
 Copyright (c) 2025 Andereoo
 """
 
-from PIL import Image, ImageOps, ImageFont, ImageDraw
+from PIL import Image, ImageOps
 from PIL.ImageTk import PhotoImage
 from io import BytesIO
 
@@ -117,15 +117,12 @@ def blankimage(name):
     image = PhotoImage(image, name=name)
     return image
 
-
-def createRGBimage(data, name, w, h):
+def createRGBimage(data, w, h):
     image = Image.new("RGB", (w, h))
     for y, row in enumerate(data):
         for x, hexc in enumerate(row.split()):
             rgb = tuple(int(hexc[1:][i:i+2], 16) for i in (0, 2, 4))
             image.putpixel((x, y), rgb)
-
-    if name: image.save(name)
     return image
 
 class ImageLabel(Label):

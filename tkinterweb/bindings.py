@@ -4,16 +4,18 @@ The core Python bindings to Tkhtml3
 Copyright (c) 2025 Andereoo
 """
 
-import platform
-import re
-import sys
+from re import IGNORECASE, MULTILINE, split, sub, finditer
 
 from urllib.parse import urlencode, urljoin, urlparse, urlunparse
 
 import tkinter as tk
+from tkinter.ttk import Scale, Style
 
-from imageutils import *
-from utilities import *
+from imageutils import newimage, blankimage
+from utilities import (PLATFORM, PYTHON_VERSION, DEFAULT_PARSE_MODE, BROKEN_IMAGE, CURSOR_MAP, DEFAULT_STYLE, DARK_STYLE, 
+                       ScrolledTextBox, FileSelector, ColourSelector, StoppableThread,
+                       get_tkhtml_folder, load_combobox, load_tkhtml, rgb_to_hex, shorten, 
+                       download, cachedownload, strip_css_url, threadname,)
 
 
 class Combobox(tk.Widget):
@@ -70,13 +72,7 @@ class TkinterWeb(tk.Widget):
 
         # provide OS information for troubleshooting
         self.message_func(
-            "Starting TkinterWeb for {} {} with Python {}.{}.{}".format(
-                "64-bit" if sys.maxsize > 2**32 else "32-bit",
-                platform.system(),
-                sys.version_info.major,
-                sys.version_info.minor,
-                sys.version_info.micro
-            )
+            f"Starting TkinterWeb for {PLATFORM.processor} {PLATFORM.system} with Python {".".join(PYTHON_VERSION)}"
         )
 
         # pre-load custom stylesheet, set default parse mode, and register image loading infrastructure
@@ -117,9 +113,6 @@ class TkinterWeb(tk.Widget):
         self.recursive_hovering_count = 10
         self.max_thread_count = 20
         self.image_alternate_text_enabled = True
-        self.image_alternate_text_font = get_alt_font()
-        self.image_alternate_text_size = 14
-        self.image_alternate_text_threshold = 10
         self.selection_enabled = True
         self.find_match_highlight_color = "#ef0fff"
         self.find_match_text_color = "#fff"
@@ -151,7 +144,7 @@ class TkinterWeb(tk.Widget):
         self.stored_widgets = {}
         self.loaded_images = set()
         self.image_directory = {}
-        self.image_name_prefix = "_tkinterweb_img_{}_".format(id(self))
+        self.image_name_prefix = f"_tkinterweb_img_{id(self)}_"
         self.is_selecting = False
         self.downloads_have_occured = False
         self.unstoppable = True
@@ -215,6 +208,12 @@ class TkinterWeb(tk.Widget):
         """Blank placeholder function. The only purpose of this is to
         improve readability by avoiding `lambda a, b, c: None` statements."""
 
+    @property
+    def simplified_base_url(self):
+        base = urlparse(self.base_url)
+        url = f"{base.scheme}://{base.netloc}{base.path}"
+        return url
+
     def parse(self, html):
         "Parse HTML code"
         self.downloads_have_occured = False
@@ -252,7 +251,7 @@ class TkinterWeb(tk.Widget):
     def generate_altered_colour(self, match, matchtype=1):
         "Invert document colours. Highly experimental."
         colors = match.group(2).replace("\n", "")
-        colors = re.split(r"\s(?![^()]*\))", colors)
+        colors = split(r"\s(?![^()]*\))", colors)
         changed = False
 
         for count, color in enumerate(colors):
@@ -306,16 +305,16 @@ class TkinterWeb(tk.Widget):
             
     def dark_mode(self, html):
         if self.dark_theme_enabled:
-            html = re.sub(self.inline_dark_theme_regexes[0], lambda match: match.group(1) + re.sub(self.inline_dark_theme_regexes[1], self.generate_altered_colour, match.group(2)), html)
+            html = sub(self.inline_dark_theme_regexes[0], lambda match: match.group(1) + sub(self.inline_dark_theme_regexes[1], self.generate_altered_colour, match.group(2)), html)
             for regex in self.general_dark_theme_regexes:
-                html = re.sub(regex, self.generate_altered_colour, html, flags=re.IGNORECASE)
+                html = sub(regex, self.generate_altered_colour, html, flags=IGNORECASE)
         return html
 
     def parse_css(self, sheetid=None, importcmd=None, data="", override=False):
         "Parse CSS code"
         data = self.crash_prevention(data)
         if self.dark_theme_enabled:
-            data = re.sub(self.style_dark_theme_regex, lambda match, matchtype=0: self.generate_altered_colour(match, matchtype), data)
+            data = sub(self.style_dark_theme_regex, lambda match, matchtype=0: self.generate_altered_colour(match, matchtype), data)
         if sheetid and importcmd:
             self.tk.call(
                 self._w, "style", "-id", sheetid, "-importcmd", importcmd, data
@@ -543,13 +542,21 @@ class TkinterWeb(tk.Widget):
     def register_handler(self, handler_type, node_tag, callback):
         self.tk.call(self._w, "handler", handler_type, node_tag, self.register(callback))
 
-    def image(self, full=""):
+    def image(self, full=False):
         """Return the name of a new Tk image containing the rendered document.
         The returned image should be deleted when the script has finished with it.
         Note that this command is mainly intended for automated testing.
-        Be wary of running this command on large documents.
-        Does not work on Windows."""
-        return self.tk.call(self._w, "image", full)
+        Be wary of running this command on large documents."""
+        full = "-full" if full else ""
+        name = self.tk.call(self._w, "image", full)
+        return name, self.tk.call(name, "data")
+
+    def postscript(self, cnf={}, **kw):
+        """Print the contents of the canvas to a postscript file.
+        Valid options: colormap, colormode, file, fontmap, height, 
+        pageanchor, pageheight, pagesize, pagewidth, pagex, pagey, 
+        nobg, noimages, rotate, width, x, and y"""
+        return self.tk.call((self._w, "postscript")+self._options(cnf, kw))
 
     def on_script(self, attributes, tagcontents):
         """Currently ignoring script.
@@ -991,7 +998,7 @@ class TkinterWeb(tk.Widget):
             variable.set(nodevalue)
             from_ = self.get_node_attribute(node, "min", 0)
             to = self.get_node_attribute(node, "max", 100)
-            widgetid = ttk.Scale(self, variable=variable, from_=from_, to=to)
+            widgetid = Scale(self, variable=variable, from_=from_, to=to)
             variable.trace(
                 "w", lambda *_, widgetid=widgetid: self.on_input_change(widgetid)
             )
@@ -1097,13 +1104,13 @@ class TkinterWeb(tk.Widget):
     def crash_prevention(self, data):
         if self.prevent_crashes:
             data = "".join(c for c in data if c <= "\uFFFF")
-            data = re.sub(
+            data = sub(
                 "font-family:[^;']*(;)?",
                 self.remove_noto_emoji,
                 data,
-                flags=re.IGNORECASE,
+                flags=IGNORECASE,
             )
-            data = re.sub(r"rgb\([^0-9](.*?)\)", "inherit", data, flags=re.IGNORECASE)
+            data = sub(r"rgb\([^0-9](.*?)\)", "inherit", data, flags=IGNORECASE)
         return data
 
     def begin_download(self):
@@ -1172,7 +1179,7 @@ class TkinterWeb(tk.Widget):
                     data = cachedownload(url, insecure=self.insecure_https)[0]
 
                 matcher = lambda match, url=url: self.fix_css_urls(match, url)
-                data = re.sub(r"url\((.*?)\)", matcher, data)
+                data = sub(r"url\((.*?)\)", matcher, data)
 
             except Exception as error:
                 self.message_func(f"Error loading stylesheet {errorurl}: {error}")
@@ -1189,7 +1196,7 @@ class TkinterWeb(tk.Widget):
             alt = self.get_node_attribute(node, "alt")
             if alt and self.image_alternate_text_enabled: self.insert_node(node, self.parse_fragment(alt))
         elif not self.ignore_invalid_images:
-            image = newimage(BROKENIMAGE, name, "image/png", self.image_inversion_enabled)
+            image = newimage(BROKEN_IMAGE, name, "image/png", self.image_inversion_enabled)
             self.loaded_images.add(image)
 
     def fetch_images(self, url, name, urltype):
@@ -1392,7 +1399,7 @@ class TkinterWeb(tk.Widget):
                 node = self.get_node_parent(node)
             if bg == "transparent":
                 bg = "white"
-            style = ttk.Style()
+            style = Style()
             stylename = f"Scale{widgetid}.Horizontal.TScale"
             style.configure(stylename, background=bg)
             widgetid.configure(style=stylename)
@@ -1534,11 +1541,11 @@ class TkinterWeb(tk.Widget):
         try:
             # find matches
             if ignore_case:
-                rmatches = re.finditer(
-                    searchtext, doctext, flags=re.IGNORECASE | re.MULTILINE
+                rmatches = finditer(
+                    searchtext, doctext, flags=IGNORECASE | MULTILINE
                 )
             else:
-                rmatches = re.finditer(searchtext, doctext, flags=re.MULTILINE)
+                rmatches = finditer(searchtext, doctext, flags=MULTILINE)
 
             for match in rmatches:
                 match_indexes.append(
@@ -1599,16 +1606,12 @@ class TkinterWeb(tk.Widget):
                     self.yview("moveto", node_top / docheight)
             else:
                 self.message_func(
-                    "No results for the search key '{}' could be found".format(
-                        searchtext
-                    )
+                    f"No results for the search key '{searchtext}' could be found"
                 )
             return nmatches, selected, matches
         except Exception as error:
             self.message_func(
-                "Error searching for {}: {}".format(
-                    searchtext, error
-                )
+                f"Error searching for {searchtext}: {error}"
             )
             return nmatches, selected, matches
 
@@ -1671,6 +1674,7 @@ class TkinterWeb(tk.Widget):
 
     def on_mouse_motion(self, event):
         "Set hover flags and handle the CSS 'cursor' property"
+
         if self.is_selecting:
             return
         if self.on_embedded_node:
@@ -1680,12 +1684,7 @@ class TkinterWeb(tk.Widget):
             if not node_handle:
                 self.on_leave(None)
                 return
-
-        if (
-            node_handle
-            and node_handle != self.current_node
-            and self.stylesheets_enabled
-        ):
+        if (node_handle and node_handle != self.current_node and self.stylesheets_enabled):
             old_handle = self.current_node
             self.current_node = node_handle
 
@@ -2058,7 +2057,7 @@ class TkinterWeb(tk.Widget):
             self.overflow_scroll_frame.scroll(event)
         elif self.overflow_scroll_frame and event.delta < 0 and (yview[1] == 1 or self.vsb_type == 0):
             self.overflow_scroll_frame.scroll(event)
-        elif platform.system() == "Darwin":
+        elif PLATFORM.system == "Darwin":
             if self.vsb_type == 0:
                 return
             self.yview_scroll(int(-1*event.delta), "units")
@@ -2066,14 +2065,3 @@ class TkinterWeb(tk.Widget):
             if self.vsb_type == 0:
                 return
             self.yview_scroll(int(-1*event.delta/30), "units")
-
-    def image(self, full=""):
-        name = self.tk.call(self._w, "image", full)
-        return {name: self.tk.call(name, "data")}
-
-    def postscript(self, cnf={}, **kw):
-        """Print the contents of the canvas to a postscript
-        file. Valid options: colormap, colormode, file, fontmap,
-        height, pageanchor, pageheight, pagesize, pagewidth, pagex, pagey, nobg, noimages,
-        rotate, width, x and y"""
-        return self.tk.call((self._w, "postscript")+self._options(cnf, kw))

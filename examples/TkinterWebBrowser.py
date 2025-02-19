@@ -406,11 +406,11 @@ class Page(tk.Frame):
 
     def set_zoom(self, *args):
         self.frame.set_zoom(self.zoom_var.get())
-        self.sidebar.document.getElementById("zoom").textContent(round(float(self.zoom_var.get()), 1))
+        self.sidebar.document.getElementById("zoom").textContent = round(float(self.zoom_var.get()), 1)
 
     def set_fontscale(self, *args):
         self.frame.set_fontscale(self.fontscale_var.get())
-        self.sidebar.document.getElementById("fontscale").textContent(round(float(self.fontscale_var.get()), 1))
+        self.sidebar.document.getElementById("fontscale").textContent = round(float(self.fontscale_var.get()), 1)
 
     def set_parsemode(self, *args):
         if self.parsemode_var.get() not in ["html", "xml", "xhtml"]:

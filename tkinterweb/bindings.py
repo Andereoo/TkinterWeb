@@ -20,8 +20,8 @@ class Combobox(tk.Widget):
     "Bindings for Bryan Oakley's combobox widget"
 
     def __init__(self, master):
-        load_combobox(master)
         try:
+            load_combobox(master)
             tk.Widget.__init__(self, master, "::combobox::combobox")
         except tk.TclError:
             load_combobox(master, force=True)
@@ -60,22 +60,22 @@ class Combobox(tk.Widget):
 class TkinterWeb(tk.Widget):
     "Bindings for the Tkhtml3 HTML widget"
 
-    def __init__(self, master, message_func, embed_obj, manage_vsb_func, overflow_scroll_frame=None, cfg={}, **kwargs):
+    def __init__(self, master, message_func, embed_obj, manage_vsb_func, manage_hsb_func, overflow_scroll_frame=None, cfg={}, **kwargs):
         self.message_func = message_func
         self.manage_vsb_func = manage_vsb_func
+        self.manage_hsb_func = manage_hsb_func
         self.overflow_scroll_frame = overflow_scroll_frame
 
         folder = get_tkhtml_folder()
 
         # provide OS information for troubleshooting
         self.message_func(
-            "Starting TkinterWeb for {} {} with Python {}.".format(
+            "Starting TkinterWeb for {} {} with Python {}.{}.{}".format(
                 "64-bit" if sys.maxsize > 2**32 else "32-bit",
                 platform.system(),
-                str(sys.version_info[0:3])
-                .replace(", ", ".")
-                .replace(")", "")
-                .replace("(", ""),
+                sys.version_info.major,
+                sys.version_info.minor,
+                sys.version_info.micro
             )
         )
 
@@ -101,7 +101,7 @@ class TkinterWeb(tk.Widget):
             load_tkhtml(master, folder, force=True)
             tk.Widget.__init__(self, master, "html", cfg, kwargs)
 
-        self.message_func(f"Tkhtml3 successfully loaded from {folder}.")
+        self.message_func(f"Tkhtml3 successfully loaded from {folder}")
 
         # widget settings
         self.stylesheets_enabled = True
@@ -120,6 +120,7 @@ class TkinterWeb(tk.Widget):
         self.image_alternate_text_font = get_alt_font()
         self.image_alternate_text_size = 14
         self.image_alternate_text_threshold = 10
+        self.selection_enabled = True
         self.find_match_highlight_color = "#ef0fff"
         self.find_match_text_color = "#fff"
         self.find_current_highlight_color = "#38d878"
@@ -138,6 +139,10 @@ class TkinterWeb(tk.Widget):
         self.radiobutton_token = "TKWtsvLKac1"
         self.insecure_https = False
         self.embedded_widget_attr_name = "widgetid"
+        self.dark_theme_limit = 160
+        self.style_dark_theme_regex = r"([^:;\s{]+)\s?:\s?([^;{!]+)(?=!|;|})"
+        self.general_dark_theme_regexes = [r'(<[^>]+bgcolor=")([^"]*)',r'(<[^>]+text=")([^"]*)',r'(<[^>]+link=")([^"]*)']
+        self.inline_dark_theme_regexes = [r'(<[^>]+style=")([^"]*)', r'([a-zA-Z-]+:)([^;]*)']
 
         # widget status variables
         self.embed_obj = embed_obj
@@ -160,6 +165,8 @@ class TkinterWeb(tk.Widget):
         self.hovered_nodes = []
         self.current_cursor = ""
         self.vsb_type = 2
+        self.selection_type = 0
+        self.motion_frame_bg = "white"
 
         # enable form resetting and submission
         self.form_get_commands = {}
@@ -169,22 +176,9 @@ class TkinterWeb(tk.Widget):
         self.radio_buttons = {}
         self.waiting_forms = 0
 
-        # other UI variables
-        self.cursors = {
-            "crosshair": "crosshair",
-            "default": "",
-            "pointer": "hand2",
-            "move": "fleur",
-            "text": "xterm",
-            "wait": "watch",
-            "progress": "box_spiral",
-            "help": "question_arrow",
-            "none": "none",
-        }
-        self.dark_theme_regex = re.compile(
-            r"([^:;\s{]+)\s?:\s?([^;{!]+)(?=!|;|})"
-        )  # ([^:;\s{]+)\s?:\s?([^;{]+)(?=;|})')
-        self.dark_theme_limit = 160
+        # create a tiny, blank frame for cursor updating
+        self.motion_frame = tk.Frame(self, bg=self.motion_frame_bg, width=1, height=1)
+        self.motion_frame.place(x=0, y=0)
 
         # set up bindtags
         self.node_tag = f"tkinterweb.{id(self)}.nodes"
@@ -195,6 +189,7 @@ class TkinterWeb(tk.Widget):
         self.bind("<<Copy>>", self.copy_selection, True)
         self.bind("<B1-Motion>", self.extend_selection, True)
         self.bind("<Button-1>", self.on_click, True)
+        self.bind("<Double-Button-1>", self.on_double_click, True)
         self.bind("<ButtonRelease-1>", self.on_click_release, True)
         self.bind_class(self.node_tag, "<Motion>", self.on_mouse_motion, True)
 
@@ -224,15 +219,14 @@ class TkinterWeb(tk.Widget):
         "Parse HTML code"
         self.downloads_have_occured = False
         self.unstoppable = True
-        self.vsb_type = 2 # reset the scrollbars
-        self.manage_vsb_func(2)
         html = self.crash_prevention(html)
+        html = self.dark_mode(html)
         self.tk.call(self._w, "parse", html)
         if self.embedded_widget_attr_name in html:
             self.setup_widgets()
         # we assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
         if not self.downloads_have_occured:
-            self.done_loading_func()
+            self.after(0, self.done_loading_func)
 
     def update_default_style(self, stylesheet=None):
         "Update the default stylesheet based on color theme"
@@ -243,23 +237,19 @@ class TkinterWeb(tk.Widget):
         else:
             self.config(defaultstyle=DEFAULTSTYLE)
 
-    def rgb_to_hex(self, red, green, blue, *args):
-        "Convert RGB colour code to HEX"
-        return f"#{red:02x}{green:02x}{blue:02x}"
-
     def check_colors(self, rgb, match):
         "Check colour, invert if necessary, and convert"
         if ("background" in match and sum(rgb) < self.dark_theme_limit) or (
             match == "color" and sum(rgb) > self.dark_theme_limit
         ):
-            return self.rgb_to_hex(*rgb)
+            return rgb_to_hex(*rgb)
         else:
             rgb[0] = max(1, min(255, 240 - rgb[0]))
             rgb[1] = max(1, min(255, 240 - rgb[1]))
             rgb[2] = max(1, min(255, 240 - rgb[2]))
-            return self.rgb_to_hex(*rgb)
+            return rgb_to_hex(*rgb)
 
-    def generate_altered_colour(self, match):
+    def generate_altered_colour(self, match, matchtype=1):
         "Invert document colours. Highly experimental."
         colors = match.group(2).replace("\n", "")
         colors = re.split(r"\s(?![^()]*\))", colors)
@@ -268,7 +258,6 @@ class TkinterWeb(tk.Widget):
         for count, color in enumerate(colors):
             try:
                 if color.startswith("#"):
-                    changed = True
                     color = color.lstrip("#")
                     lv = len(color)
                     if lv == 3:
@@ -281,8 +270,8 @@ class TkinterWeb(tk.Widget):
                         ),
                         match.group(1),
                     )
-                elif color.startswith("rgb(") or color.startswith("rgba("):
                     changed = True
+                elif color.startswith("rgb(") or color.startswith("rgba("):
                     colors[count] = self.check_colors(
                         list(
                             map(
@@ -296,22 +285,37 @@ class TkinterWeb(tk.Widget):
                         ),
                         match.group(1),
                     )
-                elif color in COLORMAPPINGS:
                     changed = True
-                    colors[count] = COLORMAPPINGS[color]
+                else:
+                    try:
+                        color = list(self.winfo_rgb(color))
+                        colors[count] = self.check_colors(color, match.group(1))
+                        changed = True
+                    except tk.TclError:
+                        pass
             except ValueError as error:
-                changed = False
-
+                pass
+        
         if changed:
-            return match.group(1) + ": " + " ".join(colors)
+            if matchtype:
+                return match.group(1) + " ".join(colors)
+            else:
+                return match.group(1) + ": " + " ".join(colors)
         else:
             return match.group()
+            
+    def dark_mode(self, html):
+        if self.dark_theme_enabled:
+            html = re.sub(self.inline_dark_theme_regexes[0], lambda match: match.group(1) + re.sub(self.inline_dark_theme_regexes[1], self.generate_altered_colour, match.group(2)), html)
+            for regex in self.general_dark_theme_regexes:
+                html = re.sub(regex, self.generate_altered_colour, html, flags=re.IGNORECASE)
+        return html
 
     def parse_css(self, sheetid=None, importcmd=None, data="", override=False):
         "Parse CSS code"
         data = self.crash_prevention(data)
         if self.dark_theme_enabled:
-            data = re.sub(self.dark_theme_regex, self.generate_altered_colour, data)
+            data = re.sub(self.style_dark_theme_regex, lambda match, matchtype=0: self.generate_altered_colour(match, matchtype), data)
         if sheetid and importcmd:
             self.tk.call(
                 self._w, "style", "-id", sheetid, "-importcmd", importcmd, data
@@ -337,6 +341,12 @@ class TkinterWeb(tk.Widget):
         self.hovered_nodes = []
         self.current_node = None
         self.on_embedded_node = None
+        self.selection_start_node = None
+        self.selection_end_node = None
+        self.vsb_type = self.manage_vsb_func()
+        self.manage_hsb_func()
+        self.motion_frame_bg = "white"
+        self.set_cursor("default")
         self.tk.call(self._w, "reset")
 
     def stop(self):
@@ -388,7 +398,7 @@ class TkinterWeb(tk.Widget):
         "Set the font zoom"
         self.tk.call(self._w, "configure", "-fontscale", multiplier)
 
-    def get_fontscale(self, multiplier):
+    def get_fontscale(self):
         "Return the font zoom"
         return self.tk.call(self._w, "cget", "-fontscale")
 
@@ -437,6 +447,7 @@ class TkinterWeb(tk.Widget):
         self.downloads_have_occured = False
         self.unstoppable = True
         html = self.crash_prevention(html)
+        html = self.dark_mode(html)
         fragment = self.tk.call(self._w, "fragment", html)
         # We assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
         if not self.downloads_have_occured:
@@ -540,8 +551,10 @@ class TkinterWeb(tk.Widget):
         Does not work on Windows."""
         return self.tk.call(self._w, "image", full)
 
-    def on_script(self, *args):
-        "Currently just ignoring script"
+    def on_script(self, attributes, tagcontents):
+        """Currently ignoring script.
+        A javascript engine could be used here to parse the script.
+        Returning any HTMl code here causes it to be parsed in place of the script tag."""
 
     def on_style(self, attributes, tagcontents):
         "Handle <style> elements"
@@ -555,7 +568,6 @@ class TkinterWeb(tk.Widget):
                 parent_url, new_url
             )
         )
-        self.message_func("Loading <style> element.")
         self.style_thread_check(sheetid=ids, handler=handler_proc, data=tagcontents)
 
     def on_link(self, node):
@@ -576,7 +588,7 @@ class TkinterWeb(tk.Widget):
             href = self.get_node_attribute(node, "href")
             try:
                 url = self.resolve_url(href)
-                self.message_func(f"Loading stylesheet from {shorten(url)}.")
+                self.message_func(f"Fetching stylesheet from {shorten(url)}")
                 self.style_count += 1
                 ids = "user." + str(self.style_count).zfill(4)
                 handler_proc = self.register(
@@ -588,7 +600,7 @@ class TkinterWeb(tk.Widget):
                     sheetid=ids, handler=handler_proc, errorurl=href, url=url
                 )
             except Exception as error:
-                self.message_func(f"Error reading stylesheet {href}: {error}.")
+                self.message_func(f"Error reading stylesheet {href}: {error}")
         elif "icon" in rel:
             href = self.get_node_attribute(node, "href")
             url = self.resolve_url(href)
@@ -602,7 +614,7 @@ class TkinterWeb(tk.Widget):
         self.style_count += 1
         try:
             url = urljoin(parent_url, new_url)
-            self.message_func(f"Loading stylesheet from {shorten(url)}.")
+            self.message_func(f"Loading stylesheet from {shorten(url)}")
             ids = "user." + str(self.style_count).zfill(4)
             handler_proc = self.register(
                 lambda new_url, parent_url=url: self.on_atimport(parent_url, new_url)
@@ -613,7 +625,7 @@ class TkinterWeb(tk.Widget):
             )
 
         except Exception as error:
-            self.message_func(f"Error reading stylesheet {new_url}: {error}.")
+            self.message_func(f"Error loading stylesheet {new_url}: {error}")
 
     def on_title(self, node):
         "Handle <title> elements"
@@ -627,7 +639,7 @@ class TkinterWeb(tk.Widget):
             self.base_url = self.resolve_url(href)
         except Exception:
             self.message_func(
-                "Error setting base url: a <base> element has been found without an href attribute."
+                "Error setting base url: a <base> element has been found without an href attribute"
             )
 
     def on_a(self, node):
@@ -649,11 +661,11 @@ class TkinterWeb(tk.Widget):
         src = self.get_node_attribute(node, "src")
         srcdoc = self.get_node_attribute(node, "srcdoc")
 
-        self.message_func("Loading <iframe> element.")
         if srcdoc:
             self.create_iframe(node, None, srcdoc)
         elif src and (src != self.base_url):
             src = self.resolve_url(src)
+            self.message_func(f"Creating iframe from {shorten(src)}")
             self.create_iframe(node, src)
 
     def on_object(self, node):
@@ -664,41 +676,67 @@ class TkinterWeb(tk.Widget):
         name = self.image_name_prefix + str(len(self.loaded_images))
         url = self.get_node_attribute(node, "data")
 
-        try:
-            url = self.resolve_url(url)
-            if url == self.base_url:
-                # Don't load the object if it is the same as the current file
-                # Otherwise the page will load the same object indefinitely and freeze the GUI forever
-                return
+        if url != "":
+            try:
+                # stylecmd behaviour is iffy when using the 'widgetid' attribute because sometimes the styling is done by the time setup_widgets fires
+                # instead we try to load widgets presented at <object> elements at runtime
+                widgetid = self.nametowidget(url)
+                if widgetid.winfo_ismapped():  # Don't display the same widget twice
+                    return
 
-            self.message_func(f"Loading object: {shorten(url)}.")
+                allowscrolling = self.get_node_attribute(node, "allowscrolling", "false") != "false"
+                allowstyling = self.get_node_attribute(node, "allowstyling", "false") != "false"
+                handleremoval = self.get_node_attribute(node, "handleremoval", "false") != "false"
+                if allowstyling:
+                    allowstyling = lambda node=node, widgetid=widgetid, widgettype="text": self.handle_node_style(node, widgetid, widgettype)
+                else:
+                    allowstyling = None
+                if handleremoval:
+                    handleremoval = lambda widgetid=widgetid: self.handle_node_removal(widgetid)
+                else:
+                    handleremoval = None
 
-            # Download the data and display it if it is an image or html file
-            # Ideally threading would be used here, but at the moment threading <object> elements breaks some images
-            # It doesn't really matter though, since very few webpages use <object> elements anyway
-            if url.startswith("file://") or (not self.caches_enabled):
-                data, newurl, filetype = download(url, insecure=self.insecure_https)
-            elif url:
-                data, newurl, filetype = cachedownload(
-                    url, insecure=self.insecure_https
+                self.stored_widgets[widgetid] = node
+                self.handle_node_replacement(
+                    node,
+                    widgetid,
+                    handleremoval,
+                    allowstyling,
+                    allowscrolling,
+                    False,
                 )
-            else:
-                return
+            except KeyError:
+                url = self.resolve_url(url)
+                if url == self.base_url:
+                    # Don't load the object if it is the same as the current file
+                    # Otherwise the page will load the same object indefinitely and freeze the GUI forever
+                    return
 
-            if data and filetype.startswith("image"):
-                image, error = newimage(
-                    data, name, filetype, self.image_inversion_enabled
-                )
-                self.loaded_images.add(image)
-                self.tk.call(
-                    node, "override", f"-tkhtml-replacement-image url(replace:{image})"
-                )
-            elif data and filetype == "text/html":
-                self.create_iframe(node, newurl, data)
-        except Exception as error:
-            self.message_func(
-                f"An error has been encountered while loading an <object> element: {error}."
-            )
+                self.message_func(f"Creating object from {shorten(url)}")
+                try:
+                    if url.startswith("file://") or (not self.caches_enabled):
+                        data, newurl, filetype, code = download(url, insecure=self.insecure_https)
+                    elif url:
+                        data, newurl, filetype, code = cachedownload(
+                            url, insecure=self.insecure_https
+                        )
+                    else:
+                        return
+
+                    if data and filetype.startswith("image"):
+                        image, error = newimage(
+                            data, name, filetype, self.image_inversion_enabled
+                        )
+                        self.loaded_images.add(image)
+                        self.tk.call(
+                            node, "override", f"-tkhtml-replacement-image url(replace:{image})"
+                        )
+                    elif data and filetype == "text/html":
+                        self.create_iframe(node, newurl, data)
+                except Exception as error:
+                    self.message_func(
+                        f"Error loading object element: {error}"
+                    )
 
     def on_drawcleanupcrash(self):
         if self.prevent_crashes:
@@ -737,9 +775,10 @@ class TkinterWeb(tk.Widget):
             ]
         ):
             done = False
-            self.message_func(f"Fetching image: {shorten(url)}.")
+            self.message_func(f"Fetching image: {shorten(url)}")
             for image in url.split(","):
                 if image.startswith("url("):
+                    url = url.split("'), url('", 1)[0]
                     image = strip_css_url(image)
                     url = self.resolve_url(image)
                     self.image_thread_check(url, name)
@@ -747,10 +786,11 @@ class TkinterWeb(tk.Widget):
             if not done:
                 self.load_alt_text(url, name)
                 self.message_func(
-                    f"The image {shorten(url)} could not be shown because it is not supported yet."
+                    f"The image {shorten(url)} could not be shown because it is not supported yet"
                 )
                 self.image_setup_func(url, True)
         else:
+            url = url.split("'), url('", 1)[0]
             url = self.resolve_url(url)
             self.image_thread_check(url, name)
         return name
@@ -776,7 +816,7 @@ class TkinterWeb(tk.Widget):
             self.waiting_forms += 1
         else:
             self.loaded_forms[node] = inputs
-            self.message_func("Successfully setup <form> element.")
+            self.message_func("Successfully setup form")
 
     def on_table(self, node):
         "Handle <form> elements in tables; workaround for Bug #48"
@@ -803,7 +843,7 @@ class TkinterWeb(tk.Widget):
             scan(node, node)
             for form in inputs:
                 self.loaded_forms[form] = inputs[form]
-                self.message_func("Successfully setup table <form> element.")
+                self.message_func("Successfully setup table form")
                 self.waiting_forms -= 1
 
     def on_select(self, node):
@@ -1054,147 +1094,6 @@ class TkinterWeb(tk.Widget):
         widgetid.event_generate("<<Modified>>")
         return True
 
-    def on_click(self, event):
-        "Set active element flags"
-
-        if not self.current_node:
-            # register current node if mouse has never moved
-            self.on_mouse_motion(event)
-
-        self.focus_set()
-        self.tag("delete", "selection")
-        node_handle = self.get_current_node(event)
-
-        if node_handle:
-            self.selection_start_node, self.selection_start_offset = self.node(
-                True, event.x, event.y
-            )
-
-            if node_handle and self.stylesheets_enabled:
-                if not self.get_node_tag(node_handle):
-                    node_handle = self.get_current_node_parent(node_handle)
-                self.set_node_flags(node_handle, "active")
-                self.prev_active_node = node_handle
-
-    def on_leave(self, event):
-        "Reset cursor and node states when leaving this widget"
-        self.set_cursor("default")
-        if self.stylesheets_enabled:
-            for node in self.hovered_nodes:
-                try:
-                    self.remove_node_flags(node, "hover")
-                    self.remove_node_flags(node, "active")
-                except tk.TclError:
-                    pass
-        self.hovered_nodes = []
-        self.current_node = None
-
-    def on_mouse_motion(self, event):
-        "Set hover flags and handle the CSS 'cursor' property"
-        if self.is_selecting:
-            return
-        if self.on_embedded_node:
-            node_handle = self.on_embedded_node
-        else:
-            node_handle = self.get_current_node(event)
-            if not node_handle:
-                self.on_leave(None)
-                return
-
-        if (
-            node_handle
-            and node_handle != self.current_node
-            and self.stylesheets_enabled
-        ):
-            old_handle = self.current_node
-            self.current_node = node_handle
-
-            if node_handle != old_handle:
-                is_text_node = False
-                if not self.get_node_tag(node_handle):
-                    node_handle = self.get_current_node_parent(node_handle)
-                    is_text_node = True
-
-                cursor = self.get_node_property(node_handle, "cursor")
-                if cursor in self.cursors:
-                    self.set_cursor(cursor)
-                elif is_text_node:
-                    self.set_cursor("text")
-                else:
-                    self.set_cursor("default")
-
-                for node in self.hovered_nodes:
-                    self.remove_node_flags(node, "hover")
-
-                self.hovered_nodes = []
-                self.handle_recursive_hovering(
-                    node_handle, self.recursive_hovering_count
-                )
-
-    def on_click_release(self, event):
-        "Handle click releases on <a> nodes"
-        if self.is_selecting:
-            self.is_selecting = False
-            self.current_node = None
-            self.on_mouse_motion(event)
-            return
-
-        node_handle = self.get_current_node(event)
-
-        try:
-            if node_handle:
-                node_tag = self.get_node_tag(node_handle).lower()
-
-                if not node_tag:
-                    node_handle = self.get_node_parent(node_handle)
-                    node_tag = self.get_node_tag(node_handle).lower()
-
-                node_type = self.get_node_attribute(node_handle, "type").lower()
-
-                if self.prev_active_node and self.stylesheets_enabled:
-                    self.remove_node_flags(self.prev_active_node, "active")
-                if node_tag == "a":
-                    self.set_node_flags(node_handle, "visited")
-                    self.handle_link_click(node_handle)
-                elif node_tag == "input" and node_type == "reset":
-                    self.handle_form_reset(node_handle)
-                elif node_tag == "input" and node_type == "submit":
-                    self.handle_form_submission(node_handle)
-                elif node_tag == "input" and node_type == "image":
-                    self.handle_form_submission(node_handle)
-                elif node_tag == "button" and node_type == "submit":
-                    self.handle_form_submission(node_handle)
-                else:
-                    for node in self.hovered_nodes:
-                        node_tag = self.get_node_tag(node).lower()
-                        if node_tag == "a":
-                            self.set_node_flags(node, "visited")
-                            self.handle_link_click(node)
-                            break
-                        elif node_tag == "button":
-                            if (self.get_node_attribute(node, "type").lower() == "submit"):
-                                self.handle_form_submission(node)
-                                break
-        except tk.TclError:
-            pass
-
-        self.prev_active_node = None
-
-    def on_embedded_mouse_motion(self, event, node_handle):
-        self.on_embedded_node = node_handle
-        self.on_mouse_motion(event)
-
-    def add_bindtags(self, widgetid, allowscrolling=True):
-        "Add bindtags to allow scrolling and on_embedded_mouse function calls"
-        if allowscrolling:
-            tags = (
-                self.node_tag,
-                self.scrollable_node_tag,
-            )
-        else:
-            tags = (self.node_tag,)
-        widgetid.bindtags(widgetid.bindtags() + tags)
-
     def crash_prevention(self, data):
         if self.prevent_crashes:
             data = "".join(c for c in data if c <= "\uFFFF")
@@ -1210,7 +1109,7 @@ class TkinterWeb(tk.Widget):
     def begin_download(self):
         thread = threadname()
         self.active_threads.append(thread)
-        self.downloading_resource_func()
+        self.after(0, self.downloading_resource_func)
         return thread
 
     def finish_download(self, thread):
@@ -1218,7 +1117,7 @@ class TkinterWeb(tk.Widget):
         if len(self.active_threads) == 0:
             # call done_loading_func outside of the thread 
             # this stops bad things from happening when Tcl is also being called in the callback
-            self.after(1, self.done_loading_func)
+            self.after(0, self.done_loading_func)
 
     def fix_css_urls(self, match, url):
         "Make relative uris in CSS files absolute"
@@ -1276,11 +1175,12 @@ class TkinterWeb(tk.Widget):
                 data = re.sub(r"url\((.*?)\)", matcher, data)
 
             except Exception as error:
-                self.message_func(f"Error reading stylesheet {errorurl}: {error}.")
+                self.message_func(f"Error loading stylesheet {errorurl}: {error}")
+
         if data and self.unstoppable:
-
             self.parse_css(f"{sheetid}.9999", handler, data)
-
+            if url:
+                self.message_func(f"Successfully loaded {shorten(url)}")
         self.finish_download(thread)
 
     def load_alt_text(self, url, name):
@@ -1296,56 +1196,67 @@ class TkinterWeb(tk.Widget):
         "Fetch images and display them in the document"
         thread = self.begin_download()
 
-        self.message_func(f"Fetching image: {shorten(url)}.")
+        self.message_func(f"Fetching image from {shorten(url)}")
 
         try:
             if url.startswith("file://") or (not self.caches_enabled):
-                data, newurl, filetype = download(url, insecure=self.insecure_https)
+                data, newurl, filetype, code = download(url, insecure=self.insecure_https)
             else:
-                data, newurl, filetype = cachedownload(
+                data, newurl, filetype, code = cachedownload(
                     url, insecure=self.insecure_https
                 )
 
             if self.unstoppable and data:
-                image, error = newimage(
-                    data, name, filetype, self.image_inversion_enabled
-                )
-                if image:
-                    self.loaded_images.add(image)
-                    self.image_setup_func(url, True)
-                    node = self.search(f"img[src='{url}']")
-                    if self.get_node_children(node): self.delete_node(self.get_node_children(node))
-                elif error == "no_pycairo":
-                    self.load_alt_text(url, name)
-                    self.message_func(
-                        "Scalable Vector Graphics could not be shown because Pycairo is not installed but is required to parse .svg files."
-                    )
-                    self.image_setup_func(url, False)
-                elif error == "no_rsvg":
-                    self.load_alt_text(url, name)
-                    self.message_func(
-                        "Scalable Vector Graphics could not be shown because Rsvg is not installed but is required to parse .svg files."
-                    )
-                    self.image_setup_func(url, False)
-                elif error == "corrupt":
-                    self.load_alt_text(url, name)
-                    self.message_func(f"The image {url} could not be shown.")
-                    self.image_setup_func(url, False)
+                # thread safety
+                self.after(0, self.finish_fetching_images, data, name, filetype, url)
 
-        except Exception:
+        except Exception as error:
             self.load_alt_text(url, name)
             self.message_func(
-                f"The image {url} could not be shown because it is corrupt or is not supported yet."
+                f"Error loading image {url}: {error}"
             )
             self.image_setup_func(url, False)
 
         self.finish_download(thread)
 
+    def finish_fetching_images(self, data, name, filetype, url):
+        try:
+            image, error = newimage(
+                data, name, filetype, self.image_inversion_enabled
+            )
+            
+            if image:
+                self.loaded_images.add(image)
+                self.message_func(f"Successfully loaded {shorten(url)}")
+                self.image_setup_func(url, True)
+            elif error == "no_pycairo":
+                self.load_alt_text(url, name)
+                self.message_func(
+                    f"Error loading image {url}: Pycairo is not installed but is required to parse .svg files"
+                )
+                self.image_setup_func(url, False)
+            elif error == "no_rsvg":
+                self.load_alt_text(url, name)
+                self.message_func(
+                    f"Error loading image {url}: Rsvg is not installed but is required to parse .svg files"
+                )
+                self.image_setup_func(url, False)
+            elif error == "corrupt":
+                self.load_alt_text(url, name)
+                self.message_func(f"The image {url} could not be shown")
+                self.image_setup_func(url, False)
+        except Exception as error:
+            self.load_alt_text(url, name)
+            self.message_func(
+                f"Error loading image {url}: {error}"
+            )
+            self.image_setup_func(url, False)
+
     def handle_link_click(self, node_handle):
         "Handle link clicks"
         href = self.get_node_attribute(node_handle, "href")
         url = self.resolve_url(href)
-        self.message_func(f"A link to '{shorten(url)}' has been clicked.")
+        self.message_func(f"A link to '{shorten(url)}' has been clicked")
         self.visited_links.append(url)
         self.link_click_func(url)
 
@@ -1414,7 +1325,7 @@ class TkinterWeb(tk.Widget):
         else:
             data = data.encode()
 
-        self.message_func(f"A form has been submitted to {shorten(url)}.")
+        self.message_func(f"A form has been submitted to {shorten(url)}")
         self.form_submit_func(url, data, method)
 
     def handle_node_replacement(self, node, widgetid, deletecmd, stylecmd=None, allowscrolling=True, handledelete=True):
@@ -1505,16 +1416,28 @@ class TkinterWeb(tk.Widget):
                             "scroll": 1,
                             "clip": 0}
             overflow = overflow_map[overflow]
-            self.manage_vsb_func(overflow)
-            self.vsb_type = overflow
+            self.vsb_type = self.manage_vsb_func(overflow)
+        
+        if self.get_node_attribute(node, "scroll-x"): # tkhtml doesn't support overflow-x
+            self.manage_hsb_func(2)
+
+        background = self.get_node_property(node, "background-color")
+        if background != "transparent" and self.motion_frame_bg != background: # transparent is the tkhtml default, so it's largely meaningless
+            self.motion_frame_bg = background
+            self.motion_frame.config(bg=background)
 
     def set_cursor(self, cursor):
         "Set document cursor"
-
         if self.current_cursor != cursor:
-            cursor = self.cursors[cursor]
+            cursor = CURSORMAPPINGS[cursor]
             self.cursor_change_func(cursor=cursor)
             self.current_cursor = cursor
+            # I've noticed that the cursor won't always update when the binding is tied to a different widget than the one we are changing the cursor of
+            # however, the html widget doesn't support the cursor property so there's not much we can do about this
+            # update_idletasks() or update() have no effect, but print() and updating the color or text of another widget does
+            # therefore we update the background color of a tiny frame that is barely visible to match the background color of the page whenever we need to change te cursor
+            # it's wierd but hey, it works
+            self.motion_frame.config(bg=self.motion_frame_bg)
 
     def handle_recursive_hovering(self, node_handle, count):
         "Set hover flags on the parents of the hovered element"
@@ -1531,18 +1454,34 @@ class TkinterWeb(tk.Widget):
         widgets = self.search(f"[{self.embedded_widget_attr_name}]")
         for node in widgets:
             widgetid = self.get_node_attribute(node, self.embedded_widget_attr_name)
-            widgetid = self.nametowidget(widgetid)
-            if widgetid.winfo_ismapped():  # Don't display the same widget twice
+            if widgetid == "":
                 continue
-            allowscrolling = self.get_node_attribute(node, "allowscrolling")
+            widgetid = self.nametowidget(widgetid)
+            if widgetid.winfo_ismapped():  
+                # don't display a widget that is already visible 
+                continue
+            if widgetid in self.stored_widgets:
+                # don't display a widget that is already embedded or about to be embedded
+                # this prevents this code from firing after a widget has been embedded by the <object> tag
+                continue
+
+            allowscrolling = self.get_node_attribute(node, "allowscrolling", "false") != "false"
+            handleremoval = self.get_node_attribute(node, "handleremoval", "false") != "false"
+            if handleremoval:
+                handleremoval = lambda widgetid=widgetid: self.handle_node_removal(widgetid)
+            else:
+                handleremoval = None
+
             self.stored_widgets[widgetid] = node
             self.handle_node_replacement(
                 node,
                 widgetid,
-                lambda widgetid=widgetid: self.handle_node_removal(widgetid),
-                allowscrolling=(True if allowscrolling == "yes" else False),
-                handledelete=False,
+                handleremoval,
+                None,
+                allowscrolling,
+                False,
             )
+            
 
     def remove_widget(self, widgetid):
         "Remove a stored widget"
@@ -1605,7 +1544,7 @@ class TkinterWeb(tk.Widget):
             if len(match_indexes) > 0:
                 # highlight matches
                 self.message_func(
-                    f"{nmatches} results for the search key '{searchtext}' have been found."
+                    f"{nmatches} results for the search key '{searchtext}' have been found"
                 )
                 if highlight_all:
                     for num, match in enumerate(match_indexes):
@@ -1652,14 +1591,14 @@ class TkinterWeb(tk.Widget):
                     self.yview("moveto", node_top / docheight)
             else:
                 self.message_func(
-                    "No results for the search key '{}' could be found.".format(
+                    "No results for the search key '{}' could be found".format(
                         searchtext
                     )
                 )
             return nmatches, selected, matches
         except Exception as error:
             self.message_func(
-                "An error has been encountered while searching the document for {}: {}.".format(
+                "Error searching for {}: {}".format(
                     searchtext, error
                 )
             )
@@ -1682,12 +1621,241 @@ class TkinterWeb(tk.Widget):
     def resolve_url(self, href):
         "Get full url from partial url"
         return urljoin(self.base_url, href)
+    
+    def on_click(self, event, redirected=False):
+        "Set active element flags"
+        if not self.current_node:
+            # register current node if mouse has never moved
+            self.on_mouse_motion(event)
+
+        if not redirected:
+            self.selection_type = 0
+
+        self.focus_set()
+        self.tag("delete", "selection")
+        node_handle = self.get_current_node(event)
+
+        if node_handle:
+            self.selection_start_node, self.selection_start_offset = self.node(
+                True, event.x, event.y
+            )
+            self.selection_end_node = None
+            self.selection_end_offset = None
+
+            if node_handle and self.stylesheets_enabled:
+                if not self.get_node_tag(node_handle):
+                    node_handle = self.get_current_node_parent(node_handle)
+                self.set_node_flags(node_handle, "active")
+                self.prev_active_node = node_handle
+
+    def on_leave(self, event):
+        "Reset cursor and node states when leaving this widget"
+        self.set_cursor("default")
+        if self.stylesheets_enabled:
+            for node in self.hovered_nodes:
+                try:
+                    self.remove_node_flags(node, "hover")
+                    self.remove_node_flags(node, "active")
+                except tk.TclError:
+                    pass
+        self.hovered_nodes = []
+        self.current_node = None
+
+    def on_mouse_motion(self, event):
+        "Set hover flags and handle the CSS 'cursor' property"
+        if self.is_selecting:
+            return
+        if self.on_embedded_node:
+            node_handle = self.on_embedded_node
+        else:
+            node_handle = self.get_current_node(event)
+            if not node_handle:
+                self.on_leave(None)
+                return
+
+        if (
+            node_handle
+            and node_handle != self.current_node
+            and self.stylesheets_enabled
+        ):
+            old_handle = self.current_node
+            self.current_node = node_handle
+
+            if node_handle != old_handle:
+                is_text_node = False
+                if not self.get_node_tag(node_handle):
+                    node_handle = self.get_current_node_parent(node_handle)
+                    is_text_node = True
+
+                cursor = self.get_node_property(node_handle, "cursor")
+                if cursor in CURSORMAPPINGS:
+                    self.set_cursor(cursor)
+                elif is_text_node:
+                    self.set_cursor("text")
+                else:
+                    self.set_cursor("default")
+                
+                for node in self.hovered_nodes:
+                    try:
+                        self.remove_node_flags(node, "hover")
+                    except tk.TclError:
+                        # sometimes errors are thrown if the mouse is moving while the page is loading
+                        pass
+
+                self.hovered_nodes = []
+                self.handle_recursive_hovering(
+                    node_handle, self.recursive_hovering_count
+                )
+
+    def on_click_release(self, event):
+        "Handle click releases on hyperlinks and form elements"
+        if self.is_selecting:
+            self.is_selecting = False
+            self.current_node = None
+            self.on_mouse_motion(event)
+            return
+
+        node_handle = self.get_current_node(event)
+
+        try:
+            if node_handle:
+                node_tag = self.get_node_tag(node_handle).lower()
+
+                if not node_tag:
+                    node_handle = self.get_node_parent(node_handle)
+                    node_tag = self.get_node_tag(node_handle).lower()
+
+                node_type = self.get_node_attribute(node_handle, "type").lower()
+
+                if self.prev_active_node and self.stylesheets_enabled:
+                    self.remove_node_flags(self.prev_active_node, "active")
+                if node_tag == "a":
+                    self.set_node_flags(node_handle, "visited")
+                    self.handle_link_click(node_handle)
+                elif node_tag == "input" and node_type == "reset":
+                    self.handle_form_reset(node_handle)
+                elif node_tag == "input" and node_type == "submit":
+                    self.handle_form_submission(node_handle)
+                elif node_tag == "input" and node_type == "image":
+                    self.handle_form_submission(node_handle)
+                elif node_tag == "button" and node_type == "submit":
+                    self.handle_form_submission(node_handle)
+                else:
+                    for node in self.hovered_nodes:
+                        node_tag = self.get_node_tag(node).lower()
+                        if node_tag == "a":
+                            self.set_node_flags(node, "visited")
+                            self.handle_link_click(node)
+                            break
+                        elif node_tag == "button":
+                            if (self.get_node_attribute(node, "type").lower() == "submit"):
+                                self.handle_form_submission(node)
+                                break
+        except tk.TclError:
+            pass
+
+        self.prev_active_node = None
+
+    def word_in_node(self, node, offset):
+        text = self.get_node_text(node)
+        letters = list(text)
+
+        beg = 0
+        end = 0
+        for index, letter in enumerate(reversed(letters[:offset])):
+            beg = index + 1
+            if letter == " ":
+                beg = index
+                break
+        for index, letter in enumerate(letters[offset:]):
+            end = index + 1
+            if letter == " ":
+                end = index
+                break
+
+        pre = len(letters[:offset])
+        return pre - beg, pre + end
+
+    def on_double_click(self, event):
+        "Cycle between normal selection, text selection, and element selection on multi-clicks"
+        self.on_click(event, True)
+
+        if not self.selection_enabled:
+            return
+        
+        if not self.selection_start_node:
+            return
+
+        self.selection_end_node = self.selection_start_node
+        self.selection_end_offset = self.selection_start_offset
+        
+        try:
+            if self.selection_type == 1:
+                text = self.get_node_text(self.selection_start_node)
+                self.tag(
+                    "add",
+                    "selection",
+                    self.selection_start_node,
+                    0,
+                    self.selection_start_node,
+                    len(text),
+                )
+                self.selection_type = 2
+
+            elif self.selection_type == 2:
+                self.tag("delete", "selection")
+                self.selection_type = 0
+
+            else:
+                start_offset, end_offset = self.word_in_node(self.selection_start_node, self.selection_start_offset)
+                self.tag(
+                    "add",
+                    "selection",
+                    self.selection_start_node,
+                    start_offset,
+                    self.selection_start_node,
+                    end_offset,
+                )
+                self.selection_type = 1
+
+            self.tag(
+                "configure",
+                "selection",
+                "-bg",
+                self.selected_text_highlight_color,
+                "-fg",
+                self.selected_text_color,
+            )
+        except tk.TclError:
+            self.set_cursor("default")
+
+    def on_embedded_mouse_motion(self, event, node_handle):
+        self.on_embedded_node = node_handle
+        self.on_mouse_motion(event)
+
+    def add_bindtags(self, widgetid, allowscrolling=True):
+        "Add bindtags to allow scrolling and on_embedded_mouse function calls"
+        if allowscrolling:
+            tags = (
+                self.node_tag,
+                self.scrollable_node_tag,
+            )
+        else:
+            tags = (self.node_tag,)
+        widgetid.bindtags(widgetid.bindtags() + tags)
 
     def select_all(self):
         "Select all of the text in the document"
+        if not self.selection_enabled:
+            return
+        
         self.clear_selection()
         beginning = self.text("index", 0)
         end = self.text("index", len(self.text("text")))
+        self.selection_start_node = beginning[0]
+        self.selection_start_offset = beginning[1]
+        self.selection_end_node = end[0]
+        self.selection_end_offset = end[1]
         self.tag("add", "selection", beginning[0], beginning[1], end[0], end[1])
         self.tag(
             "configure",
@@ -1705,6 +1873,9 @@ class TkinterWeb(tk.Widget):
 
     def extend_selection(self, event):
         "Alter selection and HTML element states based on mouse movement"
+        if not self.selection_enabled:
+            return
+                
         if self.selection_start_node is None:
             self.tag("delete", "selection")
             return
@@ -1718,14 +1889,58 @@ class TkinterWeb(tk.Widget):
                 return
 
             self.tag("delete", "selection")
-            self.tag(
-                "add",
-                "selection",
-                self.selection_start_node,
-                self.selection_start_offset,
-                self.selection_end_node,
-                self.selection_end_offset,
-            )
+
+            if self.selection_type == 1:
+                start_offset, end_offset = self.word_in_node(self.selection_start_node, self.selection_start_offset)
+                start_offset2, end_offset2 = self.word_in_node(self.selection_end_node, self.selection_end_offset)
+                self.tag(
+                    "add",
+                    "selection",
+                    self.selection_start_node,
+                    start_offset,
+                    self.selection_end_node,
+                    end_offset2,
+                )
+                self.tag(
+                    "add",
+                    "selection",
+                    self.selection_start_node,
+                    end_offset,
+                    self.selection_end_node,
+                    start_offset2,
+                )
+
+            elif self.selection_type == 2:
+                text = self.get_node_text(self.selection_start_node)
+                text2 = self.get_node_text(self.selection_end_node)
+                self.tag(
+                    "add",
+                    "selection",
+                    self.selection_start_node,
+                    0,
+                    self.selection_end_node,
+                    len(text2),
+                )
+
+                self.tag(
+                    "add",
+                    "selection",
+                    self.selection_start_node,
+                    len(text),
+                    self.selection_end_node,
+                    0,
+                )
+                
+            else:
+                self.tag(
+                    "add",
+                    "selection",
+                    self.selection_start_node,
+                    self.selection_start_offset,
+                    self.selection_end_node,
+                    self.selection_end_offset,
+                )
+
             self.tag(
                 "configure",
                 "selection",
@@ -1752,14 +1967,49 @@ class TkinterWeb(tk.Widget):
         "Return the currently selected text"
         if self.selection_start_node is None or self.selection_end_node is None:
             return
-        start_index = self.text(
-            "offset", self.selection_start_node, self.selection_start_offset
-        )
-        end_index = self.text(
-            "offset", self.selection_end_node, self.selection_end_offset
-        )
-        if start_index > end_index:
-            start_index, end_index = end_index, start_index
+        if self.selection_type == 1:
+            start_offset, end_offset = self.word_in_node(self.selection_start_node, self.selection_start_offset)
+            start_offset2, end_offset2 = self.word_in_node(self.selection_end_node, self.selection_end_offset)
+            start_index = self.text(
+                "offset", self.selection_start_node, start_offset
+            )
+            end_index = self.text(
+                "offset", self.selection_end_node, end_offset2
+            )
+            if start_index > end_index:
+                start_index = self.text(
+                    "offset", self.selection_end_node, start_offset2
+                )
+                end_index = self.text(
+                    "offset", self.selection_start_node, end_offset
+                )
+
+        elif self.selection_type == 2:
+            text = self.get_node_text(self.selection_start_node)
+            text2 = self.get_node_text(self.selection_end_node)
+            start_index = self.text(
+                "offset", self.selection_start_node, 0
+            )
+            end_index = self.text(
+                "offset", self.selection_end_node, len(text2)
+            )
+            if start_index > end_index:
+                start_index = self.text(
+                    "offset", self.selection_end_node, 0
+                )
+                end_index = self.text(
+                    "offset", self.selection_start_node, len(text)
+                )
+        else:
+            start_index = self.text(
+                "offset", self.selection_start_node, self.selection_start_offset
+            )
+            end_index = self.text(
+                "offset", self.selection_end_node, self.selection_end_offset
+            )
+            if start_index > end_index:
+                start_index, end_index = end_index, start_index
+                
         whole_text = self.text("text")
         return whole_text[start_index:end_index]
 
@@ -1768,41 +2018,45 @@ class TkinterWeb(tk.Widget):
         selected_text = self.get_selection()
         self.clipboard_clear()
         self.clipboard_append(selected_text)
-        self.message_func(f"The text '{selected_text}' has been copied to the clipboard.")
+        self.message_func(f"The text '{selected_text}' has been copied to the clipboard")
         
     def scroll_x11(self, event, widget=None):
         "Manage scrolling on Linux"
         if not widget:
             widget = event.widget
-        if widget.vsb_type == 0:
-            return
             
         yview = widget.yview()  
 
         if event.num == 4:
-            if widget.overflow_scroll_frame and yview[0] == 0:
+            if widget.overflow_scroll_frame and (yview[0] == 0 or widget.vsb_type == 0):
                 widget.overflow_scroll_frame.scroll_x11(event, widget.overflow_scroll_frame)
             else:
+                if widget.vsb_type == 0:
+                    return
                 widget.yview_scroll(-4, "units")
         else:
-            if widget.overflow_scroll_frame and yview[1] == 1:
+            if widget.overflow_scroll_frame and (yview[1] == 1 or widget.vsb_type == 0):
                 widget.overflow_scroll_frame.scroll_x11(event, widget.overflow_scroll_frame)
             else:
+                if widget.vsb_type == 0:
+                    return
                 widget.yview_scroll(4, "units")
 
     def scroll(self, event):
         "Manage scrolling on Windows/MacOS"
-        if self.vsb_type == 0:
-            return
         yview = self.yview()      
 
-        if self.overflow_scroll_frame and yview[0] == 0 and event.delta > 0:
+        if self.overflow_scroll_frame and event.delta > 0 and (yview[0] == 0 or self.vsb_type == 0):
             self.overflow_scroll_frame.scroll(event)
-        elif self.overflow_scroll_frame and yview[1] == 1 and event.delta < 0:
+        elif self.overflow_scroll_frame and event.delta < 0 and (yview[1] == 1 or self.vsb_type == 0):
             self.overflow_scroll_frame.scroll(event)
         elif platform.system() == "Darwin":
+            if self.vsb_type == 0:
+                return
             self.yview_scroll(int(-1*event.delta), "units")
         else:
+            if self.vsb_type == 0:
+                return
             self.yview_scroll(int(-1*event.delta/30), "units")
 
     def image(self, full=""):
@@ -1815,4 +2069,3 @@ class TkinterWeb(tk.Widget):
         height, pageanchor, pageheight, pagesize, pagewidth, pagex, pagey, nobg, noimages,
         rotate, width, x and y"""
         return self.tk.call((self._w, "postscript")+self._options(cnf, kw))
-

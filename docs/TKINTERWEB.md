@@ -1,16 +1,14 @@
-## *`TkinterWeb.TkinterWeb` Documentation*
+## *`tkinterweb.TkinterWeb` Documentation*
 
 ## Overview
-**The `TkinterWeb` class is the low-level widget that bridges the gap between the underlying Tcl Tkhtml3 widget and Tkinter. It provides the basic functionality nessessary for accessing Tkhtml3 from Python scripts.**
+**The `TkinterWeb` class is the low-level widget that bridges the gap between the underlying Tkhtml3 widget and Tkinter. It provides the basic functionality nessessary for accessing Tkhtml3 from Python scripts.**
 
 ## Usage
 **Because the main purpose of the TkinterWeb widget is simply to call Tkhtml3 functions, using this widget is not particularily straightfoward and is missing a lot of functionality.**
 **Do not use this widget unless absolutely nessessary. Instead use the [HtmlFrame widget](HTMLFRAME.md).**
 
 
-The HtmlFrame widget is built on top of this widget, so variables and functions in this API can be called from the HtmlFrame via `yourhtmlframe.html.variableorfunction`. This enables access to underlying settings and commands that are not a part of the HtmlFrame API.
-
----
+This API reference is provided becasue the HtmlFrame and HtmlLabel widgets are built on top of the TkinterWeb widget. This widget widget can be accessed through the `html` property of the HtmlFrame and HtmlLabel widgets to access underlying settings and commands that are not a part of the HtmlFrame API.
 
 ## Class API 
 
@@ -23,7 +21,7 @@ The HtmlFrame widget is built on top of this widget, so variables and functions 
 * `**kw` Other optional arguments
 
 ### Widget settings variables:
-*The following are the major variables that can be changed to alter the behaviour of the TkinterWeb widget. Please refer to the [source code](../bindings.py) for more details.*
+*The following is a subset of the variables that can be changed to alter the behaviour of the TkinterWeb widget. Please refer to the [source code](../tkinterweb/bindings.py) for more details.*
 ```
 stylesheets_enabled = True
 images_enabled = True
@@ -34,9 +32,14 @@ ignore_invalid_images = True
 prevent_crashes = True
 dark_theme_enabled = False
 image_inversion_enabled = False
-base_url = ""
-recursive_hovering_count = 10
-max_thread_count = 20
+self.base_url = ""
+self.recursive_hovering_count = 10
+self.max_thread_count = 20
+self.image_alternate_text_enabled = True
+self.image_alternate_text_font = get_alt_font() # path to any .ttf file is acceptable
+self.image_alternate_text_size = 14
+self.image_alternate_text_threshold = 10
+self.selection_enabled = True
 find_match_highlight_color = "#ef0fff"
 find_match_text_color = "#fff"
 find_current_highlight_color = "#38d878"
@@ -51,10 +54,12 @@ link_click_func = self.placeholder
 form_submit_func = self.placeholder
 done_loading_func = self.placeholder
 downloading_resource_func = self.placeholder
+self.insecure_https = False
+self.embedded_widget_attr_name = "widgetid"
  ```
 
 ### Useful Methods:
-*This is a subset of the functions provided by the TkinterWeb widget. Please refer to the [source code](../bindings.py) for more details.*
+*The following is a subset of the functions provided by the TkinterWeb widget. Please refer to the [source code](../tkinterweb/bindings.py) for more details.*
 
 ---
 #### `clear_selection()`
@@ -263,5 +268,3 @@ Shifts the view vertically to the specified position.
 ---
 #### `yview_scroll(number, what)`
 Shifts the view in the window up or down, according to number and  what. "number" is an integer, and "what" is either "units" or "pages".
-
----

@@ -1,12 +1,13 @@
 import pathlib
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 
 HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
 
+
 setup(
     name="tkinterweb",
-    version="3.25.4",
+    version="3.25.19",
     description="HTML/CSS viewer for Tkinter",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -18,12 +19,11 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
         "Topic :: Software Development",
       ],
     keywords="tkinter, Tkinter, tkhtml, Tkhtml, Tk, HTML, CSS, webbrowser",
-    packages=find_packages(),
+    packages=find_namespace_packages(include=["tkinterweb", "tkinterweb.*"]),
     include_package_data=True,
     install_requires=["pillow"],
 )

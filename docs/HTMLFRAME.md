@@ -1,5 +1,5 @@
 
-## *`TkinterWeb.HtmlFrame` Documentation*
+## *`tkinterweb.HtmlFrame` Documentation*
 
 ## Overview
 **The `HtmlFrame` class is a Tkinter frame that provides additional functionality to the [TkinterWeb widget](TKINTERWEB.md).**
@@ -8,10 +8,6 @@ It combines the TkinterWeb browser, automatic scrollbars, cursor handling capabi
 
 ## Usage
 **The HtmlFrame widget is extremely easy to use.**
-
-The HtmlFrame widget behaves like any other Tkinter widget. This also means that Tkinter functions such as `grid()`, `destroy()`, or `pack()` work on the HtmlFrame. 
-
-Tkinter bindings (such as right-clicks or keyboard presses) can also be used on the HtmlFrame. See [Tips and Tricks](HTMLFRAME.md#tips-and-tricks) below for more information.
 
 Here is an example:
 
@@ -30,7 +26,7 @@ root.mainloop()
 ```
 To load a website, call `myhtmlframe.load_website("www.yourwebsite.com")`
 
-The HtmlFrame widget can also load files and custom HTML code. It also supports clicking on links, submitting forms, and handling website titles. In order to use these features, refer to the API refrence below.
+The HtmlFrame widget behaves like any other Tkinter widget and supports bindings. It can also load files and custom HTML code. It also supports clicking on links, submitting forms, and handling website titles. In order to use these features, refer to the API refrence below.
 
 ## Tips and Tricks
 *Bindings*
@@ -101,7 +97,7 @@ Searching the page for specific text is very straightfoward. To search the docum
 ```
 number_of_matches = myhtmlframe.find_text("python")
 ```
-Refer to the API reference for more information and [Bug 18](https://github.com/Andereoo/TkinterWeb/issues/18#issuecomment-881649007) for sample code.
+Refer to the API reference for more information and [Bug 18](https://github.com/Andereoo/TkinterWeb/issues/18#issuecomment-881649007) or the [sample web browser](https://github.com/Andereoo/TkinterWeb/blob/main/examples/TkinterWebBrowser.py) for sample code.
 
 ---
 *Done loading?*
@@ -141,7 +137,7 @@ To zoom only the text, use `set_fontscale()` instead.
 ---
 *Manipulating the DOM*
 
-Refer to [DOM.md](DOM.md).
+Refer to [DOM Manipulation with TkinterWeb](DOM.md).
 
 ---
 *Other methods can be found in the [useful methods section](#useful-methods) below.*
@@ -152,10 +148,19 @@ Refer to [DOM.md](DOM.md).
 
 ### HtmlFrame constructors:
 * `master` Parent (tkinter widget)
-* `messages_enabled` Enable messages (boolean) **Default: True**
-* `vertical_scrollbar` Show the vertical scrollbar (True, False, or "auto") **Default: "auto"**
-* `horizontal_scrollbar` Show the horizontal scrollbar (True, False, or "auto)" **Default: False**
+* `messages_enabled` Enable messages (boolean). **Default: True**
+* `vertical_scrollbar` Show the vertical scrollbar (True, False, or "auto"). **Default: "auto"**
+
+   **New since version 3.25.3:** consider using the CSS property `overflow` on your `<html>` or `<body>` element instead.
+* `horizontal_scrollbar` Show the horizontal scrollbar (True, False, or "auto"). **Default: False**
+  
+   **New since version 3.25.5:** consider adding the attribute `scroll-x=true` on your `<html>` or `<body>` element to switch modes to auto.
+   Generally speaking, it is best to keep the horizontal scrollbar hidden.
 * `**kw` Other optional `ttk.Frame` arguments
+
+### Useful Subclasses:
+* `document` (`tkinterweb.dom.TkwDocumentObjectModel` instance): see [DOM Manipulation with TkinterWeb](DOM.md)
+* `html` (`tkinterweb.TkinterWeb` instance): see the [TkinterWeb widget documentation](TKINTERWEB.md)
 
 ### Useful Methods:
 
@@ -182,7 +187,7 @@ Parameters
 
 ---
 #### `load_url(url, decode=None, force=False, insecure=False)`
-Loads and parses html from the given url. A local file will be loaded if the url begins with "file://". If the url begins with "https://" or "http://", a website will be loaded. 
+Loads and parses html from the given url. A local file will be loaded if the url begins with "file://". If the url begins with "https://" or "http://", a website will be loaded. If the url begins with "view-source:", the source code of the webpage will be displayed. Loading "about:tkinterweb" will open a page with debugging information.
 
 Parameters
 * **url** *(string)* - Specifies the url to load.
@@ -535,10 +540,11 @@ Get the text content that is currently highlighted/selected in the HtmlFrame.
 Return type
 * *string*
 
+
 ---
 
-#### `replace_widget(oldwidget, newwidget)`
-Removes the `oldwidget` from the document, and replaces it with the `newwidget`. Note that if both `oldwidget` and `newwidget` are currently shown in the document, their locations will be swapped. See the [geometry management docs](GEOMETRY.md) for more information.
+#### **replace_widget**(oldwidget, newwidget)
+Removes the `oldwidget` from the document, and replaces it with the `newwidget`. Note that if both `oldwidget` and `newwidget` are currently shown in the document, their locations will be swapped.
 
 Parameters
 * **oldwidget** *(tkinter.Widget)* - Specifies the Tkinter widget to replace. This must be a valid Tkinter widget that is currently managed by TkinterWeb.
@@ -546,18 +552,21 @@ Parameters
 
 ---
 
-#### `replace_element(cssselector, newwidget)`
-Replaces the content of the element matching the specified CSS selector with the `newwidget`. See the [geometry management docs](GEOMETRY.md) for more information.
-
+#### **replace_element**(cssselector, newwidget)
+Replaces the content of the element matching the specified CSS selector with the specified widget. This command will scan the document for any elements that match the specified CSS selector. If multiple elements match the specified selector, only the first element will be replaced. For example, the following code will replace the 'text' HTML element with a button. 
+```
+yourbutton = tkinter.Button(yourframe)
+yourframe.load_html("<p id='text'>some text</p>")
+yourframe.replace_element("#text", yourbutton)
+```
 Parameters
 * **cssselector** *(string)* - Specifies the CSS selector to search for.
 * **newwidget** *(tkinter.Widget)* - Specifies the new Tkinter widget to show. This may be any Tkinter widget.
 
 ---
 
-#### `remove_widget(oldwidget)`
-Removes the `oldwidget` from the document. 
-This method is experimental and may cause issues. If you encounter any issues, please [report them](https://github.com/Andereoo/TkinterWeb/issues). See the [geometry management docs](GEOMETRY.md) for more information.
+#### **remove_widget**(oldwidget)
+Removes the specified widget from the document. 
 
 Parameters
 * **oldwidget** *(tkinter.Widget)* - Specifies the Tkinter widget to remove. This must be a valid Tkinter widget that is currently managed by TkinterWeb.

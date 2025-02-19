@@ -51,25 +51,26 @@ Pip will automatically install PIL when installing TkinterWeb.
 &nbsp;
 &nbsp;
 ## API Documentation
-**TkinterWeb ships with a few classes that make it quick and easy to use.**
+**Documentation and additional information on built-in classes can be found in the corresponding API reference pages:**
+* [`tkinterweb.Demo`](/docs/DEMO.md)
+* [`tkinterweb.HtmlFrame`](/docs/HTMLFRAME.md)
+* [`tkinterweb.HtmlLabel`](/docs/HTMLLABEL.md)
+* [`tkinterweb.TkinterWeb`](/docs/TKINTERWEB.md)
 
-Documentation and additional information for these classes can be found in the corresponding API refrence pages:
-* [`TkinterWeb.HtmlFrame`](/docs/HTMLFRAME.md)
-* [`TkinterWeb.HtmlLabel`](/docs/HTMLLABEL.md)
-* [`TkinterWeb.Demo`](/docs/DEMO.md)
-* [`TkinterWeb.TkinterWeb`](/docs/TKINTERWEB.md)
+Other notable built-in classes:
+* `tkinterweb.Notebook` (a Tkhtml-compatible drop-in replacement for `ttk.Notebook`). See [Frequently Asked Questions](https://github.com/Andereoo/TkinterWeb/blob/main/docs/FAQ.md).
 
 &nbsp;
 &nbsp;
 ## FAQs
-See https://github.com/Andereoo/TkinterWeb/blob/main/docs/FAQ.md.
+See [Frequently Asked Questions](https://github.com/Andereoo/TkinterWeb/blob/main/docs/FAQ.md).
 
 &nbsp;
 &nbsp;
 ## Webpage Compatability
 **HTML/CSS:**
 * TkinterWeb supports HTML 4.01 and CSS 2.1. A full list of supported CSS declarations can be found at http://tkhtml.tcl.tk/support.html. 
-* Most CSS Pseudo-elements, such as `:hover` and `:active` are also supported. 
+* Most CSS pseudo-elements, such as `:hover` and `:active` are also supported. 
 
 **JavaScript:**
 * Javascript is not supported at the moment, but it is possible to manipulate the document through Python. See [DOM Manipulation with TkinterWeb](/docs/DOM.md).
@@ -83,9 +84,9 @@ See https://github.com/Andereoo/TkinterWeb/blob/main/docs/FAQ.md.
 &nbsp;
 &nbsp;
 ## Contributing
-**TkinterWeb happily accepts contributions.**
+**The best ways to contribute to this project are by submitting a [bug report](https://github.com/Andereoo/TkinterWeb/issues/new) to report bugs or suggest new features or by submitting a [pull request](https://github.com/Andereoo/TkinterWeb/pulls) to offer fixes. Your help makes TkinterWeb become more stable and full-featured!**
 
-The best way to contribute to this project is to go to the [issues tab](https://github.com/Andereoo/TkinterWeb/issues) and report bugs or submit a feature request. This helps TkinterWeb become more stable and full-featured. Please check the [FAQs](https://github.com/Andereoo/TkinterWeb/blob/main/docs/FAQ.md) and [closed bugs](https://github.com/Andereoo/TkinterWeb/issues?q=is%3Aissue+is%3Aclosed) before submitting a bug report to see if your question as already been answered.
+Please check the [FAQs](https://github.com/Andereoo/TkinterWeb/blob/main/docs/FAQ.md) and [closed bugs](https://github.com/Andereoo/TkinterWeb/issues?q=is%3Aissue) before submitting a bug report to see if your question as already been answered.
 
 &nbsp;
 &nbsp;

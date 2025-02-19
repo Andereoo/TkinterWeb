@@ -118,18 +118,18 @@ class TkwDocumentObjectModel:
         "Return a list of elements given a class name"
         newquery = [f".{i}" for i in query.split()]
         nodes = self.html.search(" ".join(newquery))
-        return [HtmlElement(self.html, node) for node in nodes]
+        return tuple(HtmlElement(self.html, node) for node in nodes)
 
     def getElementsByName(self, query):
         "Return a list of elements matching a given name attribute"
         newquery = f"[name='{query}']"
         nodes = self.html.search(newquery)
-        return [HtmlElement(self.html, node) for node in nodes]
+        return tuple(HtmlElement(self.html, node) for node in nodes)
 
     def getElementsByTagName(self, query):
         "Return a list of elements given a tag name"
         nodes = self.html.search(query)
-        return [HtmlElement(self.html, node) for node in nodes]
+        return tuple(HtmlElement(self.html, node) for node in nodes)
 
     def querySelector(self, query):
         "Return the first element that matches a given CSS selector"
@@ -327,18 +327,18 @@ class HtmlElement:
         "Return a list of elements given a class name"
         newquery = [f".{i}" for i in query.split()]
         nodes = self.html.search(" ".join(newquery), root=self.node)
-        return [HtmlElement(self.html, node) for node in nodes]
+        return tuple(HtmlElement(self.html, node) for node in nodes)
 
     def getElementsByName(self, query):
         "Return a list of elements matching a given name attribute"
         newquery = f"[name='{query}']"
         nodes = self.html.search(newquery, root=self.node)
-        return [HtmlElement(self.html, node) for node in nodes]
+        return tuple(HtmlElement(self.html, node) for node in nodes)
 
     def getElementsByTagName(self, query):
         "Return a list of elements given a tag name"
         nodes = self.html.search(query, root=self.node)
-        return [HtmlElement(self.html, node) for node in nodes]
+        return tuple(HtmlElement(self.html, node) for node in nodes)
 
     def querySelector(self, query):
         "Return the first element that matches a given CSS selector"
@@ -348,5 +348,5 @@ class HtmlElement:
     def querySelectorAll(self, query):
         "Return a list of elements that match a given CSS selector"
         nodes = self.html.search(query, root=self.node)
-        return [HtmlElement(self.html, node) for node in nodes]
+        return tuple(HtmlElement(self.html, node) for node in nodes)
 

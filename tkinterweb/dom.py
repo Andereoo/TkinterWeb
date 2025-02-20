@@ -143,9 +143,9 @@ class TkwDocumentObjectModel:
 
 
 class CSSStyleDeclaration:
-    def __init__(self, node, htmlwidget):
-        self.node = node
+    def __init__(self, htmlwidget, node):
         self.html = htmlwidget
+        self.node = node
 
     def __getitem__(self, prop):
         return self.html.get_node_property(self.node, prop)
@@ -157,13 +157,26 @@ class CSSStyleDeclaration:
         self.html.set_node_attribute(self.node, "style", sStr)
         return style[prop]
 
+    def __setattr__(self, prop, value):
+        if prop in ("node", "html"):
+            super().__setattr__(prop, value)
+        else:
+            self.__setitem__(prop.replace("_", "-"), value)
+
+    def __getattr__(self, prop):
+        return self.__getitem__(prop.replace("_", "-"))
+
     @property
     def cssText(self):
         return self.html.get_node_attribute(self.node, "style")
-
+    
     @property
-    def length(self):
-        return len(self.html.get_node_properties(self.node, "-inline"))
+    def cssProperties(self):
+        return self.html.get_node_properties(self.node)
+    
+    @property
+    def cssInlineProperties(self):
+        return self.html.get_node_properties(self.node, "-inline")
 
 
 class HtmlElement:
@@ -177,7 +190,7 @@ class HtmlElement:
     @property
     def style(self):
         if self.styleCache is None:  # Lazy loading of style
-            self.styleCache = CSSStyleDeclaration(self.node, self.html)
+            self.styleCache = CSSStyleDeclaration(self.html, self.node)
         return self.styleCache
 
     @property

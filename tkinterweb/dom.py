@@ -7,6 +7,8 @@ Some of the Tcl code in this file is borrowed from the Tkhtml/Hv3 project. See t
 Copyright (c) 2025 Andereoo
 """
 
+from re import finditer
+
 def escape_Tcl(string):
     string = str(string)
     escaped = ""
@@ -69,6 +71,10 @@ def generate_text_node(htmlwidget, text):  # taken from hv3_dom_core.tcl line 21
         return $node
         """ % (htmlwidget, escape_Tcl(text))
     )
+
+def camel_case_to_property(string):
+    matches = finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)', string)
+    return "-".join([m.group(0).lower() for m in matches])
 
 
 class TkwDocumentObjectModel:
@@ -161,10 +167,10 @@ class CSSStyleDeclaration:
         if prop in ("node", "html"):
             super().__setattr__(prop, value)
         else:
-            self.__setitem__(prop.replace("_", "-"), value)
+            self.__setitem__(camel_case_to_property(prop), value)
 
     def __getattr__(self, prop):
-        return self.__getitem__(prop.replace("_", "-"))
+        return self.__getitem__(camel_case_to_property(prop))
 
     @property
     def cssText(self):

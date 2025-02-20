@@ -8,6 +8,7 @@ Copyright (c) 2025 Andereoo
 """
 
 from re import finditer
+from tkinter import TclError
 
 def escape_Tcl(string):
     string = str(string)
@@ -170,7 +171,10 @@ class CSSStyleDeclaration:
             self.__setitem__(camel_case_to_property(prop), value)
 
     def __getattr__(self, prop):
-        return self.__getitem__(camel_case_to_property(prop))
+        try:
+            return self.__getitem__(camel_case_to_property(prop))
+        except TclError:
+            raise TclError(f"no such property: {prop}")
 
     @property
     def cssText(self):

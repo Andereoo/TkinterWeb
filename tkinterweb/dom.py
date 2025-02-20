@@ -52,7 +52,7 @@ def node_to_html(self, node, deep=True):
         """ % (int(deep), extract_nested(node))
     )
 
-def generate_text_node(htmlwidget, text):  # Taken from hv3_dom_core.tcl line 219
+def generate_text_node(htmlwidget, text):  # taken from hv3_dom_core.tcl line 219
     return htmlwidget.tk.eval("""
         set tkw %s
         set text "%s"
@@ -77,7 +77,7 @@ class TkwDocumentObjectModel:
         self.html.tk.createcommand("parse_fragment", self.html.parse_fragment)
         self.html.tk.createcommand("node_to_html", node_to_html)
 
-    def createElement(self, tagname):  # Taken from hv3_dom_core.tcl line 214
+    def createElement(self, tagname):  # taken from hv3_dom_core.tcl line 214
         "Create a new HTML element with the given tag name"
         return HtmlElement(
             self.html,
@@ -93,7 +93,7 @@ class TkwDocumentObjectModel:
         return HtmlElement(self.html, generate_text_node(self.html, text))
 
     @property
-    def body(self):  # Taken from hv3_dom_html.tcl line 161
+    def body(self):  # taken from hv3_dom_html.tcl line 161
         "Return the document body element"
         return HtmlElement(
             self.html,
@@ -171,30 +171,34 @@ class CSSStyleDeclaration:
         return self.html.get_node_attribute(self.node, "style")
     
     @property
-    def cssProperties(self):
-        return self.html.get_node_properties(self.node)
+    def length(self):
+        return len(self.html.get_node_properties(self.node, "-inline"))
     
     @property
+    def cssProperties(self): # not a JS function, but could be useful
+        return self.html.get_node_properties(self.node)
+    
+    @property # not a JS function, but could be useful
     def cssInlineProperties(self):
         return self.html.get_node_properties(self.node, "-inline")
-
+    
 
 class HtmlElement:
     def __init__(self, htmlwidget, node):
         self.html = htmlwidget
         self.node = node
         self.contains_widgets = False
-        self.styleCache = None  # Initialize style as None
-        self.html.bbox(node)  # Check if the node is valid
+        self.styleCache = None  # initialize style as None
+        self.html.bbox(node)  # check if the node is valid
 
     @property
     def style(self):
-        if self.styleCache is None:  # Lazy loading of style
+        if self.styleCache is None:  # lazy loading of style
             self.styleCache = CSSStyleDeclaration(self.html, self.node)
         return self.styleCache
 
     @property
-    def innerHTML(self):  # Taken from hv3_dom2.tcl line 61
+    def innerHTML(self):  # taken from hv3_dom2.tcl line 61
         "Get the inner HTML of an element"
         return self.html.tk.eval("""
             set node %s
@@ -210,7 +214,7 @@ class HtmlElement:
         )
 
     @innerHTML.setter
-    def innerHTML(self, contents):  # Taken from hv3_dom2.tcl line 88
+    def innerHTML(self, contents):  # taken from hv3_dom2.tcl line 88
         "Set the inner HTML of an element"
         self.html.tk.eval("""
             set node %s
@@ -240,7 +244,7 @@ class HtmlElement:
             self.contains_widgets = False
 
     @property
-    def textContent(self):  # Original for this project
+    def textContent(self):  # original for this project
         "Get the text content of an element."
         return self.html.tk.eval("""
             proc get_child_text {node} {
@@ -275,21 +279,21 @@ class HtmlElement:
         )
 
     @property
-    def attributes(self):  # attr
+    def attributes(self):
         return self.html.get_node_attributes(self.node)
 
     @property
-    def tagName(self):  # attr
+    def tagName(self):
         "Return the tag name of the element"
         return self.html.get_node_tag(self.node)
 
     @property
-    def parentElement(self):  # attr
+    def parentElement(self):
         "Return the element's parent element"
         return HtmlElement(self.html, self.html.get_node_parent(self.node))
 
     @property
-    def children(self):  # attr
+    def children(self):
         "Return the element's children elements"
         return [HtmlElement(self.html, i) for i in self.html.get_node_children(self.node)]
 
@@ -313,19 +317,19 @@ class HtmlElement:
         "Insert the specified children before a specified child element"
         self._insert_children(children, before)
 
-    def _insert_children(self, children, before=None):  # internal
+    def _insert_children(self, children, before=None):
         "Helper method to insert children at a specified position"
-        # Ensure children is a list
+        # ensure children is a list
         children = children if isinstance(children, list) else [children]
-        # Extract node commands
+        # extract node commands
         tkhtml_children_nodes = [i.node for i in children]
-        # Insert the nodes based on the position
+        # insert the nodes based on the position
         if before:
             self.html.insert_node_before(self.node, tkhtml_children_nodes, before.node)
         else:
             self.html.insert_node(self.node, tkhtml_children_nodes)
 
-        # Set up widgets if the element is visible
+        # set up widgets if the element is visible
         if self.html.bbox(self.node):
             if any(node.contains_widgets for node in children):
                 self.html.setup_widgets()

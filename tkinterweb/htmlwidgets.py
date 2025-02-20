@@ -567,7 +567,7 @@ Otherwise, use 'insecure=True' when loading a page to ignore website certificate
                 raise KeyError("Parameter 'pagesize' must be A3, A4, A5, Legal, or Letter")
             del cnf["pagesize"]
 
-        self.html.update()  # Update the root window to ensure HTML is rendered
+        self.html.update() # update the root window to ensure HTML is rendered
         file = self.html.postscript(cnf)
         self.message_func("Printed!")
         return file
@@ -603,7 +603,7 @@ Otherwise, use 'insecure=True' when loading a page to ignore website certificate
             foreach child [$bodynode children] {
                 append zBody [node_to_html $child 1]
             }
-            # It has to be writen like this because it outputs the indention
+            # it has to be writen like this because it outputs the indention
             return [subst {<html>
     <head>
         <title>$zTitle</title>

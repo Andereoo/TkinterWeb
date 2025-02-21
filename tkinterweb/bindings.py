@@ -130,6 +130,7 @@ class TkinterWeb(tk.Widget):
         self.current_cursor = ""
         self.vsb_type = 2
         self.selection_type = 0
+        self.motion_frame_bg = "white"
 
         # enable form resetting and submission
         self.form_get_commands = {}
@@ -164,8 +165,13 @@ class TkinterWeb(tk.Widget):
         except tk.TclError:
             load_tkhtml(master, folder, force=True)
             tk.Widget.__init__(self, master, "html", cfg, kwargs)
+            
 
         self.post_event(DEBUG_MESSAGE_EVENT, data=f"Tkhtml3 successfully loaded from {folder}")
+
+        # create a tiny, blank frame for cursor updating
+        self.motion_frame = tk.Frame(self, bg=self.motion_frame_bg, width=1, height=1)
+        self.motion_frame.place(x=0, y=0)
 
         # set up bindtags
         self.node_tag = f"tkinterweb.{id(self)}.nodes"
@@ -219,10 +225,15 @@ class TkinterWeb(tk.Widget):
         if not self.messages_enabled and event == DEBUG_MESSAGE_EVENT: return
         if direct_notify: notifier(data)
         if self.events_enabled:
-            tk.Event.url = url
-            tk.Event.data = data
-            tk.Event.method = method
-            self.event_generate(event)
+            # thread safety
+            self.after(0, self.finish_posting_event, event, url, data, method)
+    
+    def finish_posting_event(self, event, url, data, method):
+        "Finish generating a virtual event"
+        tk.Event.url = url
+        tk.Event.data = data
+        tk.Event.method = method
+        self.event_generate(event)
 
     def parse(self, html):
         "Parse HTML code"
@@ -634,7 +645,7 @@ class TkinterWeb(tk.Widget):
             href = self.get_node_attribute(node, "href")
             url = self.resolve_url(href)
             self.icon = url
-            self.post_event(ICON_CHANGED_EVENT)
+            self.post_event(ICON_CHANGED_EVENT, url=url)
 
     def on_atimport(self, parent_url, new_url):
         "Load @import scripts"
@@ -661,7 +672,7 @@ class TkinterWeb(tk.Widget):
         "Handle <title> elements"
         for child in self.tk.call(node, "children"):
             self.title = self.tk.call(child, "text")
-            self.post_event(TITLE_CHANGED_EVENT)
+            self.post_event(TITLE_CHANGED_EVENT, data=self.title)
 
     def on_base(self, node):
         "Handle <base> elements"
@@ -1263,7 +1274,7 @@ class TkinterWeb(tk.Widget):
         url = self.resolve_url(href)
         self.post_event(DEBUG_MESSAGE_EVENT, data=f"A link to '{shorten(url)}' has been clicked")
         self.visited_links.append(url)
-        self.post_event(LINK_CLICK_EVENT, url)
+        self.post_event(LINK_CLICK_EVENT, url, "", "GET")
 
     def handle_entry_reset(self, widgetid, content):
         "Reset tk.Entry widgets in HTML forms"
@@ -1432,12 +1443,23 @@ class TkinterWeb(tk.Widget):
 
         self.handle_overflow_property(node, "overflow-x", self.manage_hsb_func)
 
+        background = self.get_node_property(node, "background-color")
+        if background != "transparent" and self.motion_frame_bg != background: # transparent is the tkhtml default, so it's largely meaningless
+            self.motion_frame_bg = background
+            self.motion_frame.config(bg=background)
+
     def set_cursor(self, cursor):
         "Set document cursor"
         if self.current_cursor != cursor:
             cursor = CURSOR_MAP[cursor]
-            self.current_cursor = cursor
             self.master.config(cursor=cursor)
+            self.current_cursor = cursor
+            # I've noticed that the cursor won't always update when the binding is tied to a different widget than the one we are changing the cursor of
+            # however, the html widget doesn't support the cursor property so there's not much we can do about this
+            # update_idletasks() or update() have no effect, but print() and updating the color or text of another widget does
+            # therefore we update the background color of a tiny frame that is barely visible to match the background color of the page whenever we need to change te cursor
+            # it's wierd but hey, it works
+            self.motion_frame.config(bg=self.motion_frame_bg)
 
     def handle_recursive_hovering(self, node_handle, count):
         "Set hover flags on the parents of the hovered element"

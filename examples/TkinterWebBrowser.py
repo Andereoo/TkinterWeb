@@ -198,8 +198,8 @@ class Page(tk.Frame):
         widget.see(tk.INSERT)
 
     def on_right_click(self, event):
-        url = self.frame.get_current_link(resolve=True)
-        selection = self.frame.get_currently_selected_text()
+        url = self.frame.resolve_url(self.frame.get_currently_hovered_element().getAttribute("href"))
+        selection = self.frame.get_selection()
         menu = tk.Menu(self, tearoff=0)
         if len(self.back_history) > 1:
             menu.add_command(label="Back", accelerator="Alt-Back", command=self.back)
@@ -426,7 +426,7 @@ class Page(tk.Frame):
             self.view_source_button.config(state="normal", cursor="hand2")
 
     def url_change(self, url=None):
-        if not isinstance(url, str): url = self.frame.current_url
+        if not isinstance(url, str): url = self.frame.current_url;
         self.master.tab(self, text=self.cut_text(url, 40))
         self.urlbar.delete(0, "end")
         self.urlbar.insert(0, url)
@@ -450,11 +450,12 @@ class Page(tk.Frame):
         if not any((url.startswith("file:"), url.startswith("http:"), url.startswith("about:"), url.startswith("view-source:"), url.startswith("https:"), url.startswith("data:"))):
             url = "http://{}".format(url)
         self.addtohist(url)
-        self.frame.load_url(url)
+        self.frame.load_url(url, force=True)
         self.handle_view_source_button(url)
 
     def link_click(self, url, history=True):
         self.addtohist(url)
+        self.master.tab(self, text=self.cut_text(url, 40))
         if not history:
             self.backbutton.config(state="disabled", cursor="arrow")
         self.urlbar.delete(0, "end")
@@ -463,7 +464,7 @@ class Page(tk.Frame):
         self.handle_view_source_button(url)
 
     def reload(self):
-        self.frame.load_url(self.back_history[-1], force=True)
+        self.frame.load_url(self.frame.current_url, force=True)
 
     def change_title(self, event):
         self.master.tab(self, text=self.cut_text(self.frame.title, 40))  

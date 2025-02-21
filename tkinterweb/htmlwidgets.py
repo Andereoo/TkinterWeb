@@ -26,6 +26,7 @@ class HtmlFrame(ttk.Frame):
 
         # state and settings variables
         self.current_url = ""
+        self.previous_url = ""
         self.accumulated_styles = []
         self.waiting_for_reset = False
         self.thread_in_progress = None
@@ -244,27 +245,46 @@ class HtmlFrame(ttk.Frame):
     def parsemode(self, mode):
         self.html.set_parsemode(mode)
 
-    def load_website(self, website_url, decode=None, force=False, insecure=None):
-        "Load a website from the specified URL"
-        if (not website_url.startswith("https://")) and (not website_url.startswith("http://")) and (not website_url.startswith("about:")):
-            website_url = "http://" + str(website_url)
-        self.load_url(website_url, decode, force, insecure)
+    def load_html(self, html_source, base_url=None):
+        "Reset parser and send html code to it"
+        self.html.reset()
+
+        self.enable_auto_resizing = False
+        if base_url == None:
+            path = WORKING_DIR
+            if not path.startswith("/"):
+                path = f"/{path}"
+            base_url = f"file://{path}/"
+        self.html.base_url = self.current_url = base_url
+        self.html.parse(html_source)
+
+        self._finish_css()
 
     def load_file(self, file_url, decode=None, force=False, insecure=None):
-        "Load a locally stored file from the specified path"
+        "convenience method to load a locally stored file from the specified path"
+        self.previous_url = self.current_url
         if not file_url.startswith("file://"):
             if PLATFORM.system == "Windows" and not file_url.startswith("/"):
                 file_url = "file:///" + str(file_url)
             else:
                 file_url = "file://" + str(file_url)
+            self.current_url = file_url
+            self.html.post_event(URL_CHANGED_EVENT, url=file_url)
         self.load_url(file_url, decode, force, insecure)
 
+    def load_website(self, website_url, decode=None, force=False, insecure=None):
+        "Convenience method to load a website from the specified URL"
+        self.previous_url = self.current_url
+        if (not website_url.startswith("https://")) and (not website_url.startswith("http://")) and (not website_url.startswith("about:")):
+            website_url = "http://" + str(website_url)
+            self.current_url = website_url
+            self.html.post_event(URL_CHANGED_EVENT, url=website_url)
+        self.load_url(website_url, decode, force, insecure)
+
     def load_url(self, url, decode=None, force=False, insecure=None):
-        """Load a website (https:// or http://) or a file (file://) from the specified URL.
-        We use threading here to prevent the GUI from freezing while fetching the website.
-        Technically Tkinter isn't threadsafe, 
-        but as long as we do not use the .join() method and no errors are raised in the mainthread, we can get away with it.
-        """                        
+        "Load a website or a file from the specified URL"
+        if not self.current_url == url:
+            self.previous_url = self.current_url
         if url in BUILTIN_PAGES:
             self.load_html(BUILTIN_PAGES[url].format(self.background, "", "No file selected"))
             return
@@ -273,7 +293,11 @@ class HtmlFrame(ttk.Frame):
 
         # ugly workaround for Bug #40, where urllib.urljoin constructs improperly formatted urls on Linux when url starts with file:///
         if not url.startswith("file://///"):
-            url = url.replace("file:////", "file:///")
+            newurl = url.replace("file:////", "file:///")
+            if newurl != url:
+                url = newurl
+                self.current_url = url
+                self.html.post_event(URL_CHANGED_EVENT, url=url)
 
         if self.thread_in_progress:
             self.thread_in_progress.stop()
@@ -287,6 +311,7 @@ class HtmlFrame(ttk.Frame):
 
     def load_form_data(self, url, data, method="GET", decode=None, insecure=None):
         "Load a webpage using form data"
+        self.previous_url = self.current_url
         if self.thread_in_progress:
             self.thread_in_progress.stop()
         if self.html.maximum_thread_count >= 1:
@@ -297,12 +322,31 @@ class HtmlFrame(ttk.Frame):
         else:
             self._continue_loading(url, data, method, decode)
 
+    def add_html(self, html_source):
+        "Parse HTML and add it to the end of the current document"
+        self.previous_url = ""
+        if not self.html.base_url:
+            path = WORKING_DIR
+            if not path.startswith("/"):
+                path = f"/{path}"
+            base_url = f"file://{path}/"
+            self.html.base_url = self.current_url = base_url
+        self.html.parse(html_source)
+
+    def add_css(self, css_source):
+        "Parse CSS code"
+        if self.waiting_for_reset:
+            self.accumulated_styles.append(css_source)
+        else:
+            self.html.parse_css(data=css_source, override=True)
+
     def stop(self):
         "Stop loading a page"
         if self.thread_in_progress:
             self.thread_in_progress.stop()
         self.html.stop()
-        self.html.post_event(URL_CHANGED_EVENT)
+        self.current_url = self.previous_url
+        self.html.post_event(URL_CHANGED_EVENT, url=self.current_url)
         self.html.post_event(DONE_LOADING_EVENT)
 
     def find_text(self, searchtext, select=1, ignore_case=True, highlight_all=True, detailed=False):
@@ -324,38 +368,6 @@ class HtmlFrame(ttk.Frame):
     def yview_toelement(self, element):
         "Convenience method to scroll to a given element"
         self.html.yview(element.node)
-
-    def load_html(self, html_source, base_url=None):
-        "Reset parser and send html code to it"
-        self.html.reset()
-
-        self.enable_auto_resizing = False
-        if base_url == None:
-            path = WORKING_DIR
-            if not path.startswith("/"):
-                path = f"/{path}"
-            base_url = f"file://{path}/"
-        self.html.base_url = self.current_url = base_url
-        self.html.parse(html_source)
-
-        self._finish_css()
-
-    def add_html(self, html_source):
-        "Parse HTML and add it to the end of the current document"
-        if not self.html.base_url:
-            path = WORKING_DIR
-            if not path.startswith("/"):
-                path = f"/{path}"
-            base_url = f"file://{path}/"
-            self.html.base_url = self.current_url = base_url
-        self.html.parse(html_source)
-
-    def add_css(self, css_source):
-        "Parse CSS code"
-        if self.waiting_for_reset:
-            self.accumulated_styles.append(css_source)
-        else:
-            self.html.parse_css(data=css_source, override=True)
 
     def screenshot(self, file=None, full=False):
         "Take a screenshot"
@@ -509,6 +521,7 @@ class HtmlFrame(ttk.Frame):
         else:
             self.html.insecure_https = insecure
         code = 404
+        self.current_url = url
 
         self.html.post_event(DOWNLOADING_RESOURCE_EVENT)
         
@@ -520,15 +533,15 @@ class HtmlFrame(ttk.Frame):
                 url = str(url) + str(data)
 
             # if url is different than the current one, load the new site
-            if force or (method == "POST") or ((urldefrag(url)[0]).replace("/", "") != (urldefrag(self.current_url)[0]).replace("/", "")):
+            if force or (method == "POST") or ((urldefrag(url)[0]).replace("/", "") != (urldefrag(self.previous_url)[0]).replace("/", "")):
                 view_source = False
                 if url.startswith("view-source:"):
                     view_source = True
                     url = url.replace("view-source:", "")
                     parsed = urlparse(url)
-                self.html.post_event(DEBUG_MESSAGE_EVENT, data="Connecting to {0}".format(parsed.netloc))
+                self.html.post_event(DEBUG_MESSAGE_EVENT, data=f"Connecting to {parsed.netloc}")
                 if insecure:
-                    self.html.post_event(DEBUG_MESSAGE_EVENT, data="WARNGING: Using insecure HTTPS session")
+                    self.html.post_event(DEBUG_MESSAGE_EVENT, data="WARNING: Using insecure HTTPS session")
                 if (parsed.scheme == "file") or (not self.html.caches_enabled):
                     data, newurl, filetype, code = download(
                         url, data, method, decode, insecure)
@@ -539,8 +552,9 @@ class HtmlFrame(ttk.Frame):
                 if threadname().isrunning():
                     if view_source:
                         newurl = "view-source:"+newurl
-                        self.current_url = newurl
-                        self.html.post_event(URL_CHANGED_EVENT)
+                        if self.current_url != newurl:
+                            self.current_url = newurl
+                            self.html.post_event(URL_CHANGED_EVENT, url=newurl)
                         data = str(data).replace("<","&lt;").replace(">", "&gt;")
                         data = data.splitlines()
                         length = int(len(str(len(data))))
@@ -554,14 +568,15 @@ class HtmlFrame(ttk.Frame):
                     elif "image" in filetype:
                         self.load_html("", newurl)
                         self.enable_auto_resizing = True
-                        self.current_url = newurl
-                        self.html.post_event(URL_CHANGED_EVENT)
+                        if self.current_url != newurl:
+                            self.html.post_event(URL_CHANGED_EVENT, url=newurl)
                         name = self.html.image_name_prefix + str(len(self.html.loaded_images))
                         self.html.finish_fetching_images(data, name, filetype, newurl)
                         self.add_html(BUILTIN_PAGES["about:image"].format(self.background, name))
                     else:
-                        self.current_url = newurl
-                        self.html.post_event(URL_CHANGED_EVENT)
+                        if self.current_url != newurl:
+                            self.current_url = newurl
+                            self.html.post_event(URL_CHANGED_EVENT, url=newurl)
                         self.load_html(data, newurl)
             else:
                 # if no requests need to be made, we can signal that the page is done loading

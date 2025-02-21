@@ -441,29 +441,38 @@ INPUT[type="submit"],INPUT[type="button"], INPUT[type="reset"], BUTTON {
 }
 """
 BUILTIN_PAGES = {
-    "about:blank": "<html><head><style>html,body{{background-color:{}}}</style><title>about:blank</title></head><body></body></html>",
+    "about:blank": "<html><head><style>html,body{{background-color:{};cursor:gobbler;width:100%;height:100%;margin:0}}</style><title>about:blank</title></head><body></body></html>",
     "about:tkinterweb": "<html scroll-x=true><head><style>html,body{{background-color:{}}}</style><title>about:tkinterweb</title><style>code{{display:block}}</style></head><body>\
-<code>Welcome to "+__title__+"!</code><code>Licenced under the "+__license__+" licence</code><code>"+__copyright__+"</code>\
-<code style=\"display:block;text-decoration:underline;margin-top:35px\">Debugging information</code>\
-<code>Version: "+__version__+"</code><code>Header: "+HEADER["User-Agent"]+"</code><code>Default parse mode: "+DEFAULT_PARSE_MODE+"</code>\
-<code style=\"display:block\">Root directory: "+ROOT_DIR+"</code><code style=\"display:block\">Working directory: "+WORKING_DIR+"</code>\
-<code style=\"display:block;text-decoration:underline;margin-top:35px\">System specs</code>\
-<code>Python version: "+".".join(PYTHON_VERSION)+"</code><code>Tcl version: "+str(tk.TclVersion)+"</code><code>Tk version: "+str(tk.TkVersion)+"</code>\
-<code>Platform: "+str(PLATFORM.system)+"</code><code>Machine: "+str(PLATFORM.machine)+"</code><code>Processor: "+str(PLATFORM.processor)+"</code></body></html>",
-    "about:error": "<html style=\"overflow:hidden;height:100%;width:100%\"><head><style>html,body{{background-color:{}}}</style><title>Error {}</title></head>\
-<body style=\"text-align:center;margin:0;padding:0;position:fixed;top:50%;bottom:50%;left:0;right:0;\">\
-<table style=\"display:table;text-align:center;width:100%;margin-top:-40px;height:80px;overflow:hidden\"><tr><td style=\"vertical-align:middle\">\
-<h2 style=\"margin:0;padding:0;font-weight:normal\">Oops.</h2><p></p><h3 style=\"margin:0;padding:0;font-weight:normal\">The page you've requested could not be found :(</h3>\
-</td></tr></table></body></html>",
-    "about:image": "<html style=\"margin:0;padding:0;overflow:hidden\"><head><style>html,body,object{{background-color:{}}}</style></head>\
-<body style=\"margin:0;padding:0\"><object allowstyling data=\"{}\"><code style=\"display:block;margin:8px\">No image selected</code></object></body></html>",
+        <code>Welcome to "+__title__+"!</code><code>Licenced under the "+__license__+" licence</code><code>"+__copyright__+"</code>\
+        <code style=\"display:block;text-decoration:underline;margin-top:35px\">Debugging information</code>\
+        <code>Version: "+__version__+"</code><code>Header: "+HEADER["User-Agent"]+"</code><code>Default parse mode: "+DEFAULT_PARSE_MODE+"</code>\
+        <code style=\"display:block\">Root directory: "+ROOT_DIR+"</code><code style=\"display:block\">Working directory: "+WORKING_DIR+"</code>\
+        <code style=\"display:block;text-decoration:underline;margin-top:35px\">System specs</code>\
+        <code>Python version: "+".".join(PYTHON_VERSION)+"</code><code>Tcl version: "+str(tk.TclVersion)+"</code><code>Tk version: "+str(tk.TkVersion)+"</code>\
+        <code>Platform: "+str(PLATFORM.system)+"</code><code>Machine: "+str(PLATFORM.machine)+"</code><code>Processor: "+str(PLATFORM.processor)+"</code></body></html>",
+    "about:error": "<html><head><style>html,body,table,tr,td{{background-color:{};width:100%;height:100%;margin:0}}</style><title>Error {}</title></head>\
+        <body><table><tr><td style=\"text-align:center;vertical-align:middle\">\
+        <h2 style=\"margin:0;padding:0;font-weight:normal\">Oops.</h2><p></p>\
+        <h3 style=\"margin:0;padding:0;font-weight:normal\">The page you've requested could not be found :(</h3>\
+        </td></tr></table></body></html>",
+    "about:image": "<html><head><style>html,body,table,tr {{background-color:{};width:100%;height:100%;margin:0}}</style></head><body>\
+        <table><tr><td style='text-align:center;vertical-align:middle;padding:4px 4px 0px 4px'><img style='max-width:100%;max-height:100%' src='replace:{}'></td></tr></table></body></html>",
     "about:view-source": "<html scroll-x=true><head><style>\
-html,body{{background-color:{}}}\
-pre::before{{counter-reset:listing}}\
-code{{counter-increment:listing}}\
-code::before{{content:counter(listing);display:inline-block;width:{}px;margin-left:5px;padding-right:5px;margin-right:5px;text-align:right;border-right:1px solid grey60;color:grey60}}\
-</style></head><body><pre style=\"margin:0;padding:0\">{}</pre></body></html>",
+        html,body{{background-color:{}}}\
+        pre::before{{counter-reset:listing}}\
+        code{{counter-increment:listing}}\
+        code::before{{content:counter(listing);display:inline-block;width:{}px;margin-left:5px;padding-right:5px;margin-right:5px;text-align:right;border-right:1px solid grey60;color:grey60}}\
+        </style></head><body><pre style=\"margin:0;padding:0\">{}</pre></body></html>",
 }
+
+DEBUG_MESSAGE_EVENT = "<<DebugMessage>>"
+DONE_LOADING_EVENT = "<<DoneLoading>>"
+ICON_CHANGED_EVENT = "<<IconChanged>>"
+TITLE_CHANGED_EVENT = "<<TitleChanged>>"
+DOWNLOADING_RESOURCE_EVENT = "<<DownloadingResource>>"
+LINK_CLICK_EVENT = "<<LinkClick>>"
+FORM_SUBMISSION_EVENT = "<<FormSubmission>>"
+URL_CHANGED_EVENT = "<<UrlChanged>>"
 
 
 tkhtml_loaded = False
@@ -837,7 +846,7 @@ def download(url, data=None, method="GET", decode=None, insecure=False):
     else:
         req = urlopen(Request(url, headers=HEADER), context=ctx)
     if not thread.isrunning():
-        return None, url, ""
+        return None, url, "", ""
     data = req.read()
     url = req.geturl()
     info = req.info()
@@ -951,3 +960,7 @@ def tkhtml_notifier(name, text, *args):
         sys.stdout.write("DEBUG " + str(name) + ": " + str(text) + "\n\n")
     except Exception:
         pass
+
+def placeholder(*args, **kwargs):
+    """Blank placeholder function. The only purpose of this is to
+    improve readability by avoiding `lambda a, b, c: None` statements."""

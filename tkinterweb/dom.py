@@ -197,7 +197,6 @@ class HtmlElement:
     def __init__(self, htmlwidget, node):
         self.html = htmlwidget
         self.node = node
-        self.contains_widgets = False
         self.styleCache = None  # initialize style as None
         self.html.bbox(node)  # check if the node is valid
 
@@ -246,12 +245,10 @@ class HtmlElement:
             update
             """ % (extract_nested(self.node), escape_Tcl(contents))
         )
-        if self.html.embedded_widget_attr_name in str(contents):
-            self.contains_widgets = True
-            if self.html.bbox(self.node):  # only bother setting up widgets if visible; won't work otherwise
-                self.html.setup_widgets()
-        else:
-            self.contains_widgets = False
+        #print("SDF")
+        #for node in self.html.search("object"):
+        #    print(node)
+        #    self.html.on_object(node)
 
     @property
     def textContent(self):  # original for this project
@@ -313,8 +310,14 @@ class HtmlElement:
 
     def setAttribute(self, attribute, value):
         "Set the value of the given attribute"
-        return self.html.set_node_attribute(self.node, attribute, value)
-
+        self.html.set_node_attribute(self.node, attribute, value)
+        if attribute == "href" and self.tagName == "a":
+            self.html.on_a(self.node)
+        if attribute == "data" and self.tagName == "object":
+            self.html.on_object(self.node)
+        if attribute in ("src", "srcdoc",) and self.tagName == "iframe":
+            self.html.on_iframe(self.node)
+        
     def remove(self):
         "Delete the element"
         self.html.delete_node(self.node)
@@ -338,11 +341,6 @@ class HtmlElement:
             self.html.insert_node_before(self.node, tkhtml_children_nodes, before.node)
         else:
             self.html.insert_node(self.node, tkhtml_children_nodes)
-
-        # set up widgets if the element is visible
-        if self.html.bbox(self.node):
-            if any(node.contains_widgets for node in children):
-                self.html.setup_widgets()
 
     def getElementById(self, query):
         "Return an element given an id"
@@ -376,4 +374,3 @@ class HtmlElement:
         "Return a list of elements that match a given CSS selector"
         nodes = self.html.search(query, root=self.node)
         return tuple(HtmlElement(self.html, node) for node in nodes)
-

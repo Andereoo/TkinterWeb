@@ -110,7 +110,7 @@ class Page(tk.Frame):
         self.find_bar_caption = find_bar_caption = ttk.Label(findbar, text="")
         find_close = ttk.Button(findbar, text="Close", command=self.open_findbar, cursor="hand2")
 
-        frame.messages_enabled = True            
+        frame.messages_enabled = True
         frame.bind(TITLE_CHANGED_EVENT, self.change_title)
         frame.bind(LINK_CLICK_EVENT, lambda event: self.link_click(event.url))
         frame.bind(FORM_SUBMISSION_EVENT, self.form_submit)
@@ -198,7 +198,9 @@ class Page(tk.Frame):
         widget.see(tk.INSERT)
 
     def on_right_click(self, event):
-        url = self.frame.resolve_url(self.frame.get_currently_hovered_element().getAttribute("href"))
+        url = self.frame.get_currently_hovered_element().getAttribute("href")
+        if url:
+            url = self.frame.resolve_url(url)
         selection = self.frame.get_selection()
         menu = tk.Menu(self, tearoff=0)
         if len(self.back_history) > 1:

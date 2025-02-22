@@ -25,36 +25,6 @@ def extract_nested(nested):
         return extract_nested(nested[0])
     return nested
 
-def node_to_html(self, node, deep=True):
-    return self.html.tk.eval(r"""
-        proc TclNode_to_html {node} {
-            set tag [$node tag]
-            if {$tag eq ""} {
-                append ret [$node text -pre]
-            } else {
-                append ret <$tag
-                foreach {zKey zVal} [$node attribute] {
-                    set zEscaped [string map [list "\x22" "\x5C\x22"] $zVal]
-                    append ret " $zKey=\"$zEscaped\""
-                }
-                append ret >
-                if {%d} {
-                    append ret [node_to_childrenHtml $node]
-                }
-                append ret </$tag>
-            }
-        }
-        proc node_to_childrenHtml {node} {
-            set ret ""
-            foreach child [$node children] {
-                append ret [TclNode_to_html $child]
-            }
-            return $ret
-        }
-        return [TclNode_to_html %s]
-        """ % (int(deep), extract_nested(node))
-    )
-
 def generate_text_node(htmlwidget, text):  # taken from hv3_dom_core.tcl line 219
     return htmlwidget.tk.eval("""
         set tkw %s
@@ -82,7 +52,7 @@ class TkwDocumentObjectModel:
     def __init__(self, htmlwidget):
         self.html = htmlwidget
         self.html.tk.createcommand("parse_fragment", self.html.parse_fragment)
-        self.html.tk.createcommand("node_to_html", node_to_html)
+        self.html.tk.createcommand("node_to_html", self._node_to_html)
 
     def createElement(self, tagname):  # taken from hv3_dom_core.tcl line 214
         "Create a new HTML element with the given tag name"
@@ -147,6 +117,36 @@ class TkwDocumentObjectModel:
         "Return a list of elements that match a given CSS selector"
         nodes = self.html.search(query)
         return tuple(HtmlElement(self.html, node) for node in nodes)
+    
+    def _node_to_html(self, node, deep=True):
+        return self.html.tk.eval(r"""
+            proc TclNode_to_html {node} {
+                set tag [$node tag]
+                if {$tag eq ""} {
+                    append ret [$node text -pre]
+                } else {
+                    append ret <$tag
+                    foreach {zKey zVal} [$node attribute] {
+                        set zEscaped [string map [list "\x22" "\x5C\x22"] $zVal]
+                        append ret " $zKey=\"$zEscaped\""
+                    }
+                    append ret >
+                    if {%d} {
+                        append ret [node_to_childrenHtml $node]
+                    }
+                    append ret </$tag>
+                }
+            }
+            proc node_to_childrenHtml {node} {
+                set ret ""
+                foreach child [$node children] {
+                    append ret [TclNode_to_html $child]
+                }
+                return $ret
+            }
+            return [TclNode_to_html %s]
+            """ % (int(deep), extract_nested(node))
+        )
 
 
 class CSSStyleDeclaration:
@@ -200,6 +200,10 @@ class HtmlElement:
         self.styleCache = None  # initialize style as None
         self.html.bbox(node)  # check if the node is valid
 
+        # we need this here or crashes might happen if multiple tkhtml instances exist (depending on the tkhtml version)
+        # not too sure why, but it works
+        self.html.tk.createcommand("parse_fragment", self.html.parse_fragment)
+        
     @property
     def style(self):
         if self.styleCache is None:  # lazy loading of style
@@ -245,10 +249,6 @@ class HtmlElement:
             update
             """ % (extract_nested(self.node), escape_Tcl(contents))
         )
-        #print("SDF")
-        #for node in self.html.search("object"):
-        #    print(node)
-        #    self.html.on_object(node)
 
     @property
     def textContent(self):  # original for this project
@@ -271,7 +271,7 @@ class HtmlElement:
         )
 
     @textContent.setter
-    def textContent(self, contents):  # Ditto
+    def textContent(self, contents):  # ditto
         "Set the text content of an element."
         self.html.tk.eval("""
             set node %s

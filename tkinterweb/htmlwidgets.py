@@ -31,30 +31,29 @@ class HtmlFrame(ttk.Frame):
         self.waiting_for_reset = False
         self.thread_in_progress = None
         self.broken_webpage_message = ""
-        self.enable_auto_resizing = False
 
         # setup sub-widgets
         self.html = html = TkinterWeb(self, HtmlFrame, self._manage_vsb, self._manage_hsb, messages_enabled, overflow_scroll_frame)
         html.grid(row=0, column=0, sticky=tk.NSEW)
 
         self.document = TkwDocumentObjectModel(html)
+
         self.style = ttk.Style()
         self._on_style_change(None)
 
         self.hsb = hsb = AutoScrollbar(self, orient=tk.HORIZONTAL, command=html.xview)
-        self.hsb_type = None
-        self.original_hsb_type = horizontal_scrollbar
-        hsb.bind("<Enter>", html.on_leave)
-        html.configure(xscrollcommand=hsb.set)
-        hsb.grid(row=1, column=0, sticky="nsew")
-        self._manage_hsb(horizontal_scrollbar)
-
         self.vsb = vsb = AutoScrollbar(self, orient=tk.VERTICAL, command=html.yview)
+
+        self.hsb_type = None
         self.vsb_type = None
+        self.original_hsb_type = horizontal_scrollbar
         self.original_vsb_type = vertical_scrollbar
-        vsb.bind("<Enter>", html.on_leave)
+        
+        html.configure(xscrollcommand=hsb.set)
         html.configure(yscrollcommand=vsb.set)
+        hsb.grid(row=1, column=0, sticky="nsew")
         vsb.grid(row=0, column=1, sticky="nsew")
+        self._manage_hsb(horizontal_scrollbar)
         self._manage_vsb(vertical_scrollbar)
 
         # setup default virtual event bindings
@@ -78,12 +77,15 @@ class HtmlFrame(ttk.Frame):
         vsb.bind("<Button-5>", lambda event, widget=html: html.scroll_x11(event, widget))
         vsb.bind("<MouseWheel>", html.scroll)
 
-        self.bind("<Leave>", html.on_leave)
-        self.bind("<Enter>", html.on_mouse_motion)
+        hsb.bind("<Enter>", html._on_leave)
+        vsb.bind("<Enter>", html._on_leave)
+
+        self.bind("<Leave>", html._on_leave)
+        self.bind("<Enter>", html._on_mouse_motion)
         html.bind("<Configure>", self._handle_resize)
         self.bind("<<ThemeChanged>>", self._on_style_change)
 
-        html.post_event(DEBUG_MESSAGE_EVENT, data=f"Welcome to TkinterWeb {__version__}! \nhttps://github.com/Andereoo/TkinterWeb\n\nDebugging messages are enabled \nUse the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLabel() to disable these messages")
+        html.post_event(DEBUG_MESSAGE_EVENT, data=f"Welcome to TkinterWeb {__version__}! \nhttps://github.com/Andereoo/TkinterWeb\n\nDebugging messages are enabled \nUse the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLabel() to disable these messages", direct_notify=True)
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
@@ -197,7 +199,11 @@ class HtmlFrame(ttk.Frame):
     @threading_enabled.setter
     def threading_enabled(self, enabled):
         if enabled:
-            self.html.maximum_thread_count = self.html.default_maximum_thread_count
+            if self.html.allow_threading:
+                self.html.maximum_thread_count = self.html.default_maximum_thread_count
+            else:
+                self.post_event(DEBUG_MESSAGE_EVENT, data="WARNING: threading will not be enabled because your Tcl/Tk library does not support threading")
+                self.html.maximum_thread_count = 0
         else:
             self.html.maximum_thread_count = 0
 
@@ -249,7 +255,6 @@ class HtmlFrame(ttk.Frame):
         "Reset parser and send html code to it"
         self.html.reset()
 
-        self.enable_auto_resizing = False
         if base_url == None:
             path = WORKING_DIR
             if not path.startswith("/"):
@@ -261,7 +266,7 @@ class HtmlFrame(ttk.Frame):
         self._finish_css()
 
     def load_file(self, file_url, decode=None, force=False, insecure=None):
-        "convenience method to load a locally stored file from the specified path"
+        "Convenience method to load a locally stored file from the specified path"
         self.previous_url = self.current_url
         if not file_url.startswith("file://"):
             if PLATFORM.system == "Windows" and not file_url.startswith("/"):
@@ -484,10 +489,9 @@ class HtmlFrame(ttk.Frame):
         self.html.inline_dark_theme_regexes = html.inline_dark_theme_regexes
     
     def _handle_resize(self, event):
-        if self.enable_auto_resizing:
-            td = self.document.getElementsByTagName("td")
-            if td:
-                td[0].style.height = f"{event.height}px"
+        resizeable_elements = self.document.querySelectorAll("[tkinterweb-full-page]")
+        for element in resizeable_elements:
+            element.style.height = f"{event.height}px"
 
     def _on_style_change(self, event):
         self.background = self.style.lookup('TFrame', 'background')
@@ -567,7 +571,6 @@ class HtmlFrame(ttk.Frame):
                         self.load_html(BUILTIN_PAGES["about:view-source"].format(self.background, length*9, data), newurl)
                     elif "image" in filetype:
                         self.load_html("", newurl)
-                        self.enable_auto_resizing = True
                         if self.current_url != newurl:
                             self.html.post_event(URL_CHANGED_EVENT, url=newurl)
                         name = self.html.image_name_prefix + str(len(self.html.loaded_images))

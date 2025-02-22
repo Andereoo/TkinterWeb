@@ -451,12 +451,12 @@ BUILTIN_PAGES = {
         <code>Python version: "+".".join(PYTHON_VERSION)+"</code><code>Tcl version: "+str(tk.TclVersion)+"</code><code>Tk version: "+str(tk.TkVersion)+"</code>\
         <code>Platform: "+str(PLATFORM.system)+"</code><code>Machine: "+str(PLATFORM.machine)+"</code><code>Processor: "+str(PLATFORM.processor)+"</code></body></html>",
     "about:error": "<html><head><style>html,body,table,tr,td{{background-color:{};width:100%;height:100%;margin:0}}</style><title>Error {}</title></head>\
-        <body><table><tr><td style=\"text-align:center;vertical-align:middle\">\
+        <body><table><tr><td tkinterweb-full-page style=\"text-align:center;vertical-align:middle\">\
         <h2 style=\"margin:0;padding:0;font-weight:normal\">Oops.</h2><p></p>\
         <h3 style=\"margin:0;padding:0;font-weight:normal\">The page you've requested could not be found :(</h3>\
         </td></tr></table></body></html>",
     "about:image": "<html><head><style>html,body,table,tr {{background-color:{};width:100%;height:100%;margin:0}}</style></head><body>\
-        <table><tr><td style='text-align:center;vertical-align:middle;padding:4px 4px 0px 4px'><img style='max-width:100%;max-height:100%' src='replace:{}'></td></tr></table></body></html>",
+        <table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle;padding:4px 4px 0px 4px'><img style='max-width:100%;max-height:100%' src='replace:{}'></td></tr></table></body></html>",
     "about:view-source": "<html scroll-x=true><head><style>\
         html,body{{background-color:{};overflow-x:auto}}\
         pre::before{{counter-reset:listing}}\
@@ -898,6 +898,18 @@ def strip_css_url(url):
 def rgb_to_hex(red, green, blue, *args):
     "Convert RGB colour code to HEX"
     return f"#{red:02x}{green:02x}{blue:02x}"
+
+def invert_color(rgb, match, limit):
+    "Check colour, invert if necessary, and convert"
+    if ("background" in match and sum(rgb) < limit) or (
+        match == "color" and sum(rgb) > limit
+    ):
+        return rgb_to_hex(*rgb)
+    else:
+        rgb[0] = max(1, min(255, 240 - rgb[0]))
+        rgb[1] = max(1, min(255, 240 - rgb[1]))
+        rgb[2] = max(1, min(255, 240 - rgb[2]))
+        return rgb_to_hex(*rgb)
 
 
 def get_tkhtml_folder():

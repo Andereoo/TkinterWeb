@@ -17,6 +17,7 @@ Copyright (c) 2025 Andereoo
 """
 
 import tkinter as tk
+from tkinter import filedialog
 from tkinter import ttk
 
 from tkinterweb import HtmlFrame, Notebook, __version__
@@ -47,11 +48,11 @@ class Page(tk.Frame):
         self.back_history = []
         self.forward_history = []
 
-        self.frame = frame = HtmlFrame(self, messages_enabled=False)
+        self.frame = frame = HtmlFrame(self)
         topbar = ttk.Frame(self)
         self.bottombar = bottombar = ttk.Frame(self)
         self.findbar = findbar = ttk.Frame(self)
-        self.sidebar = sidebar = HtmlFrame(frame, messages_enabled=False, width=250)
+        self.sidebar = sidebar = HtmlFrame(frame, width=250)
         sidebar.grid_propagate(False)
         sidebar.fontscale = 0.8
         sidebar.selection_enabled = False
@@ -89,8 +90,6 @@ class Page(tk.Frame):
         self.zoom_box = zoom_box = ttk.Scale(sidebar, from_=0.1, to=5, orient="horizontal", variable=zoom_var, command=self.set_zoom)
         self.fontscale_var = fontscale_var = tk.StringVar(value=frame.fontscale)
         self.fontscale_box = fontscale_box = ttk.Scale(sidebar, from_=0.1, to=5, orient="horizontal", variable=fontscale_var, command=self.set_fontscale)
-        self.parsemode_var = parsemode_var = tk.StringVar(value=frame.parsemode)
-        self.parsemode_box = parsemode_box = tk.Entry(sidebar, textvariable=parsemode_var)
         self.broken_page_msg_box = broken_page_msg_box = tk.Text(sidebar, wrap=tk.WORD, width=30, undo=True)
         self.view_source_button = view_source_button = ttk.Button(sidebar, text="View page source", command=self.view_source)
         about_button = ttk.Button(sidebar, text="About TkinterWeb", command=lambda url="about:tkinterweb": self.open_new_tab(url))
@@ -144,11 +143,12 @@ class Page(tk.Frame):
                                <object allowscrolling data={invert_images_enabled}></object><hr></hr>
                                <div><p style="float:left">Zoom:</p><span style="float:right" id="zoom">{zoom_var.get()}</span><object allowscrolling data={zoom_box}></object></div>
                                <div><p style="float:left">Font scale:</p><span style="float:right" id="fontscale">{fontscale_var.get()}</span><object allowscrolling data={fontscale_box}></object></div><hr></hr>
-                               <p>Parse mode:</p><object allowscrolling data={parsemode_box}></object><hr></hr>
+                               <p>Parse mode:</p><select style="width:100%"><option value="xml">xml</option><option value="xhtml">xhtml</option><option value="html">html</option></select><hr></hr>
                                <p>Broken page message:</p><object allowscrolling data={broken_page_msg_box}></object><hr></hr>
                                <object allowscrolling data={view_source_button}></object>
                                <object allowscrolling data={about_button}></object>
         """)
+        sidebar.bind_all("<<Modified>>", self.on_modified)
 
         linklabel.pack(expand=True, fill="both")
         topbar.columnconfigure(4, weight=1)
@@ -173,12 +173,11 @@ class Page(tk.Frame):
         ttk.Separator(findbar).grid(row=1, column=0, columnspan=9, sticky="ew", pady=4, padx=8)
 
         findbox_var.trace("w", self.search_in_page)
-        parsemode_var.trace("w", self.set_parsemode)
 
         broken_page_msg_box.insert("end", BUILTIN_PAGES["about:error"].format(frame.background, "").replace("</", "\n</").replace(">", ">\n").replace("\n\n", "\n").replace("</html>\n", "</html>"))
 
         frame.bind("<Button-3>", self.on_right_click)
-        for widget in [urlbar, find_box, parsemode_box, zoom_box, fontscale_box]:
+        for widget in [urlbar, find_box, zoom_box, fontscale_box]:
             widget.bind("<Control-a>", lambda e: self.after(50, self.select_all_in_entry, e.widget))
         broken_page_msg_box.bind("<Control-a>", lambda e: self.after(50, self.select_all_in_text, e.widget))
 
@@ -187,6 +186,10 @@ class Page(tk.Frame):
         for child in sidebar.winfo_children():
             child.bind("<Escape>", lambda x: self.close_sidebar())
         settingsbutton.bind("<Escape>", lambda x: self.close_sidebar())
+
+    def on_modified(self, event):
+        if "combobox" in str(event.widget):
+            self.frame.parsemode = event.widget.get()
 
     def select_all_in_entry(self, widget):
         widget.select_range(0, 'end')
@@ -217,10 +220,47 @@ class Page(tk.Frame):
         if selection:
             menu.add_command(label="Copy", accelerator="Ctrl-C", command=self.frame.html.copy_selection)
         menu.add_separator()
+        menu.add_command(label="Take screenshot", command=self.screenshot)
+        menu.add_command(label="Snapshot page", command=self.snapshot)
+        menu.add_command(label="Print", accelerator="Ctrl-P", command=self.print)
+        menu.add_command(label="Save page", accelerator="Ctrl-S", command=self.save)
+        menu.add_separator()
         menu.add_command(label="Find in page", accelerator="Ctrl-F", command=lambda: self.open_findbar(True))
         if str(self.view_source_button.cget("state")) == "normal":
             menu.add_command(label="View page source", accelerator="Ctrl-U", command=self.view_source)
         menu.tk_popup(event.x_root, event.y_root, 0)
+
+    def screenshot(self):
+        file_path = filedialog.asksaveasfilename(
+            filetypes=[("JPG files", "*.jpg"), ("PNG files", "*.png"), ("All files", "*.*")],
+            title="Save Screenshot As"
+        )
+        if file_path:
+            self.frame.screenshot_page(file_path)
+
+    def snapshot(self):
+        file_path = filedialog.asksaveasfilename(
+            filetypes=[("HTML files", "*.html"), ("XHTML files", "*.xhtml"), ("XML files", "*.xml"), ("All files", "*.*")],
+            title="Snapshot Page As"
+        )
+        if file_path:
+            self.frame.snapshot_page(file_path)
+
+    def print(self):
+        file_path = filedialog.asksaveasfilename(
+            filetypes=[("Postscript files", "*.ps"), ("All files", "*.*")],
+            title="Print Page As"
+        )
+        if file_path:
+            self.frame.print_page()
+
+    def save(self):
+        file_path = filedialog.asksaveasfilename(
+            filetypes=[("HTML files", "*.html"), ("XHTML files", "*.xhtml"), ("XML files", "*.xml"), ("All files", "*.*")],
+            title="Save Page As"
+        )
+        if file_path:
+            self.frame.save_page(file_path)
 
     def urlbar_focus(self):
         self.urlbar.focus()
@@ -268,19 +308,13 @@ class Page(tk.Frame):
             self.handle_view_source_button("about:error")
         self.linklabel.config(text=self.cut_text(event.data, 80))
 
-    def recursive_depth_change(self, *args):
-        self.frame.set_recursive_hover_depth(self.recursive_depth_var.get())
-
-    def thread_count_change(self, *args):
-        self.frame.set_maximum_thread_count(self.thread_count_var.get())
-
     def broken_page_msg_update(self, event=None):
         height = self.broken_page_msg_box.count("1.0", "end", "displaylines")[0]
         self.broken_page_msg_box.configure(height=height)
         self.broken_page_msg_box.edit_modified(False)
 
     def broken_page_msg_change(self, event):
-        self.frame.set_broken_webpage_message(event.widget.get("1.0", 'end-1c'))
+        self.frame.set_broken_webpage_message = event.widget.get("1.0", 'end-1c')
 
     def toggle_images(self):
         self.frame.images_enabled = self.images_var.get()
@@ -409,13 +443,6 @@ class Page(tk.Frame):
         fontscale = round(float(self.fontscale_var.get()), 1)
         self.frame.fontscale = fontscale
         self.sidebar.document.getElementById("fontscale").textContent = fontscale
-
-    def set_parsemode(self, *args):
-        if self.parsemode_var.get() not in ["html", "xml", "xhtml"]:
-            self.parsemode_box.config(background="#ff6959")
-        else:
-            self.parsemode_box.config(background="white")
-            self.frame.set_parsemode(self.parsemode_var.get())
 
     def done_loading(self, event):
         self.linklabel.config(text="Done")

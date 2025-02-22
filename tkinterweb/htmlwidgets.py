@@ -371,24 +371,27 @@ class HtmlFrame(ttk.Frame):
         return HtmlElement(self.html, node)
     
     def yview_toelement(self, element):
-        "Convenience method to scroll to a given element"
+        "Scroll to a given element"
         self.html.yview(element.node)
 
-    def screenshot(self, file=None, full=False):
+    def screenshot_page(self, file=None, full=False):
         "Take a screenshot"
-        self.html.post_event(DEBUG_MESSAGE_EVENT, data=f"Taking a screenshot...")
+        self.html.post_event(DEBUG_MESSAGE_EVENT, data=f"Taking a screenshot of {self.current_url}...")
         image, data = self.html.image(full=full)
         height = len(data)
         width = len(data[0].split())
         image = createRGBimage(data, width, height)
-        self.html.post_event(DEBUG_MESSAGE_EVENT, data=f"Screenshot taken: {file} {width}px by {height}px.")
-        if file: image.save(file)
+        if file:
+            image.save(file)
+        self.html.post_event(DEBUG_MESSAGE_EVENT, data=f"Screenshot taken: {width}px by {height}px!")
         return image
 
-    def print_page(self, cnf={}, **kw):
+    def print_page(self, file=None, cnf={}, **kw):
         "Print the page"
         cnf |= kw
-        self.html.post_event(DEBUG_MESSAGE_EVENT, data=f"Printing {self.html.base_url}...")
+        self.html.post_event(DEBUG_MESSAGE_EVENT, data=f"Printing {self.current_url}...")
+        if file:
+            cnf["file"] = file
         if "pagesize" in cnf:
             pageheights = {
                 "A3": "1191", "A4": "842", "A5": "595",
@@ -408,55 +411,44 @@ class HtmlFrame(ttk.Frame):
 
         self.html.update() # update the root window to ensure HTML is rendered
         file = self.html.postscript(cnf)
+        # no need to save - tkhtml handles that for us
         self.html.post_event(DEBUG_MESSAGE_EVENT, data="Printed!")
         return file
     
     def save_page(self, file=None):
         "Save the page"
+        self.html.post_event(DEBUG_MESSAGE_EVENT, data=f"Saving {self.current_url}...")
         html = self.document.documentElement.innerHTML
         if file:
             with open(file, "w+") as handle:
                 handle.write(html)
+        self.html.post_event(DEBUG_MESSAGE_EVENT, data="Saved!")
         return html
     
-    def create_snapshot(self, file=None):
-        self.html.tk.setvar("zBase", self.html.base_url)
-        html = self.html.tk.eval(r"""
-            set html %s
-            set zTitle ""
-            set zStyle "\n"
-            set zBody ""
+    def snapshot_page(self, file=None, allow_agent=False):
+        "Save a snapshot of the page"
+        self.html.post_event(DEBUG_MESSAGE_EVENT, data=f"Snapshotting {self.current_url}...")
+        title = ""
+        icon = ""
+        base = ""
+        style = ""
+        
+        for rule in self.html.get_computed_styles():
+            selector, prop, origin = rule
+            if origin == "agent" and not allow_agent: continue
+            style += f"{selector} {{{prop}}}\n"
 
-            foreach rule [$html _styleconfig] {
-                foreach {selector properties origin} $rule {}
-                if {$origin eq "agent"} continue
-                append zStyle "$selector { $properties }\n"
-            }
-            set titlenode [$html search title]
-            if {$titlenode ne ""} {
-                set child [lindex [$titlenode children] 0]
-                if {$child ne ""} { set zTitle [$child text] }
-            }
-            set bodynode [$html search body]
-            set zBody ""
-            foreach child [$bodynode children] {
-                append zBody [node_to_html $child 1]
-            }
-            # it has to be writen like this because it outputs the indention
-            return [subst {<html>
-    <head>
-        <title>$zTitle</title>
-        <style>$zStyle</style>
-        <base href="$zBase"></base>
-    </head>
-    <body>
-        $zBody
-    </body>
-</html>}]
-        """ % self.html)
+        if self.html.title: title = f"\n        <title>{self.html.title}</title>"
+        if self.html.icon: icon = f"\n        <link rel=\"icon\" type=\"image/x-icon\" href=\"/{self.html.icon}\">"
+        if self.html.base_url: base = f"\n        <base href=\"{self.html.base_url}\"</base>"
+        if style: style = f"\n        <style>{style}</style>"
+        body = self.document.body.innerHTML
+
+        html = f"""<html>\n    <head>{title}{icon}{base}{style}\n    </head>\n    <body>\n        {body}\n    </body>\n</html>"""
         if file:
             with open(file, "w+") as handle:
                 handle.write(html)
+        self.html.post_event(DEBUG_MESSAGE_EVENT, data="Saved!")
         return html
     
     def copy_settings(self, html):

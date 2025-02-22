@@ -505,6 +505,10 @@ class TkinterWeb(tk.Widget):
         """Preload an image. 
         Only useful if caches are enabled and reset() is not called after preloading."""
         return self.tk.call(self._w, "preload", url)
+    
+    def get_computed_styles(self):
+        "Get a tuple containing the computed CSS rules for each CSS selector"
+        return self.tk.call(self._w, "_styleconfig")
 
     def fetch_styles(self, sheetid, handler, errorurl="", url=None, data=None):
         "Fetch stylesheets and parse the CSS code they contain"
@@ -926,7 +930,7 @@ class TkinterWeb(tk.Widget):
                     if lv == 3:
                         color = color + color
                         lv = len(color)
-                    colors[count] = self.invert_color(
+                    colors[count] = invert_color(
                         list(
                             int(color[i : i + lv // 3], 16)
                             for i in range(0, lv, lv // 3)
@@ -935,7 +939,7 @@ class TkinterWeb(tk.Widget):
                     )
                     changed = True
                 elif color.startswith("rgb(") or color.startswith("rgba("):
-                    colors[count] = self.invert_color(
+                    colors[count] = invert_color(
                         list(
                             map(
                                 int,
@@ -952,7 +956,7 @@ class TkinterWeb(tk.Widget):
                 else:
                     try:
                         color = list(self.winfo_rgb(color))
-                        colors[count] = self.invert_color(color, match.group(1), self.dark_theme_limit)
+                        colors[count] = invert_color(color, match.group(1), self.dark_theme_limit)
                         changed = True
                     except tk.TclError:
                         pass

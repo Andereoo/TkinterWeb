@@ -256,7 +256,7 @@ BR {
  */
 INPUT[type="hidden"] { display: none }
 INPUT, TEXTAREA, SELECT, BUTTON { 
-  border: 1px solid black;
+  border: 1px solid #828282;
   background-color: white;
   line-height: normal;
   vertical-align: middle;
@@ -321,7 +321,7 @@ FRAMESET {
 IFRAME {
   width: 300px;
   height: 200px;
-  border: 1px solid black;
+  border: 1px solid #828282;
 }
 /*
  *************************************************************************

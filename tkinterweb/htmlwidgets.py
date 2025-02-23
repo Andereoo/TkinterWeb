@@ -8,10 +8,9 @@ Copyright (c) 2025 Andereoo
 from urllib.parse import urldefrag, urlparse
 
 from bindings import TkinterWeb
-from utilities import (PLATFORM, WORKING_DIR, PYTHON_VERSION, BUILTIN_PAGES, 
-                       DEBUG_MESSAGE_EVENT, DONE_LOADING_EVENT, LINK_CLICK_EVENT, FORM_SUBMISSION_EVENT, 
-                       DOWNLOADING_RESOURCE_EVENT, URL_CHANGED_EVENT,
-                       AutoScrollbar, StoppableThread, 
+from utilities import (PLATFORM, WORKING_DIR, PYTHON_VERSION, BUILTIN_PAGES, DONE_LOADING_EVENT, 
+                       DOWNLOADING_RESOURCE_EVENT, URL_CHANGED_EVENT, DEFAULT_PARSE_MODE, DEFAULT_STYLE, 
+                       DARK_STYLE, AutoScrollbar, StoppableThread, 
                        cachedownload, download, threadname, notifier, __version__)
 from imageutils import createRGBimage
 from dom import TkwDocumentObjectModel, HtmlElement
@@ -21,50 +20,103 @@ from tkinter import ttk
 
 
 class HtmlFrame(ttk.Frame):
-    def __init__(self, master, messages_enabled=False, vertical_scrollbar="auto", horizontal_scrollbar=False, overflow_scroll_frame=None, **kw):
-        ttk.Frame.__init__(self, master, **kw)
-
+    def __init__(self, master, **kwargs):
         # state and settings variables
         self.current_url = ""
-        self.previous_url = ""
-        self.accumulated_styles = []
-        self.waiting_for_reset = False
-        self.thread_in_progress = None
-        self.broken_webpage_message = ""
+
+        self._previous_url = ""
+        self._accumulated_styles = []
+        self._waiting_for_reset = False
+        self._thread_in_progress = None
+        self._prev_height = 0
+
+        self.htmlframe_options = {
+            "vertical_scrollbar": "auto",
+            "horizontal_scrollbar": False,
+            "broken_webpage_message": "",
+        }
+        self.tkinterweb_options = {
+            "link_click_func": self.load_url,
+            "form_submit_func": self.load_form_data,
+            "message_func": notifier,
+            "messages_enabled": True,
+            "selection_enabled": True,
+            "stylesheets_enabled": True,
+            "images_enabled": True,
+            "forms_enabled": True,
+            "objects_enabled": True,
+            "caches_enabled": True,
+            "dark_theme_enabled": False,
+            "image_inversion_enabled": False,
+            "crash_prevention_enabled": True,
+            "events_enabled": True,
+            "threading_enabled": True,
+            "image_alternate_text_enabled": True,
+            "visited_links": [],
+            "find_match_highlight_color": "#ef0fff",
+            "find_match_text_color": "#fff",
+            "find_current_highlight_color": "#38d878",
+            "find_current_text_color": "#fff",
+            "selected_text_highlight_color": "#3584e4",
+            "selected_text_color": "#fff",
+            "default_style": DEFAULT_STYLE,
+            "dark_style": DEFAULT_STYLE + DARK_STYLE,
+            "insecure_https": False,
+            # internal
+            "overflow_scroll_frame": None,
+            "embed_obj": HtmlFrame,
+            "manage_vsb_func": self._manage_vsb,
+            "manage_hsb_func": self._manage_hsb,
+
+        }
+        self.tkhtml_options = {
+            "zoom": 1.0,
+            "fontscale": 1.0,
+            "parsemode": DEFAULT_PARSE_MODE,
+            "shrink": False,
+            "mode": "standards",
+        }
+                            
+        for key, value in self.htmlframe_options.items():
+            if key in kwargs:
+                value = self.htmlframe_options[key] = kwargs.pop(key)
+            setattr(self, key, value)
+
+        for key in list(kwargs.keys()):
+            if key in self.tkinterweb_options:
+                value = self._check_value(self.tkinterweb_options[key], kwargs.pop(key))
+                self.tkinterweb_options[key] = value
+            elif key in self.tkhtml_options:
+                self.tkhtml_options[key] = kwargs.pop(key)
+
+        super().__init__(master, **kwargs)
 
         # setup sub-widgets
-        self.html = html = TkinterWeb(self, HtmlFrame, self._manage_vsb, self._manage_hsb, messages_enabled, overflow_scroll_frame)
-        html.grid(row=0, column=0, sticky=tk.NSEW)
-
-        self.document = TkwDocumentObjectModel(html)
-
-        self.style = ttk.Style()
-        self._on_style_change(None)
-
+        self.html = html = TkinterWeb(self, self.tkinterweb_options, **self.tkhtml_options)
         self.hsb = hsb = AutoScrollbar(self, orient=tk.HORIZONTAL, command=html.xview)
         self.vsb = vsb = AutoScrollbar(self, orient=tk.VERTICAL, command=html.yview)
+        self.document = TkwDocumentObjectModel(html)
+        self.style = ttk.Style()
 
-        self.hsb_type = None
-        self.vsb_type = None
-        self.original_hsb_type = horizontal_scrollbar
-        self.original_vsb_type = vertical_scrollbar
-        
+        self.background = self.style.lookup('TFrame', 'background')
+        self.foreground = self.style.lookup('TLabel', 'foreground')
+
         html.configure(xscrollcommand=hsb.set)
         html.configure(yscrollcommand=vsb.set)
+
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        html.grid(row=0, column=0, sticky="nsew")
         hsb.grid(row=1, column=0, sticky="nsew")
         vsb.grid(row=0, column=1, sticky="nsew")
-        self._manage_hsb(horizontal_scrollbar)
-        self._manage_vsb(vertical_scrollbar)
 
-        # setup default virtual event bindings
-        html.bind(LINK_CLICK_EVENT, lambda event: self.load_url(event.url))
-        html.bind(FORM_SUBMISSION_EVENT, lambda event: self.load_form_data(event.url, event.data, event.method))
-        html.bind(DEBUG_MESSAGE_EVENT, lambda event: notifier(event.data))
+        self._manage_hsb(self.horizontal_scrollbar)
+        self._manage_vsb(self.vertical_scrollbar)
 
         # html.document only applies to the document it is bound to (which makes things easy)
         # for some reason, binding to Html only works on Linux and binding to html.document only works on Windows
         # Html fires on all documents (i.e. <iframe> elements), so it has to be handled slightly differently
-        if not overflow_scroll_frame:
+        if not self.html.overflow_scroll_frame:
             self.bind_class("Html", "<Button-4>", html.scroll_x11)
             self.bind_class("Html", "<Button-5>", html.scroll_x11)
         self.bind_class(f"{html}.document", "<MouseWheel>", html.scroll)
@@ -83,18 +135,11 @@ class HtmlFrame(ttk.Frame):
         self.bind("<Leave>", html._on_leave)
         self.bind("<Enter>", html._on_mouse_motion)
         html.bind("<Configure>", self._handle_resize)
-        self.bind("<<ThemeChanged>>", self._on_style_change)
-
-        html.post_event(DEBUG_MESSAGE_EVENT, data=f"Welcome to TkinterWeb {__version__}! \nhttps://github.com/Andereoo/TkinterWeb\n\nDebugging messages are enabled \nUse the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLabel() to disable these messages", direct_notify=True)
-
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(0, weight=1)
 
         # redirected commands
         self.select_all = html.select_all
         self.clear_selection = html.clear_selection
         self.get_selection = html.get_selection
-        self.bind = html.bind
         self.resolve_url = html.resolve_url
         self.yview = html.yview
         self.yview_moveto = html.yview_moveto
@@ -102,110 +147,43 @@ class HtmlFrame(ttk.Frame):
         self.replace_widget = html.replace_widget
         self.replace_element = html.replace_element
         self.remove_widget = html.remove_widget
+        self.bind = html.bind
 
-    @property
-    def messages_enabled(self):
-        return self.html.messages_enabled
-    
-    @messages_enabled.setter
-    def messages_enabled(self, enabled):
-        self.html.messages_enabled = enabled
+        self.html.post_message(f"Welcome to TkinterWeb {__version__}! \nhttps://github.com/Andereoo/TkinterWeb\n\nDebugging messages are enabled \nUse the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLabel() to disable these messages")
 
-    @property
-    def selection_enabled(self):
-        return self.html.selection_enabled
-    
-    @selection_enabled.setter
-    def selection_enabled(self, enabled):
-        self.html.selection_enabled = enabled
+    def configure(self, **kwargs):
+        for key in list(kwargs.keys()):
+            if key in self.htmlframe_options:
+                value = self._check_value(self.htmlframe_options[key], kwargs.pop(key))
+                setattr(self, key, value)
+                if key == "vertical_scrollbar":
+                    self._manage_vsb(value)
+                elif key == "horizontal_scrollbar":
+                    self._manage_hsb(value)
+            elif key in self.tkinterweb_options:
+                value = self._check_value(self.tkinterweb_options[key], kwargs.pop(key))
+                setattr(self.html, key, value)
+            elif key in self.tkhtml_options:
+                self.html[key] = kwargs.pop(key)
+        super().configure(**kwargs)
 
-    @property
-    def stylesheets_enabled(self):
-        return self.html.stylesheets_enabled
-    
-    @stylesheets_enabled.setter
-    def stylesheets_enabled(self, enabled):
-        self.html.stylesheets_enabled = enabled
+    def config(self, **kwargs):
+        self.configure(**kwargs)
 
-    @property
-    def images_enabled(self):
-        return self.html.images_enabled
+    def cget(self, key):
+        if key in self.htmlframe_options:
+            return getattr(self, key)
+        elif key in self.tkinterweb_options.keys():
+            return getattr(self.html, key)
+        elif key in self.tkhtml_options.keys():
+            return self.html.cget(key)
+        return super().cget(key)
     
-    @images_enabled.setter
-    def images_enabled(self, enabled):
-        self.html.images_enabled = enabled
+    def __getitem__(self, key):
+        return self.cget(key)
 
-    @property
-    def forms_enabled(self):
-        return self.html.forms_enabled
-    
-    @forms_enabled.setter
-    def forms_enabled(self, enabled):
-        self.html.forms_enabled = enabled
-
-    @property
-    def objects_enabled(self):
-        return self.html.objects_enabled
-    
-    @objects_enabled.setter
-    def objects_enabled(self, enabled):
-        self.html.objects_enabled
-
-    @property
-    def caches_enabled(self):
-        return self.html.caches_enabled
-    
-    @caches_enabled.setter
-    def caches_enabled(self, enabled):
-        if self.html.caches_enabled != enabled:
-            self.html.caches_enabled = enabled
-            self.html.enable_imagecache(enabled)
-    
-    @property
-    def dark_theme_enabled(self):
-        return self.html.dark_theme_enabled
-    
-    @dark_theme_enabled.setter
-    def dark_theme_enabled(self, enabled):
-        if self.html.dark_theme_enabled != enabled:
-            self.html.dark_theme_enabled = enabled    
-            if enabled:
-                self.html.post_event(DEBUG_MESSAGE_EVENT, data="WARNING: dark theme has been enabled. This feature is experimental and may cause freezes or crashes.")
-            self.html.update_default_style()
-
-    @property
-    def image_inversion_enabled(self):
-        return self.html.image_inversion_enabled
-    
-    @image_inversion_enabled.setter
-    def image_inversion_enabled(self, enabled):
-        if self.html.image_inversion_enabled != enabled:
-            self.html.image_inversion_enabled = enabled
-            if enabled:
-                self.html.post_event(DEBUG_MESSAGE_EVENT, data="WARNING: image inversion has been enabled. This feature is experimental and may cause freezes or crashes.")
-
-    @property
-    def crash_prevention_enabled(self):
-        return self.html.crash_prevention_enabled
-    
-    @crash_prevention_enabled.setter
-    def crash_prevention_enabled(self, enabled):
-        self.html.crash_prevention_enabled = enabled
-
-    @property
-    def threading_enabled(self):
-        return bool(self.html.maximum_thread_count)
-    
-    @threading_enabled.setter
-    def threading_enabled(self, enabled):
-        if enabled:
-            if self.html.allow_threading:
-                self.html.maximum_thread_count = self.html.default_maximum_thread_count
-            else:
-                self.post_event(DEBUG_MESSAGE_EVENT, data="WARNING: threading will not be enabled because your Tcl/Tk library does not support threading")
-                self.html.maximum_thread_count = 0
-        else:
-            self.html.maximum_thread_count = 0
+    def __setitem__(self, key, value):
+        self.configure(**{key: value})
 
     @property
     def base_url(self):
@@ -218,38 +196,6 @@ class HtmlFrame(ttk.Frame):
     @property
     def icon(self):
         return self.html.icon
-    
-    @property
-    def visited_links(self):
-        return self.html.visited_links
-    
-    @visited_links.setter
-    def visited_links(self, links):
-        self.html.visited_links = links
-
-    @property
-    def zoom(self):
-        return self.html.get_zoom()
-    
-    @zoom.setter
-    def zoom(self, scale):
-        self.html.set_zoom(scale)
-
-    @property
-    def fontscale(self):
-        return self.html.get_fontscale()
-    
-    @fontscale.setter
-    def fontscale(self, scale):
-        self.html.set_fontscale(scale)
-
-    @property
-    def parsemode(self):
-        return self.html.get_parsemode()
-    
-    @parsemode.setter
-    def parsemode(self, mode):
-        self.html.set_parsemode(mode)
 
     def load_html(self, html_source, base_url=None):
         "Reset parser and send html code to it"
@@ -264,10 +210,11 @@ class HtmlFrame(ttk.Frame):
         self.html.parse(html_source)
 
         self._finish_css()
+        self._handle_resize()
 
-    def load_file(self, file_url, decode=None, force=False, insecure=None):
+    def load_file(self, file_url, decode=None, force=False):
         "Convenience method to load a locally stored file from the specified path"
-        self.previous_url = self.current_url
+        self._previous_url = self.current_url
         if not file_url.startswith("file://"):
             if PLATFORM.system == "Windows" and not file_url.startswith("/"):
                 file_url = "file:///" + str(file_url)
@@ -275,26 +222,26 @@ class HtmlFrame(ttk.Frame):
                 file_url = "file://" + str(file_url)
             self.current_url = file_url
             self.html.post_event(URL_CHANGED_EVENT, url=file_url)
-        self.load_url(file_url, decode, force, insecure)
+        self.load_url(file_url, decode, force)
 
-    def load_website(self, website_url, decode=None, force=False, insecure=None):
+    def load_website(self, website_url, decode=None, force=False):
         "Convenience method to load a website from the specified URL"
-        self.previous_url = self.current_url
+        self._previous_url = self.current_url
         if (not website_url.startswith("https://")) and (not website_url.startswith("http://")) and (not website_url.startswith("about:")):
             website_url = "http://" + str(website_url)
             self.current_url = website_url
             self.html.post_event(URL_CHANGED_EVENT, url=website_url)
-        self.load_url(website_url, decode, force, insecure)
+        self.load_url(website_url, decode, force)
 
-    def load_url(self, url, decode=None, force=False, insecure=None):
+    def load_url(self, url, decode=None, force=False):
         "Load a website or a file from the specified URL"
         if not self.current_url == url:
-            self.previous_url = self.current_url
+            self._previous_url = self.current_url
         if url in BUILTIN_PAGES:
-            self.load_html(BUILTIN_PAGES[url].format(self.background, "", "No file selected"))
+            self.load_html(BUILTIN_PAGES[url].format(self.background, self.foreground, "", "No file selected"), url)
             return
 
-        self.waiting_for_reset = True
+        self._waiting_for_reset = True
 
         # ugly workaround for Bug #40, where urllib.urljoin constructs improperly formatted urls on Linux when url starts with file:///
         if not url.startswith("file://///"):
@@ -304,32 +251,32 @@ class HtmlFrame(ttk.Frame):
                 self.current_url = url
                 self.html.post_event(URL_CHANGED_EVENT, url=url)
 
-        if self.thread_in_progress:
-            self.thread_in_progress.stop()
+        if self._thread_in_progress:
+            self._thread_in_progress.stop()
         if self.html.maximum_thread_count >= 1:
             thread = StoppableThread(target=self._continue_loading, args=(
-                url,), kwargs={"decode": decode, "force": force, "insecure": insecure})
-            self.thread_in_progress = thread
+                url,), kwargs={"decode": decode, "force": force})
+            self._thread_in_progress = thread
             thread.start()
         else:
-            self._continue_loading(url, decode=decode, force=force, insecure=insecure)
+            self._continue_loading(url, decode=decode, force=force)
 
-    def load_form_data(self, url, data, method="GET", decode=None, insecure=None):
+    def load_form_data(self, url, data, method="GET", decode=None):
         "Load a webpage using form data"
-        self.previous_url = self.current_url
-        if self.thread_in_progress:
-            self.thread_in_progress.stop()
+        self._previous_url = self.current_url
+        if self._thread_in_progress:
+            self._thread_in_progress.stop()
         if self.html.maximum_thread_count >= 1:
             thread = StoppableThread(
-                target=self._continue_loading, args=(url, data, method, decode), kwargs={"insecure": insecure})
-            self.thread_in_progress = thread
+                target=self._continue_loading, args=(url, data, method, decode))
+            self._thread_in_progress = thread
             thread.start()
         else:
             self._continue_loading(url, data, method, decode)
 
     def add_html(self, html_source):
         "Parse HTML and add it to the end of the current document"
-        self.previous_url = ""
+        self._previous_url = ""
         if not self.html.base_url:
             path = WORKING_DIR
             if not path.startswith("/"):
@@ -340,17 +287,17 @@ class HtmlFrame(ttk.Frame):
 
     def add_css(self, css_source):
         "Parse CSS code"
-        if self.waiting_for_reset:
-            self.accumulated_styles.append(css_source)
+        if self._waiting_for_reset:
+            self._accumulated_styles.append(css_source)
         else:
             self.html.parse_css(data=css_source, override=True)
 
     def stop(self):
         "Stop loading a page"
-        if self.thread_in_progress:
-            self.thread_in_progress.stop()
+        if self._thread_in_progress:
+            self._thread_in_progress.stop()
         self.html.stop()
-        self.current_url = self.previous_url
+        self.current_url = self._previous_url
         self.html.post_event(URL_CHANGED_EVENT, url=self.current_url)
         self.html.post_event(DONE_LOADING_EVENT)
 
@@ -376,20 +323,20 @@ class HtmlFrame(ttk.Frame):
 
     def screenshot_page(self, file=None, full=False):
         "Take a screenshot"
-        self.html.post_event(DEBUG_MESSAGE_EVENT, data=f"Taking a screenshot of {self.current_url}...")
+        self.html.post_message(f"Taking a screenshot of {self.current_url}...")
         image, data = self.html.image(full=full)
         height = len(data)
         width = len(data[0].split())
         image = createRGBimage(data, width, height)
         if file:
             image.save(file)
-        self.html.post_event(DEBUG_MESSAGE_EVENT, data=f"Screenshot taken: {width}px by {height}px!")
+        self.html.post_message(f"Screenshot taken: {width}px by {height}px!")
         return image
 
-    def print_page(self, file=None, cnf={}, **kw):
+    def print_page(self, file=None, cnf={}, **kwargs):
         "Print the page"
-        cnf |= kw
-        self.html.post_event(DEBUG_MESSAGE_EVENT, data=f"Printing {self.current_url}...")
+        cnf |= kwargs
+        self.html.post_message(f"Printing {self.current_url}...")
         if file:
             cnf["file"] = file
         if "pagesize" in cnf:
@@ -404,7 +351,7 @@ class HtmlFrame(ttk.Frame):
             try:
                 cnf["pageheight"] = pageheights[cnf["pagesize"].upper()]
                 cnf["pagewidth"] = pagewidths[cnf["pagesize"].upper()]
-                self.html.post_event(DEBUG_MESSAGE_EVENT, data=f"Setting printer page size to {cnf["pageheight"]}px by {cnf["pagewidth"]}px.")
+                self.html.post_message(f"Setting printer page size to {cnf["pageheight"]}px by {cnf["pagewidth"]}px.")
             except KeyError:
                 raise KeyError("Parameter 'pagesize' must be A3, A4, A5, Legal, or Letter")
             del cnf["pagesize"]
@@ -412,22 +359,22 @@ class HtmlFrame(ttk.Frame):
         self.html.update() # update the root window to ensure HTML is rendered
         file = self.html.postscript(cnf)
         # no need to save - tkhtml handles that for us
-        self.html.post_event(DEBUG_MESSAGE_EVENT, data="Printed!")
+        self.html.post_message("Printed!")
         return file
     
     def save_page(self, file=None):
         "Save the page"
-        self.html.post_event(DEBUG_MESSAGE_EVENT, data=f"Saving {self.current_url}...")
+        self.html.post_message(f"Saving {self.current_url}...")
         html = self.document.documentElement.innerHTML
         if file:
             with open(file, "w+") as handle:
                 handle.write(html)
-        self.html.post_event(DEBUG_MESSAGE_EVENT, data="Saved!")
+        self.html.post_message("Saved!")
         return html
     
     def snapshot_page(self, file=None, allow_agent=False):
         "Save a snapshot of the page"
-        self.html.post_event(DEBUG_MESSAGE_EVENT, data=f"Snapshotting {self.current_url}...")
+        self.html.post_message(f"Snapshotting {self.current_url}...")
         title = ""
         icon = ""
         base = ""
@@ -448,74 +395,49 @@ class HtmlFrame(ttk.Frame):
         if file:
             with open(file, "w+") as handle:
                 handle.write(html)
-        self.html.post_event(DEBUG_MESSAGE_EVENT, data="Saved!")
+        self.html.post_message("Saved!")
         return html
     
-    def copy_settings(self, html):
-        "Copy settings from one html widget to this one"
-        self.html.stylesheets_enabled = html.stylesheets_enabled
-        self.html.images_enabled = html.images_enabled
-        self.html.forms_enabled = html.forms_enabled
-        self.html.objects_enabled = html.objects_enabled
-        self.html.ignore_invalid_images = html.ignore_invalid_images
-        self.html.crash_prevention_enabled = html.crash_prevention_enabled
-        self.html.dark_theme_enabled = html.dark_theme_enabled
-        self.html.image_inversion_enabled = html.image_inversion_enabled
-        self.html.caches_enabled = html.caches_enabled
-        self.html.recursive_hovering_count = html.recursive_hovering_count
-        self.html.maximum_thread_count = html.maximum_thread_count
-        self.html.default_maximum_thread_count = html.default_maximum_thread_count
-        self.html.image_alternate_text_enabled = html.image_alternate_text_enabled
-        self.html.selection_enabled = html.selection_enabled
-        self.html.find_match_highlight_color = html.find_match_highlight_color
-        self.html.find_match_text_color = html.find_match_text_color
-        self.html.find_current_highlight_color = html.find_current_highlight_color
-        self.html.find_current_text_color = html.find_current_text_color
-        self.html.selected_text_highlight_color = html.selected_text_highlight_color
-        self.html.selected_text_color = html.selected_text_color
-        self.html.visited_links = html.visited_links
-        self.html.insecure_https = html.insecure_https
-        self.html.dark_theme_limit = html.dark_theme_limit
-        self.html.style_dark_theme_regex = html.style_dark_theme_regex
-        self.html.general_dark_theme_regexes = html.general_dark_theme_regexes
-        self.html.inline_dark_theme_regexes = html.inline_dark_theme_regexes
+    def _check_value(self, old, new):
+        expected_type = type(old)
+        if callable(old) or old == None:
+            if not callable(new):
+                raise TypeError(f"expected callable object, got \"{expected_type.__name__}\"")
+        elif not isinstance(new, expected_type):
+            try:
+                new = expected_type(new)
+            except (TypeError, ValueError,):
+                raise TypeError(f"expected {expected_type.__name__}, got \"{new}\"")
+        return new
     
-    def _handle_resize(self, event):
-        resizeable_elements = self.document.querySelectorAll("[tkinterweb-full-page]")
-        for element in resizeable_elements:
-            element.style.height = f"{event.height}px"
-
-    def _on_style_change(self, event):
-        self.background = self.style.lookup('TFrame', 'background')
+    def _handle_resize(self, event=None):
+        if (event and self._prev_height != event.height) or (not event):
+            resizeable_elements = self.document.querySelectorAll("[tkinterweb-full-page]")
+            for element in resizeable_elements:
+                element.style.height = f"{self._prev_height}px"
+        if event:
+            self._prev_height = event.height
 
     def _manage_vsb(self, allow=None):
         "Show or hide the scrollbars"
         if allow == None:
-            allow = self.original_vsb_type
+            allow = self.vertical_scrollbar
         if allow == "auto":
             allow = 2 
-        if self.vsb_type != allow:
-            self.vsb.set_type(allow)
-            self.vsb_type = allow
+        self.vsb.set_type(allow)
         return allow
     
     def _manage_hsb(self, allow=None):
         "Show or hide the scrollbars"
         if allow == None:
-            allow = self.original_hsb_type
+            allow = self.horizontal_scrollbar
         if allow == "auto":
             allow = 2
-        if self.hsb_type != allow:
-            self.hsb.set_type(allow)
-            self.hsb_type = allow
+        self.hsb.set_type(allow)
         return allow
 
-    def _continue_loading(self, url, data="", method="GET", decode=None, force=False, insecure=None):
+    def _continue_loading(self, url, data="", method="GET", decode=None, force=False):
         "Finish loading urls and handle URI fragments"
-        if insecure == None:
-            insecure = self.html.insecure_https
-        else:
-            self.html.insecure_https = insecure
         code = 404
         self.current_url = url
 
@@ -529,22 +451,22 @@ class HtmlFrame(ttk.Frame):
                 url = str(url) + str(data)
 
             # if url is different than the current one, load the new site
-            if force or (method == "POST") or ((urldefrag(url)[0]).replace("/", "") != (urldefrag(self.previous_url)[0]).replace("/", "")):
+            if force or (method == "POST") or ((urldefrag(url)[0]).replace("/", "") != (urldefrag(self._previous_url)[0]).replace("/", "")):
                 view_source = False
                 if url.startswith("view-source:"):
                     view_source = True
                     url = url.replace("view-source:", "")
                     parsed = urlparse(url)
-                self.html.post_event(DEBUG_MESSAGE_EVENT, data=f"Connecting to {parsed.netloc}")
-                if insecure:
-                    self.html.post_event(DEBUG_MESSAGE_EVENT, data="WARNING: Using insecure HTTPS session")
+                self.html.post_message(f"Connecting to {parsed.netloc}")
+                if self.html.insecure_https:
+                    self.html.post_message("WARNING: Using insecure HTTPS session")
                 if (parsed.scheme == "file") or (not self.html.caches_enabled):
                     data, newurl, filetype, code = download(
-                        url, data, method, decode, insecure)
+                        url, data, method, decode, self.html.insecure_https)
                 else:
                     data, newurl, filetype, code = cachedownload(
-                        url, data, method, decode, insecure)
-                self.html.post_event(DEBUG_MESSAGE_EVENT, data=f"Successfully connected to {parsed.netloc}")
+                        url, data, method, decode, self.html.insecure_https)
+                self.html.post_message(f"Successfully connected to {parsed.netloc}")
                 if threadname().isrunning():
                     if view_source:
                         newurl = "view-source:"+newurl
@@ -560,14 +482,14 @@ class HtmlFrame(ttk.Frame):
                             data = data.split("</code><br>", 1)[1]
                         else:
                             data = "".join(data)
-                        self.load_html(BUILTIN_PAGES["about:view-source"].format(self.background, length*9, data), newurl)
+                        self.load_html(BUILTIN_PAGES["about:view-source"].format(self.background, self.foreground, length*9, data), newurl)
                     elif "image" in filetype:
                         self.load_html("", newurl)
                         if self.current_url != newurl:
                             self.html.post_event(URL_CHANGED_EVENT, url=newurl)
                         name = self.html.image_name_prefix + str(len(self.html.loaded_images))
                         self.html.finish_fetching_images(data, name, filetype, newurl)
-                        self.add_html(BUILTIN_PAGES["about:image"].format(self.background, name))
+                        self.add_html(BUILTIN_PAGES["about:image"].format(self.background, self.foreground, name))
                     else:
                         if self.current_url != newurl:
                             self.current_url = newurl
@@ -597,37 +519,35 @@ class HtmlFrame(ttk.Frame):
         except Exception as error:
             self._on_error(url, error, code)
 
-        self.thread_in_progress = None
+        self._thread_in_progress = None
 
     def _on_error(self, url, error, code):
-        self.html.post_event(DEBUG_MESSAGE_EVENT, data=f"Error loading {url}: {error}")
+        self.html.post_message(f"Error loading {url}: {error}")
         if self.broken_webpage_message:
-            self.load_html(self.broken_webpage_message, "")
+            self.load_html(self.broken_webpage_message, url)
         else:
-            self.load_html(BUILTIN_PAGES["about:error"].format(self.background, code), "")
+            self.load_html(BUILTIN_PAGES["about:error"].format(self.background, self.foreground, code), url)
         
         if "CERTIFICATE_VERIFY_FAILED" in str(error):
-            self.html.post_event(DEBUG_MESSAGE_EVENT, data=f"Check that you are using the right url scheme. Some websites only support http.\n\
+            self.html.post_message(f"Check that you are using the right url scheme. Some websites only support http.\n\
 This might also happen if your Python distribution does not come installed with website certificates.\n\
 This is a known Python bug on older MacOS systems. \
 Running something along the lines of \"/Applications/Python {".".join(PYTHON_VERSION[:2])}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
-Otherwise, use 'insecure=True' when loading a page to ignore website certificates.")
+Otherwise, use 'configure(insecure_https=True)' to ignore website certificates.")
 
     def _finish_css(self):        
-        if self.waiting_for_reset:
-            self.waiting_for_reset = False
-            for style in self.accumulated_styles:
+        if self._waiting_for_reset:
+            self._waiting_for_reset = False
+            for style in self._accumulated_styles:
                 self.add_css(style)
-            self.accumulated_styles = []
+            self._accumulated_styles = []
 
 class HtmlLabel(HtmlFrame):
-    def __init__(self, master, text="", messages_enabled=False, **kw):
-        HtmlFrame.__init__(self, master, messages_enabled=messages_enabled, vertical_scrollbar=False, horizontal_scrollbar=False, **kw)
+    def __init__(self, master, text="", **kwargs):
+        HtmlFrame.__init__(self, master, vertical_scrollbar=False, shrink=True, **kwargs)
 
         tags = list(self.html.bindtags())
         tags.remove("Html")
         self.html.bindtags(tags)
-
-        self.html.set_shrink(True)
 
         self.load_html(text)

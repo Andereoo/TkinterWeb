@@ -441,8 +441,8 @@ INPUT[type="submit"],INPUT[type="button"], INPUT[type="reset"], BUTTON {
 }
 """
 BUILTIN_PAGES = {
-    "about:blank": "<html><head><style>html,body{{background-color:{};cursor:gobbler;width:100%;height:100%;margin:0}}</style><title>about:blank</title></head><body></body></html>",
-    "about:tkinterweb": "<html scroll-x=true><head><style>html,body{{background-color:{};overflow-x:auto}}</style><title>about:tkinterweb</title><style>code{{display:block}}</style></head><body>\
+    "about:blank": "<html><head><style>html,body{{background-color:{};color:{};cursor:gobbler;width:100%;height:100%;margin:0}}</style><title>about:blank</title></head><body></body></html>",
+    "about:tkinterweb": "<html scroll-x=true><head><style>html,body{{background-color:{};color:{};overflow-x:auto}}</style><title>about:tkinterweb</title><style>code{{display:block}}</style></head><body>\
         <code>Welcome to "+__title__+"!</code><code>Licenced under the "+__license__+" licence</code><code>"+__copyright__+"</code>\
         <code style=\"display:block;text-decoration:underline;margin-top:35px\">Debugging information</code>\
         <code>Version: "+__version__+"</code><code>Header: "+HEADER["User-Agent"]+"</code><code>Default parse mode: "+DEFAULT_PARSE_MODE+"</code>\
@@ -450,29 +450,26 @@ BUILTIN_PAGES = {
         <code style=\"display:block;text-decoration:underline;margin-top:35px\">System specs</code>\
         <code>Python version: "+".".join(PYTHON_VERSION)+"</code><code>Tcl version: "+str(tk.TclVersion)+"</code><code>Tk version: "+str(tk.TkVersion)+"</code>\
         <code>Platform: "+str(PLATFORM.system)+"</code><code>Machine: "+str(PLATFORM.machine)+"</code><code>Processor: "+str(PLATFORM.processor)+"</code></body></html>",
-    "about:error": "<html><head><style>html,body,table,tr,td{{background-color:{};width:100%;height:100%;margin:0}}</style><title>Error {}</title></head>\
+    "about:error": "<html><head><style>html,body,table,tr,td{{background-color:{};color:{};width:100%;height:100%;margin:0}}</style><title>Error {}</title></head>\
         <body><table><tr><td tkinterweb-full-page style=\"text-align:center;vertical-align:middle\">\
         <h2 style=\"margin:0;padding:0;font-weight:normal\">Oops.</h2><p></p>\
         <h3 style=\"margin:0;padding:0;font-weight:normal\">The page you've requested could not be found :(</h3>\
         </td></tr></table></body></html>",
-    "about:image": "<html><head><style>html,body,table,tr {{background-color:{};width:100%;height:100%;margin:0}}</style></head><body>\
+    "about:image": "<html><head><style>html,body,table,tr {{background-color:{};color:{};width:100%;height:100%;margin:0}}</style></head><body>\
         <table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle;padding:4px 4px 0px 4px'><img style='max-width:100%;max-height:100%' src='replace:{}'></td></tr></table></body></html>",
     "about:view-source": "<html scroll-x=true><head><style>\
-        html,body{{background-color:{};overflow-x:auto}}\
+        html,body{{background-color:{};color:{};overflow-x:auto}}\
         pre::before{{counter-reset:listing}}\
         code{{counter-increment:listing}}\
         code::before{{content:counter(listing);display:inline-block;width:{}px;margin-left:5px;padding-right:5px;margin-right:5px;text-align:right;border-right:1px solid grey60;color:grey60}}\
         </style></head><body><pre style=\"margin:0;padding:0\">{}</pre></body></html>",
 }
 
-DEBUG_MESSAGE_EVENT = "<<DebugMessage>>" # use event.data
-DONE_LOADING_EVENT = "<<DoneLoading>>"
-ICON_CHANGED_EVENT = "<<IconChanged>>" # use event.url or HtmlFrame.icon
-TITLE_CHANGED_EVENT = "<<TitleChanged>>" # use event.title or HtmlFrame.title
 DOWNLOADING_RESOURCE_EVENT = "<<DownloadingResource>>"
-LINK_CLICK_EVENT = "<<LinkClick>>" # use event.url
-FORM_SUBMISSION_EVENT = "<<FormSubmission>>" # use event.url, event.data, and event.method
-URL_CHANGED_EVENT = "<<UrlChanged>>" # use event.url or HtmlFrame.current_url
+DONE_LOADING_EVENT = "<<DoneLoading>>"
+URL_CHANGED_EVENT = "<<UrlChanged>>"
+ICON_CHANGED_EVENT = "<<IconChanged>>"
+TITLE_CHANGED_EVENT = "<<TitleChanged>>"
 
 
 tkhtml_loaded = False
@@ -508,10 +505,10 @@ class AutoScrollbar(ttk.Scrollbar):
             lo, hi = self.get()
             self.set(lo, hi)
 
-    def pack(self, **kw):
+    def pack(self, **kwargs):
         raise tk.TclError("cannot use pack with this widget")
 
-    def place(self, **kw):
+    def place(self, **kwargs):
         raise tk.TclError("cannot use place with this widget")
 
 

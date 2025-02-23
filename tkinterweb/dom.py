@@ -72,17 +72,14 @@ class TkwDocumentObjectModel:
     @property
     def body(self):  # taken from hv3_dom_html.tcl line 161
         "Return the document body element"
-        return HtmlElement(
-            self.html,
-            self.html.tk.eval(f"""set body [lindex [[{self.html} node] children] 1]"""),
-        )
+        return self.querySelector("body")
 
     @property
     def documentElement(self):
-        "Return the document body element"
+        "Return the document root element"
         return HtmlElement(
             self.html,
-            self.html.tk.eval(f"""set body [lindex [{self.html} node] 0]"""),
+            self.html.tk.eval(f"""set root [lindex [{self.html} node] 0]"""),
         )
 
     def getElementById(self, query):
@@ -162,7 +159,6 @@ class CSSStyleDeclaration:
         style[prop] = value
         sStr = " ".join(f"{p}: {v};" for p, v in style.items())
         self.html.set_node_attribute(self.node, "style", sStr)
-        return style[prop]
 
     def __setattr__(self, prop, value):
         if prop in ("node", "html"):

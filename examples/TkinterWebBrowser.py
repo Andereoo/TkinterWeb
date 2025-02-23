@@ -81,7 +81,7 @@ class Page(tk.Frame):
         self.find_bar_caption = find_bar_caption = ttk.Label(findbar, text="")
         find_close = ttk.Button(findbar, text="Close", command=self.open_findbar, cursor="hand2")
 
-        self.frame = frame = HtmlFrame(self, message_func=self.add_message, link_click_func=self.link_click, form_submit_func=self.form_submit)
+        self.frame = frame = HtmlFrame(self, message_func=self.add_message, link_click_func=self.link_click, form_submit_func=self.form_submit, download_failed_func=self.load_error_page)
         self.sidebar = sidebar = HtmlFrame(frame, width=250, fontscale=0.8, selection_enabled=False, messages_enabled=False)
         sidebar.grid_propagate(False)
 
@@ -122,7 +122,6 @@ class Page(tk.Frame):
         #frame.bind("<Motion>", self.on_motion)
         frame.bind("<Leave>", lambda event: linklabel.config(text="Done"))
         broken_page_msg_box.bind("<<Modified>>", self.broken_page_msg_update)
-        broken_page_msg_box.bind('<KeyRelease>', self.broken_page_msg_change)
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
@@ -173,8 +172,6 @@ class Page(tk.Frame):
 
         findbox_var.trace("w", self.search_in_page)
 
-        broken_page_msg_box.insert("end", BUILTIN_PAGES["about:error"].format(self.sidebar.background, self.sidebar.foreground, "").replace("</", "\n</").replace(">", ">\n").replace("\n\n", "\n").replace("</html>\n", "</html>"))
-
         frame.bind("<Button-3>", self.on_right_click)
         for widget in [urlbar, find_box, zoom_box, fontscale_box]:
             widget.bind("<Control-a>", lambda e: self.after(50, self.select_all_in_entry, e.widget))
@@ -186,7 +183,11 @@ class Page(tk.Frame):
             child.bind("<Escape>", lambda x: self.close_sidebar())
         settingsbutton.bind("<Escape>", lambda x: self.close_sidebar())
 
-        self.apply_light_theme()
+        self.toggle_theme(False)
+        broken_page_msg_box.insert("end", BUILTIN_PAGES["about:error"].format(self.frame["about_page_background"], self.frame["about_page_foreground"], "").replace("</", "\n</").replace(">", ">\n").replace("\n\n", "\n").replace("</html>\n", "</html>"))
+
+    def load_error_page(self, url, error, code):
+        self.frame.load_html(self.broken_page_msg_box.get("1.0", 'end-1c'), url)
 
     def apply_dark_theme(self):
         self.style.configure(".", background="#2b2b2b", foreground="#FFFFFF")
@@ -412,9 +413,6 @@ class Page(tk.Frame):
         self.broken_page_msg_box.configure(height=height)
         self.broken_page_msg_box.edit_modified(False)
 
-    def broken_page_msg_change(self, event):
-        self.frame.configure(broken_webpage_message = event.widget.get("1.0", 'end-1c'))
-
     def toggle_images(self):
         self.frame.configure(images_enabled= self.images_var.get())
         self.reload()
@@ -450,9 +448,9 @@ class Page(tk.Frame):
         else:
             self.apply_light_theme()
 
-        self.frame.configure(dark_theme_enabled = value)
-        self.frame.background = self.style.lookup('TFrame', 'background')
-        self.frame.foreground = self.style.lookup('TLabel', 'foreground')
+        self.frame.configure(dark_theme_enabled = value, 
+                             about_page_background=self.style.lookup('TFrame', 'background'), 
+                             about_page_foreground=self.style.lookup('TLabel', 'foreground'))
         if update_page:
             self.reload()
 
@@ -659,8 +657,9 @@ class Browser(tk.Tk):
         self.mainloop()
     
     def on_tab_change(self, event):
-        self.frame.select().toggle_theme(False)
-        if not self.frame.pages:
+        if self.frame.pages:
+            self.frame.select().toggle_theme(False)
+        else:
             self.destroy()
 
 if __name__ == "__main__":   

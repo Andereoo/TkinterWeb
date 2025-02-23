@@ -8,9 +8,9 @@ Copyright (c) 2025 Andereoo
 from urllib.parse import urldefrag, urlparse
 
 from bindings import TkinterWeb
-from utilities import (PLATFORM, WORKING_DIR, PYTHON_VERSION, BUILTIN_PAGES, DONE_LOADING_EVENT, 
-                       DOWNLOADING_RESOURCE_EVENT, URL_CHANGED_EVENT, DEFAULT_PARSE_MODE, DEFAULT_STYLE, 
-                       DARK_STYLE, AutoScrollbar, StoppableThread, 
+from utilities import (PLATFORM, WORKING_DIR, PYTHON_VERSION, BUILTIN_PAGES, DONE_LOADING_EVENT,  
+                       DOWNLOADING_RESOURCE_EVENT, URL_CHANGED_EVENT, DOWNLOAD_FAILED_EVENT, DEFAULT_PARSE_MODE, DEFAULT_STYLE, 
+                       DARK_STYLE, HEADERS, AutoScrollbar, StoppableThread, 
                        cachedownload, download, threadname, notifier, __version__)
 from imageutils import createRGBimage
 from dom import TkwDocumentObjectModel, HtmlElement
@@ -24,6 +24,8 @@ class HtmlFrame(ttk.Frame):
         # state and settings variables
         self.current_url = ""
 
+        style = ttk.Style()
+
         self._previous_url = ""
         self._accumulated_styles = []
         self._waiting_for_reset = False
@@ -31,9 +33,11 @@ class HtmlFrame(ttk.Frame):
         self._prev_height = 0
 
         self.htmlframe_options = {
+            "download_failed_func": self._on_download_fail,
             "vertical_scrollbar": "auto",
             "horizontal_scrollbar": False,
-            "broken_webpage_message": "",
+            "about_page_background": style.lookup('TFrame', 'background'),
+            "about_page_foreground": style.lookup('TLabel', 'foreground'),
         }
         self.tkinterweb_options = {
             "link_click_func": self.load_url,
@@ -52,6 +56,7 @@ class HtmlFrame(ttk.Frame):
             "events_enabled": True,
             "threading_enabled": True,
             "image_alternate_text_enabled": True,
+            "ignore_invalid_images": True,
             "visited_links": [],
             "find_match_highlight_color": "#ef0fff",
             "find_match_text_color": "#fff",
@@ -62,6 +67,7 @@ class HtmlFrame(ttk.Frame):
             "default_style": DEFAULT_STYLE,
             "dark_style": DEFAULT_STYLE + DARK_STYLE,
             "insecure_https": False,
+            "headers": HEADERS,
             # internal
             "overflow_scroll_frame": None,
             "embed_obj": HtmlFrame,
@@ -79,11 +85,13 @@ class HtmlFrame(ttk.Frame):
                             
         for key, value in self.htmlframe_options.items():
             if key in kwargs:
-                value = self.htmlframe_options[key] = kwargs.pop(key)
+                value = self._check_value(self.htmlframe_options[key], kwargs.pop(key))
+                self.htmlframe_options[key] = value
             setattr(self, key, value)
 
         for key in list(kwargs.keys()):
             if key in self.tkinterweb_options:
+                print(key)
                 value = self._check_value(self.tkinterweb_options[key], kwargs.pop(key))
                 self.tkinterweb_options[key] = value
             elif key in self.tkhtml_options:
@@ -96,10 +104,6 @@ class HtmlFrame(ttk.Frame):
         self.hsb = hsb = AutoScrollbar(self, orient=tk.HORIZONTAL, command=html.xview)
         self.vsb = vsb = AutoScrollbar(self, orient=tk.VERTICAL, command=html.yview)
         self.document = TkwDocumentObjectModel(html)
-        self.style = ttk.Style()
-
-        self.background = self.style.lookup('TFrame', 'background')
-        self.foreground = self.style.lookup('TLabel', 'foreground')
 
         html.configure(xscrollcommand=hsb.set)
         html.configure(yscrollcommand=vsb.set)
@@ -221,7 +225,7 @@ class HtmlFrame(ttk.Frame):
             else:
                 file_url = "file://" + str(file_url)
             self.current_url = file_url
-            self.html.post_event(URL_CHANGED_EVENT, url=file_url)
+            self.html.post_event(URL_CHANGED_EVENT)
         self.load_url(file_url, decode, force)
 
     def load_website(self, website_url, decode=None, force=False):
@@ -230,7 +234,7 @@ class HtmlFrame(ttk.Frame):
         if (not website_url.startswith("https://")) and (not website_url.startswith("http://")) and (not website_url.startswith("about:")):
             website_url = "http://" + str(website_url)
             self.current_url = website_url
-            self.html.post_event(URL_CHANGED_EVENT, url=website_url)
+            self.html.post_event(URL_CHANGED_EVENT)
         self.load_url(website_url, decode, force)
 
     def load_url(self, url, decode=None, force=False):
@@ -238,7 +242,7 @@ class HtmlFrame(ttk.Frame):
         if not self.current_url == url:
             self._previous_url = self.current_url
         if url in BUILTIN_PAGES:
-            self.load_html(BUILTIN_PAGES[url].format(self.background, self.foreground, "", "No file selected"), url)
+            self.load_html(BUILTIN_PAGES[url].format(self.about_page_background, self.about_page_foreground, "", ""), url)
             return
 
         self._waiting_for_reset = True
@@ -249,7 +253,7 @@ class HtmlFrame(ttk.Frame):
             if newurl != url:
                 url = newurl
                 self.current_url = url
-                self.html.post_event(URL_CHANGED_EVENT, url=url)
+                self.html.post_event(URL_CHANGED_EVENT)
 
         if self._thread_in_progress:
             self._thread_in_progress.stop()
@@ -298,7 +302,7 @@ class HtmlFrame(ttk.Frame):
             self._thread_in_progress.stop()
         self.html.stop()
         self.current_url = self._previous_url
-        self.html.post_event(URL_CHANGED_EVENT, url=self.current_url)
+        self.html.post_event(URL_CHANGED_EVENT)
         self.html.post_event(DONE_LOADING_EVENT)
 
     def find_text(self, searchtext, select=1, ignore_case=True, highlight_all=True, detailed=False):
@@ -411,12 +415,15 @@ class HtmlFrame(ttk.Frame):
         return new
     
     def _handle_resize(self, event=None):
-        if (event and self._prev_height != event.height) or (not event):
+        if event:
+            height = event.height
+        else:
+            height = self.html.winfo_height()
+        if self._prev_height != height:
             resizeable_elements = self.document.querySelectorAll("[tkinterweb-full-page]")
             for element in resizeable_elements:
-                element.style.height = f"{self._prev_height}px"
-        if event:
-            self._prev_height = event.height
+                element.style.height = f"{height}px"
+        self._prev_height = height
 
     def _manage_vsb(self, allow=None):
         "Show or hide the scrollbars"
@@ -462,17 +469,17 @@ class HtmlFrame(ttk.Frame):
                     self.html.post_message("WARNING: Using insecure HTTPS session")
                 if (parsed.scheme == "file") or (not self.html.caches_enabled):
                     data, newurl, filetype, code = download(
-                        url, data, method, decode, self.html.insecure_https)
+                        url, data, method, decode, self.html.insecure_https, tuple(self.html.headers.items()))
                 else:
                     data, newurl, filetype, code = cachedownload(
-                        url, data, method, decode, self.html.insecure_https)
+                        url, data, method, decode, self.html.insecure_https, tuple(self.html.headers.items()))
                 self.html.post_message(f"Successfully connected to {parsed.netloc}")
                 if threadname().isrunning():
                     if view_source:
                         newurl = "view-source:"+newurl
                         if self.current_url != newurl:
                             self.current_url = newurl
-                            self.html.post_event(URL_CHANGED_EVENT, url=newurl)
+                            self.html.post_event(URL_CHANGED_EVENT)
                         data = str(data).replace("<","&lt;").replace(">", "&gt;")
                         data = data.splitlines()
                         length = int(len(str(len(data))))
@@ -482,18 +489,18 @@ class HtmlFrame(ttk.Frame):
                             data = data.split("</code><br>", 1)[1]
                         else:
                             data = "".join(data)
-                        self.load_html(BUILTIN_PAGES["about:view-source"].format(self.background, self.foreground, length*9, data), newurl)
+                        self.load_html(BUILTIN_PAGES["about:view-source"].format(self.about_page_background, self.about_page_foreground, length*9, data), newurl)
                     elif "image" in filetype:
                         self.load_html("", newurl)
                         if self.current_url != newurl:
-                            self.html.post_event(URL_CHANGED_EVENT, url=newurl)
+                            self.html.post_event(URL_CHANGED_EVENT)
                         name = self.html.image_name_prefix + str(len(self.html.loaded_images))
                         self.html.finish_fetching_images(data, name, filetype, newurl)
-                        self.add_html(BUILTIN_PAGES["about:image"].format(self.background, self.foreground, name))
+                        self.add_html(BUILTIN_PAGES["about:image"].format(self.about_page_background, self.about_page_foreground, name))
                     else:
                         if self.current_url != newurl:
                             self.current_url = newurl
-                            self.html.post_event(URL_CHANGED_EVENT, url=newurl)
+                            self.html.post_event(URL_CHANGED_EVENT)
                         self.load_html(data, newurl)
             else:
                 # if no requests need to be made, we can signal that the page is done loading
@@ -517,23 +524,19 @@ class HtmlFrame(ttk.Frame):
                 except Exception:
                     pass
         except Exception as error:
-            self._on_error(url, error, code)
-
-        self._thread_in_progress = None
-
-    def _on_error(self, url, error, code):
-        self.html.post_message(f"Error loading {url}: {error}")
-        if self.broken_webpage_message:
-            self.load_html(self.broken_webpage_message, url)
-        else:
-            self.load_html(BUILTIN_PAGES["about:error"].format(self.background, self.foreground, code), url)
-        
-        if "CERTIFICATE_VERIFY_FAILED" in str(error):
-            self.html.post_message(f"Check that you are using the right url scheme. Some websites only support http.\n\
+            self.html.post_message(f"Error loading {url}: {error}")
+            if "CERTIFICATE_VERIFY_FAILED" in str(error):
+                self.html.post_message(f"Check that you are using the right url scheme. Some websites only support http.\n\
 This might also happen if your Python distribution does not come installed with website certificates.\n\
 This is a known Python bug on older MacOS systems. \
 Running something along the lines of \"/Applications/Python {".".join(PYTHON_VERSION[:2])}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
 Otherwise, use 'configure(insecure_https=True)' to ignore website certificates.")
+            self.download_failed_func(url, error, code)
+
+        self._thread_in_progress = None
+
+    def _on_download_fail(self, url, error, code):
+        self.load_html(BUILTIN_PAGES["about:error"].format(self.about_page_background, self.about_page_foreground, code), url)
 
     def _finish_css(self):        
         if self._waiting_for_reset:

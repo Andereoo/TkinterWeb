@@ -139,6 +139,7 @@ class TkinterWeb(tk.Widget):
         self.recursive_hovering_count = 10
         self.maximum_thread_count = 20
         self.insecure_https = False
+        self.headers = {}
         self.dark_theme_limit = 160
         self.style_dark_theme_regex = r"([^:;\s{]+)\s?:\s?([^;{!]+)(?=!|;|})"
         self.general_dark_theme_regexes = [r'(<[^>]+bgcolor=")([^"]*)',r'(<[^>]+text=")([^"]*)',r'(<[^>]+link=")([^"]*)']
@@ -422,38 +423,6 @@ class TkinterWeb(tk.Widget):
             self.post_event(DONE_LOADING_EVENT)
         return fragment
     
-    def get_zoom(self):
-        "Return the page zoom"
-        return self.tk.call(self._w, "cget", "-zoom")
-    
-    def set_zoom(self, multiplier):
-        "Set the page zoom"
-        self.tk.call(self._w, "configure", "-zoom", float(multiplier))
-
-    def get_fontscale(self):
-        "Return the font zoom"
-        return self.tk.call(self._w, "cget", "-fontscale")
-    
-    def set_fontscale(self, multiplier):
-        "Set the font zoom"
-        self.tk.call(self._w, "configure", "-fontscale", multiplier)
-
-    def get_parsemode(self):
-        "Return the page render mode"
-        return self.tk.call(self._w, "cget", "-parsemode")
-
-    def set_parsemode(self, mode):
-        "Set the page render mode"
-        self.tk.call(self._w, "configure", "-parsemode", mode)
-
-    def get_shrink(self):
-        "Get the shrink value for the html widget"
-        return self.tk.call(self._w, "cget", "-shrink") 
-
-    def set_shrink(self, value):
-        "Set shrink value for the html widget"
-        self.tk.call(self._w, "configure", "-shrink", value) 
-    
     def enable_imagecache(self, enabled):
         "Enable or disable the tkhtml imagecache"
         self.tk.call(self._w, "configure", "-imagecache", enabled)
@@ -579,9 +548,9 @@ class TkinterWeb(tk.Widget):
         if url and self.unstoppable:
             try:
                 if url.startswith("file://") or (not self._caches_enabled):
-                    data = download(url, insecure=self.insecure_https)[0]
+                    data = download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))[0]
                 else:
-                    data = cachedownload(url, insecure=self.insecure_https)[0]
+                    data = cachedownload(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))[0]
 
                 matcher = lambda match, url=url: self._fix_css_urls(match, url)
                 data = sub(r"url\((.*?)\)", matcher, data)
@@ -612,11 +581,9 @@ class TkinterWeb(tk.Widget):
 
         try:
             if url.startswith("file://") or (not self._caches_enabled):
-                data, newurl, filetype, code = download(url, insecure=self.insecure_https)
+                data, newurl, filetype, code = download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))
             else:
-                data, newurl, filetype, code = cachedownload(
-                    url, insecure=self.insecure_https
-                )
+                data, newurl, filetype, code = cachedownload(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))
 
             if self.unstoppable and data:
                 # thread safety
@@ -1196,11 +1163,9 @@ class TkinterWeb(tk.Widget):
                 self.post_message(f"Creating object from {shorten(url)}")
                 try:
                     if url.startswith("file://") or (not self._caches_enabled):
-                        data, newurl, filetype, code = download(url, insecure=self.insecure_https)
+                        data, newurl, filetype, code = download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))
                     elif url:
-                        data, newurl, filetype, code = cachedownload(
-                            url, insecure=self.insecure_https
-                        )
+                        data, newurl, filetype, code = cachedownload(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))
                     else:
                         return
 
@@ -2103,3 +2068,6 @@ class TkinterWeb(tk.Widget):
         else:
             tags = (self.node_tag,)
         widgetid.bindtags(widgetid.bindtags() + tags)
+
+    def __call__(self):
+        "Mark this class as callable so it is accepted as a overflow_scroll_frame by HtmlFrame"

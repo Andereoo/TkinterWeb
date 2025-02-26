@@ -31,16 +31,16 @@ class HtmlFrame(ttk.Frame):
         self._button = None
 
         self.htmlframe_options = {
-            "download_failed_func": self._on_download_fail,
+            "on_download_failed": self._on_download_fail,
             "vertical_scrollbar": "auto",
             "horizontal_scrollbar": False,
             "about_page_background": style.lookup('TFrame', 'background'),
             "about_page_foreground": style.lookup('TLabel', 'foreground'),
         }
         self.tkinterweb_options = {
-            "link_click_func": self.load_url,
-            "form_submit_func": self.load_form_data,
-            "script_parse_func": placeholder,
+            "on_link_click": self.load_url,
+            "on_form_submit": self.load_form_data,
+            "on_script": placeholder,
             "message_func": notifier,
             "messages_enabled": True,
             "selection_enabled": True,
@@ -64,7 +64,7 @@ class HtmlFrame(ttk.Frame):
             "selected_text_highlight_color": "#3584e4",
             "selected_text_color": "#fff",
             "default_style": DEFAULT_STYLE,
-            "dark_style": DEFAULT_STYLE + DARK_STYLE,
+            "dark_style": DARK_STYLE,
             "insecure_https": False,
             "headers": HEADERS,
             "experimental": False,
@@ -81,7 +81,7 @@ class HtmlFrame(ttk.Frame):
             "fontscale": 1.0,
             "parsemode": DEFAULT_PARSE_MODE,
             "shrink": False,
-            "mode": "standards",
+            "mode": DEFAULT_ENGINE_MODE,
         }
                             
         for key, value in self.htmlframe_options.items():
@@ -401,11 +401,11 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         for rule in self.html.get_computed_styles():
             selector, prop, origin = rule
             if origin == "agent" and not allow_agent: continue
-            style += f"{selector} {{{prop}}}\n"
+            style += f"{selector} {{{prop.replace('-tkhtml-no-color', 'transparent')}}}\n"
 
         if self.html.title: title = f"\n        <title>{self.html.title}</title>"
         if self.html.icon: icon = f"\n        <link rel=\"icon\" type=\"image/x-icon\" href=\"/{self.html.icon}\">"
-        if self.html.base_url: base = f"\n        <base href=\"{self.html.base_url}\"</base>"
+        if self.html.base_url: base = f"\n        <base href=\"{self.html.base_url}\"></base>"
         if style: style = f"\n        <style>{style}</style>"
         body = self.document.body.innerHTML
 
@@ -548,7 +548,7 @@ This might also happen if your Python distribution does not come installed with 
 This is a known Python bug on older MacOS systems. \
 Running something along the lines of \"/Applications/Python {'.'.join(PYTHON_VERSION[:2])}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
 Otherwise, use 'configure(insecure_https=True)' to ignore website certificates.")
-            self.download_failed_func(url, error, code)
+            self.on_download_failed(url, error, code)
 
         self._thread_in_progress = None
 

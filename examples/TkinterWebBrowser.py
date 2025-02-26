@@ -82,7 +82,7 @@ class Page(tk.Frame):
         self.find_bar_caption = find_bar_caption = ttk.Label(findbar, text="")
         find_close = ttk.Button(findbar, text="Close", command=self.open_findbar, cursor="hand2")
 
-        self.frame = frame = HtmlFrame(self, message_func=self.add_message, link_click_func=self.link_click, form_submit_func=self.form_submit)#, download_failed_func=self.load_error_page)
+        self.frame = frame = HtmlFrame(self, message_func=self.add_message, on_link_click=self.link_click, on_form_submit=self.form_submit)
         self.sidebar = sidebar = HtmlFrame(frame, width=250, fontscale=0.8, selection_enabled=False, messages_enabled=False)
         sidebar.grid_propagate(False)
 
@@ -597,6 +597,8 @@ class Page(tk.Frame):
         url = self.urlbar.get()
         if not any((url.startswith("file:"), url.startswith("http:"), url.startswith("about:"), url.startswith("view-source:"), url.startswith("https:"), url.startswith("data:"))):
             url = "http://{}".format(url)
+            self.urlbar.delete(0, "end")
+            self.urlbar.insert(0, url)
         self.addtohist(url)
         self.frame.load_url(url, force=True)
         self.handle_view_source_button(url)

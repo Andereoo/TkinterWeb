@@ -135,10 +135,10 @@ class TkinterWeb(tk.Widget):
         self.embed_obj = None
         self.manage_vsb_func = placeholder
         self.manage_hsb_func = placeholder
-        self.link_click_func = placeholder
-        self.form_submit_func = placeholder
+        self.on_link_click = placeholder
+        self.on_form_submit = placeholder
         self.message_func = placeholder
-        self.script_parse_func = placeholder
+        self.on_script = placeholder
         
         self.recursive_hovering_count = 10
         self.maximum_thread_count = 20
@@ -1053,7 +1053,7 @@ class TkinterWeb(tk.Widget):
         """Currently not doing anything with script.
         A javascript engine could be used here to parse the script.
         Returning any HTMl code here causes it to be parsed in place of the script tag."""
-        return self.script_parse_func(attributes, tagcontents)
+        return self.on_script(attributes, tagcontents)
 
     def _on_style(self, attributes, tagcontents):
         "Handle <style> elements"
@@ -1649,7 +1649,7 @@ class TkinterWeb(tk.Widget):
         url = self.resolve_url(href)
         self.post_message(f"A link to '{shorten(url)}' was clicked")
         self.visited_links.append(url)
-        self.link_click_func(url)
+        self.on_link_click(url)
 
     def _handle_entry_reset(self, widgetid, content):
         "Reset tk.Entry widgets in HTML forms"
@@ -1715,7 +1715,7 @@ class TkinterWeb(tk.Widget):
             data = data.encode()
 
         self.post_message(f"A form was submitted to {shorten(url)}")
-        self.form_submit_func(url, data, method)
+        self.on_form_submit(url, data, method)
 
     def _handle_overflow_property(self, overflow, overflow_function):
         if overflow != "visible": # visible is the Tkhtml default, so it's largely meaningless

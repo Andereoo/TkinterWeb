@@ -12,9 +12,8 @@ import platform
 import sys
 import threading
 
-from urllib.request import Request, urlopen
-
 import ssl
+from urllib.request import Request, urlopen
 
 import tkinter as tk
 from tkinter import colorchooser, filedialog, ttk
@@ -42,7 +41,7 @@ __title__ = 'TkinterWeb'
 __author__ = "Andereoo"
 __copyright__ = "Copyright (c) 2025 Andereoo"
 __license__ = "MIT"
-__version__ = '3.25.19'
+__version__ = '4.0.0'
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "tkhtml")
@@ -51,7 +50,7 @@ PLATFORM = platform.uname()
 PYTHON_VERSION = platform.python_version_tuple()
 
 
-HEADER = {
+HEADERS = {
     "User-Agent": "Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha"
     # Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 Firefox/4.0
 }
@@ -74,6 +73,7 @@ CURSOR_MAP = {
     "sw-resize": "bottom_left_corner",
     "s-resize": "bottom_side",
     "w-resize": "left_side",
+    # the following cursors only work with experimental Tkhtml
     "context-menu": "",
     "cell": "cross",
     "vertical-text": "xterm",
@@ -287,6 +287,11 @@ INPUT[type="submit"],INPUT[type="button"], INPUT[type="reset"], BUTTON {
   color: #000000;
   color: tcl(::tkhtml::if_disabled #666666 #000000);
 }
+INPUT[type="color"] {
+  cursor: pointer;
+  padding: 5px;
+  background-color: #ccc;
+}
 INPUT[disabled], BUTTON[disabled] {
     cursor: auto;
 }
@@ -339,7 +344,7 @@ body a[href]:visited { color: attr(vlink x body) }
 [height]           { height:           attr(height l) }
 basefont[size]     { font-size:        attr(size) }
 font[size]         { font-size:        tcl(::tkhtml::size_to_fontsize) }
-[bgcolor]          { background-color: attr(bgcolor) }
+[bgcolor]       img   { background-color: attr(bgcolor) }
 BR[clear]          { clear: attr(clear) }
 BR[clear="all"]    { clear: both; }
 /* Standard html <img> tags - replace the node with the image at url $src */
@@ -442,27 +447,32 @@ INPUT[type="submit"],INPUT[type="button"], INPUT[type="reset"], BUTTON {
 """
 BUILTIN_PAGES = {
     "about:blank": "<html><head><style>html,body{{background-color:{};color:{};cursor:gobbler;width:100%;height:100%;margin:0}}</style><title>about:blank</title></head><body></body></html>",
-    "about:tkinterweb": "<html scroll-x=true><head><style>html,body{{background-color:{};color:{};overflow-x:auto}}</style><title>about:tkinterweb</title><style>code{{display:block}}</style></head><body>\
+    "about:tkinterweb": "<html tkinterweb-overflow-x=auto><head><style>html,body{{background-color:{};color:{};}}</style><title>about:tkinterweb</title><style>code{{display:block}}</style></head><body>\
         <code>Welcome to "+__title__+"!</code><code>Licenced under the "+__license__+" licence</code><code>"+__copyright__+"</code>\
         <code style=\"display:block;text-decoration:underline;margin-top:35px\">Debugging information</code>\
-        <code>Version: "+__version__+"</code><code>Header: "+HEADER["User-Agent"]+"</code><code>Default parse mode: "+DEFAULT_PARSE_MODE+"</code>\
+        <code>Version: "+__version__+"</code><code>Default headers: "+HEADERS["User-Agent"]+"</code><code>Default parse mode: "+DEFAULT_PARSE_MODE+"</code>\
         <code style=\"display:block\">Root directory: "+ROOT_DIR+"</code><code style=\"display:block\">Working directory: "+WORKING_DIR+"</code>\
         <code style=\"display:block;text-decoration:underline;margin-top:35px\">System specs</code>\
         <code>Python version: "+".".join(PYTHON_VERSION)+"</code><code>Tcl version: "+str(tk.TclVersion)+"</code><code>Tk version: "+str(tk.TkVersion)+"</code>\
         <code>Platform: "+str(PLATFORM.system)+"</code><code>Machine: "+str(PLATFORM.machine)+"</code><code>Processor: "+str(PLATFORM.processor)+"</code></body></html>",
     "about:error": "<html><head><style>html,body,table,tr,td{{background-color:{};color:{};width:100%;height:100%;margin:0}}</style><title>Error {}</title></head>\
         <body><table><tr><td tkinterweb-full-page style=\"text-align:center;vertical-align:middle\">\
-        <h2 style=\"margin:0;padding:0;font-weight:normal\">Oops.</h2><p></p>\
-        <h3 style=\"margin:0;padding:0;font-weight:normal\">The page you've requested could not be found :(</h3>\
+        <h2 style=\"margin:0;padding:0;font-weight:normal\">Oops.</h2>\
+        <h3 style=\"margin-top:10px;margin-bottom:40px;font-weight:normal\">The page you've requested could not be found :(</h3>\
+        <object handleremoval allowscrolling style=\"cursor:pointer\" data=\"{}\"></object>\
         </td></tr></table></body></html>",
     "about:image": "<html><head><style>html,body,table,tr {{background-color:{};color:{};width:100%;height:100%;margin:0}}</style></head><body>\
-        <table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle;padding:4px 4px 0px 4px'><img style='max-width:100%;max-height:100%' src='replace:{}'></td></tr></table></body></html>",
-    "about:view-source": "<html scroll-x=true><head><style>\
-        html,body{{background-color:{};color:{};overflow-x:auto}}\
+        <table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle;padding:4px 4px 0px 4px'><img style='max-width:100%;max-height:100%' src='replace:{}'><h3 style=\"margin:0;padding:0;font-weight:normal\"></td></tr></table></body></html>",
+    "about:view-source": "<html tkinterweb-overflow-x=auto><head><style>\
+        html,body{{background-color:{};color:{};}}\
         pre::before{{counter-reset:listing}}\
         code{{counter-increment:listing}}\
         code::before{{content:counter(listing);display:inline-block;width:{}px;margin-left:5px;padding-right:5px;margin-right:5px;text-align:right;border-right:1px solid grey60;color:grey60}}\
         </style></head><body><pre style=\"margin:0;padding:0\">{}</pre></body></html>",
+}
+BUILTIN_ATTRIBUTES = {
+    "overflow-x": "tkinterweb-overflow-x",
+    "vertical-align": "tkinterweb-full-page"
 }
 
 DOWNLOADING_RESOURCE_EVENT = "<<DownloadingResource>>"
@@ -470,7 +480,6 @@ DONE_LOADING_EVENT = "<<DoneLoading>>"
 URL_CHANGED_EVENT = "<<UrlChanged>>"
 ICON_CHANGED_EVENT = "<<IconChanged>>"
 TITLE_CHANGED_EVENT = "<<TitleChanged>>"
-
 
 tkhtml_loaded = False
 combobox_loaded = False
@@ -643,7 +652,7 @@ class FileSelector(tk.Frame):
         self.label.config(text="No files selected.")
         self.event_generate("<<Modified>>")
 
-    def get_value(self):
+    def get(self):
         return self.files
 
     def configure(self, *args, **kwargs):
@@ -660,59 +669,28 @@ class ColourSelector(tk.Frame):
     "Colour selector widget"
 
     def __init__(self, parent, colour, **kwargs):
-        tk.Frame.__init__(self, parent, bg="#ccc", highlightthickness=0)
         colour = colour if colour else "#000000"
-        self.selector = tk.Button(
-            self,
+        tk.Button.__init__(self, parent,
             bg=colour,
             command=self.select_colour,
             activebackground=colour,
-            width=5,
             highlightthickness=0,
             borderwidth=0,
         )
-        self.selector.pack(expand=True, fill="both", padx=5, pady=5)
-        self.bind("<Button-1>", self.on_click)
-        self.bind("<ButtonRelease-1>", self.on_release)
-        self.selector.bind("<Button-1>", self.on_click)
-        self.selector.bind("<ButtonRelease-1>", self.on_button_release)
-        self.colour = colour
         self.default_colour = colour
-        self.disabled = True
-
-    def on_release(self, event):
-        if not self.disabled:
-            self.config(bg="#ccc")
-            self.select_colour()
-
-    def on_button_release(self, event):
-        if not self.disabled:
-            self.config(bg="#ccc")
-
-    def on_click(self, event):
-        if not self.disabled:
-            self.config(bg="#aaa")
 
     def select_colour(self):
-        colour = colorchooser.askcolor(title="Choose color")[1]
-        self.colour = colour if colour else self.colour
-        self.selector.config(bg=self.colour, activebackground=self.colour)
-        self.event_generate("<<Modified>>")
-
-    def configure(self, *args, **kwargs):
-        state = kwargs.pop("state")
-        if state == "disabled":
-            self.selector.config(state="disabled")
-            self.disabled = True
-        self.config(*args, **kwargs)
+        colour = colorchooser.askcolor(title="Choose color", initialcolor=self.cget("bg"))[1]
+        if colour:
+            self.config(bg=colour, activebackground=colour)
+            self.event_generate("<<Modified>>")
 
     def reset(self):
-        self.colour = self.default_colour
-        self.selector.config(bg=self.colour, activebackground=self.colour)
+        self.config(bg=self.default_colour, activebackground=self.default_colour)
         self.event_generate("<<Modified>>")
 
-    def get_value(self):
-        return self.colour
+    def get(self):
+        return self.cget("bg")
 
 
 class Notebook(ttk.Frame):
@@ -829,19 +807,20 @@ class PlaceholderThread:
         return True
 
 
-def download(url, data=None, method="GET", decode=None, insecure=False):
+def download(url, data=None, method="GET", decode=None, insecure=False, headers=()):
     "Fetch files"
+    "Note that headers should be converted from dict to tuple before calling download() as dicts aren't hashable"
     ctx = ssl.create_default_context()
     if insecure:
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
 
-    thread = threadname()
+    thread = get_current_thread()
     url = url.replace(" ", "%20")
     if data and (method == "POST"):
-        req = urlopen(Request(url, data, headers=HEADER), context=ctx)
+        req = urlopen(Request(url, data, headers=dict(headers)), context=ctx)
     else:
-        req = urlopen(Request(url, headers=HEADER), context=ctx)
+        req = urlopen(Request(url, headers=dict(headers)), context=ctx)
     if not thread.isrunning():
         return None, url, "", ""
     data = req.read()
@@ -867,7 +846,7 @@ def download(url, data=None, method="GET", decode=None, insecure=False):
 
 
 @lru_cache()
-def cachedownload(*args, **kwargs):
+def cache_download(*args, **kwargs):
     "Fetch files and add them to the lru cache"
     return download(*args, **kwargs)
 
@@ -879,7 +858,7 @@ def shorten(string):
     return string
 
 
-def threadname():
+def get_current_thread():
     "Return the currently running thread"
     thread = threading.current_thread()
     if thread.name == "MainThread":
@@ -908,6 +887,9 @@ def invert_color(rgb, match, limit):
         rgb[2] = max(1, min(255, 240 - rgb[2]))
         return rgb_to_hex(*rgb)
 
+def get_alt_font():
+    "Get the location of the truetype file to be used for image alternate text"
+    return os.path.join(ROOT_DIR, "opensans.ttf")
 
 def get_tkhtml_folder():
     "Get the location of the platform's tkhtml binary"
@@ -960,7 +942,7 @@ def notifier(text):
         sys.stdout.write(str(text) + "\n\n")
     except Exception:
         "sys.stdout.write doesn't work in .pyw files."
-        "Since .pyw files have no console, we can simply not bother printing messages."
+        "Since .pyw files have no console, we won't bother printing messages."
 
 
 def tkhtml_notifier(name, text, *args):
@@ -968,8 +950,9 @@ def tkhtml_notifier(name, text, *args):
     try:
         sys.stdout.write("DEBUG " + str(name) + ": " + str(text) + "\n\n")
     except Exception:
-        pass
+        "sys.stdout.write doesn't work in .pyw files."
+        "Since .pyw files have no console, we won't bother printing messages."
 
 def placeholder(*args, **kwargs):
     """Blank placeholder function. The only purpose of this is to
-    improve readability by avoiding `lambda a, b, c: None` statements."""
+    improve readability by avoiding `lambda a, b, c, d: None` statements."""

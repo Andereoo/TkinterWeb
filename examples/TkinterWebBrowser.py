@@ -6,10 +6,11 @@ These already exist and are generally resource-hungry and not highly integratabl
 Being based on Tkhtml, TkinterWeb is intended to be fast, lightweight, and highly integrated with Tkinter while providing far more control over layouts and styling than is feasible than Tkinter
 TkinterWeb displays older or simpler websites well but may be found lacking on more modern websites
 
-This file was originally created for testing TkinterWeb and could be cleaned up a bit, but nonetheless is a great example of some of the things that can be done with the software, including:
+This code was originally created for testing TkinterWeb and is a bit of a mess, but nonetheless is a great example of some of the things that can be done with the software, including:
  - loading pages
  - searching pages
  - embedding Tkinter widgets
+ - managing input elements
  - manipulating the DOM
  - and others
  
@@ -37,7 +38,7 @@ if tuple(version) < (3, 25, 12):
     raise RuntimeError("This demo needs TkinterWeb version 3.25.12 or higher.")
 
 
-NEW_TAB = "http://tkhtml.tcl.tk"#https://wiki.python.org/moin/TkInter"
+NEW_TAB = "about:tkinterweb"
 
 
 class Page(tk.Frame):
@@ -59,7 +60,7 @@ class Page(tk.Frame):
         self.backbutton = backbutton = ttk.Button(topbar, text="Back", command=self.back, state="disabled")
         self.forwardbutton = forwardbutton = ttk.Button(topbar, text="Forward", command=self.forward, state="disabled")
         self.reloadbutton = reloadbutton = ttk.Button(topbar, text="Reload", command=self.reload, cursor="hand2")
-        self.urlbar = urlbar = ttk.Entry(topbar)
+        self.urlbar = urlbar = ttk.Entry(topbar, width=100)
         newbutton = ttk.Button(topbar, text="New tab", command=self.open_new_tab, cursor="hand2")
         closebutton = ttk.Button(topbar, text="Close", command=self.close_current_tab, cursor="hand2")
         self.findbutton = findbutton = ttk.Button(topbar, text="Find",  command=self.open_findbar, cursor="hand2")
@@ -81,7 +82,7 @@ class Page(tk.Frame):
         self.find_bar_caption = find_bar_caption = ttk.Label(findbar, text="")
         find_close = ttk.Button(findbar, text="Close", command=self.open_findbar, cursor="hand2")
 
-        self.frame = frame = HtmlFrame(self, message_func=self.add_message, link_click_func=self.link_click, form_submit_func=self.form_submit, download_failed_func=self.load_error_page)
+        self.frame = frame = HtmlFrame(self, message_func=self.add_message, link_click_func=self.link_click, form_submit_func=self.form_submit)#, download_failed_func=self.load_error_page)
         self.sidebar = sidebar = HtmlFrame(frame, width=250, fontscale=0.8, selection_enabled=False, messages_enabled=False)
         sidebar.grid_propagate(False)
 
@@ -104,11 +105,6 @@ class Page(tk.Frame):
         self.invert_images_var = invert_images_var = tk.IntVar(value=self.frame["image_inversion_enabled"])
         invert_images_enabled = ttk.Checkbutton(sidebar, text="Image inverter", variable=invert_images_var, command=self.toggle_inverter)
         
-        self.zoom_var = zoom_var = tk.StringVar(value=self.frame["zoom"])
-        self.zoom_box = zoom_box = ttk.Scale(sidebar, from_=0.1, to=5, orient="horizontal", variable=zoom_var, command=self.set_zoom)
-        self.fontscale_var = fontscale_var = tk.StringVar(value=frame["fontscale"])
-        self.fontscale_box = fontscale_box = ttk.Scale(sidebar, from_=0.1, to=5, orient="horizontal", variable=fontscale_var, command=self.set_fontscale)
-        self.broken_page_msg_box = broken_page_msg_box = tk.Text(sidebar, wrap=tk.WORD, width=30, undo=True)
         self.view_source_button = view_source_button = ttk.Button(sidebar, text="View page source", command=self.view_source)
         about_button = ttk.Button(sidebar, text="About TkinterWeb", command=lambda url="about:tkinterweb": self.open_new_tab(url))
         
@@ -121,7 +117,6 @@ class Page(tk.Frame):
         urlbar.bind("<Return>", self.load_site)
         #frame.bind("<Motion>", self.on_motion)
         frame.bind("<Leave>", lambda event: linklabel.config(text="Done"))
-        broken_page_msg_box.bind("<<Modified>>", self.broken_page_msg_update)
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
@@ -129,8 +124,9 @@ class Page(tk.Frame):
         frame.grid(column=0, row=1, sticky="nsew")
         bottombar.grid(column=0, row=4, sticky="ew")
 
-        self.sidebar.load_html(f"""<html><body><style>body p, span {{margin-top: 5px; margin-bottom: 5px; cursor: default}} object {{width: 100%; cursor: pointer}}</style>
-                               <div><object allowscrolling data={images_enabled}></object><br>
+        self.sidebar.load_html(f"""<html><body><style>body p, span {{margin-top: 5px; margin-bottom: 5px; cursor: default}} object {{width: 100%; cursor: pointer}}
+                               input[type="color"] {{height:15px; width:30px; border: 1px solid black; padding:0; margin:5px;background-color: transparent}} label {{margin-left: 5px}}</style>
+                               <object allowscrolling data={images_enabled}></object><br>
                                <object allowscrolling data={styles_enabled}></object><br>
                                <object allowscrolling data={forms_enabled}></object><br>
                                <object allowscrolling data={objects_enabled}></object><br>
@@ -139,22 +135,29 @@ class Page(tk.Frame):
                                <object allowscrolling data={threads_enabled}></object><hr></hr>
                                <object allowscrolling data={invert_page_enabled}></object><br>
                                <object allowscrolling data={invert_images_enabled}></object><hr></hr>
-                               <div><p style="float:left">Zoom:</p><span style="float:right" id="zoom">{zoom_var.get()}</span><object allowscrolling data={zoom_box}></object></div>
-                               <div><p style="float:left">Font scale:</p><span style="float:right" id="fontscale">{fontscale_var.get()}</span><object allowscrolling data={fontscale_box}></object></div><hr></hr>
-                               <p>Parse mode:</p><select style="width:100%; color:black"><option value="xml">xml</option><option value="xhtml">xhtml</option><option value="html">html</option></select><hr></hr>
-                               <p>Broken page message:</p><object allowscrolling data={broken_page_msg_box}></object><hr></hr>
-                               <object allowscrolling data={view_source_button}></object>
+                               <div><p style="float:left">Zoom:</p><span style="float:right" id="zoom">{self.frame['zoom']}</span><input style="width: 100%" type="range" name="zoom" min="0.1" max="10" value="{self.frame['zoom']}"></div>
+                               <div><p style="float:left">Font scale:</p><span style="float:right" id="fontscale">{self.frame['fontscale']}</span><input style="width: 100%" type="range" name="fontscale" min="0.1" max="10" value="{self.frame['fontscale']}"></div><hr style="margin-bottom:10px;margin-top:10px"></hr>
+                               <p>User agent:</p><input style="padding: 5px 0px 3px 0px; width: 100%; color:black" type="text" value="{self.frame["headers"]["User-Agent"]}"></input><hr style="margin-bottom:10px;margin-top:0"></hr>
+                               <p>Parse mode:</p><select style="padding: 3px 0px 1px 0px; width:100%; color:black"><option value="xml">xml</option><option value="xhtml">xhtml</option><option value="html">html</option></select><hr style="margin-bottom:10px;margin-top:0"></hr>
+                               <input type="color" name="find_match_highlight_color" value="{self.frame['find_match_highlight_color']}" />
+                               <input type="color" name="find_match_text_color" value="{self.frame['find_match_text_color']}" /><label>Find matches</label><br>
+                               <input type="color" name="find_current_highlight_color" value="{self.frame['find_current_highlight_color']}" />
+                               <input type="color" name="find_current_text_color" value="{self.frame['find_current_text_color']}" /><label>Current match</label><br>
+                               <input type="color" name="selected_text_highlight_color" value="{self.frame['selected_text_highlight_color']}" />
+                               <input type="color" name="selected_text_color" value="{self.frame['selected_text_color']}" /><label>Selected text</label><br>
+                               <hr></hr>
+                               <div style="margin-top: 20px"><object allowscrolling data={view_source_button}></object>
                                <object allowscrolling data={about_button}></object></div></body></html>
         """)
-        sidebar.bind_all("<<Modified>>", self.on_modified)
+        sidebar.bind_class(self.sidebar.html.scrollable_node_tag, "<<Modified>>", self.on_modified)
 
         linklabel.pack(expand=True, fill="both")
         topbar.columnconfigure(4, weight=1)
         backbutton.grid(row=0, column=1, pady=5, padx=5)
         forwardbutton.grid(row=0, column=2, pady=5)
         reloadbutton.grid(row=0, column=3, pady=5, padx=5)
-        urlbar.grid(row=0, column=4, pady=5, padx=3, sticky="NSEW")
-        newbutton.grid(row=0, column=5, pady=5, padx=5)
+        urlbar.grid(row=0, column=4, pady=5, padx=20, sticky="NS")
+        newbutton.grid(row=0, column=5, pady=5, padx=(5,0))
         closebutton.grid(row=0, column=6, pady=5, padx=5)
         findbutton.grid(row=0, column=7, pady=5)
         settingsbutton.grid(row=0, column=8, pady=5, padx=5)
@@ -173,9 +176,8 @@ class Page(tk.Frame):
         findbox_var.trace("w", self.search_in_page)
 
         frame.bind("<Button-3>", self.on_right_click)
-        for widget in [urlbar, find_box, zoom_box, fontscale_box]:
+        for widget in [urlbar, find_box]:
             widget.bind("<Control-a>", lambda e: self.after(50, self.select_all_in_entry, e.widget))
-        broken_page_msg_box.bind("<Control-a>", lambda e: self.after(50, self.select_all_in_text, e.widget))
 
         for child in findbar.winfo_children():
             child.bind("<Escape>", lambda x: self.open_findbar())
@@ -184,10 +186,6 @@ class Page(tk.Frame):
         settingsbutton.bind("<Escape>", lambda x: self.close_sidebar())
 
         self.toggle_theme(False)
-        broken_page_msg_box.insert("end", BUILTIN_PAGES["about:error"].format(self.frame["about_page_background"], self.frame["about_page_foreground"], "").replace("</", "\n</").replace(">", ">\n").replace("\n\n", "\n").replace("</html>\n", "</html>"))
-
-    def load_error_page(self, url, error, code):
-        self.frame.load_html(self.broken_page_msg_box.get("1.0", 'end-1c'), url)
 
     def apply_dark_theme(self):
         self.style.configure(".", background="#2b2b2b", foreground="#FFFFFF")
@@ -202,7 +200,10 @@ class Page(tk.Frame):
             foreground="#FFFFFF")
         self.style.configure("TEntry",
             fieldbackground="#555555",
-            foreground="#FFFFFF")      
+            foreground="#FFFFFF")    
+        self.style.map('TScale',
+          background=[('active', '#2b2b2b'),
+                      ('!active', '#2b2b2b')])  
         self.style.configure("TFrame",
             background="#2b2b2b")
         self.style.configure("TScrollbar",
@@ -248,7 +249,13 @@ class Page(tk.Frame):
             fieldbackground="#FFFFFF",
             foreground="#000000",
             insertcolor="black",
+            borderwidth=0,
             font=("Arial", 10))
+        self.style.configure("TScale",
+            troughcolor="white",)
+        self.style.map('TScale',
+          background=[('active', '#F0F0F0'),
+                      ('!active', '#F0F0F0')])
         self.style.configure("TFrame",
             background="#F0F0F0",)
         self.style.configure("TScrollbar",
@@ -279,8 +286,8 @@ class Page(tk.Frame):
             borderwidth=0,
             font=("Arial", 10))
         self.style.map("TNotebook.Tab", 
-            background=[("selected", "#FFFFFF"),
-                ("!selected", "#DDDDDD")],
+            background=[("selected", "#DDDDDD"),
+                ("!selected", "#F0F0F0")],
             foreground=[("selected", "#000000"),
                 ("!selected", "#000000")])
         # this only works on the non-experimental version of tkhtml
@@ -289,7 +296,21 @@ class Page(tk.Frame):
 
     def on_modified(self, event):
         if "combobox" in str(event.widget):
-            self.frame.configure(parsemode = event.widget.get())
+            self.frame["parsemode"] = event.widget.get()
+        elif "colourselector" in str(event.widget):
+            widgets = {v: k for k, v in self.sidebar.html.form_get_commands.items()}
+            node = widgets[event.widget.get]
+            name = self.sidebar.html.get_node_attribute(node, "name")
+            self.frame[name] = event.widget.get()
+            self.frame.html.update_tags()
+        elif "entry" in str(event.widget):
+            self.frame["headers"]["User-Agent"] = event.widget.get()
+        elif "scale" in str(event.widget):
+            widgets = {v: k for k, v in self.sidebar.html.form_get_commands.items()}
+            node = widgets[event.widget.get]
+            name = self.sidebar.html.get_node_attribute(node, "name")
+            self.frame[name] = event.widget.get()
+            self.sidebar.document.getElementById(name).textContent = round(float(event.widget.get()), 1)
 
     def select_all_in_entry(self, widget):
         widget.select_range(0, 'end')
@@ -320,9 +341,15 @@ class Page(tk.Frame):
         if selection:
             menu.add_command(label="Copy", accelerator="Ctrl-C", command=self.frame.html.copy_selection)
         menu.add_separator()
-        menu.add_command(label="Take screenshot", command=self.screenshot)
+        if self.frame["experimental"] or not os.name == "nt":
+            menu.add_command(label="Take screenshot", command=self.screenshot)
+        else:
+            menu.add_command(label="Take screenshot", state="disabled", command=self.screenshot)
         menu.add_command(label="Snapshot page", command=self.snapshot)
-        menu.add_command(label="Print", accelerator="Ctrl-P", command=self.print)
+        if self.frame["experimental"]:
+            menu.add_command(label="Print page", accelerator="Ctrl-P", command=self.print)
+        else:
+            menu.add_command(label="Print page", accelerator="Ctrl-P", state="disabled", command=self.print)
         menu.add_command(label="Save page", accelerator="Ctrl-S", command=self.save)
         menu.add_separator()
         menu.add_command(label="Find in page", accelerator="Ctrl-F", command=lambda: self.open_findbar(True))
@@ -347,12 +374,13 @@ class Page(tk.Frame):
             self.frame.snapshot_page(file_path)
 
     def print(self):
-        file_path = filedialog.asksaveasfilename(
-            filetypes=[("Postscript files", "*.ps"), ("All files", "*.*")],
-            title="Print Page As"
-        )
-        if file_path:
-            self.frame.print_page()
+        if self.frame["experimental"]:
+            file_path = filedialog.asksaveasfilename(
+                filetypes=[("Postscript files", "*.ps"), ("All files", "*.*")],
+                title="Print Page As"
+            )
+            if file_path:
+                self.frame.print_page()
 
     def save(self):
         file_path = filedialog.asksaveasfilename(
@@ -408,11 +436,6 @@ class Page(tk.Frame):
             self.handle_view_source_button("about:error")
         self.linklabel.config(text=self.cut_text(message, 80))
 
-    def broken_page_msg_update(self, event=None):
-        height = self.broken_page_msg_box.count("1.0", "end", "displaylines")[0]
-        self.broken_page_msg_box.configure(height=height)
-        self.broken_page_msg_box.edit_modified(False)
-
     def toggle_images(self):
         self.frame.configure(images_enabled= self.images_var.get())
         self.reload()
@@ -465,8 +488,6 @@ class Page(tk.Frame):
         else:
             self.sidebar.grid(row=0, column=2, sticky="nsew")
             self.sidebar.update()
-            self.broken_page_msg_box.update()
-            self.broken_page_msg_update()
             self.settingsbutton.state(['pressed'])
             
     def close_sidebar(self):
@@ -542,16 +563,6 @@ class Page(tk.Frame):
     def close_current_tab(self):
         self.master.forget(self)
 
-    def set_zoom(self, *args):
-        zoom = round(float(self.zoom_var.get()), 1)
-        self.frame.configure(zoom = self.zoom_var.get())
-        self.sidebar.document.getElementById("zoom").textContent = zoom
-
-    def set_fontscale(self, *args):
-        fontscale = round(float(self.fontscale_var.get()), 1)
-        self.frame.configure(fontscale = fontscale)
-        self.sidebar.document.getElementById("fontscale").textContent = fontscale
-
     def done_loading(self, event):
         self.linklabel.config(text="Done")
         self.reloadbutton.config(text="Reload", command=self.reload)
@@ -607,7 +618,7 @@ class Page(tk.Frame):
         self.master.tab(self, text=self.cut_text(self.frame.title, 40))  
     
     def select_all(self):
-        if self.focus_get() not in (self.urlbar, self.find_box, self.zoom_box, self.fontscale_box, self.broken_page_msg_box):
+        if self.focus_get() not in (self.urlbar, self.find_box):
             self.frame.select_all()
 
     def view_source(self):
@@ -621,9 +632,11 @@ class Browser(tk.Tk):
 
         tk.Tk.__init__(self)
         self.title("TkinterWebBrowser")
+        self.minsize(800, 500)
         self.main_frame = main_frame = tk.Frame(self, highlightthickness=0, bd=0)
 
         self.frame = frame = Notebook(main_frame)
+        frame.enable_traversal()
         frame.bind("<<NotebookTabChanged>>", self.on_tab_change)
 
         page = Page(frame)
@@ -645,6 +658,8 @@ class Browser(tk.Tk):
         self.bind_all("<Control-q>", lambda e: self.destroy())
         self.bind_all("<Control-a>", lambda e: frame.select().select_all())
         self.bind_all("<Control-u>", lambda e: frame.select().view_source())
+        self.bind_all("<Control-p>", lambda e: frame.select().print())
+        self.bind_all("<Control-s>", lambda e: frame.select().save())
         self.bind_all("<Alt-Left>", lambda e: frame.select().back())
         self.bind_all("<Alt-Right>", lambda e: frame.select().forward())
 

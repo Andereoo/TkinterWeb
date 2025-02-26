@@ -4,13 +4,10 @@ Generate Tk images and alt text
 Copyright (c) 2025 Andereoo
 """
 
-from PIL import Image, ImageOps
+from PIL import Image
 from PIL.ImageTk import PhotoImage
-from io import BytesIO
-
 from tkinter import PhotoImage as TkinterPhotoImage
-from tkinter import Label
-
+from io import BytesIO
 
 try:
     import cairo
@@ -45,8 +42,47 @@ if cairoimport:
             except (ValueError, ImportError,):
                 rsvgimport = None
 
+def text_to_image(name, alt, nodebox, font_type, font_size, threshold):
+    from PIL import ImageFont, ImageDraw
+    font = ImageFont.truetype(font_type, font_size)
+    if len(nodebox) == 4:
+        width = nodebox[2]-nodebox[0]
+        height = nodebox[3]-nodebox[1]
+        if (width < threshold) or (height < threshold):
+            try:
+                width, height = font.getsize(alt)
+            except AttributeError:
+                left, top, right, bottom = font.getbbox(alt)
+                width = right - left
+                height = bottom
+    else:
+        try:
+            width, height = font.getsize(alt)
+        except AttributeError:
+            left, top, right, bottom = font.getbbox(alt)
+            width = right - left
+            height = bottom
+            
+    image = Image.new('RGBA', (width, height))
+    draw = ImageDraw.Draw(image)
+    draw.text((0,0), alt, fill=(0, 0, 0), font=font)
+    image = PhotoImage(image, name=name)
+    return image
 
-def newimage(data, name, imagetype, invert, return_image=False):
+def invert_image(image):
+    from PIL import ImageOps
+    if image.mode == 'RGBA':
+        r,g,b,a = image.split()
+        image = Image.merge('RGB', (r,g,b))
+        image = ImageOps.invert(image)
+        r2,g2,b2 = image.split()
+        image = Image.merge('RGBA', (r2,g2,b2,a))
+    else:
+        image = image.convert("RGB")
+        image = ImageOps.invert(image)
+    return image
+
+def data_to_image(data, name, imagetype, invert, return_image=False):
     image = None
     error = None
     if "svg" in imagetype:
@@ -88,21 +124,13 @@ def newimage(data, name, imagetype, invert, return_image=False):
             photoimage = None
             error = "corrupt"
     elif invert:
-        image = Image.open(BytesIO(data))
-        if image.mode == 'RGBA':
-            r,g,b,a = image.split()
-            image = Image.merge('RGB', (r,g,b))
-            image = ImageOps.invert(image)
-            r2,g2,b2 = image.split()
-            image = Image.merge('RGBA', (r2,g2,b2,a))
-        else:
-            image = image.convert("RGB")
-            image = ImageOps.invert(image)
+        image = invert_image(Image.open(BytesIO(data)))
         photoimage = PhotoImage(image=image, name=name)
     elif return_image:
         image = Image.open(BytesIO(data))
         photoimage = PhotoImage(image=image, name=name)
-    elif imagetype == "image/png" or imagetype == "image/gif" or imagetype == "image/ppm" or imagetype == "image/bmp":
+    elif imagetype in ("image/png", "image/gif", "image/ppm", "image/pgm",):
+        # tkinter.PhotoImage has less overhead, so use it when possible
         photoimage = TkinterPhotoImage(name=name, data=data)
     else:
         photoimage = PhotoImage(data=data, name=name)
@@ -112,12 +140,12 @@ def newimage(data, name, imagetype, invert, return_image=False):
     else:
         return photoimage, error
 
-def blankimage(name):
+def blank_image(name):
     image = Image.new("RGBA", (1, 1))
     image = PhotoImage(image, name=name)
     return image
 
-def createRGBimage(data, w, h):
+def create_RGB_image(data, w, h):
     image = Image.new("RGB", (w, h))
     for y, row in enumerate(data):
         for x, hexc in enumerate(row.split()):

@@ -8,14 +8,11 @@ Copyright (c) 2025 Andereoo
 from urllib.parse import urldefrag, urlparse
 
 from bindings import TkinterWeb
-from utilities import (PLATFORM, WORKING_DIR, PYTHON_VERSION, BUILTIN_PAGES, DONE_LOADING_EVENT,  
-                       DOWNLOADING_RESOURCE_EVENT, URL_CHANGED_EVENT, DOWNLOAD_FAILED_EVENT, DEFAULT_PARSE_MODE, DEFAULT_STYLE, 
-                       DARK_STYLE, HEADERS, AutoScrollbar, StoppableThread, 
-                       cachedownload, download, threadname, notifier, __version__)
-from imageutils import createRGBimage
-from dom import TkwDocumentObjectModel, HtmlElement
+from utilities import *
+from utilities import __version__
+from imageutils import create_RGB_image
+from dom import HTMLDocument, HTMLElement
 
-import tkinter as tk
 from tkinter import ttk
 
 
@@ -31,6 +28,7 @@ class HtmlFrame(ttk.Frame):
         self._waiting_for_reset = False
         self._thread_in_progress = None
         self._prev_height = 0
+        self._button = None
 
         self.htmlframe_options = {
             "download_failed_func": self._on_download_fail,
@@ -42,6 +40,7 @@ class HtmlFrame(ttk.Frame):
         self.tkinterweb_options = {
             "link_click_func": self.load_url,
             "form_submit_func": self.load_form_data,
+            "script_parse_func": placeholder,
             "message_func": notifier,
             "messages_enabled": True,
             "selection_enabled": True,
@@ -68,12 +67,14 @@ class HtmlFrame(ttk.Frame):
             "dark_style": DEFAULT_STYLE + DARK_STYLE,
             "insecure_https": False,
             "headers": HEADERS,
+            "experimental": False,
+            # no impact after loading
+            "use_prebuilt_tkhtml": True,
             # internal
             "overflow_scroll_frame": None,
             "embed_obj": HtmlFrame,
             "manage_vsb_func": self._manage_vsb,
             "manage_hsb_func": self._manage_hsb,
-
         }
         self.tkhtml_options = {
             "zoom": 1.0,
@@ -91,7 +92,6 @@ class HtmlFrame(ttk.Frame):
 
         for key in list(kwargs.keys()):
             if key in self.tkinterweb_options:
-                print(key)
                 value = self._check_value(self.tkinterweb_options[key], kwargs.pop(key))
                 self.tkinterweb_options[key] = value
             elif key in self.tkhtml_options:
@@ -101,12 +101,11 @@ class HtmlFrame(ttk.Frame):
 
         # setup sub-widgets
         self.html = html = TkinterWeb(self, self.tkinterweb_options, **self.tkhtml_options)
-        self.hsb = hsb = AutoScrollbar(self, orient=tk.HORIZONTAL, command=html.xview)
-        self.vsb = vsb = AutoScrollbar(self, orient=tk.VERTICAL, command=html.yview)
-        self.document = TkwDocumentObjectModel(html)
+        self.hsb = hsb = AutoScrollbar(self, orient="horizontal", command=html.xview)
+        self.vsb = vsb = AutoScrollbar(self, orient="vertical", command=html.yview)
+        self.document = HTMLDocument(html)
 
-        html.configure(xscrollcommand=hsb.set)
-        html.configure(yscrollcommand=vsb.set)
+        html.configure(xscrollcommand=hsb.set, yscrollcommand=vsb.set)
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
@@ -153,7 +152,13 @@ class HtmlFrame(ttk.Frame):
         self.remove_widget = html.remove_widget
         self.bind = html.bind
 
-        self.html.post_message(f"Welcome to TkinterWeb {__version__}! \nhttps://github.com/Andereoo/TkinterWeb\n\nDebugging messages are enabled \nUse the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLabel() to disable these messages")
+        self.html.post_message(f"""Welcome to TkinterWeb {__version__}!
+https://github.com/Andereoo/TkinterWeb
+
+Note that the API has changed in this version. See the project's GitHub home page for details.
+
+Debugging messages are enabled
+Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLabel() to disable these messages""")
 
     def configure(self, **kwargs):
         for key in list(kwargs.keys()):
@@ -169,6 +174,8 @@ class HtmlFrame(ttk.Frame):
                 setattr(self.html, key, value)
             elif key in self.tkhtml_options:
                 self.html[key] = kwargs.pop(key)
+                if key == "zoom":
+                    self._handle_resize(force=True)
         super().configure(**kwargs)
 
     def config(self, **kwargs):
@@ -214,7 +221,7 @@ class HtmlFrame(ttk.Frame):
         self.html.parse(html_source)
 
         self._finish_css()
-        self._handle_resize()
+        self._handle_resize(force=True)
 
     def load_file(self, file_url, decode=None, force=False):
         "Convenience method to load a locally stored file from the specified path"
@@ -242,7 +249,7 @@ class HtmlFrame(ttk.Frame):
         if not self.current_url == url:
             self._previous_url = self.current_url
         if url in BUILTIN_PAGES:
-            self.load_html(BUILTIN_PAGES[url].format(self.about_page_background, self.about_page_foreground, "", ""), url)
+            self.load_html(BUILTIN_PAGES[url].format(self.about_page_background, self.about_page_foreground, "", "", ""), url)
             return
 
         self._waiting_for_reset = True
@@ -289,6 +296,9 @@ class HtmlFrame(ttk.Frame):
             self.html.base_url = self.current_url = base_url
         self.html.parse(html_source)
 
+        self._finish_css()
+        self._handle_resize(force=True)
+
     def add_css(self, css_source):
         "Parse CSS code"
         if self._waiting_for_reset:
@@ -319,53 +329,57 @@ class HtmlFrame(ttk.Frame):
         if ignore_text_nodes:
             if not self.html.get_node_tag(self.html.current_node):
                 node = self.html.get_node_parent(self.html.current_node)
-        return HtmlElement(self.html, node)
-    
-    def yview_toelement(self, element):
-        "Scroll to a given element"
-        self.html.yview(element.node)
+        return HTMLElement(self.html, node)
 
     def screenshot_page(self, file=None, full=False):
         "Take a screenshot"
-        self.html.post_message(f"Taking a screenshot of {self.current_url}...")
-        image, data = self.html.image(full=full)
-        height = len(data)
-        width = len(data[0].split())
-        image = createRGBimage(data, width, height)
-        if file:
-            image.save(file)
-        self.html.post_message(f"Screenshot taken: {width}px by {height}px!")
-        return image
+        if self.html.experimental or PLATFORM.system != "Windows":
+            self.html.post_message(f"Taking a screenshot of {self.current_url}...")
+            image, data = self.html.image(full=full)
+            height = len(data)
+            width = len(data[0].split())
+            image = create_RGB_image(data, width, height)
+            if file:
+                image.save(file)
+            self.html.post_message(f"Screenshot taken: {width}px by {height}px!")
+            return image
+        else:
+            self.html.post_message("A screenshot could not be taken because it screenshot_page is an experimental feature on Windows")
+            return None
 
     def print_page(self, file=None, cnf={}, **kwargs):
         "Print the page"
-        cnf |= kwargs
-        self.html.post_message(f"Printing {self.current_url}...")
-        if file:
-            cnf["file"] = file
-        if "pagesize" in cnf:
-            pageheights = {
-                "A3": "1191", "A4": "842", "A5": "595",
-                "LEGAL": "792", "LETTER": "1008"
-            }
-            pagewidths = {
-                "A3": "842", "A4": "595", "A5": "420",
-                "LEGAL": "612", "LETTER": "612"
-            }
-            try:
-                cnf["pageheight"] = pageheights[cnf["pagesize"].upper()]
-                cnf["pagewidth"] = pagewidths[cnf["pagesize"].upper()]
-                self.html.post_message(f"Setting printer page size to {cnf["pageheight"]}px by {cnf["pagewidth"]}px.")
-            except KeyError:
-                raise KeyError("Parameter 'pagesize' must be A3, A4, A5, Legal, or Letter")
-            del cnf["pagesize"]
+        if self.html.experimental:
+            cnf |= kwargs
+            self.html.post_message(f"Printing {self.current_url}...")
+            if file:
+                cnf["file"] = file
+            if "pagesize" in cnf:
+                pageheights = {
+                    "A3": "1191", "A4": "842", "A5": "595",
+                    "LEGAL": "792", "LETTER": "1008"
+                }
+                pagewidths = {
+                    "A3": "842", "A4": "595", "A5": "420",
+                    "LEGAL": "612", "LETTER": "612"
+                }
+                try:
+                    cnf["pageheight"] = pageheights[cnf["pagesize"].upper()]
+                    cnf["pagewidth"] = pagewidths[cnf["pagesize"].upper()]
+                    self.html.post_message(f"Setting printer page size to {cnf['pageheight']}px by {cnf['pagewidth']}px.")
+                except KeyError:
+                    raise KeyError("Parameter 'pagesize' must be A3, A4, A5, Legal, or Letter")
+                del cnf["pagesize"]
 
-        self.html.update() # update the root window to ensure HTML is rendered
-        file = self.html.postscript(cnf)
-        # no need to save - tkhtml handles that for us
-        self.html.post_message("Printed!")
-        return file
-    
+            self.html.update() # update the root window to ensure HTML is rendered
+            file = self.html.postscript(cnf)
+            # no need to save - Tkhtml handles that for us
+            self.html.post_message("Printed!")
+            return file
+        else:
+            self.html.post_message("The page could not be printed because print_page is an experimental feature")
+            return ""
+
     def save_page(self, file=None):
         "Save the page"
         self.html.post_message(f"Saving {self.current_url}...")
@@ -414,15 +428,18 @@ class HtmlFrame(ttk.Frame):
                 raise TypeError(f"expected {expected_type.__name__}, got \"{new}\"")
         return new
     
-    def _handle_resize(self, event=None):
+    def _handle_resize(self, event=None, force=False):
+        """Make all elements with the 'tkinterweb-full-page' attribute the same height as the html widget.
+        This can be used in conjunction with table elements to vertical align pages,
+        which is otherwise not possible with Tkhtml. Hopefully we won't need this forever."""
         if event:
             height = event.height
         else:
             height = self.html.winfo_height()
-        if self._prev_height != height:
-            resizeable_elements = self.document.querySelectorAll("[tkinterweb-full-page]")
+        if self._prev_height != height or force:
+            resizeable_elements = self.document.querySelectorAll(f"[{BUILTIN_ATTRIBUTES["vertical-align"]}]")
             for element in resizeable_elements:
-                element.style.height = f"{height}px"
+                element.style.height = f"{height/self["zoom"]}px"
         self._prev_height = height
 
     def _manage_vsb(self, allow=None):
@@ -471,10 +488,10 @@ class HtmlFrame(ttk.Frame):
                     data, newurl, filetype, code = download(
                         url, data, method, decode, self.html.insecure_https, tuple(self.html.headers.items()))
                 else:
-                    data, newurl, filetype, code = cachedownload(
+                    data, newurl, filetype, code = cache_download(
                         url, data, method, decode, self.html.insecure_https, tuple(self.html.headers.items()))
                 self.html.post_message(f"Successfully connected to {parsed.netloc}")
-                if threadname().isrunning():
+                if get_current_thread().isrunning():
                     if view_source:
                         newurl = "view-source:"+newurl
                         if self.current_url != newurl:
@@ -529,14 +546,17 @@ class HtmlFrame(ttk.Frame):
                 self.html.post_message(f"Check that you are using the right url scheme. Some websites only support http.\n\
 This might also happen if your Python distribution does not come installed with website certificates.\n\
 This is a known Python bug on older MacOS systems. \
-Running something along the lines of \"/Applications/Python {".".join(PYTHON_VERSION[:2])}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
+Running something along the lines of \"/Applications/Python {'.'.join(PYTHON_VERSION[:2])}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
 Otherwise, use 'configure(insecure_https=True)' to ignore website certificates.")
             self.download_failed_func(url, error, code)
 
         self._thread_in_progress = None
 
     def _on_download_fail(self, url, error, code):
-        self.load_html(BUILTIN_PAGES["about:error"].format(self.about_page_background, self.about_page_foreground, code), url)
+        if not self._button:
+            self._button = tk.Button(self, text="Try Again")
+        self._button.configure(command=lambda url=self.current_url: self.load_url(url, None, True))
+        self.load_html(BUILTIN_PAGES["about:error"].format(self.about_page_background, self.about_page_foreground, code, self._button), url)
 
     def _finish_css(self):        
         if self._waiting_for_reset:

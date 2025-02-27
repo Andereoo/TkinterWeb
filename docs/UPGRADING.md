@@ -4,13 +4,12 @@
 
 ### Changes include:
 * Faster load speed
-* Support for experimental Tkhtml features
-* Widget behaviour is now more closely aligned with standard Tkinter widgets
+* A more intuitive API
+* Support for experimental Tkhtml features, such as page printing
+* Widget behaviour and API is now more closely aligned with standard Tkinter widgets
+* The DOM API now more closely mirrors its JavaScript counterparts
 * Dozens of new configuration options, including access to more settings and the ability to link a JavaScript interpreter
 * More DOM improvements
-* DOM behaviour is now more closely aligned with that of JavaScript
-* A more intuitive API
-
 
 ### Removed:
 * `HtmlFrame.get_zoom()` - use `HtmlFrame.cget("zoom")`
@@ -122,7 +121,7 @@
 * Text elements now emit the `<<Modified>>` event *after* the content updates.
   
 
-* The TkinterWeb demo and some of the built-in pages have been updated. Many internal methods and variables of the HtmlFrame and TkinterWeb widgets were renamed.
+* The TkinterWeb demo and some of the built-in pages have been updated. Many internal methods and variables of the HtmlFrame and TkinterWeb widgets were renamed or moved.
 
 
 &nbsp;

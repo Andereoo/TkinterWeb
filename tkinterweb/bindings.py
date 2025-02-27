@@ -1266,13 +1266,13 @@ class TkinterWeb(tk.Widget):
             name = url.replace("replace:", "")
             self._finish_download(thread)
         elif any(
-            [
+            frozenset({
                 url.startswith("linear-gradient("),
                 url.startswith("url("),
                 url.startswith("radial-gradient("),
                 url.startswith("repeating-linear-gradient("),
                 url.startswith("repeating-radial-gradient("),
-            ]
+            })
         ):
             done = False
             self.post_message(f"Fetching image: {shorten(url)}")
@@ -1416,14 +1416,7 @@ class TkinterWeb(tk.Widget):
         )
         nodevalue = self.get_node_attribute(node, "value")
 
-        if any(
-            (
-                nodetype == "image",
-                nodetype == "submit",
-                nodetype == "reset",
-                nodetype == "button",
-            )
-        ):
+        if nodetype in frozenset({"image", "submit", "reset", "button"}):
             widgetid = None
             self.form_get_commands[node] = placeholder
             self.form_reset_commands[node] = placeholder

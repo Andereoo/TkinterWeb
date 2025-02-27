@@ -327,4 +327,4 @@ Return type
 
 Please report bugs or request new features on the [issues page](https://github.com/Andereoo/TkinterWeb/issues).
 
-Special thanks to [Zamy846692](https://github.com/Zamy846692) for their help making this happen!
+Special thanks to [Zamy846692](https://github.com/Zamy846692) for the help making this happen!

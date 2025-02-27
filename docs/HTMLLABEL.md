@@ -1,3 +1,5 @@
+> [!WARNING]
+> The API changed significantly in version 4.0.0. See [Porting to TkinterWeb v4+](UPGRADING.md) for details.
 
 ## *`tkinterweb.HtmlLabel` Documentation*
 
@@ -28,35 +30,8 @@ HTML can also be loaded using the `load_html` command to change the content of t
 ## Class API 
 
 ### HtmlLabel constructors:
-* `master` Parent (tkinter widget)
+* `master` Parent (Tkinter widget)
 * `text` Set the content of the widget (string) **Default: ""**
-* `messages_enabled` Enable messages (boolean) **Default: False**
-* `**kw` Other optional `HtmlFrame` arguments
+* `**kwargs` Any other optional `HtmlFrame` arguments
 
-
-### Useful Methods:
-#### `load_html(html_source, base_url="")`
-Parses the supplied HTML code.
-
-Parameters
-* **html_source** *(string)* - Specifies the HTML code
-* **base_url** *(string)* - Specifies the base url to use when parsing stylesheets and images. If this argument is not supplied, it will be set to the current working directory.
-
----
-#### `on_link_click(function)`
-Set TkinterWeb to call the specified python function whenever a link is clicked.
-When a link is clicked on a webpage, a variable containing the url of the clicked link will be passed to the specified function.
-
-Parameters
-* **function** *(python function)* - Specifies the function to call when a link is clicked.
-
----
-#### `set_zoom(multiplier)`
-Set the zoom multiplier of the document.
-
-Parameters
-* **multiplier** *(float or integer)* - Specifies the zoom multiplier.
-
----
-
-All HtmlFrame methods can also be used on the HtmlLabel widget. For a complete list of avaliable methods, see the [HtmlFrame docs](HTMLFRAME.md#useful-methods).
+The HtmlLabel class inherits from the HtmlFrame. For a complete list of avaliable methods, configuration options, generated events, and state variables, see the [HtmlFrame docs](HTMLFRAME.md#useful-methods).

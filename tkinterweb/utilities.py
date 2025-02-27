@@ -12,9 +12,8 @@ import platform
 import sys
 import threading
 
-from urllib.request import Request, urlopen
-
 import ssl
+from urllib.request import Request, urlopen
 
 import tkinter as tk
 from tkinter import colorchooser, filedialog, ttk
@@ -42,16 +41,23 @@ __title__ = 'TkinterWeb'
 __author__ = "Andereoo"
 __copyright__ = "Copyright (c) 2025 Andereoo"
 __license__ = "MIT"
-__version__ = '3.25.19'
+__version__ = '4.0.0'
 
 
-HEADER = {
-    "User-Agent": "Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha" #Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 Firefox/4.0
+ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "tkhtml")
+WORKING_DIR = os.getcwd()
+PLATFORM = platform.uname()
+PYTHON_VERSION = platform.python_version_tuple()
+
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha"
+    # Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 Firefox/4.0
 }
-DEFAULTPARSEMODE = "xml"
-BROKENIMAGE = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x19\x00\x00\x00\x1e\x08\x03\x00\x00\x00\xee2E\xe9\x00\x00\x03\x00PLTE\xc5\xd5\xf4\xcd\xdb\xf4\xdf\xe8\xfc\xd5\xdd\xf4\xa5\xa3\xa5\x85\x83\x85\xfc\xfe\xfc\xf4\xf6\xf9\x95\x93\x95S\xb39\x9d\x9f\x9d\xc5\xd3\xedo\xbbg\xd5\xe3\xf4\xd5\xdf\xfc\xd5\xe3\xfc\xb5\xcf\xd5\x9d\xc7\xb5\xc5\xdf\xe5S\xaf9\x8d\xc7\x8d\x15\x15\x15\x16\x16\x16\x17\x17\x17\x18\x18\x18\x19\x19\x19\x1a\x1a\x1a\x1b\x1b\x1b\x1c\x1c\x1c\x1d\x1d\x1d\x1e\x1e\x1e\x1f\x1f\x1f   !!!"""###$$$%%%&&&\'\'\'((()))***+++,,,---...///000111222333444555666777888999:::;;;<<<===>>>???@@@AAABBBCCCDDDEEEFFFGGGHHHIIIJJJKKKLLLMMMNNNOOOPPPQQQRRRSSSTTTUUUVVVWWWXXXYYYZZZ[[[\\\\\\]]]^^^___```aaabbbcccdddeeefffggghhhiiijjjkkklllmmmnnnooopppqqqrrrssstttuuuvvvwwwxxxyyyzzz{{{|||}}}~~~\x7f\x7f\x7f\x80\x80\x80\x81\x81\x81\x82\x82\x82\x83\x83\x83\x84\x84\x84\x85\x85\x85\x86\x86\x86\x87\x87\x87\x88\x88\x88\x89\x89\x89\x8a\x8a\x8a\x8b\x8b\x8b\x8c\x8c\x8c\x8d\x8d\x8d\x8e\x8e\x8e\x8f\x8f\x8f\x90\x90\x90\x91\x91\x91\x92\x92\x92\x93\x93\x93\x94\x94\x94\x95\x95\x95\x96\x96\x96\x97\x97\x97\x98\x98\x98\x99\x99\x99\x9a\x9a\x9a\x9b\x9b\x9b\x9c\x9c\x9c\x9d\x9d\x9d\x9e\x9e\x9e\x9f\x9f\x9f\xa0\xa0\xa0\xa1\xa1\xa1\xa2\xa2\xa2\xa3\xa3\xa3\xa4\xa4\xa4\xa5\xa5\xa5\xa6\xa6\xa6\xa7\xa7\xa7\xa8\xa8\xa8\xa9\xa9\xa9\xaa\xaa\xaa\xab\xab\xab\xac\xac\xac\xad\xad\xad\xae\xae\xae\xaf\xaf\xaf\xb0\xb0\xb0\xb1\xb1\xb1\xb2\xb2\xb2\xb3\xb3\xb3\xb4\xb4\xb4\xb5\xb5\xb5\xb6\xb6\xb6\xb7\xb7\xb7\xb8\xb8\xb8\xb9\xb9\xb9\xba\xba\xba\xbb\xbb\xbb\xbc\xbc\xbc\xbd\xbd\xbd\xbe\xbe\xbe\xbf\xbf\xbf\xc0\xc0\xc0\xc1\xc1\xc1\xc2\xc2\xc2\xc3\xc3\xc3\xc4\xc4\xc4\xc5\xc5\xc5\xc6\xc6\xc6\xc7\xc7\xc7\xc8\xc8\xc8\xc9\xc9\xc9\xca\xca\xca\xcb\xcb\xcb\xcc\xcc\xcc\xcd\xcd\xcd\xce\xce\xce\xcf\xcf\xcf\xd0\xd0\xd0\xd1\xd1\xd1\xd2\xd2\xd2\xd3\xd3\xd3\xd4\xd4\xd4\xd5\xd5\xd5\xd6\xd6\xd6\xd7\xd7\xd7\xd8\xd8\xd8\xd9\xd9\xd9\xda\xda\xda\xdb\xdb\xdb\xdc\xdc\xdc\xdd\xdd\xdd\xde\xde\xde\xdf\xdf\xdf\xe0\xe0\xe0\xe1\xe1\xe1\xe2\xe2\xe2\xe3\xe3\xe3\xe4\xe4\xe4\xe5\xe5\xe5\xe6\xe6\xe6\xe7\xe7\xe7\xe8\xe8\xe8\xe9\xe9\xe9\xea\xea\xea\xeb\xeb\xeb\xec\xec\xec\xed\xed\xed\xee\xee\xee\xef\xef\xef\xf0\xf0\xf0\xf1\xf1\xf1\xf2\xf2\xf2\xf3\xf3\xf3\xf4\xf4\xf4\xf5\xf5\xf5\xf6\xf6\xf6\xf7\xf7\xf7\xf8\xf8\xf8\xf9\xf9\xf9\xfa\xfa\xfa\xfb\xfb\xfb\xfc\xfc\xfc\xfd\xfd\xfd\xfe\xfe\xfe\xff\xff\xff\x01\xb3\x9a&\x00\x00\x01+IDATx\x9c\x9d\x91\xe9\x92\x84 \x0c\x84s (\x08A\xc6\xf7\x7f\xd6M8\x9c\x9d\xa9\xda?\xdb\x96W\x7f\xb6\xd5\x04\xf0\x7f\t\xdcT\x9c\xf7}\x0f\xf4I\x16U\x12\x16\t\x1f\xdaw\xe7\x16!\xcay\x9cL\xac\xc4\xfb\x18\x06\xc9\x81\x14\xd0\xd4o\xc2\x88\xa5X\x1e\x0b"\x1a\xf1\xd1\x05\x0f1f3\x06\xc9\x85\xb6Nb\x08\xe0\xa2d\x9cK\xd00\xefKF\x16\xf0E\ti?\xb2\x8aJ2\xf9\'\x83\xa8]Fy#\xa8\x1d\x00\x91\xa1\x01d\xad\x9e1h\x11m EM(\xa2vA\xe0\xc2,T,\xe3\x98$\xc1T\xd307 \xda6[)C\xea\x16\x1aK\x8c\rDv#BF\xd4\x03\xb4\x0b\xa4\x02,:\x83\xe8H i\xc2<\xec,%\xa2>\x1d\xc9)\x8dD\xad\xfd\x89a\xce\xad\x10\xdbw\xa0\xa0Z.\xa54v!\x8a@\x85\xeb:^\xaf\xe38\xcfZ\x19\xfc"E\xbf\xbf.\x03F\x1a\xf0 Q\xbbUM\xbc\xd5\xfd\xbeR\xa2\xda\x9d\xb3\x1f\xdd\x97\xbc\xf5Y\xf35\xc9\x93\xd0\x19\xe8\xdc\\k_\x7f\xf2g\xb6\x19\xc4\xf8\x90s\x91\x17\xe5\xbe\x0b\xf7\xf9\x99\xd0\x87\xfbV\xb2\xbd\xd5\xfd\xe7\xed?\xe4\x07\xca\xeb\x13o\x88}\xa9\x12\x00\x00\x00\x00IEND\xaeB`\x82'
-CURSORMAPPINGS = {
-    # these are the only cursors supported by Tkhtml :(
+DEFAULT_PARSE_MODE = "xml"
+DEFAULT_ENGINE_MODE = "standards"
+BROKEN_IMAGE = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x19\x00\x00\x00\x1e\x08\x03\x00\x00\x00\xee2E\xe9\x00\x00\x03\x00PLTE\xc5\xd5\xf4\xcd\xdb\xf4\xdf\xe8\xfc\xd5\xdd\xf4\xa5\xa3\xa5\x85\x83\x85\xfc\xfe\xfc\xf4\xf6\xf9\x95\x93\x95S\xb39\x9d\x9f\x9d\xc5\xd3\xedo\xbbg\xd5\xe3\xf4\xd5\xdf\xfc\xd5\xe3\xfc\xb5\xcf\xd5\x9d\xc7\xb5\xc5\xdf\xe5S\xaf9\x8d\xc7\x8d\x15\x15\x15\x16\x16\x16\x17\x17\x17\x18\x18\x18\x19\x19\x19\x1a\x1a\x1a\x1b\x1b\x1b\x1c\x1c\x1c\x1d\x1d\x1d\x1e\x1e\x1e\x1f\x1f\x1f   !!!"""###$$$%%%&&&\'\'\'((()))***+++,,,---...///000111222333444555666777888999:::;;;<<<===>>>???@@@AAABBBCCCDDDEEEFFFGGGHHHIIIJJJKKKLLLMMMNNNOOOPPPQQQRRRSSSTTTUUUVVVWWWXXXYYYZZZ[[[\\\\\\]]]^^^___```aaabbbcccdddeeefffggghhhiiijjjkkklllmmmnnnooopppqqqrrrssstttuuuvvvwwwxxxyyyzzz{{{|||}}}~~~\x7f\x7f\x7f\x80\x80\x80\x81\x81\x81\x82\x82\x82\x83\x83\x83\x84\x84\x84\x85\x85\x85\x86\x86\x86\x87\x87\x87\x88\x88\x88\x89\x89\x89\x8a\x8a\x8a\x8b\x8b\x8b\x8c\x8c\x8c\x8d\x8d\x8d\x8e\x8e\x8e\x8f\x8f\x8f\x90\x90\x90\x91\x91\x91\x92\x92\x92\x93\x93\x93\x94\x94\x94\x95\x95\x95\x96\x96\x96\x97\x97\x97\x98\x98\x98\x99\x99\x99\x9a\x9a\x9a\x9b\x9b\x9b\x9c\x9c\x9c\x9d\x9d\x9d\x9e\x9e\x9e\x9f\x9f\x9f\xa0\xa0\xa0\xa1\xa1\xa1\xa2\xa2\xa2\xa3\xa3\xa3\xa4\xa4\xa4\xa5\xa5\xa5\xa6\xa6\xa6\xa7\xa7\xa7\xa8\xa8\xa8\xa9\xa9\xa9\xaa\xaa\xaa\xab\xab\xab\xac\xac\xac\xad\xad\xad\xae\xae\xae\xaf\xaf\xaf\xb0\xb0\xb0\xb1\xb1\xb1\xb2\xb2\xb2\xb3\xb3\xb3\xb4\xb4\xb4\xb5\xb5\xb5\xb6\xb6\xb6\xb7\xb7\xb7\xb8\xb8\xb8\xb9\xb9\xb9\xba\xba\xba\xbb\xbb\xbb\xbc\xbc\xbc\xbd\xbd\xbd\xbe\xbe\xbe\xbf\xbf\xbf\xc0\xc0\xc0\xc1\xc1\xc1\xc2\xc2\xc2\xc3\xc3\xc3\xc4\xc4\xc4\xc5\xc5\xc5\xc6\xc6\xc6\xc7\xc7\xc7\xc8\xc8\xc8\xc9\xc9\xc9\xca\xca\xca\xcb\xcb\xcb\xcc\xcc\xcc\xcd\xcd\xcd\xce\xce\xce\xcf\xcf\xcf\xd0\xd0\xd0\xd1\xd1\xd1\xd2\xd2\xd2\xd3\xd3\xd3\xd4\xd4\xd4\xd5\xd5\xd5\xd6\xd6\xd6\xd7\xd7\xd7\xd8\xd8\xd8\xd9\xd9\xd9\xda\xda\xda\xdb\xdb\xdb\xdc\xdc\xdc\xdd\xdd\xdd\xde\xde\xde\xdf\xdf\xdf\xe0\xe0\xe0\xe1\xe1\xe1\xe2\xe2\xe2\xe3\xe3\xe3\xe4\xe4\xe4\xe5\xe5\xe5\xe6\xe6\xe6\xe7\xe7\xe7\xe8\xe8\xe8\xe9\xe9\xe9\xea\xea\xea\xeb\xeb\xeb\xec\xec\xec\xed\xed\xed\xee\xee\xee\xef\xef\xef\xf0\xf0\xf0\xf1\xf1\xf1\xf2\xf2\xf2\xf3\xf3\xf3\xf4\xf4\xf4\xf5\xf5\xf5\xf6\xf6\xf6\xf7\xf7\xf7\xf8\xf8\xf8\xf9\xf9\xf9\xfa\xfa\xfa\xfb\xfb\xfb\xfc\xfc\xfc\xfd\xfd\xfd\xfe\xfe\xfe\xff\xff\xff\x01\xb3\x9a&\x00\x00\x01+IDATx\x9c\x9d\x91\xe9\x92\x84 \x0c\x84s (\x08A\xc6\xf7\x7f\xd6M8\x9c\x9d\xa9\xda?\xdb\x96W\x7f\xb6\xd5\x04\xf0\x7f\t\xdcT\x9c\xf7}\x0f\xf4I\x16U\x12\x16\t\x1f\xdaw\xe7\x16!\xcay\x9cL\xac\xc4\xfb\x18\x06\xc9\x81\x14\xd0\xd4o\xc2\x88\xa5X\x1e\x0b"\x1a\xf1\xd1\x05\x0f1f3\x06\xc9\x85\xb6Nb\x08\xe0\xa2d\x9cK\xd00\xefKF\x16\xf0E\ti?\xb2\x8aJ2\xf9\'\x83\xa8]Fy#\xa8\x1d\x00\x91\xa1\x01d\xad\x9e1h\x11m EM(\xa2vA\xe0\xc2,T,\xe3\x98$\xc1T\xd307 \xda6[)C\xea\x16\x1aK\x8c\rDv#BF\xd4\x03\xb4\x0b\xa4\x02,:\x83\xe8H i\xc2<\xec,%\xa2>\x1d\xc9)\x8dD\xad\xfd\x89a\xce\xad\x10\xdbw\xa0\xa0Z.\xa54v!\x8a@\x85\xeb:^\xaf\xe38\xcfZ\x19\xfc"E\xbf\xbf.\x03F\x1a\xf0 Q\xbbUM\xbc\xd5\xfd\xbeR\xa2\xda\x9d\xb3\x1f\xdd\x97\xbc\xf5Y\xf35\xc9\x93\xd0\x19\xe8\xdc\\k_\x7f\xf2g\xb6\x19\xc4\xf8\x90s\x91\x17\xe5\xbe\x0b\xf7\xf9\x99\xd0\x87\xfbV\xb2\xbd\xd5\xfd\xe7\xed?\xe4\x07\xca\xeb\x13o\x88}\xa9\x12\x00\x00\x00\x00IEND\xaeB`\x82'
+CURSOR_MAP = {
     "crosshair": "crosshair",
     "default": "",
     "pointer": "hand2",
@@ -68,8 +74,29 @@ CURSORMAPPINGS = {
     "sw-resize": "bottom_left_corner",
     "s-resize": "bottom_side",
     "w-resize": "left_side",
+    # the following cursors only work with experimental Tkhtml
+    "context-menu": "",
+    "cell": "cross",
+    "vertical-text": "xterm",
+    "alias": "hand2",
+    "copy": "cross",
+    "no-drop": "X_cursor",
+    "not-allowed": "X_cursor", # circle works too on some platforms
+    "grab": "hand2",
+    "grabbing": "fleur",
+    "all-scroll": "",
+    "col-resize": "sb_h_double_arrow",
+    "row-resize": "sb_v_double_arrow",
+    "ew-resize": "sb_h_double_arrow",
+    "ns-resize": "sb_v_double_arrow",
+    "nesw-resize": "top_right_corner",
+    "nwse-resize": "bottom_right_corner",
+    "zoom-in": "",
+    "zoom-out": "",
+    "none": "none",
+    "gobbler": "gobbler" # purely for humor :)
 }
-DEFAULTSTYLE = r"""
+DEFAULT_STYLE = r"""
 /* Default stylesheet to be loaded whenever HTML is parsed. */
 /* This is a modified version of the stylesheet that comes bundled with Tkhtml. */
 /* Display types for non-table items. */
@@ -230,7 +257,7 @@ BR {
  */
 INPUT[type="hidden"] { display: none }
 INPUT, TEXTAREA, SELECT, BUTTON { 
-  border: 1px solid black;
+  border: 1px solid #828282;
   background-color: white;
   line-height: normal;
   vertical-align: middle;
@@ -260,6 +287,11 @@ INPUT[type="submit"],INPUT[type="button"], INPUT[type="reset"], BUTTON {
   background-color: #d9d9d9;
   color: #000000;
   color: tcl(::tkhtml::if_disabled #666666 #000000);
+}
+INPUT[type="color"] {
+  cursor: pointer;
+  padding: 5px;
+  background-color: #ccc;
 }
 INPUT[disabled], BUTTON[disabled] {
     cursor: auto;
@@ -295,7 +327,7 @@ FRAMESET {
 IFRAME {
   width: 300px;
   height: 200px;
-  border: 1px solid black;
+  border: 1px solid #828282;
 }
 /*
  *************************************************************************
@@ -313,7 +345,7 @@ body a[href]:visited { color: attr(vlink x body) }
 [height]           { height:           attr(height l) }
 basefont[size]     { font-size:        attr(size) }
 font[size]         { font-size:        tcl(::tkhtml::size_to_fontsize) }
-[bgcolor]          { background-color: attr(bgcolor) }
+[bgcolor]       img   { background-color: attr(bgcolor) }
 BR[clear]          { clear: attr(clear) }
 BR[clear="all"]    { clear: both; }
 /* Standard html <img> tags - replace the node with the image at url $src */
@@ -392,7 +424,7 @@ SPAN[spancontent]:after {
 }
 """
 
-DARKSTYLE = """
+DARK_STYLE = DEFAULT_STYLE + """
 /* Additional stylesheet to be loaded whenever dark mode is enabled. */
 /* Display properties document body. */
 HTML, BODY {
@@ -414,34 +446,42 @@ INPUT[type="submit"],INPUT[type="button"], INPUT[type="reset"], BUTTON {
   color: tcl(::tkhtml::if_disabled #666666 #ffffff);
 }
 """
-ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "tkhtml")
-WORKING_DIR = os.getcwd()
-PLATFORM = platform.uname()
-BUILTINPAGES = {
-    "about:blank": "<html><head><style>html,body{{background-color:{}}}</style><title>about:blank</title></head><body></body></html>",
-    "about:tkinterweb": "<html scroll-x=true><head><style>html,body{{background-color:{}}}</style><title>about:tkinterweb</title><style>code{{display:block}}</style></head><body>\
-<code>Welcome to "+__title__+"!</code><code>Licenced under the "+__license__+" licence</code><code>"+__copyright__+"</code>\
-<code style=\"display:block;text-decoration:underline;margin-top:35px\">Debugging information</code>\
-<code>Version: "+__version__+"</code><code>Header: "+HEADER["User-Agent"]+"</code><code>Default parse mode: "+DEFAULTPARSEMODE+"</code>\
-<code style=\"display:block\">Root directory: "+ROOT_DIR+"</code><code style=\"display:block\">Working directory: "+WORKING_DIR+"</code>\
-<code style=\"display:block;text-decoration:underline;margin-top:35px\">System specs</code>\
-<code>Python version: "+str(sys.version)+"</code><code>Tcl version: "+str(tk.TclVersion)+"</code><code>Tk version: "+str(tk.TkVersion)+"</code>\
-<code>Platform: "+str(PLATFORM.system)+"</code><code>Machine: "+str(PLATFORM.machine)+"</code><code>Processor: "+str(PLATFORM.processor)+"</code></body></html>",
-    "about:error": "<html style=\"overflow:hidden;height:100%;width:100%\"><head><style>html,body{{background-color:{}}}</style><title>Error {}</title></head>\
-<body style=\"text-align:center;margin:0;padding:0;position:fixed;top:50%;bottom:50%;left:0;right:0;\">\
-<table style=\"display:table;text-align:center;width:100%;margin-top:-40px;height:80px;overflow:hidden\"><tr><td style=\"vertical-align:middle\">\
-<h2 style=\"margin:0;padding:0;font-weight:normal\">Oops.</h2><p></p><h3 style=\"margin:0;padding:0;font-weight:normal\">The page you've requested could not be found :(</h3>\
-</td></tr></table></body></html>",
-    "about:image": "<html style=\"margin:0;padding:0;overflow:hidden\"><head><style>html,body,object{{background-color:{}}}</style></head>\
-<body style=\"margin:0;padding:0\"><object allowstyling data=\"{}\"><code style=\"display:block;margin:8px\">No image selected</code></object></body></html>",
-    "about:view-source": "<html scroll-x=true><head><style>\
-html,body{{background-color:{}}}\
-pre::before{{counter-reset:listing}}\
-code{{counter-increment:listing}}\
-code::before{{content:counter(listing);display:inline-block;width:{}px;margin-left:5px;padding-right:5px;margin-right:5px;text-align:right;border-right:1px solid grey60;color:grey60}}\
-</style></head><body><pre style=\"margin:0;padding:0\">{}</pre></body></html>",
+BUILTIN_PAGES = {
+    "about:blank": "<html><head><style>html,body{{background-color:{};color:{};cursor:gobbler;width:100%;height:100%;margin:0}}</style><title>about:blank</title></head><body></body></html>",
+    "about:tkinterweb": "<html tkinterweb-overflow-x=auto><head><style>html,body{{background-color:{};color:{};}}</style><title>about:tkinterweb</title><style>code{{display:block}}</style></head><body>\
+        <code>Welcome to "+__title__+"!</code><code>Licenced under the "+__license__+" licence</code><code>"+__copyright__+"</code>\
+        <code style=\"display:block;text-decoration:underline;margin-top:35px\">Debugging information</code>\
+        <code>Version: "+__version__+"</code><code>Default headers: "+HEADERS["User-Agent"]+"</code><code>Default parse mode: "+DEFAULT_PARSE_MODE+"</code>\
+        <code>Default rendering engine mode: "+DEFAULT_ENGINE_MODE+"</code>\
+        <code style=\"display:block\">Root directory: "+ROOT_DIR+"</code><code style=\"display:block\">Working directory: "+WORKING_DIR+"</code>\
+        <code style=\"display:block;text-decoration:underline;margin-top:35px\">System specs</code>\
+        <code>Python version: "+".".join(PYTHON_VERSION)+"</code><code>Tcl version: "+str(tk.TclVersion)+"</code><code>Tk version: "+str(tk.TkVersion)+"</code>\
+        <code>Platform: "+str(PLATFORM.system)+"</code><code>Machine: "+str(PLATFORM.machine)+"</code><code>Processor: "+str(PLATFORM.processor)+"</code></body></html>",
+    "about:error": "<html><head><style>html,body,table,tr,td{{background-color:{};color:{};width:100%;height:100%;margin:0}}</style><title>Error {}</title></head>\
+        <body><table><tr><td tkinterweb-full-page style=\"text-align:center;vertical-align:middle\">\
+        <h2 style=\"margin:0;padding:0;font-weight:normal\">Oops</h2>\
+        <h3 style=\"margin-top:10px;margin-bottom:25px;font-weight:normal\">The page you've requested could not be found :(</h3>\
+        <object handleremoval allowscrolling style=\"cursor:pointer\" data=\"{}\"></object>\
+        </td></tr></table></body></html>",
+    "about:image": "<html><head><style>html,body,table,tr {{background-color:{};color:{};width:100%;height:100%;margin:0}}</style></head><body>\
+        <table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle;padding:4px 4px 0px 4px'><img style='max-width:100%;max-height:100%' src='replace:{}'><h3 style=\"margin:0;padding:0;font-weight:normal\"></td></tr></table></body></html>",
+    "about:view-source": "<html tkinterweb-overflow-x=auto><head><style>\
+        html,body{{background-color:{};color:{};}}\
+        pre::before{{counter-reset:listing}}\
+        code{{counter-increment:listing}}\
+        code::before{{content:counter(listing);display:inline-block;width:{}px;margin-left:5px;padding-right:5px;margin-right:5px;text-align:right;border-right:1px solid grey60;color:grey60}}\
+        </style></head><body><pre style=\"margin:0;padding:0\">{}</pre></body></html>",
+}
+BUILTIN_ATTRIBUTES = {
+    "overflow-x": "tkinterweb-overflow-x",
+    "vertical-align": "tkinterweb-full-page"
 }
 
+DOWNLOADING_RESOURCE_EVENT = "<<DownloadingResource>>"
+DONE_LOADING_EVENT = "<<DoneLoading>>"
+URL_CHANGED_EVENT = "<<UrlChanged>>"
+ICON_CHANGED_EVENT = "<<IconChanged>>"
+TITLE_CHANGED_EVENT = "<<TitleChanged>>"
 
 tkhtml_loaded = False
 combobox_loaded = False
@@ -476,10 +516,10 @@ class AutoScrollbar(ttk.Scrollbar):
             lo, hi = self.get()
             self.set(lo, hi)
 
-    def pack(self, **kw):
+    def pack(self, **kwargs):
         raise tk.TclError("cannot use pack with this widget")
 
-    def place(self, **kw):
+    def place(self, **kwargs):
         raise tk.TclError("cannot use place with this widget")
 
 
@@ -614,7 +654,7 @@ class FileSelector(tk.Frame):
         self.label.config(text="No files selected.")
         self.event_generate("<<Modified>>")
 
-    def get_value(self):
+    def get(self):
         return self.files
 
     def configure(self, *args, **kwargs):
@@ -631,59 +671,28 @@ class ColourSelector(tk.Frame):
     "Colour selector widget"
 
     def __init__(self, parent, colour, **kwargs):
-        tk.Frame.__init__(self, parent, bg="#ccc", highlightthickness=0)
         colour = colour if colour else "#000000"
-        self.selector = tk.Button(
-            self,
+        tk.Button.__init__(self, parent,
             bg=colour,
             command=self.select_colour,
             activebackground=colour,
-            width=5,
             highlightthickness=0,
             borderwidth=0,
         )
-        self.selector.pack(expand=True, fill="both", padx=5, pady=5)
-        self.bind("<Button-1>", self.on_click)
-        self.bind("<ButtonRelease-1>", self.on_release)
-        self.selector.bind("<Button-1>", self.on_click)
-        self.selector.bind("<ButtonRelease-1>", self.on_button_release)
-        self.colour = colour
         self.default_colour = colour
-        self.disabled = True
-
-    def on_release(self, event):
-        if not self.disabled:
-            self.config(bg="#ccc")
-            self.select_colour()
-
-    def on_button_release(self, event):
-        if not self.disabled:
-            self.config(bg="#ccc")
-
-    def on_click(self, event):
-        if not self.disabled:
-            self.config(bg="#aaa")
 
     def select_colour(self):
-        colour = colorchooser.askcolor(title="Choose color")[1]
-        self.colour = colour if colour else self.colour
-        self.selector.config(bg=self.colour, activebackground=self.colour)
-        self.event_generate("<<Modified>>")
-
-    def configure(self, *args, **kwargs):
-        state = kwargs.pop("state")
-        if state == "disabled":
-            self.selector.config(state="disabled")
-            self.disabled = True
-        self.config(*args, **kwargs)
+        colour = colorchooser.askcolor(title="Choose color", initialcolor=self.cget("bg"))[1]
+        if colour:
+            self.config(bg=colour, activebackground=colour)
+            self.event_generate("<<Modified>>")
 
     def reset(self):
-        self.colour = self.default_colour
-        self.selector.config(bg=self.colour, activebackground=self.colour)
+        self.config(bg=self.default_colour, activebackground=self.default_colour)
         self.event_generate("<<Modified>>")
 
-    def get_value(self):
-        return self.colour
+    def get(self):
+        return self.cget("bg")
 
 
 class Notebook(ttk.Frame):
@@ -799,25 +808,23 @@ class PlaceholderThread:
     def isrunning(self):
         return True
 
-def rgb_to_hex(red, green, blue, *args):
-    "Convert RGB colour code to HEX"
-    return f"#{red:02x}{green:02x}{blue:02x}"
 
-def download(url, data=None, method="GET", decode=None, insecure=False):
+def download(url, data=None, method="GET", decode=None, insecure=False, headers=()):
     "Fetch files"
+    "Note that headers should be converted from dict to tuple before calling download() as dicts aren't hashable"
     ctx = ssl.create_default_context()
     if insecure:
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
 
-    thread = threadname()
+    thread = get_current_thread()
     url = url.replace(" ", "%20")
     if data and (method == "POST"):
-        req = urlopen(Request(url, data, headers=HEADER), context=ctx)
+        req = urlopen(Request(url, data, headers=dict(headers)), context=ctx)
     else:
-        req = urlopen(Request(url, headers=HEADER), context=ctx)
+        req = urlopen(Request(url, headers=dict(headers)), context=ctx)
     if not thread.isrunning():
-        return None, url, ""
+        return None, url, "", ""
     data = req.read()
     url = req.geturl()
     info = req.info()
@@ -841,7 +848,7 @@ def download(url, data=None, method="GET", decode=None, insecure=False):
 
 
 @lru_cache()
-def cachedownload(*args, **kwargs):
+def cache_download(*args, **kwargs):
     "Fetch files and add them to the lru cache"
     return download(*args, **kwargs)
 
@@ -853,7 +860,7 @@ def shorten(string):
     return string
 
 
-def threadname():
+def get_current_thread():
     "Return the currently running thread"
     thread = threading.current_thread()
     if thread.name == "MainThread":
@@ -866,33 +873,48 @@ def strip_css_url(url):
     return url[4:-1].replace("'", "").replace('"', "")
 
 
+def rgb_to_hex(red, green, blue, *args):
+    "Convert RGB colour code to HEX"
+    return f"#{red:02x}{green:02x}{blue:02x}"
+
+def invert_color(rgb, match, limit):
+    "Check colour, invert if necessary, and convert"
+    if ("background" in match and sum(rgb) < limit) or (
+        match == "color" and sum(rgb) > limit
+    ):
+        return rgb_to_hex(*rgb)
+    else:
+        rgb[0] = max(1, min(255, 240 - rgb[0]))
+        rgb[1] = max(1, min(255, 240 - rgb[1]))
+        rgb[2] = max(1, min(255, 240 - rgb[2]))
+        return rgb_to_hex(*rgb)
+
 def get_alt_font():
     "Get the location of the truetype file to be used for image alternate text"
     return os.path.join(ROOT_DIR, "opensans.ttf")
-
 
 def get_tkhtml_folder():
     "Get the location of the platform's tkhtml binary"
     # Universal sdist
     if platform.system() == "Linux":
-        if "arm" in PLATFORM.machine:  # 32 bit arm Linux - Raspberry Pi and others
-            return os.path.join(ROOT_DIR, "linux_armv71")
-        elif "aarch64" in PLATFORM.machine:  # 64 bit arm Linux - Raspberry Pi and others
-            return os.path.join(ROOT_DIR, "manylinux2014_aarch64")
-        elif sys.maxsize > 2**32:  # 64 bit Linux
-            return os.path.join(ROOT_DIR, "manylinux1_x86_64")
-        else:  # 32 bit Linux
-            return os.path.join(ROOT_DIR, "manylinux1_i686")
+       if "arm" in PLATFORM.machine:  # 32 bit arm Linux - Raspberry Pi and others
+           return os.path.join(ROOT_DIR, "linux_armv71")
+       elif "aarch64" in PLATFORM.machine:  # 64 bit arm Linux - Raspberry Pi and others
+           return os.path.join(ROOT_DIR, "manylinux2014_aarch64")
+       elif sys.maxsize > 2**32:  # 64 bit Linux
+           return os.path.join(ROOT_DIR, "manylinux1_x86_64")
+       else:  # 32 bit Linux
+           return os.path.join(ROOT_DIR, "manylinux1_i686")
     elif platform.system() == "Darwin":
-        if "arm" in PLATFORM.machine:  # M1 Mac
-            return os.path.join(ROOT_DIR, "macosx_11_0_arm64")
-        else:  # other Macs
-            return os.path.join(ROOT_DIR, "macosx_10_6_x86_64")
+       if "arm" in PLATFORM.machine:  # M1 Mac
+           return os.path.join(ROOT_DIR, "macosx_11_0_arm64")
+       else:  # other Macs
+           return os.path.join(ROOT_DIR, "macosx_10_6_x86_64")
     else:
-        if sys.maxsize > 2**32:  # 64 bit Windows
-            return os.path.join(ROOT_DIR, "win_amd64")
-        else:  # 32 bit Windows
-            return os.path.join(ROOT_DIR, "win32")
+       if sys.maxsize > 2**32:  # 64 bit Windows
+           return os.path.join(ROOT_DIR, "win_amd64")
+       else:  # 32 bit Windows
+           return os.path.join(ROOT_DIR, "win32")
     # Platform-specific wheel
     return os.path.join(ROOT_DIR, "binaries")
 
@@ -922,7 +944,7 @@ def notifier(text):
         sys.stdout.write(str(text) + "\n\n")
     except Exception:
         "sys.stdout.write doesn't work in .pyw files."
-        "Since .pyw files have no console, we can simply not bother printing messages."
+        "Since .pyw files have no console, we won't bother printing messages."
 
 
 def tkhtml_notifier(name, text, *args):
@@ -930,4 +952,9 @@ def tkhtml_notifier(name, text, *args):
     try:
         sys.stdout.write("DEBUG " + str(name) + ": " + str(text) + "\n\n")
     except Exception:
-        pass
+        "sys.stdout.write doesn't work in .pyw files."
+        "Since .pyw files have no console, we won't bother printing messages."
+
+def placeholder(*args, **kwargs):
+    """Blank placeholder function. The only purpose of this is to
+    improve readability by avoiding `lambda a, b, c, d: None` statements."""

@@ -4,7 +4,7 @@
 **The `Demo` class provides a simple example of TkinterWeb in action by opening a Tkinter window with the Tkinter Wiki loaded.**
 
 ## Usage
-To test the TkinterWeb demo, use the following:
+To try the TkinterWeb demo, use the following:
 ```
 from tkinterweb import Demo
 Demo()

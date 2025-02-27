@@ -6,21 +6,29 @@ These already exist and are generally resource-hungry and not highly integratabl
 Being based on Tkhtml, TkinterWeb is intended to be fast, lightweight, and highly integrated with Tkinter while providing far more control over layouts and styling than is feasible than Tkinter
 TkinterWeb displays older or simpler websites well but may be found lacking on more modern websites
 
-This file was originally created for testing TkinterWeb and could be cleaned up a bit, but nonetheless is a great example of some of the things that can be done with the software, including:
+This code was originally created for testing TkinterWeb and is a bit of a mess, but nonetheless is a great example of some of the things that can be done with the software, including:
  - loading pages
  - searching pages
  - embedding Tkinter widgets
+ - managing input elements
  - manipulating the DOM
  - and others
  
 Copyright (c) 2025 Andereoo
 """
 
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
+
 import tkinter as tk
+from tkinter import filedialog
 from tkinter import ttk
 
 from tkinterweb import HtmlFrame, Notebook, __version__
-from tkinterweb.utilities import BUILTINPAGES
+from tkinterweb.utilities import BUILTIN_PAGES, DONE_LOADING_EVENT, URL_CHANGED_EVENT, TITLE_CHANGED_EVENT, DOWNLOADING_RESOURCE_EVENT
 
 import os
 
@@ -36,7 +44,7 @@ if tuple(version) < (3, 25, 12):
     raise RuntimeError("This demo needs TkinterWeb version 3.25.12 or higher.")
 
 
-NEW_TAB = "https://wiki.python.org/moin/TkInter"
+NEW_TAB = "about:tkinterweb"
 
 
 class Page(tk.Frame):
@@ -47,55 +55,23 @@ class Page(tk.Frame):
         self.back_history = []
         self.forward_history = []
 
-        self.frame = frame = HtmlFrame(self, messages_enabled=False)
+        self.style = ttk.Style(self)
+
         topbar = ttk.Frame(self)
         self.bottombar = bottombar = ttk.Frame(self)
         self.findbar = findbar = ttk.Frame(self)
-        self.sidebar = sidebar = HtmlFrame(frame, messages_enabled=False, width=250)
-        sidebar.grid_propagate(False)
-        sidebar.set_fontscale(0.8)
-        sidebar.html.selection_enabled = False
+        
         self.linklabel = linklabel = ttk.Label(bottombar, text="Welcome to TkinterWeb!", cursor="hand2")
 
         self.backbutton = backbutton = ttk.Button(topbar, text="Back", command=self.back, state="disabled")
         self.forwardbutton = forwardbutton = ttk.Button(topbar, text="Forward", command=self.forward, state="disabled")
         self.reloadbutton = reloadbutton = ttk.Button(topbar, text="Reload", command=self.reload, cursor="hand2")
-        self.urlbar = urlbar = ttk.Entry(topbar)
+        self.urlbar = urlbar = ttk.Entry(topbar, width=100)
         newbutton = ttk.Button(topbar, text="New tab", command=self.open_new_tab, cursor="hand2")
         closebutton = ttk.Button(topbar, text="Close", command=self.close_current_tab, cursor="hand2")
         self.findbutton = findbutton = ttk.Button(topbar, text="Find",  command=self.open_findbar, cursor="hand2")
         self.settingsbutton = settingsbutton = ttk.Button(topbar, text="Settings", command=self.open_sidebar, cursor="hand2")
 
-        self.images_var = images_var = tk.IntVar(value=1)
-        images_enabled = ttk.Checkbutton(sidebar, text="Enable images", variable=images_var, command=self.toggle_images)
-        self.styles_var = styles_var = tk.IntVar(value=1)
-        styles_enabled = ttk.Checkbutton(sidebar, text="Enable stylesheets", variable=styles_var, command=self.toggle_styles)
-        self.forms_var = forms_var = tk.IntVar(value=1)
-        forms_enabled = ttk.Checkbutton(sidebar, text="Enable forms", variable=forms_var, command=self.toggle_forms)
-        self.objects_var = objects_var = tk.IntVar(value=1)
-        objects_enabled = ttk.Checkbutton(sidebar, text="Enable objects", variable=objects_var, command=self.toggle_objects)
-        self.caches_var = caches_var = tk.IntVar(value=1)
-        caches_enabled = ttk.Checkbutton(sidebar, text="Enable caches", variable=caches_var, command=self.toggle_caches)
-        self.emojis_var = emojis_var = tk.IntVar(value=1)
-        emojis_enabled = ttk.Checkbutton(sidebar, text="Enable crash prevention", variable=emojis_var, command=self.toggle_emojis)
-        self.threads_var = threads_var = tk.IntVar(value=1)
-        threads_enabled = ttk.Checkbutton(sidebar, text="Enable threading", variable=threads_var, command=self.toggle_threads)
-        self.invert_page_var = invert_page_var = tk.IntVar(value=0)
-        invert_page_enabled = ttk.Checkbutton(sidebar, text="Dark theme", variable=invert_page_var, command=self.toggle_theme)
-        self.invert_images_var = invert_images_var = tk.IntVar(value=0)
-        invert_images_enabled = ttk.Checkbutton(sidebar, text="Image inverter", variable=invert_images_var, command=self.toggle_theme)
-        
-        self.ignoreimages_var = ignoreimages_var = tk.IntVar(value=1)
-        ignore_invalid_images = ttk.Checkbutton(sidebar, text="Ignore invalid images", variable=ignoreimages_var, command=self.toggle_ignore_invalid_images)
-        self.zoom_var = zoom_var = tk.StringVar(value=self.frame.get_zoom())
-        self.zoom_box = zoom_box = ttk.Scale(sidebar, from_=0.1, to=5, orient="horizontal", variable=zoom_var, command=self.set_zoom)
-        self.fontscale_var = fontscale_var = tk.StringVar(value=frame.get_fontscale())
-        self.fontscale_box = fontscale_box = ttk.Scale(sidebar, from_=0.1, to=5, orient="horizontal", variable=fontscale_var, command=self.set_fontscale)
-        self.parsemode_var = parsemode_var = tk.StringVar(value=frame.get_parsemode())
-        self.parsemode_box = parsemode_box = tk.Entry(sidebar, textvariable=parsemode_var)
-        self.broken_page_msg_box = broken_page_msg_box = tk.Text(sidebar, wrap=tk.WORD, width=30, undo=True)
-        self.view_source_button = view_source_button = ttk.Button(sidebar, text="View page source", command=self.view_source)
-        about_button = ttk.Button(sidebar, text="About TkinterWeb", command=lambda url="about:tkinterweb": self.open_new_tab(url))
         self.message_box = tk.Text(self, height=8)
 
         self.find_select_num = 1
@@ -111,21 +87,42 @@ class Page(tk.Frame):
         highlight_all = ttk.Checkbutton(findbar, text="Highlight All", variable=highlight_all_var, command=lambda change=False: self.search_in_page(change=change), cursor="hand2")
         self.find_bar_caption = find_bar_caption = ttk.Label(findbar, text="")
         find_close = ttk.Button(findbar, text="Close", command=self.open_findbar, cursor="hand2")
-            
-        frame.on_title_change(self.change_title)
-        frame.on_link_click(self.link_click)
-        frame.on_form_submit(self.form_submit)
-        frame.on_url_change(self.url_change)
-        frame.on_done_loading(self.done_loading)
-        frame.set_message_func(self.add_message)
-        frame.on_downloading_resource(self.on_downloading)
+
+        self.frame = frame = HtmlFrame(self, message_func=self.add_message, on_link_click=self.link_click, on_form_submit=self.form_submit)
+        self.sidebar = sidebar = HtmlFrame(frame, width=250, fontscale=0.8, selection_enabled=False, messages_enabled=False)
+        sidebar.grid_propagate(False)
+
+        self.images_var = images_var = tk.IntVar(value=self.frame["images_enabled"])
+        images_enabled = ttk.Checkbutton(sidebar, text="Enable images", variable=images_var, command=self.toggle_images)
+        self.styles_var = styles_var = tk.IntVar(value=self.frame["stylesheets_enabled"])
+        styles_enabled = ttk.Checkbutton(sidebar, text="Enable stylesheets", variable=styles_var, command=self.toggle_styles)
+        self.forms_var = forms_var = tk.IntVar(value=self.frame["forms_enabled"])
+        forms_enabled = ttk.Checkbutton(sidebar, text="Enable forms", variable=forms_var, command=self.toggle_forms)
+        self.objects_var = objects_var = tk.IntVar(value=self.frame["objects_enabled"])
+        objects_enabled = ttk.Checkbutton(sidebar, text="Enable objects", variable=objects_var, command=self.toggle_objects)
+        self.caches_var = caches_var = tk.IntVar(value=self.frame["caches_enabled"])
+        caches_enabled = ttk.Checkbutton(sidebar, text="Enable caches", variable=caches_var, command=self.toggle_caches)
+        self.crashes_var = crashes_var = tk.IntVar(value=self.frame["crash_prevention_enabled"])
+        emojis_enabled = ttk.Checkbutton(sidebar, text="Enable crash prevention", variable=crashes_var, command=self.toggle_emojis)
+        self.threads_var = threads_var = tk.IntVar(value=self.frame["threading_enabled"])
+        threads_enabled = ttk.Checkbutton(sidebar, text="Enable threading", variable=threads_var, command=self.toggle_threads)
+        self.invert_page_var = invert_page_var = tk.IntVar(value=self.frame["dark_theme_enabled"])
+        invert_page_enabled = ttk.Checkbutton(sidebar, text="Dark theme", variable=invert_page_var, command=self.toggle_theme)
+        self.invert_images_var = invert_images_var = tk.IntVar(value=self.frame["image_inversion_enabled"])
+        invert_images_enabled = ttk.Checkbutton(sidebar, text="Image inverter", variable=invert_images_var, command=self.toggle_inverter)
+        
+        self.view_source_button = view_source_button = ttk.Button(sidebar, text="View page source", command=self.view_source)
+        about_button = ttk.Button(sidebar, text="About TkinterWeb", command=lambda url="about:tkinterweb": self.open_new_tab(url))
+        
+        frame.bind(TITLE_CHANGED_EVENT, self.change_title)
+        frame.bind(URL_CHANGED_EVENT, self.url_change)
+        frame.bind(DONE_LOADING_EVENT, self.done_loading)
+        frame.bind(DOWNLOADING_RESOURCE_EVENT, self.on_downloading)
 
         linklabel.bind("<Button-1>", self.hide_messsage_box)
         urlbar.bind("<Return>", self.load_site)
         #frame.bind("<Motion>", self.on_motion)
         frame.bind("<Leave>", lambda event: linklabel.config(text="Done"))
-        broken_page_msg_box.bind("<<Modified>>", self.broken_page_msg_update)
-        broken_page_msg_box.bind('<KeyRelease>', self.broken_page_msg_change)
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
@@ -133,7 +130,8 @@ class Page(tk.Frame):
         frame.grid(column=0, row=1, sticky="nsew")
         bottombar.grid(column=0, row=4, sticky="ew")
 
-        self.sidebar.load_html(f"""<style>body {{background-color: {self.sidebar.background}}} p, span {{margin-top: 5px; margin-bottom: 5px; cursor: default}} object {{width: 100%; cursor: pointer}}</style>
+        self.sidebar.load_html(f"""<html><body><style>body p, span {{margin-top: 5px; margin-bottom: 5px; cursor: default}} object {{width: 100%; cursor: pointer}}
+                               input[type="color"] {{height:15px; width:30px; border: 1px solid black; padding:0; margin:5px;background-color: transparent}} label {{margin-left: 5px}}</style>
                                <object allowscrolling data={images_enabled}></object><br>
                                <object allowscrolling data={styles_enabled}></object><br>
                                <object allowscrolling data={forms_enabled}></object><br>
@@ -143,22 +141,29 @@ class Page(tk.Frame):
                                <object allowscrolling data={threads_enabled}></object><hr></hr>
                                <object allowscrolling data={invert_page_enabled}></object><br>
                                <object allowscrolling data={invert_images_enabled}></object><hr></hr>
-                               <object allowscrolling data={ignore_invalid_images}></object><hr></hr>
-                               <div><p style="float:left">Zoom:</p><span style="float:right" id="zoom">{zoom_var.get()}</span><object allowscrolling data={zoom_box}></object></div>
-                               <div><p style="float:left">Font scale:</p><span style="float:right" id="fontscale">{fontscale_var.get()}</span><object allowscrolling data={fontscale_box}></object></div><hr></hr>
-                               <p>Parse mode:</p><object allowscrolling data={parsemode_box}></object><hr></hr>
-                               <p>Broken page message:</p><object allowscrolling data={broken_page_msg_box}></object><hr></hr>
-                               <object allowscrolling data={view_source_button}></object>
-                               <object allowscrolling data={about_button}></object>
+                               <div><p style="float:left">Zoom:</p><span style="float:right" id="zoom">{self.frame['zoom']}</span><input style="width: 100%" type="range" name="zoom" min="0.1" max="10" value="{self.frame['zoom']}"></div>
+                               <div><p style="float:left">Font scale:</p><span style="float:right" id="fontscale">{self.frame['fontscale']}</span><input style="width: 100%" type="range" name="fontscale" min="0.1" max="10" value="{self.frame['fontscale']}"></div><hr style="margin-bottom:10px;margin-top:10px"></hr>
+                               <p>User agent:</p><input style="padding: 5px 0px 3px 0px; width: 100%; color:black" type="text" value="{self.frame["headers"]["User-Agent"]}"></input><hr style="margin-bottom:10px;margin-top:0"></hr>
+                               <p>Parse mode:</p><select style="padding: 3px 0px 1px 0px; width:100%; color:black"><option value="xml">xml</option><option value="xhtml">xhtml</option><option value="html">html</option></select><hr style="margin-bottom:10px;margin-top:0"></hr>
+                               <input type="color" name="find_match_highlight_color" value="{self.frame['find_match_highlight_color']}" />
+                               <input type="color" name="find_match_text_color" value="{self.frame['find_match_text_color']}" /><label>Find matches</label><br>
+                               <input type="color" name="find_current_highlight_color" value="{self.frame['find_current_highlight_color']}" />
+                               <input type="color" name="find_current_text_color" value="{self.frame['find_current_text_color']}" /><label>Current match</label><br>
+                               <input type="color" name="selected_text_highlight_color" value="{self.frame['selected_text_highlight_color']}" />
+                               <input type="color" name="selected_text_color" value="{self.frame['selected_text_color']}" /><label>Selected text</label><br>
+                               <hr></hr>
+                               <div style="margin-top: 20px"><object allowscrolling data={view_source_button}></object>
+                               <object allowscrolling data={about_button}></object></div></body></html>
         """)
+        sidebar.bind_class(self.sidebar.html.scrollable_node_tag, "<<Modified>>", self.on_modified)
 
         linklabel.pack(expand=True, fill="both")
         topbar.columnconfigure(4, weight=1)
         backbutton.grid(row=0, column=1, pady=5, padx=5)
         forwardbutton.grid(row=0, column=2, pady=5)
         reloadbutton.grid(row=0, column=3, pady=5, padx=5)
-        urlbar.grid(row=0, column=4, pady=5, padx=3, sticky="NSEW")
-        newbutton.grid(row=0, column=5, pady=5, padx=5)
+        urlbar.grid(row=0, column=4, pady=5, padx=20, sticky="NS")
+        newbutton.grid(row=0, column=5, pady=5, padx=(5,0))
         closebutton.grid(row=0, column=6, pady=5, padx=5)
         findbutton.grid(row=0, column=7, pady=5)
         settingsbutton.grid(row=0, column=8, pady=5, padx=5)
@@ -175,20 +180,143 @@ class Page(tk.Frame):
         ttk.Separator(findbar).grid(row=1, column=0, columnspan=9, sticky="ew", pady=4, padx=8)
 
         findbox_var.trace("w", self.search_in_page)
-        parsemode_var.trace("w", self.set_parsemode)
-
-        broken_page_msg_box.insert("end", BUILTINPAGES["about:error"].format(frame.background, "").replace("</", "\n</").replace(">", ">\n").replace("\n\n", "\n").replace("</html>\n", "</html>"))
 
         frame.bind("<Button-3>", self.on_right_click)
-        for widget in [urlbar, find_box, parsemode_box, zoom_box, fontscale_box]:
+        for widget in [urlbar, find_box]:
             widget.bind("<Control-a>", lambda e: self.after(50, self.select_all_in_entry, e.widget))
-        broken_page_msg_box.bind("<Control-a>", lambda e: self.after(50, self.select_all_in_text, e.widget))
 
         for child in findbar.winfo_children():
             child.bind("<Escape>", lambda x: self.open_findbar())
         for child in sidebar.winfo_children():
             child.bind("<Escape>", lambda x: self.close_sidebar())
         settingsbutton.bind("<Escape>", lambda x: self.close_sidebar())
+
+        self.toggle_theme(False)
+
+    def apply_dark_theme(self):
+        self.style.configure(".", background="#2b2b2b", foreground="#FFFFFF")
+        self.style.configure("TButton",
+            background="#444444",
+            foreground="#FFFFFF")
+        self.style.map("TButton",
+            background=[("active", "#666666"),
+                ("!active", "#444444")])
+        self.style.configure("TLabel",
+            background="#2b2b2b",
+            foreground="#FFFFFF")
+        self.style.configure("TEntry",
+            fieldbackground="#555555",
+            foreground="#FFFFFF")    
+        self.style.map('TScale',
+          background=[('active', '#2b2b2b'),
+                      ('!active', '#2b2b2b')])  
+        self.style.configure("TFrame",
+            background="#2b2b2b")
+        self.style.configure("TScrollbar",
+            background="#444444",
+            troughcolor="#2b2b2b",
+            arrowcolor="#FFFFFF")
+        self.style.map("TScrollbar",
+            background=[("active", "#666666"),
+                ("!active", "#444444")])
+        self.style.configure("TCheckbutton",
+            foreground="#FFFFFF")
+        self.style.map("TCheckbutton",
+            background=[("active", "#666666"),
+                ("!active", "#2b2b2b")])
+        self.style.configure("TNotebook",
+            background="#2b2b2b")
+        self.style.configure("TNotebook.Tab",
+            background="#444444",
+            foreground="#FFFFFF")
+        self.style.map("TNotebook.Tab", 
+            background=[("selected", "#444444"), 
+                ("!selected", "#2b2b2b")],
+            foreground=[("selected", "#FFFFFF"),
+                ("!selected", "#FFFFFF")])
+        self.sidebar.document.body.style.backgroundColor = "#2b2b2b"
+        self.sidebar.document.body.style.color = "#FFFFFF"
+        
+    def apply_light_theme(self):
+        self.style.configure(".", background="#F0F0F0", foreground="#000000",)
+        self.style.configure("TButton",
+            background="#DDDDDD",
+            foreground="#000000",
+            font=("Arial", 10),
+            relief="flat")
+        self.style.map("TButton",
+            background=[("active", "#CCCCCC"),
+                ("!active", "#DDDDDD")])
+        self.style.configure("TLabel",
+            background="#F0F0F0",
+            foreground="#000000",
+            font=("Arial", 10))
+        self.style.configure("TEntry",
+            fieldbackground="#FFFFFF",
+            foreground="#000000",
+            insertcolor="black",
+            borderwidth=0,
+            font=("Arial", 10))
+        self.style.configure("TScale",
+            troughcolor="white",)
+        self.style.map('TScale',
+          background=[('active', '#F0F0F0'),
+                      ('!active', '#F0F0F0')])
+        self.style.configure("TFrame",
+            background="#F0F0F0",)
+        self.style.configure("TScrollbar",
+            background="#DDDDDD",
+            troughcolor="#F0F0F0",
+            arrowcolor="#000000")
+        self.style.map("TScrollbar",
+            background=[("active", "#CCCCCC"),
+                ("!active", "#DDDDDD")])
+        self.style.configure("TCheckbutton",
+            background="#F0F0F0",
+            foreground="#000000",
+            font=("Arial", 10))
+        self.style.map("TCheckbutton",
+            background=[("active", "#DDDDDD"),
+                ("!active", "#F0F0F0")])
+        self.style.configure("TNotebook",
+            background="#F0F0F0",
+            relief="flat",
+            borderwidth=0,
+            tabmargins=(5, 5, 5, 0),
+            padding=0)
+        self.style.configure("TNotebook.Tab",
+            background="#DDDDDD",
+            foreground="#000000",
+            padding=(10, 5),
+            relief="flat",
+            borderwidth=0,
+            font=("Arial", 10))
+        self.style.map("TNotebook.Tab", 
+            background=[("selected", "#DDDDDD"),
+                ("!selected", "#F0F0F0")],
+            foreground=[("selected", "#000000"),
+                ("!selected", "#000000")])
+        # this only works on the non-experimental version of tkhtml
+        self.sidebar.document.body.style.backgroundColor = "#F0F0F0"
+        self.sidebar.document.body.style.color = "#000000"
+
+    def on_modified(self, event):
+        if "combobox" in str(event.widget):
+            self.frame["parsemode"] = event.widget.get()
+        elif "colourselector" in str(event.widget):
+            widgets = {v: k for k, v in self.sidebar.html.form_get_commands.items()}
+            node = widgets[event.widget.get]
+            name = self.sidebar.html.get_node_attribute(node, "name")
+            self.frame[name] = event.widget.get()
+            self.frame.html.update_tags()
+        elif "entry" in str(event.widget):
+            self.frame["headers"]["User-Agent"] = event.widget.get()
+        elif "scale" in str(event.widget):
+            widgets = {v: k for k, v in self.sidebar.html.form_get_commands.items()}
+            node = widgets[event.widget.get]
+            name = self.sidebar.html.get_node_attribute(node, "name")
+            self.frame[name] = event.widget.get()
+            self.sidebar.document.getElementById(name).textContent = round(float(event.widget.get()), 1)
 
     def select_all_in_entry(self, widget):
         widget.select_range(0, 'end')
@@ -200,8 +328,10 @@ class Page(tk.Frame):
         widget.see(tk.INSERT)
 
     def on_right_click(self, event):
-        url = self.frame.get_current_link(resolve=True)
-        selection = self.frame.get_currently_selected_text()
+        url = self.frame.get_currently_hovered_element().getAttribute("href")
+        if url:
+            url = self.frame.resolve_url(url)
+        selection = self.frame.get_selection()
         menu = tk.Menu(self, tearoff=0)
         if len(self.back_history) > 1:
             menu.add_command(label="Back", accelerator="Alt-Back", command=self.back)
@@ -217,10 +347,54 @@ class Page(tk.Frame):
         if selection:
             menu.add_command(label="Copy", accelerator="Ctrl-C", command=self.frame.html.copy_selection)
         menu.add_separator()
+        if self.frame["experimental"] or not os.name == "nt":
+            menu.add_command(label="Take screenshot", command=self.screenshot)
+        else:
+            menu.add_command(label="Take screenshot", state="disabled", command=self.screenshot)
+        menu.add_command(label="Snapshot page", command=self.snapshot)
+        if self.frame["experimental"]:
+            menu.add_command(label="Print page", accelerator="Ctrl-P", command=self.print)
+        else:
+            menu.add_command(label="Print page", accelerator="Ctrl-P", state="disabled", command=self.print)
+        menu.add_command(label="Save page", accelerator="Ctrl-S", command=self.save)
+        menu.add_separator()
         menu.add_command(label="Find in page", accelerator="Ctrl-F", command=lambda: self.open_findbar(True))
         if str(self.view_source_button.cget("state")) == "normal":
             menu.add_command(label="View page source", accelerator="Ctrl-U", command=self.view_source)
         menu.tk_popup(event.x_root, event.y_root, 0)
+
+    def screenshot(self):
+        file_path = filedialog.asksaveasfilename(
+            filetypes=[("JPG files", "*.jpg"), ("PNG files", "*.png"), ("All files", "*.*")],
+            title="Save Screenshot As"
+        )
+        if file_path:
+            self.frame.screenshot_page(file_path)
+
+    def snapshot(self):
+        file_path = filedialog.asksaveasfilename(
+            filetypes=[("HTML files", "*.html"), ("XHTML files", "*.xhtml"), ("XML files", "*.xml"), ("All files", "*.*")],
+            title="Snapshot Page As"
+        )
+        if file_path:
+            self.frame.snapshot_page(file_path)
+
+    def print(self):
+        if self.frame["experimental"]:
+            file_path = filedialog.asksaveasfilename(
+                filetypes=[("Postscript files", "*.ps"), ("All files", "*.*")],
+                title="Print Page As"
+            )
+            if file_path:
+                self.frame.print_page()
+
+    def save(self):
+        file_path = filedialog.asksaveasfilename(
+            filetypes=[("HTML files", "*.html"), ("XHTML files", "*.xhtml"), ("XML files", "*.xml"), ("All files", "*.*")],
+            title="Save Page As"
+        )
+        if file_path:
+            self.frame.save_page(file_path)
 
     def urlbar_focus(self):
         self.urlbar.focus()
@@ -268,58 +442,49 @@ class Page(tk.Frame):
             self.handle_view_source_button("about:error")
         self.linklabel.config(text=self.cut_text(message, 80))
 
-    def recursive_depth_change(self, *args):
-        self.frame.set_recursive_hover_depth(self.recursive_depth_var.get())
-
-    def thread_count_change(self, *args):
-        self.frame.set_maximum_thread_count(self.thread_count_var.get())
-
-    def broken_page_msg_update(self, event=None):
-        height = self.broken_page_msg_box.count("1.0", "end", "displaylines")[0]
-        self.broken_page_msg_box.configure(height=height)
-        self.broken_page_msg_box.edit_modified(False)
-
-    def broken_page_msg_change(self, event):
-        self.frame.set_broken_webpage_message(event.widget.get("1.0", 'end-1c'))
-
     def toggle_images(self):
-        self.frame.enable_images(self.images_var.get())
+        self.frame.configure(images_enabled= self.images_var.get())
         self.reload()
 
     def toggle_styles(self):
-        self.frame.enable_stylesheets(self.styles_var.get())
+        self.frame.configure(stylesheets_enabled = self.styles_var.get())
         self.reload()
 
     def toggle_forms(self):
-        self.frame.enable_forms(self.forms_var.get())
+        self.frame.configure(forms_enabled = self.forms_var.get())
         self.reload()
 
     def toggle_objects(self):
-        self.frame.enable_objects(self.objects_var.get())
+        self.frame.configure(objects_enabled = self.objects_var.get())
         self.reload()
 
     def toggle_caches(self):
-        self.frame.enable_caches(self.caches_var.get())
+        self.frame.configure(caches_enabled = self.caches_var.get())
         self.reload()
 
     def toggle_emojis(self):
-        self.frame.enable_crash_prevention(self.emojis_var.get())
+        self.frame.configure(crash_prevention_enabled = self.crashes_var.get())
         self.reload()
 
     def toggle_threads(self):
-        if self.threads_var.get():
-            self.frame.set_maximum_thread_count(self.original_thread_count)
+        self.frame.configure(threading_enabled = self.threads_var.get())
+        self.reload()
+
+    def toggle_theme(self, update_page=True):
+        value = self.invert_page_var.get()
+        if value:
+            self.apply_dark_theme()
         else:
-            self.original_thread_count = self.frame.html.max_thread_count
-            self.frame.set_maximum_thread_count(0)
-        self.reload()
+            self.apply_light_theme()
 
-    def toggle_theme(self):
-        self.frame.enable_dark_theme(self.invert_page_var.get(), self.invert_images_var.get())
-        self.reload()
+        self.frame.configure(dark_theme_enabled = value, 
+                             about_page_background=self.style.lookup('TFrame', 'background'), 
+                             about_page_foreground=self.style.lookup('TLabel', 'foreground'))
+        if update_page:
+            self.reload()
 
-    def toggle_ignore_invalid_images(self):
-        self.frame.ignore_invalid_images(self.ignoreimages_var.get())
+    def toggle_inverter(self):
+        self.frame.configure(image_inversion_enabled = self.invert_images_var.get())
         self.reload()
 
     def open_sidebar(self, keep_open=False):
@@ -329,8 +494,6 @@ class Page(tk.Frame):
         else:
             self.sidebar.grid(row=0, column=2, sticky="nsew")
             self.sidebar.update()
-            self.broken_page_msg_box.update()
-            self.broken_page_msg_update()
             self.settingsbutton.state(['pressed'])
             
     def close_sidebar(self):
@@ -371,7 +534,7 @@ class Page(tk.Frame):
             self.backbutton.config(state="disabled", cursor="arrow")
         self.url_change(url)
 
-    def on_downloading(self):
+    def on_downloading(self, event):
         self.reloadbutton.config(text="Stop", command=self.frame.stop)
 
     def forward(self):
@@ -399,37 +562,25 @@ class Page(tk.Frame):
         page = Page(self.master)
         self.master.add(page, text='')
         self.master.select(page)
+        page.invert_page_var.set(self.invert_page_var.get())
+        page.toggle_theme(False)
         page.link_click(url, history=False)
 
     def close_current_tab(self):
         self.master.forget(self)
 
-    def set_zoom(self, *args):
-        self.frame.set_zoom(self.zoom_var.get())
-        self.sidebar.document.getElementById("zoom").textContent(round(float(self.zoom_var.get()), 1))
-
-    def set_fontscale(self, *args):
-        self.frame.set_fontscale(self.fontscale_var.get())
-        self.sidebar.document.getElementById("fontscale").textContent(round(float(self.fontscale_var.get()), 1))
-
-    def set_parsemode(self, *args):
-        if self.parsemode_var.get() not in ["html", "xml", "xhtml"]:
-            self.parsemode_box.config(background="#ff6959")
-        else:
-            self.parsemode_box.config(background="white")
-            self.frame.set_parsemode(self.parsemode_var.get())
-
-    def done_loading(self):
+    def done_loading(self, event):
         self.linklabel.config(text="Done")
         self.reloadbutton.config(text="Reload", command=self.reload)
 
     def handle_view_source_button(self, url):
-        if url in BUILTINPAGES or url.startswith("view-source:"):
+        if url in BUILTIN_PAGES or url.startswith("view-source:"):
             self.view_source_button.config(state="disabled", cursor="arrow")
         else:
             self.view_source_button.config(state="normal", cursor="hand2")
 
-    def url_change(self, url):
+    def url_change(self, url=None):
+        if not isinstance(url, str): url = self.frame.current_url;
         self.master.tab(self, text=self.cut_text(url, 40))
         self.urlbar.delete(0, "end")
         self.urlbar.insert(0, url)
@@ -441,7 +592,7 @@ class Page(tk.Frame):
         self.forwardbutton.config(state="disabled", cursor="arrow")
         self.backbutton.config(state="normal", cursor="hand2")
 
-    def form_submit(self, url, data, method="GET"):
+    def form_submit(self, url, data, method):
         if method == "GET":
             self.addtohist(url+data)
         else:
@@ -452,12 +603,15 @@ class Page(tk.Frame):
         url = self.urlbar.get()
         if not any((url.startswith("file:"), url.startswith("http:"), url.startswith("about:"), url.startswith("view-source:"), url.startswith("https:"), url.startswith("data:"))):
             url = "http://{}".format(url)
+            self.urlbar.delete(0, "end")
+            self.urlbar.insert(0, url)
         self.addtohist(url)
-        self.frame.load_url(url)
+        self.frame.load_url(url, force=True)
         self.handle_view_source_button(url)
 
     def link_click(self, url, history=True):
         self.addtohist(url)
+        self.master.tab(self, text=self.cut_text(url, 40))
         if not history:
             self.backbutton.config(state="disabled", cursor="arrow")
         self.urlbar.delete(0, "end")
@@ -466,13 +620,13 @@ class Page(tk.Frame):
         self.handle_view_source_button(url)
 
     def reload(self):
-        self.frame.load_url(self.back_history[-1], force=True)
+        self.frame.load_url(self.frame.current_url, force=True)
 
-    def change_title(self, title):
-        self.master.tab(self, text=self.cut_text(title, 40))  
+    def change_title(self, event):
+        self.master.tab(self, text=self.cut_text(self.frame.title, 40))  
     
     def select_all(self):
-        if self.focus_get() not in (self.urlbar, self.find_box, self.parsemode_box, self.zoom_box, self.fontscale_box, self.broken_page_msg_box):
+        if self.focus_get() not in (self.urlbar, self.find_box):
             self.frame.select_all()
 
     def view_source(self):
@@ -486,9 +640,11 @@ class Browser(tk.Tk):
 
         tk.Tk.__init__(self)
         self.title("TkinterWebBrowser")
+        self.minsize(800, 500)
         self.main_frame = main_frame = tk.Frame(self, highlightthickness=0, bd=0)
 
         self.frame = frame = Notebook(main_frame)
+        frame.enable_traversal()
         frame.bind("<<NotebookTabChanged>>", self.on_tab_change)
 
         page = Page(frame)
@@ -510,6 +666,8 @@ class Browser(tk.Tk):
         self.bind_all("<Control-q>", lambda e: self.destroy())
         self.bind_all("<Control-a>", lambda e: frame.select().select_all())
         self.bind_all("<Control-u>", lambda e: frame.select().view_source())
+        self.bind_all("<Control-p>", lambda e: frame.select().print())
+        self.bind_all("<Control-s>", lambda e: frame.select().save())
         self.bind_all("<Alt-Left>", lambda e: frame.select().back())
         self.bind_all("<Alt-Right>", lambda e: frame.select().forward())
 
@@ -518,11 +676,13 @@ class Browser(tk.Tk):
         frame.add(page, text='')
 
         page.link_click(NEW_TAB, history=False)
-        
+
         self.mainloop()
     
     def on_tab_change(self, event):
-        if not self.frame.pages:
+        if self.frame.pages:
+            self.frame.select().toggle_theme(False)
+        else:
             self.destroy()
 
 if __name__ == "__main__":   

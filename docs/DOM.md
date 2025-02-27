@@ -1,223 +1,330 @@
+> [!WARNING]
+> The API changed significantly in version 4.0.0. See [Porting to TkinterWeb v4+](UPGRADING.md) for details.
+
 ## DOM Manipulation with TkinterWeb
 
 ## Overview
 **TkinterWeb provides a handful of functions that allow for manipulation of the webpage. They are fashioned after common JavaScript functions.**
 
 ## How-To
-To manipulate the Document Object Model, use `HtmlFrame.document` (new since version 3.25). For example, to create a heading inside of a container with the id 'container', one can use the following:
+To manipulate the Document Object Model, use `HtmlFrame.document` (new since version 3.25). For example, to create a heading with blue text inside of a container with the id 'container', one can use the following:
 ```
-yourframe = tkinterweb.HtmlFrame(root)
-yourframe.load_html("<div id='container'><p>Test</p></div>")
-container = yourframe.document.getElementById("container")
-new_header = yourframe.document.createElement("h1")
-new_header.textContent("Hello, world!")
+yourhtmlframe = tkinterweb.HtmlFrame(root)
+yourhtmlframe.load_html("<div id='container'><p>Test</p></div>")
+container = yourhtmlframe.document.getElementById("container")
+new_header = yourhtmlframe.document.createElement("h1")
+new_header.textContent = "Hello, world!"
+new_header.style.color = "blue"
 container.appendChild(new_header)
+```
+To register a callback for `<script>` elements, use the `on_script` parameter:
+```
+yourhtmlframe = tkinterweb.HtmlFrame(root)
+yourhtmlframe.load_html("<div id='container'><script>// Do stuff</script><p>Test</p></div>")
+def handle_scripts(attributes, tagcontents):
+    ## Do stuff
+yourhtmlframe.configure(on_script=handle_scripts)
 ```
 
 ## API Reference
 
+### Key Properties:
+#### `document.body` property
+Return the document's body element.
+
+Return type
+* *HTMLElement*
+
+---
+#### `document.documentElement` property
+Return the document's root element.
+
+Return type
+* *HTMLElement*
+
+---
+### Key Methods:
 #### `document.createElement(tagname)`
-Create a new HTML element with the given tag name
+Create a new HTML element with the given tag name.
 
 Parameters
-* **tagname** *(string)* - Specifies the new element's HTML tag
+* **tagname** *(string)* - Specifies the new element's HTML tag.
 
 Return type
-* *HtmlElement*
+* *HTMLElement*
 
 ---
-
 #### `document.createTextNode(text)`
-Create a new text node with the given text conent
+Create a new text node with the given text content.
 
 Parameters
-* **text** *(string)* - Specifies the text content of the new node
+* **text** *(string)* - Specifies the text content of the new node.
 
 Return type
-* *HtmlElement*
+* *HTMLElement*
 
 ---
-
-#### `document.body()`
-Return the document's body element
-
-Return type
-* *HtmlElement*
-
----
-
 #### `document.getElementById(query)`
-Return an element given an id
+Return an element given an id.
 
 Parameters
-* **query** *(string)* - Specifies the element id to be searched for 
+* **query** *(string)* - Specifies the element id to be searched for .
 
 Return type
-* *HtmlElement*
+* *HTMLElement*
 
 ---
-
 #### `document.getElementsByClassName(query)`
-Return a list of elements given a class name
+Return all elements that match given a class name.
 
 Parameters
-* **query** *(string)* - Specifies the class name to be searched for 
+* **query** *(string)* - Specifies the class to be searched for. 
 
 Return type
-* *HtmlElement*
+* *HTMLElement*
 
 ---
-
 #### `document.getElementsByName(query)`
-Return a list of elements matching a given name attribute
+Return all elements that match a given name attribute.
 
 Parameters
-* **query** *(string)* - Specifies the name to be searched for 
+* **query** *(string)* - Specifies the name to be searched for.
 
 Return type
-* *list*
+* *tuple*
 
 ---
-
 #### `document.getElementsByTagName(query)`
-Return a list of elements matching a given tag name
+Return all elements that match a given tag name.
 
 Parameters
-* **query** *(string)* - Specifies the tag name to be searched for 
+* **query** *(string)* - Specifies the tag to be searched for.
 
 Return type
-* *list*
+* *tuple*
 
 ---
-
 #### `document.querySelector(query)`
-Return the first element that matches a given CSS selector
+Return the first element that matches a given CSS selector.
 
 Parameters
-* **query** *(string)* - Specifies the CSS selector to be searched for 
+* **query** *(string)* - Specifies the CSS selector to be searched for.
 
 Return type
-* *HtmlElement*
+* *HTMLElement*
 
 ---
-
 #### `document.querySelectorAll(query)`
-Return a list of elements that match a given CSS selector
+Return all elements that match a given CSS selector.
 
 Parameters
-* **query** *(string)* - Specifies the CSS selector to be searched for 
+* **query** *(string)* - Specifies the CSS selector to be searched for.
 
 Return type
-* *list*
+* *tuple*
 
 ---
+## HTMLElement API 
 
-## HtmlElement API 
+### Key Variables:
+* `html`: The element's corresponding TkinterWeb instance.
+* `node`: The Tkhtml node associated with the element.
 
-#### `HtmlElement.innerHTML(contents=None)`
-Get and set the inner HTML of an element
-
-Parameters
-* **contents** *(string)* - If provided, specifies the new HTML content of the element
-
-Return type
-* *string*
+### Key Properties:
+#### `innerHTML` property
+Get and set the inner HTML of an element.
 
 ---
-
-#### `HtmlElement.textContent(contents=None)`
-Get and set the text content of an element
-
-Parameters
-* **contents** *(string)* - If provided, specifies the new text content of the element
+#### `textContent` property
+Get and set the text content of an element.
 
 Return type
 * *string*
 
 ---
-
-#### `HtmlElement.getAttribute(attribute)`
-Get the value of the given attribute
-
-Parameters
-* **attribute** *(string)* - Specifies the element's attribute to return 
+#### `tagName` property
+Get the tag name of the element.
 
 Return type
 * *string*
 
 ---
-
-#### `HtmlElement.setAttribute(attribute, value)`
-Set the value of the given attribute
-
-Parameters
-* **attribute** *(string)* - Specifies the element's attribute to set 
-* **value** *(string)* - Specifies new value of the specified attribute 
+#### `attributes` property
+Get the attributes of the element.
 
 Return type
 * *string*
 
 ---
+#### `style` property
+Manage the element's styling.
 
-#### `HtmlElement.tagName()`
-Get the tag name of the element
+Return type
+* *CSSStyleDeclaration*
+
+---
+#### `parentElement` property
+Get the element's parent element.
+
+Return type
+* *HTMLElement*
+
+---
+#### `children` property
+Get the element's children elements.
+
+Return type
+* *tuple*
+
+---
+### Key Methods:
+#### `getAttribute(attribute)`
+Get the value of the given attribute.
+
+Parameters
+* **attribute** *(string)* - Specifies the attribute to return.
 
 Return type
 * *string*
 
 ---
-
-#### `HtmlElement.style(property, value=None)`
-Get and set the value of the given CSS property
+#### `setAttribute(attribute, value)`
+Set the value of the given attribute.
 
 Parameters
-* **property** *(string)* - Specifies the element's CSS property to set 
-* **value** *(string)* - If provided, specifies new value of the specified property 
+* **attribute** *(string)* - Specifies the attribute to set.
+* **value** *(string)* - Specifies the new value of the specified attribute.
 
 Return type
 * *string*
 
 ---
+#### `remove()`
+Delete the element.
 
-#### `HtmlElement.parentElement()`
-Get the element's parent element
+---
+#### `appendChild(children)`
+Insert the specified children into the element.
+
+Parameters
+* **children** *(list, tuple, or HTMLElement)* - Specifies the element(s) to be added into the element.
+
+---
+#### `insertBefore(children, before)`
+Insert the specified children before a specified child element.
+
+Parameters
+* **children** *(list, tuple, or HTMLElement)* - Specifies the element(s) to be added into the element.
+* **before** *(HTMLElement)* - Specifies the child element that the added elements should be placed before.
+
+---
+#### `getElementById(query)`
+Return an element that is a child of the current element and matches the given id.
+
+Parameters
+* **query** *(string)* - Specifies the element id to be searched for.
 
 Return type
-* *HtmlElement*
+* *HTMLElement*
 
 ---
-
-#### `HtmlElement.children(deep=True)`
-Get the element's children elements
+#### `getElementsByClassName(query)`
+Return all elements that are children of the current element and match the given class name.
 
 Parameters
-* **deep** *(boolean)* - If False, only return the element's direct children. If True, return all children. 
+* **query** *(string)* - Specifies the class to be searched for.
 
 Return type
-* *list*
+* *HTMLElement*
 
 ---
-
-#### `HtmlElement.remove()`
-Delete the element
-
----
-
-#### `HtmlElement.appendChild(children)`
-Insert the specified children into the element
+#### `getElementsByName(query)`
+Return all elements that are children of the current element and match the given name attribute.
 
 Parameters
-* **children** *(list or HtmlElement)* - Specifies the element(s) to be added into the element 
+* **query** *(string)* - Specifies the name to be searched for.
+
+Return type
+* *tuple*
 
 ---
-
-#### `HtmlElement.insertBefore(children, before)`
-Insert the specified children before a specified child element
+#### `getElementsByTagName(query)`
+Return all elements that are children of the current element and match the given tag name.
 
 Parameters
-* **children** *(list or HtmlElement)* - Specifies the element(s) to be added into the element 
-* **before** *(HtmlElement)* - Specifies the child element that the added elements should be placed before
+* **query** *(string)* - Specifies the tag to be searched for.
+
+Return type
+* *tuple*
+
+---
+#### `querySelector(query)`
+Return the first element that are children of the current element and match the given CSS selector.
+
+Parameters
+* **query** *(string)* - Specifies the CSS selector to be searched for.
+
+Return type
+* *HTMLElement*
+
+---
+#### `querySelectorAll(query)`
+Return all elements that are children of the current element and match the given CSS selector.
+
+Parameters
+* **query** *(string)* - Specifies the CSS selector to be searched for.
+
+Return type
+* *tuple*
+
+---
+#### `scrollIntoView()`
+Scroll the viewport so that this element is visible.
+
+---
+## CSSStyleDeclaration API 
+
+### Key Variables:
+* `html`: The element's corresponding TkinterWeb instance.
+* `node`: The Tkhtml node associated with the element
+
+
+### Key Properties:
+**All camel-cased supported CSS properties are valid properties.**
+Examples include `color`, `backgroundColor`, and `fontFamily`.
+
+CSS properties can also be returned or set as key-value pairs (eg. `CSSStyleDeclaration["background-color"]`)
+
+---
+#### `cssText` property
+Get the text of the element's inline style declaration. Read-only.
+
+Return type
+* *string*
+
+---
+#### `length` property
+Get the number of style declarations in the element's inline style declaration. Read-only.
+
+Return type
+* *int*
+
+---
+#### `cssProperties` property
+Get all computed properties for the element. Read-only.
+
+Return type
+* *dict*
+
+---
+#### `cssInlineProperties` property
+Get all inline properties for the element. Similar to the `cssText` property, but formatted as a dictionary. Read-only.
+
+Return type
+* *dict*
 
 ---
 
 Please report bugs or request new features on the [issues page](https://github.com/Andereoo/TkinterWeb/issues).
+
+Special thanks to [Zamy846692](https://github.com/Zamy846692) for the help making this happen!

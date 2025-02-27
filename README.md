@@ -42,7 +42,7 @@ Pip will automatically install PIL when installing TkinterWeb.
 ## API Documentation
 
 > [!WARNING]
-> The API changed significantly in version 4.0.0. See [Porting to TkinterWeb v4+](UPGRADING.md) for details.
+> The API changed significantly in version 4.0.0. See [Porting to TkinterWeb v4+](/docs/UPGRADING.md) for details.
 
 **Documentation and additional information on built-in classes can be found in the corresponding API reference pages:**
 * [`tkinterweb.Demo`](/docs/DEMO.md)

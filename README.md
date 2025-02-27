@@ -1,3 +1,5 @@
+<a href="https://www.buymeacoffee.com/andereoo" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-violet.png" alt="Buy Me A Coffee" style="height: 35px !important;width: 140px !important;" ></a>
+
 # TkinterWeb 
 **A fast and lightweight web browser widget for Tkinter.**
 

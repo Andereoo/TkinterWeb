@@ -29,8 +29,7 @@ root.mainloop()
 Some other tricks, such as handling page title changes, link clicks, and navigation key presses, can be found in the [HtmlFrame documentation](/docs/HTMLFRAME.md#tips-and-tricks).
 
 ## Installation
-To install TkinterWeb, simply type `pip install tkinterweb` in the command prompt or terminal.
-That's it.
+To install TkinterWeb, simply type `pip install tkinterweb` in the command prompt or terminal. That's it!
 
 ## Dependencies
 **In order to load webpages and show images, TkinterWeb requires the following packages:**
@@ -41,6 +40,10 @@ That's it.
 Pip will automatically install PIL when installing TkinterWeb.
 
 ## API Documentation
+
+> [!WARNING]
+> The API changed significantly in version 4.0.0. See [Porting to TkinterWeb v4+](UPGRADING.md) for details.
+
 **Documentation and additional information on built-in classes can be found in the corresponding API reference pages:**
 * [`tkinterweb.Demo`](/docs/DEMO.md)
 * [`tkinterweb.HtmlFrame`](/docs/HTMLFRAME.md)
@@ -68,18 +71,18 @@ See [Frequently Asked Questions](https://github.com/Andereoo/TkinterWeb/blob/mai
 * Without these packages, TkinterWeb will still function properly, but SVG files will not be shown.
 
 ## Contributing
-**The best ways to contribute to this project are by submitting a [bug report](https://github.com/Andereoo/TkinterWeb/issues/new) to report bugs or suggest new features or by submitting a [pull request](https://github.com/Andereoo/TkinterWeb/pulls) to offer fixes. Your help makes TkinterWeb become more stable and full-featured!**
+**The best ways to contribute to this project are by submitting a [bug report](https://github.com/Andereoo/TkinterWeb/issues/new) to report bugs or suggest new features, or by submitting a [pull request](https://github.com/Andereoo/TkinterWeb/pulls) to offer fixes. Your help makes TkinterWeb become more stable and full-featured!**
 
 Please check the [FAQs](https://github.com/Andereoo/TkinterWeb/blob/main/docs/FAQ.md) and [closed bugs](https://github.com/Andereoo/TkinterWeb/issues?q=is%3Aissue) before submitting a bug report to see if your question as already been answered.
 
 ## Credits
 **TkinterWeb is powered by the [Tkhtml project](http://tkhtml.tcl.tk/index.html).**
 
-Thanks to the [TkinterHtml package](https://bitbucket.org/aivarannamaa/tkinterhtml) for providing the bindings which this project is based on.
+Thanks to the [TkinterHtml package](https://bitbucket.org/aivarannamaa/tkinterhtml) for providing the bindings on which this project is based.
 
 Thanks to the [BRL-CAD project](https://github.com/BRL-CAD/brlcad) for providing modifications for Tkhtml on 64-bit Windows platforms.
 
-Thanks to [Google Fonts](https://github.com/google/fonts) for providing the font used for generating alternate text when images fail to load.
+Thanks to [Google Fonts](https://github.com/google/fonts) for providing the font used for generating alternative text when images fail to load.
 
-A huge thanks to everyone else who helped this project by reporting bugs, providing suggestions, and creating pull requests!
+A huge thanks to everyone else who supported this project by reporting bugs, providing suggestions, and creating pull requests!
 

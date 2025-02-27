@@ -21,7 +21,7 @@
 * `HtmlFrame.set_message_func()` - use `HtmlFrame.configure(message_func=)`
 * `HtmlFrame.set_broken_webpage_message()` - use `HtmlFrame.configure(on_navigate_fail=)`. Note that `on_navigate_fail` latter requires a function instead.
 * `HtmlFrame.set_maximum_thread_count()` - use `HtmlFrame.configure(threading_enabled=)`
-* `HtmlFrame.set_recursive_hover_depth()`
+* `HtmlFrame.set_recursive_hover_depth()` - use `HtmlFrame.html.recursive_hover_depth=`
 * `HtmlFrame.add_visited_links()` - use `HtmlFrame.configure(visited_links=)`
 * `HtmlFrame.clear_visited_links()` - use `HtmlFrame.configure(visited_links=)`
 * `HtmlFrame.enable_stylesheets()` - use `HtmlFrame.configure(stylesheets_enabled=)`

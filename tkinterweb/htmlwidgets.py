@@ -153,9 +153,8 @@ class HtmlFrame(ttk.Frame):
         self.bind = html.bind
 
         self.html.post_message(f"""Welcome to TkinterWeb {__version__}!
-https://github.com/Andereoo/TkinterWeb
 
-Note that the API has changed in this version. See the project's GitHub home page for details.
+The API has changed in this version. See https://github.com/Andereoo/TkinterWeb for details.
 
 Debugging messages are enabled
 Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLabel() to disable these messages""")

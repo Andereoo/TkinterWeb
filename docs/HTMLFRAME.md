@@ -268,10 +268,10 @@ Change the widget's configuration options. Below are the supported options:
 * `headers`:
   - The headers used by urllib's Request when fetching a resource (dict). **Default: utilities.HEADERS**
 * `experimental`:
-  - If True, experimental features will be enabled. You will need to compile the cutting-edge Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental and replace the default Tkhtml binary for your system with the experimental version. Unless you need to screenshot the page on Windows or print your page it is generally best to use the default Tkhtml binary and leave this setting alone. **Default: False**
+  - If True, experimental features will be enabled. You will need to compile the cutting-edge Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental and replace the default Tkhtml binary for your system with the experimental version. Unless you need to screenshot the page on Windows or print your page for now it is likely best to use the default Tkhtml binary and leave this setting alone. **Default: False**
 * `use_prebuilt_tkhtml`:
   - If True, the Tkhtml binary for your system supplied by TkinterWeb will be used. If your system isn't supported and you don't want to compile the Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml yourself, you could try installing Tkhtml3 system-wide and set `use_prebuilt_tkhtml` to False. Note that some crash prevention features will no longer work. **Default: True
-    
+
 * `parsemode`:
   - The parse mode. May be "xml", "xhtml", or "html". In "html" mode, explicit XML-style self-closing tags are not handled specially and unknown tags are ignored. "xhtml" mode is similar to "html" mode except that explicit self-closing tags are recognized. "xml" mode is similar to "xhtml" mode except that XML CDATA sections and unknown tag names are recognized. It is usually best to leave this setting alone. **Default: "xml"**
 * `mode`:

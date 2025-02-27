@@ -6,7 +6,7 @@
 
 **How do I manage clicks and use custom bindings?**
 
-* The `on_link_click` configuration option can be used to assign a custom function to link clicks. Likewise the `on_form_submit` configuration option can be used for form submits. See the [API reference](https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/docs/HTMLFRAME.md) for more information
+* The `on_link_click` configuration option can be used to assign a custom function to link clicks. Likewise `on_form_submit` can be used to handle form submissions. See the [API reference](https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/docs/HTMLFRAME.md) for more information
 * Like any other Tkinter widget, mouse and keyboard events can be bound to the HtmlFrame widget. See the [Tips and Tricks](https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/docs/HTMLFRAME.md#tips-and-tricks) page for examples of binding navigation keys and opening menus on right-clicks.
  
 **TkinterWeb is crashing. Help?**

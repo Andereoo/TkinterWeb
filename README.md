@@ -29,8 +29,7 @@ root.mainloop()
 Some other tricks, such as handling page title changes, link clicks, and navigation key presses, can be found in the [HtmlFrame documentation](/docs/HTMLFRAME.md#tips-and-tricks).
 
 ## Installation
-To install TkinterWeb, simply type `pip install tkinterweb` in the command prompt or terminal.
-That's it.
+To install TkinterWeb, simply type `pip install tkinterweb` in the command prompt or terminal. That's it!
 
 ## Dependencies
 **In order to load webpages and show images, TkinterWeb requires the following packages:**

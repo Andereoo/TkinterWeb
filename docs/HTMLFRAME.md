@@ -178,7 +178,7 @@ Refer to [DOM Manipulation with TkinterWeb](DOM.md).
   - Generated whenever the content of any `<input>` element changes.
 
 ### State Variables:
-* `current_url`: The document's url. Read-only.
+* `current_url`: The document's url.
 * `base_url`: The documents's base url. This is automatically generated from the `current_url` but will also change if explicitly specified by the document. Read-only.
 * `title`: The document's title (if specified by the document). Read-only.
 * `icon`: The document's icon url (if specified by the document). Read-only.

@@ -443,9 +443,9 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         else:
             height = self.html.winfo_height()
         if self._prev_height != height or force:
-            resizeable_elements = self.document.querySelectorAll(f"[{BUILTIN_ATTRIBUTES["vertical-align"]}]")
+            resizeable_elements = self.document.querySelectorAll(f"[{BUILTIN_ATTRIBUTES['vertical-align']}]")
             for element in resizeable_elements:
-                element.style.height = f"{height/self["zoom"]}px"
+                element.style.height = f"{height/self['zoom']}px"
         self._prev_height = height
 
     def _manage_vsb(self, allow=None):

@@ -8,12 +8,29 @@ tkinterweb/htmlwidgets.py
 tkinterweb/imageutils.py
 tkinterweb/lrucache.py
 tkinterweb/utilities.py
-tkinterweb.egg-info/PKG-INFO
+tkinterweb/dom.py
 tkinterweb.egg-info/SOURCES.txt
 tkinterweb.egg-info/dependency_links.txt
 tkinterweb.egg-info/requires.txt
 tkinterweb.egg-info/top_level.txt
 tkinterweb/tkhtml/combobox-2.3.tm
 tkinterweb/tkhtml/pkgIndex.tcl
-tkinterweb/tkhtml/win_amd64/Tkhtml30g.dll
+tkinterweb/tkhtml/opensans.ttf
+tkinterweb/tkhtml/COPYRIGHT
+tkinterweb/tkhtml/linux_armv7l/libTkhtml3.0.so
+tkinterweb/tkhtml/linux_armv7l/pkgIndex.tcl
+tkinterweb/tkhtml/macosx_10_6_x86_64/libTkhtml3.0.dylib
+tkinterweb/tkhtml/macosx_10_6_x86_64/pkgIndex.tcl
+tkinterweb/tkhtml/macosx_11_0_arm64 tkinterweb/tkhtml/macosx_11_0_arm64/libTkhtml3.0.dylib
+tkinterweb/tkhtml/macosx_11_0_arm64/pkgIndex.tcl
+tkinterweb/tkhtml/manylinux1_i686 tkinterweb/tkhtml/manylinux1_i686/libTkhtml3.0.so
+tkinterweb/tkhtml/manylinux1_i686/pkgIndex.tcl tkinterweb/tkhtml/manylinux1_x86_64
+tkinterweb/tkhtml/manylinux1_x86_64/libTkhtml3.0.so
+tkinterweb/tkhtml/manylinux1_x86_64/pkgIndex.tcl
+tkinterweb/tkhtml/manylinux2014_aarch64/libTkhtml3.0.so
+tkinterweb/tkhtml/manylinux2014_aarch64/pkgIndex.tcl
 tkinterweb/tkhtml/win_amd64/pkgIndex.tcl
+tkinterweb/tkhtml/win_amd64/Tkhtml30.dll
+tkinterweb/tkhtml/win32/pkgIndex.tcl
+tkinterweb/tkhtml/win32/Tkhtml30.dll
+tools/preparewheels.py

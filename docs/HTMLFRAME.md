@@ -159,12 +159,19 @@ Refer to [DOM Manipulation with TkinterWeb](DOM.md).
 * `html` (`tkinterweb.bindings.TkinterWeb` instance): see the [TkinterWeb widget documentation](TKINTERWEB.md).
 
 ### Virtual Events:
-* `<<DownloadingResource>>`/`utilities.DOWNLOADING_RESOURCE_EVENT`: Generated whenever a new resource is being downloaded.
-* `<<DoneLoading>>`/`utilities.DONE_LOADING_EVENT`: Generated whenever all outstanding resources have been downloaded. This is generally a good indicator as to when the website is done loading, but may be generated multiple times while loading a page.
-* `<<UrlChanged>>`/`utilities.URL_CHANGED_EVENT`: Generated whenever the url the widget is navigating to changes. Use `current_url` to get the url.
-* `<<IconChanged>>`/`utilities.ICON_CHANGED_EVENT`: Generated whenever the icon of a webpage changes. Use `icon` to get the icon.
-* `<<TitleChanged>>`/`utilities.TITLE_CHANGED_EVENT`: Generated whenever the title of a website or file has changed. Use `title` to get the title.
-* `<<Modified>>`: Generated whenever the content of any `<input>` element changes.
+* `<<DownloadingResource>>`/`utilities.DOWNLOADING_RESOURCE_EVENT`:
+  - Generated whenever a new resource is being downloaded.
+* `<<DoneLoading>>`/`utilities.DONE_LOADING_EVENT`:
+  - Generated whenever all outstanding resources have been downloaded.
+  - This is generally a good indicator as to when the website is done loading, but may be generated multiple times while loading a page.
+* `<<UrlChanged>>`/`utilities.URL_CHANGED_EVENT`:
+  - Generated whenever the url the widget is navigating to changes. Use `current_url` to get the url.
+* `<<IconChanged>>`/`utilities.ICON_CHANGED_EVENT`:
+  - Generated whenever the icon of a webpage changes. Use `icon` to get the icon.
+* `<<TitleChanged>>`/`utilities.TITLE_CHANGED_EVENT`:
+  - Generated whenever the title of a website or file has changed. Use `title` to get the title.
+* `<<Modified>>`:
+  - Generated whenever the content of any `<input>` element changes.
 
 ### State Variables:
 * `current_url`: The document's url. Read-only.
@@ -177,52 +184,99 @@ Below are methods that are specific to this widget. Other general Tkinter widget
 
 #### `configure(**kwargs)`
 Change the widget's configuration options. Below are the supported options:
-* `on_navigate_fail`: The function to be called when a url cannot be loaded. This can be used to override the default error page. The target url, error, and code will be passed as arguments. **Default: HtmlFrame.show_error_page**
-* `on_link_click`: The function to be called when a hyperlink is clicked. The target url will be passed as an argument. **Default: HtmlFrame.load_url**
-* `on_form_submit`: The function to be called when a form is submitted. The target url, data, and method (GET or POST) will be passed as arguments. **Default: HtmlFrame.load_form_data**
-* `on_script`: The function to be called when a `<script>` element is encountered. This can be used to connect a script handler, such as a JavaScript engine. The script element's attributes and contents will be passed as arguments. **Ignored by default.**
-* `message_func`: The function to be called when a debug message is issued. The message will be passed as an argument. **Default: utilities.notifier**
-* `visited_links`: The list used to determine if a hyperlink should be given the CSS `:visited` flag. **Default: list()**
-* `zoom`: The page zoom multiplier. **Default: 1.0**
-* `fontscale`: The page fontscale multiplier. **Default: 1.0**
-* `vertical_scrollbar`: Show the vertical scrollbar. May be True, False, or "auto". Consider using the CSS property `overflow-y` (experimental mode only) or `overflow`  on the `<html>` or `<body>` element instead. **Default: "auto"**
-* `horizontal_scrollbar`: Show the horizontal scrollbar. May be True, False, or "auto". Consider using the CSS property `overflow-x` (experimental mode only) or adding the attribute `tkinterweb-overflow-x=[True, False, or "auto"]` on the `<html>` or `<body>` element instead. **Default: False**
-* `messages_enabled`: Enable messages. **Default: True**
-* `selection_enabled`: Enable selection. **Default: True**
-* `stylesheets_enabled`: Enable stylesheets. **Default: True**
-* `images_enabled`: Enable images. **Default: True**
-* `forms_enabled`: Enable forms and form elements. **Default: True**
-* `objects_enabled`: Enable embedding of `<object>` and `<iframe>` elements. **Default: True**
-* `caches_enabled`: Enable caching. Disabling this option will conserve memory, but will also result in longer page and image reload times. **Default: True**
-* `crash_prevention_enabled`: Enable crash prevention. Disabling this option may improve page load speed, but crashes will occur on some websites. **Default: True**
-* `events_enabled`: Enable generation of Tk events. **Default: True**
-* `threading_enabled`: Enable threading. Has no effect if the Tcl/Tk build does not support threading. **Default: True**
-* `image_alternate_text_enabled`: Enable the display of alt text for broken images. **Default: True**
-* `dark_theme_enabled`: Enable dark mode. May cause hangs or crashes on more complex websites. **Default: False**
-* `image_inversion_enabled`: Enable image inversion. May cause hangs or crashes on more complex websites. **Default: False**
-* `ignore_invalid_images`: Ignore invalid images. If enabled and alt text is disabled or the image has no alt text, a broken image icon will be displayed in place of the image. **Default: True**
-* `about_page_background`: The default background color of built-in pages, intended to better integrate custom documents with Tkinter. **Default: ttk.Style.lookup('TFrame', 'background')**
-* `about_page_foreground`: The default text color of built-in pages. **Default: ttk.Style.lookup('TLabel', 'foreground')**
-* `find_match_highlight_color`: The highlight color of matches found by `find_text()`. **Default: "#ef0fff"**
-* `find_match_text_color`: The text color of matches found by `find_text()`. **Default: "#fff"**
-* `find_current_highlight_color`: The highlight color of the current match selected by `find_text()`. **Default: "#38d878"**
-* `find_current_text_color`: The text color of the current match selected by `find_text()`. **Default: "#fff"**
-* `selected_text_highlight_color`: The highlight color of selected text. **Default: "#3584e4"**
-* `selected_text_color`: The text color of selected text. **Default: "#fff"**
-* `default_style`: The stylesheet used to set the default appearance of HTML elements. It is generally best to leave this setting alone. **Default: utilities.DEFAULT_STYLE**
-* `dark_style`. The stylesheet used to set the default appearance of HTML elements when dark mode is enabled. It is generally best to leave this setting alone. **Default: utilities.DARK_STYLE**
-* `insecure_https`: If True, website certificate errors are ignored. This is a workaround for issues where `ssl` is unable to get a page's certificate on some older Mac systems. **Default: False**
-* `headers`: The headers used by urllib's Request when fetching a resource (dict). **Default: utilities.HEADERS**
-* `experimental`: If True, experimental features will be enabled. You will need to compile the cutting-edge Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental and replace the default Tkhtml binary for your system with the experimental version. Unless you need to screenshot the page on Windows or print your page it is generally best to use the default Tkhtml binary and leave this setting alone. **Default: False**
-* `use_prebuilt_tkhtml`: If True, the Tkhtml binary for your system supplied by TkinterWeb will be used. If your system isn't supported and you don't want to compile the Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml yourself, you could try installing Tkhtml3 system-wide and set `use_prebuilt_tkhtml` to False. Note that some crash prevention features will no longer work. **Default: True
-* `parsemode`: The parse mode. May be "xml", "xhtml", or "html". In "html" mode, explicit XML-style self-closing tags are not handled specially and unknown tags are ignored. "xhtml" mode is similar to "html" mode except that explicit self-closing tags are recognized. "xml" mode is similar to "xhtml" mode except that XML CDATA sections and unknown tag names are recognized. It is usually best to leave this setting alone. **Default: "xml"**
-* `shrink`: If False, the widget's width and height are set by the width and height options as per usual. You may still need to call `grid_propagate(0)` or `pack_propagate(0)` for Tkinter to respect the set width and height. If this option is set to True, the widget's requested width and height are determined by the current document. **Default: False**
-* `mode`: The rendering engine mode. May be "standards", "almost standards", or "quirks". It is usually best to leave this setting alone. **Default: "standards"**
+* `on_navigate_fail`:
+  - The function to be called when a url cannot be loaded. This can be used to override the default error page. The target url, error, and code will be passed as arguments. **Default: HtmlFrame.show_error_page**
+* `on_link_click`:
+  - The function to be called when a hyperlink is clicked. The target url will be passed as an argument. **Default: HtmlFrame.load_url**
+* `on_form_submit`:
+  - The function to be called when a form is submitted. The target url, data, and method (GET or POST) will be passed as arguments. **Default: HtmlFrame.load_form_data**
+* `on_script`:
+  - The function to be called when a `<script>` element is encountered. This can be used to connect a script handler, such as a JavaScript engine. The script element's attributes and contents will be passed as arguments. **Ignored by default.**
+* `message_func`:
+  - The function to be called when a debug message is issued. The message will be passed as an argument. **Default: utilities.notifier**
+    
+* `visited_links`:
+  - The list used to determine if a hyperlink should be given the CSS `:visited` flag. **Default: list()**
+* `zoom`:
+  - The page zoom multiplier. **Default: 1.0**
+* `fontscale`:
+  - The page fontscale multiplier. **Default: 1.0**
+    
+* `vertical_scrollbar`:
+  - Show the vertical scrollbar. May be True, False, or "auto". Consider using the CSS property `overflow-y` (experimental mode only) or `overflow`  on the `<html>` or `<body>` element instead. **Default: "auto"**
+* `horizontal_scrollbar`:
+  - Show the horizontal scrollbar. May be True, False, or "auto". Consider using the CSS property `overflow-x` (experimental mode only) or adding the attribute `tkinterweb-overflow-x=[True, False, or "auto"]` on the `<html>` or `<body>` element instead. **Default: False**
+* `shrink`:
+  - If False, the widget's width and height are set by the width and height options as per usual. You may still need to call `grid_propagate(0)` or `pack_propagate(0)` for Tkinter to respect the set width and height. If this option is set to True, the widget's requested width and height are determined by the current document. **Default: False**
+    
+* `messages_enabled`:
+  - Enable messages. **Default: True**
+* `selection_enabled`:
+  - Enable selection. **Default: True**
+* `stylesheets_enabled`:
+  - Enable stylesheets. **Default: True**
+* `images_enabled`:
+  - Enable images. **Default: True**
+* `forms_enabled`:
+  - Enable forms and form elements. **Default: True**
+* `objects_enabled`:
+  - Enable embedding of `<object>` and `<iframe>` elements. **Default: True**
+* `caches_enabled`:
+  - Enable caching. Disabling this option will conserve memory, but will also result in longer page and image reload times. **Default: True**
+* `crash_prevention_enabled`:
+  - Enable crash prevention. Disabling this option may improve page load speed, but crashes will occur on some websites. **Default: True**
+* `events_enabled`:
+  - Enable generation of Tk events. **Default: True**
+* `threading_enabled`:
+  - Enable threading. Has no effect if the Tcl/Tk build does not support threading. **Default: True**
+* `image_alternate_text_enabled`:
+  - Enable the display of alt text for broken images. **Default: True**
+* `dark_theme_enabled`:
+  - Enable dark mode. May cause hangs or crashes on more complex websites. **Default: False**
+* `image_inversion_enabled`:
+  - Enable image inversion. May cause hangs or crashes on more complex websites. **Default: False**
+* `ignore_invalid_images`:
+  - Ignore invalid images. If enabled and alt text is disabled or the image has no alt text, a broken image icon will be displayed in place of the image. **Default: True**
+    
+* `about_page_background`:
+  - The default background color of built-in pages, intended to better integrate custom documents with Tkinter. **Default: ttk.Style.lookup('TFrame', 'background')**
+* `about_page_foreground`:
+  - The default text color of built-in pages. **Default: ttk.Style.lookup('TLabel', 'foreground')**
+* `find_match_highlight_color`:
+  - The highlight color of matches found by `find_text()`. **Default: "#ef0fff"**
+* `find_match_text_color`:
+  - The text color of matches found by `find_text()`. **Default: "#fff"**
+* `find_current_highlight_color`:
+  - The highlight color of the current match selected by `find_text()`. **Default: "#38d878"**
+* `find_current_text_color`:
+  - The text color of the current match selected by `find_text()`. **Default: "#fff"**
+* `selected_text_highlight_color`:
+  - The highlight color of selected text. **Default: "#3584e4"**
+* `selected_text_color`:
+  - The text color of selected text. **Default: "#fff"**
+    
+* `default_style`:
+  - The stylesheet used to set the default appearance of HTML elements. It is generally best to leave this setting alone. **Default: utilities.DEFAULT_STYLE**
+* `dark_style`:
+  - The stylesheet used to set the default appearance of HTML elements when dark mode is enabled. It is generally best to leave this setting alone. **Default: utilities.DARK_STYLE**
+* `insecure_https`:
+  - If True, website certificate errors are ignored. This is a workaround for issues where `ssl` is unable to get a page's certificate on some older Mac systems. **Default: False**
+* `headers`:
+  - The headers used by urllib's Request when fetching a resource (dict). **Default: utilities.HEADERS**
+* `experimental`:
+  - If True, experimental features will be enabled. You will need to compile the cutting-edge Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental and replace the default Tkhtml binary for your system with the experimental version. Unless you need to screenshot the page on Windows or print your page it is generally best to use the default Tkhtml binary and leave this setting alone. **Default: False**
+* `use_prebuilt_tkhtml`:
+  - If True, the Tkhtml binary for your system supplied by TkinterWeb will be used. If your system isn't supported and you don't want to compile the Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml yourself, you could try installing Tkhtml3 system-wide and set `use_prebuilt_tkhtml` to False. Note that some crash prevention features will no longer work. **Default: True
+    
+* `parsemode`:
+  - The parse mode. May be "xml", "xhtml", or "html". In "html" mode, explicit XML-style self-closing tags are not handled specially and unknown tags are ignored. "xhtml" mode is similar to "html" mode except that explicit self-closing tags are recognized. "xml" mode is similar to "xhtml" mode except that XML CDATA sections and unknown tag names are recognized. It is usually best to leave this setting alone. **Default: "xml"**
+* `mode`:
+  - The rendering engine mode. May be "standards", "almost standards", or "quirks". It is usually best to leave this setting alone. **Default: "standards"**
 * Other optional `ttk.Frame` arguments
 
 Configuration options can also be set and returned as key-value pairs.
 
-
+---
 #### `cget(**kwargs)`
 Return the value of the specified configuration option. See above for options.
 

@@ -122,7 +122,7 @@
 * Text elements now emit the `<<Modified>>` event *after* the content updates.
   
 
-* The TkinterWeb demo and some of the built-in pages have been updated.* Many internal methods and variables of the HtmlFrame and TkinterWeb widgets were renamed.
+* The TkinterWeb demo and some of the built-in pages have been updated. Many internal methods and variables of the HtmlFrame and TkinterWeb widgets were renamed.
 
 
 &nbsp;

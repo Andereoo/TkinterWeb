@@ -1,3 +1,6 @@
+> [!WARNING]
+> The API changed significantly in version 4.0.0. See [Porting to TkinterWeb v4+](UPGRADING.md) for details.
+
 ## *`tkinterweb.TkinterWeb` Documentation*
 
 ## Overview

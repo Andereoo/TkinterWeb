@@ -87,7 +87,7 @@ class Demo():
             self.frame.pack_forget()
             self.frame2.pack(expand=True, fill="both")
             if self.frame2.title: self.root.title(f"TkinterWeb Demo - {self.frame2.title}")
-        self.afters = [self.root.after(3000, page1), self.root.after(5000, page2)]
+        self.afters = [self.root.after(3000, page1), self.root.after(5500, page2)]
 
 
 if __name__ == "__main__":

@@ -459,8 +459,8 @@ BUILTIN_PAGES = {
         <code>Platform: "+str(PLATFORM.system)+"</code><code>Machine: "+str(PLATFORM.machine)+"</code><code>Processor: "+str(PLATFORM.processor)+"</code></body></html>",
     "about:error": "<html><head><style>html,body,table,tr,td{{background-color:{};color:{};width:100%;height:100%;margin:0}}</style><title>Error {}</title></head>\
         <body><table><tr><td tkinterweb-full-page style=\"text-align:center;vertical-align:middle\">\
-        <h2 style=\"margin:0;padding:0;font-weight:normal\">Oops.</h2>\
-        <h3 style=\"margin-top:10px;margin-bottom:40px;font-weight:normal\">The page you've requested could not be found :(</h3>\
+        <h2 style=\"margin:0;padding:0;font-weight:normal\">Oops</h2>\
+        <h3 style=\"margin-top:10px;margin-bottom:25px;font-weight:normal\">The page you've requested could not be found :(</h3>\
         <object handleremoval allowscrolling style=\"cursor:pointer\" data=\"{}\"></object>\
         </td></tr></table></body></html>",
     "about:image": "<html><head><style>html,body,table,tr {{background-color:{};color:{};width:100%;height:100%;margin:0}}</style></head><body>\
@@ -896,25 +896,25 @@ def get_alt_font():
 def get_tkhtml_folder():
     "Get the location of the platform's tkhtml binary"
     # Universal sdist
-    #if platform.system() == "Linux":
-    #    if "arm" in PLATFORM.machine:  # 32 bit arm Linux - Raspberry Pi and others
-    #        return os.path.join(ROOT_DIR, "linux_armv71")
-    #    elif "aarch64" in PLATFORM.machine:  # 64 bit arm Linux - Raspberry Pi and others
-    #        return os.path.join(ROOT_DIR, "manylinux2014_aarch64")
-    #    elif sys.maxsize > 2**32:  # 64 bit Linux
-    #        return os.path.join(ROOT_DIR, "manylinux1_x86_64")
-    #    else:  # 32 bit Linux
-    #        return os.path.join(ROOT_DIR, "manylinux1_i686")
-    #elif platform.system() == "Darwin":
-    #    if "arm" in PLATFORM.machine:  # M1 Mac
-    #        return os.path.join(ROOT_DIR, "macosx_11_0_arm64")
-    #    else:  # other Macs
-    #        return os.path.join(ROOT_DIR, "macosx_10_6_x86_64")
-    #else:
-    #    if sys.maxsize > 2**32:  # 64 bit Windows
-    #        return os.path.join(ROOT_DIR, "win_amd64")
-    #    else:  # 32 bit Windows
-    #        return os.path.join(ROOT_DIR, "win32")
+    if platform.system() == "Linux":
+       if "arm" in PLATFORM.machine:  # 32 bit arm Linux - Raspberry Pi and others
+           return os.path.join(ROOT_DIR, "linux_armv71")
+       elif "aarch64" in PLATFORM.machine:  # 64 bit arm Linux - Raspberry Pi and others
+           return os.path.join(ROOT_DIR, "manylinux2014_aarch64")
+       elif sys.maxsize > 2**32:  # 64 bit Linux
+           return os.path.join(ROOT_DIR, "manylinux1_x86_64")
+       else:  # 32 bit Linux
+           return os.path.join(ROOT_DIR, "manylinux1_i686")
+    elif platform.system() == "Darwin":
+       if "arm" in PLATFORM.machine:  # M1 Mac
+           return os.path.join(ROOT_DIR, "macosx_11_0_arm64")
+       else:  # other Macs
+           return os.path.join(ROOT_DIR, "macosx_10_6_x86_64")
+    else:
+       if sys.maxsize > 2**32:  # 64 bit Windows
+           return os.path.join(ROOT_DIR, "win_amd64")
+       else:  # 32 bit Windows
+           return os.path.join(ROOT_DIR, "win32")
     # Platform-specific wheel
     return os.path.join(ROOT_DIR, "binaries")
 

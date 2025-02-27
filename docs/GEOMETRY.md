@@ -9,11 +9,11 @@ To place a Tkinter widget inside an HTML document, add the `data=[yourwidget]` a
 ```
 yourframe = tkinterweb.HtmlFrame(root)
 yourbutton = tkinter.Button(yourframe, text="Hello, world!", messages_enabled=False)
-source_html = f"<i>This is some text</i><br><object handledelete data={yourbutton}></object>"
+source_html = f"<i>This is some text</i><br><object data={yourbutton}></object>"
 yourframe.load_html(source_html) # or use add_html to add onto the existing document
 ```
   
-- Add the `allowscrolling` attribute to allow scrolling the document when the mouse is over the button. Note that this has no effect on the HtmlLabel widget.
+- Add the `allowscrolling` attribute to allow scrolling the document when the mouse is over the button. 
 
 - Add the `handledelete` attribute to automatically call `destroy()` on the widget when it is removed from the page (i.e. if another webpage is loaded).
 

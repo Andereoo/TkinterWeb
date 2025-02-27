@@ -118,12 +118,12 @@
 * `HTMLElement.innerHTML` and `.textContent` now raise a TclError when invoked on <html> elements, which previously caused segmentation faults.
 
   
-* The appearance of some input elements was improved.
+* The ability to style color selector inputs was improved.
 * Text elements now emit the `<<Modified>>` event *after* the content updates.
   
-  
-* Many internal methods and variables of the HtmlFrame and TkinterWeb widgets were renamed.
-* The TkinterWeb demo and some of the built-in pages have been updated.
+
+* The TkinterWeb demo and some of the built-in pages have been updated.* Many internal methods and variables of the HtmlFrame and TkinterWeb widgets were renamed.
+
 
 &nbsp;
 

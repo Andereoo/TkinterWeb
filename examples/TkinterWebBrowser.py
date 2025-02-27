@@ -17,6 +17,12 @@ This code was originally created for testing TkinterWeb and is a bit of a mess, 
 Copyright (c) 2025 Andereoo
 """
 
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
+
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import ttk

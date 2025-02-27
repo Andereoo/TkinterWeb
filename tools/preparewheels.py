@@ -56,6 +56,7 @@ setup(
     include_package_data=True,
     install_requires=["pillow"],{}
 )
+print("The API has changed in this version. See https://github.com/Andereoo/TkinterWeb for details.")
 """
 setup_py_contents = setup_py_contents_generic.format("""
 def get_platname():

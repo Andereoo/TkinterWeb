@@ -18,74 +18,71 @@ from tkinterweb import HtmlFrame # import the HtmlFrame widget
 root = tk.Tk() # create the Tkinter window
 
 ### The important part: create the html widget and attach it to the window
-myhtmlframe = HtmlFrame(root) # create the HtmlFrame widget
-myhtmlframe.load_html("<h1>Hello, World!</h1>") # load some HTML code
-myhtmlframe.pack(fill="both", expand=True) # attach the HtmlFrame widget to the window
+yourhtmlframe = HtmlFrame(root) # create the HtmlFrame widget
+yourhtmlframe.load_html("<h1>Hello, World!</h1>") # load some HTML code
+yourhtmlframe.pack(fill="both", expand=True) # attach the HtmlFrame widget to the window
 
 root.mainloop()
 ```
-To load a website, call `myhtmlframe.load_website("www.yourwebsite.com")`
+To load a website, call `yourhtmlframe.load_website("www.yourwebsite.com")`.
+To load a file, call `yourhtmlframe.load_file("/path/to/your/file.html")`.
+To load any generic url, call `yourhtmlframe.load_url(yourwebsiteorfile)`. Keep in mind that the url must be properly formatted and include the url scheme.
 
-The HtmlFrame widget behaves like any other Tkinter widget and supports bindings. It can also load files and custom HTML code. It also supports clicking on links, submitting forms, and handling website titles. In order to use these features, refer to the API refrence below.
+The HtmlFrame widget behaves like any other Tkinter widget and supports bindings. It also supports link clicks, form submittions, website title changes, and much, much more! Refer to the API refrence below.
 
 ## Tips and Tricks
 *Bindings*
 
 Like any other Tkinter widget, mouse and keyboard events can be bound to the HtmlFrame widget.
 
-An example of the usage of bingings with the HtmlFrame widget can be seen below:
+The following is an example of the usage of bingings with the HtmlFrame widget to show a menu:
 ```
 def on_right_click(event):
-    "Do stuff"
-    
-myhtmlframe.bind("<Button-3>", on_right_click)
-```
-The above code will call `on_right_click` every time the user right-clicks on the HtmlFrame widget.
-This can be extended with the following:
-```
-def on_right_click(event):
-  url = myhtmlframe.get_current_link(resolve=True) #get the current link
-  if url: #if mouse was clicked on a link
-      menu = tk.Menu(root, tearoff=0) #create the menu
-      menu.add_command(label="Open %s" % url, command=lambda url=url: myhtmlframe.load_url(url)) #add a button to the menu showing the url
-      menu.tk_popup(event.x_root, event.y_root, 0) #show the menu
-myhtmlframe.bind("<Button-3>", on_right_click)
+    element = yourhtmlframe.get_currently_hovered_element() # get the element under the mouse
+    url = element.getAttribute("href") # get the element's 'href' attribute
+    if url: #if mouse was clicked on a link
+        url = yourhtmlframe.resolve_url(url) # resolve the url so that partial urls are converted to full urls
+        menu = tk.Menu(root, tearoff=0) # create the menu
+        menu.add_command(label="Open %s" % url, command=lambda url=url: yourhtmlframe.load_url(url)) # add a button to the menu showing the url
+        menu.tk_popup(event.x_root, event.y_root, 0) # show the menu
+yourhtmlframe.bind("<Button-3>", on_right_click)
 ```
 This will make a popup show if the user right-clicked on a link. Clicking link shown in the popup would load the website.
 
 Similarly, bindings can also be applied to navigation keys:  
 ```
-  myhtmlframe.bind_all("<Up>", lambda e: myhtmlframe.yview_scroll(-5, "units"))
-  myhtmlframe.bind_all("<Down>", lambda e: myhtmlframe.yview_scroll(5, "units"))
-  myhtmlframe.bind_all("<Prior>", lambda e: myhtmlframe.yview_scroll(-1, "pages"))
-  myhtmlframe.bind_all("<Next>", lambda e: myhtmlframe.yview_scroll(1, "pages"))
-  myhtmlframe.bind_all("<Home>", lambda e: myhtmlframe.yview_moveto(0))
-  myhtmlframe.bind_all("<End>", lambda e: myhtmlframe.yview_moveto(1))
+    yourhtmlframe.bind_all("<Up>", lambda e: yourhtmlframe.yview_scroll(-5, "units"))
+    yourhtmlframe.bind_all("<Down>", lambda e: yourhtmlframe.yview_scroll(5, "units"))
+    yourhtmlframe.bind_all("<Prior>", lambda e: yourhtmlframe.yview_scroll(-1, "pages"))
+    yourhtmlframe.bind_all("<Next>", lambda e: yourhtmlframe.yview_scroll(1, "pages"))
+    yourhtmlframe.bind_all("<Home>", lambda e: yourhtmlframe.yview_moveto(0))
+    yourhtmlframe.bind_all("<End>", lambda e: yourhtmlframe.yview_moveto(1))
 ```
 
 ---
 *Changing the title*
 
 It is very easy to handle title changes with the HtmlFrame widget.
-To change the title of `root`(see example above) every time the title of a website changes, use the following:
+To change the title of the window every time the title of a website changes, use the following:
 ```
-def change_title(title):
-    root.title(title) # change the title
+def change_title(event):
+    root.title(yourhtmlframe.title) # change the title
     
-myhtmlframe.on_title_change(change_title)
+yourhtmlframe.bind("<<TitleChanged>>", change_title)
 ```
-Similarily, `on_icon_change` can be used to get the website's icon when it is loaded.
+Similarily, `<<IconChanged>>` can be used to get the website's icon when it is loaded.
 
 ---
 *Url changes*
 
-Normally, a website's url may change when it is loaded. For example, `www.github.com` will redirect to `https://github.com`. This can be handled with `on_url_change`:
+Normally, a website's url may change when it is loaded. For example, `https://github.com` will redirect to `https://www.github.com`. This can be handled with a binding to `<<UrlChanged>>`:
 
 ```
-def url_changed(url):
-    # do something, such as change the text an a url-bar
+def url_changed(event):
+    updated_url = yourhtmlframe.current_url
+    ## Do stuff, such as change the content of a url-bar
     
-myhtmlframe.on_url_change(url_changed)
+yourhtmlframe.bind("<<UrlChanged>>", url_changed)
 ```
 It is highly recomended to use this method to change the text in a url-bar, for example, instead of changing the text when a page is loaded at first. This method will handle page redirects, and url changes when stopping loading page.
 
@@ -93,23 +90,34 @@ It is highly recomended to use this method to change the text in a url-bar, for 
 ---
 *Search the page*
 
-Searching the page for specific text is very straightfoward. To search the document for the word 'python', for example, the following may be used:
+Use `find_text` to search the page for specific text. To search the document for the word 'python', for example, the following may be used:
 ```
-number_of_matches = myhtmlframe.find_text("python")
+number_of_matches = yourhtmlframe.find_text("python")
 ```
-Refer to the API reference for more information and [Bug 18](https://github.com/Andereoo/TkinterWeb/issues/18#issuecomment-881649007) or the [sample web browser](https://github.com/Andereoo/TkinterWeb/blob/main/examples/TkinterWebBrowser.py) for sample code.
+Refer to the API reference for more information and [Bug 18](https://github.com/Andereoo/TkinterWeb/issues/18#issuecomment-881649007) or the [sample web browser](https://github.com/Andereoo/TkinterWeb/blob/main/examples/TkinterWebBrowser.py) for see the code for and try out a sample find bar.
+
+---
+*Embed a widget*
+
+There are many ways to embed widgets in you HtmlFrame. One way is to use `<object>` elements:
+```
+yourcanvas = tkinter.Canvas(yourhtmlframe)
+yourhtmlframe.load_html(f"<p>This is a canvas!</p><object data="{yourcanvas}"></object>")
+
+```
+Refer to [Geometry Management with TkinterWeb](GEOMETRY.md) for more information.
 
 ---
 *Done loading?*
 
-The method `on_done_loading` can be used to do something when the document is done loading. 
+The `<<DoneLoading>>` event fires when the document is done loading. 
 
-When using `on_done_loading` to, for example, change the 'stop' button to a 'refresh' button, it is generally a good idea to use `on_downloading_resource` to do the opposite. Otherwise, the document may show that is is done loading while it is still loading.
+When binding to `<<DoneLoading>>` to, for example, change a 'stop' button to a 'refresh' button, it is generally a good idea to bind to `<<DownloadingResource>>` to do the opposite. Otherwise, the document may show that is is done loading while it is still loading.
 
 ---
 *Stop loading*
 
-The method `stop()` can be used to stop loading a webpage. Likewise, the `force=True` parameter can be passed to `load_url`, `load_website`, or `load_file` to mimic a page refresh. Refer to the API refrence below for more information.
+The method `stop()` can be used to stop loading a webpage. If `load_url`, `load_website`, or `load_file` was used to load the document, passing `yourhtmlframe.current_url` with `force=True`  will force a page refresh. Refer to the API refrence below for more information.
 
 ---
 *Link clicks*
@@ -117,22 +125,24 @@ The method `stop()` can be used to stop loading a webpage. Likewise, the `force=
 Link clicks can also be easily handled. By default, when a link is clicked, it will be automatically loaded.
 To run some code before loading the new website, use the following: 
 ```
+yourhtmlframe = HtmlFrame(master, on_link_click=load_new_page)
+
 def load_new_page(url):
     ## Do stuff - insert code here
-    myhtmlframe.load_url(url) #load the new website
+    yourhtmlframe.load_url(url) # load the new website
     
-myhtmlframe.on_link_click(load_new_page)
 ```
 Similarily, `on_form_submit` can be used to override the default form submission handlers. Refer to the API reference below.
 
 ---
 *Zooming*
 
-Setting the zoom of the HtmlFrame widget is very easy. This can be used to add accessibility features to your application. To set the zoom to 2x magnification the following can be used: 
+Setting the zoom of the HtmlFrame widget is very easy. This can be used to improve accessibility in your application. To set the zoom to 2x magnification the following can be used: 
 ```
-myhtmlframe.set_zoom(2)
+yourhtmlframe.configure(zoom=2)
+# or yourhtmlframe["zoom"] = 2
 ```
-To zoom only the text, use `set_fontscale()` instead.
+To zoom only the text, use `fontscale=2` instead.
 
 ---
 *Manipulating the DOM*
@@ -140,60 +150,111 @@ To zoom only the text, use `set_fontscale()` instead.
 Refer to [DOM Manipulation with TkinterWeb](DOM.md).
 
 ---
-*Other methods can be found in the [useful methods section](#useful-methods) below.*
-
----
 
 ## Class API 
 
 ### HtmlFrame constructors:
-* `master` Parent (tkinter widget)
-* `messages_enabled` Enable messages (boolean). **Default: True**
-* `vertical_scrollbar` Show the vertical scrollbar (True, False, or "auto"). **Default: "auto"**
+* `master`: Parent (Tkinter widget)
+*`**kwargs`: Any supported configuration options. See [`configure()`](#key-methods) for a list of options.
 
-   **New since version 3.25.3:** consider using the CSS property `overflow` or `overflow-y` on the `<html>` or `<body>` element instead.
-* `horizontal_scrollbar` Show the horizontal scrollbar (True, False, or "auto"). **Default: False**
-  
-   **New since version 3.25.20:** consider using the CSS property `overflow-x` on the `<html>` or `<body>` element instead.
-   Generally speaking, it is best to keep the horizontal scrollbar hidden.
-* `**kw` Other optional `ttk.Frame` arguments
+### Key Subclasses:
+* `document` (`tkinterweb.dom.HTMLDocument` instance): see [DOM Manipulation with TkinterWeb](DOM.md)
+* `html` (`tkinterweb.bindings.TkinterWeb` instance): see the [TkinterWeb widget documentation](TKINTERWEB.md)
 
-### Useful Subclasses:
-* `document` (`tkinterweb.dom.TkwDocumentObjectModel` instance): see [DOM Manipulation with TkinterWeb](DOM.md)
-* `html` (`tkinterweb.TkinterWeb` instance): see the [TkinterWeb widget documentation](TKINTERWEB.md)
+### Virtual Events:
+* `<<DownloadingResource>>`/`utilities.DOWNLOADING_RESOURCE_EVENT`: Generated whenever a new resource is being downloaded.
+* `<<DoneLoading>>`/`utilities.DONE_LOADING_EVENT`: Generated whenever all outstanding resources have been downloaded. This is generally a good indicator as to when the website is done loading, but may be generated multiple times while loading a page.
+* `<<UrlChanged>>`/`utilities.URL_CHANGED_EVENT`: Generated whenever the url the HtmlFrame widget is navigating to changes. Use `current_url` to get the url.
+* `<<IconChanged>>`/`utilities.ICON_CHANGED_EVENT`: Generated whenever the icon of a webpage changes. Use `icon` to get the icon.
+* `<<TitleChanged>>`/`utilities.TITLE_CHANGED_EVENT`: Generated whenever the title of a website or file has changed. Use `title` to get the title.
+* `<<Modified>>`: Generated whenever the content of any <input> element changes.
 
-### Useful Methods:
+### State Variables:
+* `current_url`: The document's url. Read-only.
+* `base_url`: The documents's base url. This is automatically generated from the `current_url` but will also change if explicitly specified by the document. Read-only.
+* `title`: The document's title (if specified by the document). Read-only.
+* `icon`: The document's icon url (if specified by the document). Read-only.
 
----
-#### `load_website(website_url, decode=None, force=False, insecure=False)`
+### Key Methods:
+Below are methods that are specific to this widget. Other general Tkinter widget methods, such as `bind`, `pack`, and `grid`, are also supported but not listed.
+
+#### `configure(**kwargs)`
+Change the widget's configuration options. Below are the supported options:
+* `on_navigate_fail`: The function to be called when a url cannot be loaded. This can be used to override the default error page. The target url, error, and code will be passed as arguments. **Default: HtmlFrame.show_error_page**
+* `on_link_click`: The function to be called when a hyperlink is clicked. The target url will be passed as an argument. **Default: HtmlFrame.load_url**
+* `on_form_submit`: The function to be called when a form is submitted. The target url, data, and method (GET or POST) will be passed as arguments. **Default: HtmlFrame.load_form_data**
+* `on_script`: The function to be called when a script element is encountered. This can be used to implement a script handler, such as a JavaScript engine. The script element's attributes and contents will be passed as arguments. **Ignored by default.**
+* `message_func`: The function to be called when a debug message is issued. The message will be passed as an argument. **Default: utilities.notifier**
+* `visited_links`: The list used to determine if a hyperlink should be given the CSS `:visited` flag. **Default: list()**
+* `zoom`: The page zoom (float). **Default: 1.0**
+* `fontscale`: The page fontscale multiplier (float). **Default: 1.0**
+* `vertical_scrollbar`: Show the vertical scrollbar (True, False, or "auto"). Consider using the CSS property `overflow-y` (experimental mode only) or `overflow`  on the `<html>` or `<body>` element instead **Default: "auto"**
+* `horizontal_scrollbar`: Show the horizontal scrollbar (True, False, or "auto"). Consider using the CSS property `overflow-x` (experimental mode only) or adding the attribute `tkinterweb-overflow-x=[True, False, or "auto"]` on the `<html>` or `<body>` element instead **Default: False**
+* `messages_enabled`: Enable messages. **Default: True**
+* `selection_enabled`: Enable selection. **Default: True**
+* `stylesheets_enabled`: Enable stylesheets. **Default: True**
+* `images_enabled`: Enable images. **Default: True**
+* `forms_enabled`: Enable forms and form elements. **Default: True**
+* `objects_enabled`: Enable embedding of `<object>` and `<iframe>` elements. **Default: True**
+* `caches_enabled`: Enable caching. Disabling this option will conserve memory, but will also result in longer page and image reload times. **Default: True**
+* `crash_prevention_enabled`: Enable crash prevention. Disabling this option may improve page load speed, but crashes will occur on some websites. **Default: True**
+* `events_enabled`: Enable generation of Tk events. **Default: True**
+* `threading_enabled`: Enable threading. Has no effect if the Tcl/Tk build does not support threading. **Default: True**
+* `image_alternate_text_enabled`: Enable the display of alt text for broken images. **Default: True**
+* `dark_theme_enabled`: Enable dark mode. May cause hangs or crashes on more complex websites. **Default: False**
+* `image_inversion_enabled`: Enable image inversion. May cause hangs or crashes on more complex websites. **Default: False**
+* `ignore_invalid_images`: Ignore invalid images. If enabled and alt text is disabled or the image has no alt text, show a broken image icon. **Default: True**
+* `about_page_background`: The default background color of built-in pages, intended to better integrate custom documents with Tkinter. **Default: ttk.Style.lookup('TFrame', 'background')**
+* `about_page_foreground`: The default text color of built-in pages. **Default: ttk.Style.lookup('TLabel', 'foreground')**
+* `find_match_highlight_color`: The highlight color of matches found by `find_text()`. **Default: "#ef0fff"**
+* `find_match_text_color`: The text color of matches found by `find_text()`. **Default: "#fff"**
+* `find_current_highlight_color`: The highlight color of the current match selected by `find_text()`. **Default: "#38d878"**
+* `find_current_text_color`: The text color of the current match selected by `find_text()`. **Default: "#fff"**
+* `selected_text_highlight_color`: The highlight color of selected text. **Default: "#3584e4"**
+* `selected_text_color`: The text color of selected text. **Default: "#fff"**
+* `default_style`: The stylesheet used to set the default appearance of HTML elements. It is generally best to leave this setting alone. **Default: utilities.DEFAULT_STYLE**
+* `dark_style`. The stylesheet used to set the default appearance of HTML elements when dark mode is enabled. It is generally best to leave this setting alone. **Default: utilities.DARK_STYLE**
+* `insecure_https`: If False, website certificate errors are ignored. This is a workaround for issues where `ssl` is unable to get a page's certificate on some older Mac systems. **Default: False**
+* `headers`: The headers used by urllib's Request when fetching a resource (dict). **Default: utilities.HEADERS**
+* `experimental`: If True, experimental features will be enabled. You will need to compile the cutting-edge Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental and replace the default Tkhtml binary on your system with the experimental version. Unless you need to screenshot the page on Windows or print your page it is best to use the default Tkhtml version. **Default: False**
+* `use_prebuilt_tkhtml`: If True, the Tkhtml binary for your system supplied by TkinterWeb will be used. If your system isn't supported and you don't want to compile the Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml, you could try installing Tkhtml3 system-wide and set `use_prebuilt_tkhtml` to False. Note that some crash prevention features will no longer work. **Default: True
+* `parsemode`: The parse mode. May be "xml", "xhtml", or "html". In "html" mode, explicit XML-style self-closing tags are not handled specially and unknown tags are ignored. "xhtml" mode is similar to "html" mode except that explicit self-closing tags are recognized. "xml" mode is similar to "xhtml" mode except that XML CDATA sections and unknown tag names are recognized. It is usually best to leave this setting alone. **Default: "xml"**
+* `shrink`: If False, the widget's width and height are set by the width and height options as per usual. You may still need to call `grid_propagate(0)` or `pack_propagate(0)` for Tkinter to respect the set width and height. If this option is set to True, the widget's requested width and height are determined by the current document. **Default: False**
+* `mode`: The rendering engine mode. May be "standards", "almost standards", or "quirks". It is usually best to leave this setting alone. **Default: "standards"**
+* Other optional `ttk.Frame` arguments
+
+Configuration options can also be returned or set as key-value pairs.
+
+
+#### `cget(**kwargs)`
+Get the value of the specified configuration options. See above for options.
+
+#### `load_website(website_url, decode=None, force=False)`
 Loads and parses a website.
 
 Parameters
 * **website_url** *(string)* - Specifies the url to load.
 * **decode** *(string)* - Specifies the decoding to use when loading the website.
 * **force** *(boolean)* - Force the page to reload all elements.
-* **insecure** *(boolean)* - Set to True to ignore website certificate errors. This is a workaround for issues where `ssl` is unable to get a page's certificate.
 
 ---
 
-#### `load_file(file_url, decode=None, force=False, insecure=False)`
+#### `load_file(file_url, decode=None, force=False)`
 Loads and parses a local HTML file.
 
 Parameters
 * **file_url** *(string)* - Specifies the file to load.
 * **decode** *(string)* - Specifies the decoding to use when loading the file.
 * **force** *(boolean)* - Force the page to reload all elements.
-* **insecure** *(boolean)* - Set to True to ignore website certificate errors. This is a workaround for issues where `ssl` is unable to get a page's certificate.
 
 ---
-#### `load_url(url, decode=None, force=False, insecure=False)`
+#### `load_url(url, decode=None, force=False)`
 Loads and parses html from the given url. A local file will be loaded if the url begins with "file://". If the url begins with "https://" or "http://", a website will be loaded. If the url begins with "view-source:", the source code of the webpage will be displayed. Loading "about:tkinterweb" will open a page with debugging information.
 
 Parameters
 * **url** *(string)* - Specifies the url to load.
 * **decode** *(string)* - Specifies the decoding to use when loading the website.
 * **force** *(boolean)* - Force the page to reload all elements.
-* **insecure** *(boolean)* - Set to True to ignore website certificate errors. This is a workaround for issues where `ssl` is unable to get a page's certificate.
 
 ---
 #### `load_html(html_source, base_url="")`
@@ -249,112 +310,74 @@ Return type
 * *integer*
 
 ---
-#### `select_all()`
-Select all text found in the current document. 
-
----
-#### `on_link_click(function)`
-Set TkinterWeb to call the specified python function whenever a link is clicked.
-When a link is clicked on a webpage, a variable containing the url of the clicked link will be passed to the specified function.
+#### `get_currently_hovered_element(ignore_text_nodes=True)`
+Returns the element under the mouse. Particularily useful for creating right-click menus.
 
 Parameters
-* **function** *(python function)* - Specifies the function to call when a link is clicked.
-
----
-#### `on_form_submit(function)`
-Set TkinterWeb to call the specified python function whenever a form is submitted.
-When an HTML form is submitted, three variables, one containing the url, a second containing the submission data, and a third containing the submission method (GET or POST) will be passed to the specified function.
-
-Parameters
-* **function** *(python function)* - Specifies the function to call when a form is submitted.
-
----
-#### `on_title_change(function)`
-Set TkinterWeb to call the specified python function whenever the title of a website or file has changed.
-When the title of a webpage changes, a variable containing the new title will be passed to the specified function.
-
-Parameters
-* **function** *(python function)* - Specifies the function to call when a title changes.
-
----
-#### `on_icon_change(function)`
-Set TkinterWeb to call the specified python function whenever the icon of a website or file has changed.
-When the icon of a webpage changes, a variable containing the url of the new icon will be passed to the specified function.
-
-Parameters
-* **function** *(python function)* - Specifies the function to call when the icon changes.
-
----
-#### `on_url_change(function)`
-Set TkinterWeb to call the specified python function whenever the HtmlFrame widget is navigating to a new url.
-When an new url is navigated to, a variable containing the new url will be passed to the specified function.
-
-Parameters
-* **function** *(python function)* - Specifies the function to call when a url changes.
-
----
-#### `on_done_loading(function)`
-Set TkinterWeb to call the specified python function whenever all outstanding resources have been downloaded. This is generally a good indicator as to when the website is done loading. The specified function may be called multiple times while loading a page.
-
-Parameters
-* **function** *(python function)* - Specifies the function to call when a webpage is expected to be done loading.
-
----
-#### `on_downloading_resource(function)`
-Set TkinterWeb to call the specified python function whenever a new resource is being downloaded.
-
-Parameters
-* **function** *(python function)* - Specifies the function to call when a resource is downloaded.
-
----
-#### `on_image_setup(function)`
-Set TkinterWeb to call the specified python function whenever the setup of an image is completed.
-The url of the image will be passed to the specified function as well as a boolean variable that is set to `True` if the image was successfully loaded and `False` if it could not be displayed.
-
-Parameters
-* **function** *(python function)* - Specifies the function to call when an image is setup.
-
----
-#### `set_zoom(multiplier)`
-Set the zoom multiplier of the document.
-
-Parameters
-* **multiplier** *(float or integer)* - Specifies the zoom multiplier.
-
----
-#### `get_zoom()`
-Return the zoom multiplier of the document.
+* **ignore_text_nodes** *(boolean)* - If True, text nodes (i.e. the contents of a <p> element) will be ignored and their parent node returned. It is generally best to leave leave this parameter set to True.
 
 Return type
-* *float*
+* *HTMLElement*
 
 ---
-#### `set_fontscale(multiplier)`
-Set the zoom multiplier of the document's text.
+#### `screenshot_page(self, file=None, full=False)`
+Take a screenshot.
+This does not work on Windows unless experimental mode is enabled.
+This command should be used with care, particularily if `full` is set to True, as large documents can result in very large images that take a long time to create and use large amounts of memory. 
 
 Parameters
-* **multiplier** *(float or integer)* - Specifies the fontscale multiplier.
-
----
-#### `get_fontscale()`
-Return the zoom multiplier of the document's text.
+* **file** *(string)* - Specifies the file path to save the screenshot to. If None, the image is not saved to the disk.
+* **full** *(boolean)* - If True, the entire page is captured. If False, only the visible content is captured. 
 
 Return type
-* *float*
+* *PIL.Image*
 
 ---
-#### `set_parsemode(mode)`
-Set the parser mode. The three availiable options are `html`, `xhtml`, and `xhtml`. In `html` mode, explicit XML-style self-closing tags are not handled specially and unknown tags are ignored. `xhtml` mode is similar to `html` mode except that explicit self-closing tags are recognized. `xml` mode is similar to `xhtml` mode except that XML CDATA sections and unknown tag names are recognized. This is the default value.
+#### `print_page(self, file=None, cnf={}, **kwargs)`
+Print the document to a PostScript file.
+This method is experimental and requires experimental mode to be is enabled.
 
 Parameters
-* **mode** *(string)* - Specifies the parse mode.
-
----
-#### `get_parsemode()`
-Return the parser mode.
+* **file** *(string)* - Specifies the file path to print the page to. If None, the document is not saved to the disk.
+* **cnf |= kwargs** *(boolean)* - Valid options are colormap, colormode, file, fontmap, height, pageanchor, pageheight, pagesize (can be A3, A4, A5, LEGAL, and LETTER), pagewidth, pagex, pagey, nobg, noimages, rotate, width, x, and y. 
 
 Return type
 * *string*
+
+---
+#### `save_page(self, file=None)`
+Save the page as an HTML file.
+
+Parameters
+* **file** *(string)* - Specifies the file path to print the page to. If None, the document is not saved to the disk.
+
+Return type
+* *string*
+---
+
+#### `snapshot_page(self, file=None, allow_agent=False)`
+Save a snapshot of the document. Unlike `save_page`, which returns the entire, original, document, `snapshot_page` returns it as rendered. 
+For instance, <link> elements are ignored and instead one large <style> element contains all of the necessary CSS information for the document.
+This can be useful for saving documents for offline use.
+
+Parameters
+* **file** *(string)* - Specifies the file path to print the page to. If None, the document is not saved to the disk.
+* **allow_agent** *(string)* - If True, CSS properties added by the rendering engine (eg. those affected by the widget's `default_style` option) are also included.
+
+Return type
+* *string*
+    
+---
+#### `select_all()`
+Select all text in the current document. 
+
+---
+#### `clear_selection()`
+Clear the current selection. 
+
+---
+#### `get_selection()`
+Return any selected text. 
 
 ---
 #### `resolve_url(url)`
@@ -367,108 +390,9 @@ Return type
 * *string*
 
 ---
-#### `set_message_func(function)`
-Set TkinterWeb to call the specified python function whenever a new message is released.
-By default, unless `messages_enabled` was set to `False` when calling `HtmlFrame()`, messages will be printed to the console.
-After calling `set_message_func`, whenever a new message is released, a variable containing the main message and a second variable containing more information will be passed to the specified function.
-
-Parameters
-* **function** *(python function)* - Specifies the function to call when a message is released.
-
----
-#### `set_broken_webpage_message(html)`
-Set the HTML code to be displayed when a webpage cannot be reached.
-
-Parameters
-* **html** *(string)* - Specifies the HTML to be parsed when an invalid url is requested. Must be valid HTML code.
-
----
-#### `set_maximum_thread_count(maximum)`
-By default, TkinterWeb uses threading to improve page load times and to prevent Tkinter from freezing when loading HTML. TkinterWeb allows up to 20 threads to run at once. Increasing this value can improve speed and responsiveness, at the cost of CPU and memory usage while a page is loading. To disable threading altogether, call `set_maximum_thread_count` with a value of 0.
-
-Parameters
-* **maximum** *(integer)* - Specifies the maximum number of threads that can run at the same time.
-
----
-#### `set_recursive_hover_depth(depth)`
-When a mouse hovers over an element in a webpage, the element under the mouse is flagged as hovered.
-TkinterWeb then marks the parent of that element repeatedly, up to the 5th degree. This works fine for most websites, but may cause a few websites to lag slightly. If this is becoming an issue, simply call `set_recursive_hover_depth` and set the *depth* to a smaller integer.
-
-Parameters
-* **depth** *(integer)* - Specifies the number of recursions to apply the hover flag to.
-
----
-#### `add_visited_links(links)`
-TkinterWeb stores a list of visited websites to determine whether a link on a webpage should be flagged as visited or not visited.
-The method add_visited_links enables adding new custom urls to this list. 
-
-Parameters
-* **links** *(string or list)* - Specifies the url(s) to be added to the list of visited websites.
-
----
-#### `clear_visited_links()`
-Clear the list of visited websites.
-
----
-#### `enable_stylesheets(enabled=True)`
-Enable or disable CSS styling.
-This is enabled by default.
-This method must be invoked *before* loading a webpage to take effect.
-
-Parameters
-* **enabled** *(boolean)* - Specifies whether stylesheets should be enabled.
-
----
-#### `enable_images(enabled=True)`
-Enable or disable image loading.
-This is enabled by default.
-This method must be invoked *before* loading a webpage to take effect.
-
-Parameters
-* **enabled** *(boolean)* - Specifies whether images should be loaded.
-
----
-#### `enable_forms(enabled=True)`
-Enable or disable form-filling capabilities.
-This is enabled by default.
-This method must be invoked *before* loading a webpage to take effect.
-
-Parameters
-* **enabled** *(boolean)* - Specifies whether forms should be handled.
-
----
-#### `enable_objects(enabled=True)`
-Enable or disable `<object>` and `<iframe>` embedded elements.
-This is enabled by default.
-This method must be invoked *before* loading a webpage to take effect.
-
-Parameters
-* **enabled** *(boolean)* - Specifies whether objects should be loaded.
-
----
-#### `enable_caches(enabled=True)`
-Enable or disable webpage caches.
-This is enabled by default.
-Disabling this option will conserve memory, but will also result in longer page load times.
-This method must be invoked *before* loading a webpage to take effect.
-
-Parameters
-* **enabled** *(boolean)* - Specifies whether caches can be used.
-
----
-
-#### `enable_dark_theme(enabled=True, invert_images=True)`
-Enable or disable dark theme.
-This is disabled by default.
-This function is experimental and may cause hangs or crashes.
-
-Parameters
-* **enabled** *(boolean)* - Specifies whether page colours should be inverted.
-* **invert_images** *(boolean)* - Specifies images should be inverted.
-
----
 #### `yview(*args)`
-Can be used to adgust the viewport; base function for `yview_moveto` and `yview_scroll`. If a Tkhtml3 node is passed to this function, the document will scroll to the top of the given node.
+Adjust the viewport. This method uses the standard interface copied from the Tkinter Canvas and Text widgets.
+If a Tkhtml3 node is supplied as an argument, the document will scroll to the top of the given node.
 
 ---
 #### `yview_moveto(number)`
@@ -486,87 +410,30 @@ Parameters
 * **what** *(string)* - Either "units" or "pages".
 
 ---
-#### `yview_toelement(selector, index=0)`
-Find an element that matches a given CSS selectors and scroll to it.
+#### `replace_widget(oldwidget, newwidget)`
+Removes the `oldwidget` from the document, and replaces it with the `newwidget`. If both `oldwidget` and `newwidget` are currently shown in the document, their locations will be swapped.
 
 Parameters
-* **selector** *(string)* - Specifies the CSS selector to be used.
-* **index** *(integer)* - Specifies which element is to be scrolled to.
-
----
-#### `ignore_invalid_images(value)`
-Enable or disable showing a broken image icon whenever an image can't be loaded.
-
-Parameters
-* **value** *(boolean)* - Specifies whether invalid images should or should not be ignored.
-
----
-#### `get_current_link(resolve=True)`
-Convenience method for getting the url of the current hyperlink.
-
-Parameters
-* **resolve** *(boolean)* - If True, the url will be resolved before being returned. Otherwise, it will be returned as-is.
-
----
-#### `get_currently_hovered_node_tag()`
-Get the tag of the HTML element the mouse is currently over.
-For example, if the mouse is hovering over a heading, `get_currently_hovered_node_tag()` would return "h1".
-
-Return type
-* *string*
-
----
-#### `get_currently_hovered_node_text()`
-Get the text content of the HTML element the mouse is currently over.
-
-Return type
-* *string*
----
-#### `get_currently_hovered_node_attribute(attribute)`
-Get the specified attribute of the HTML element the mouse is currently over.
-For example, if the mouse is over a link to python.org, `get_currently_hovered_node_attribute("href")` would return "python.org".
-If the current element does not have the specified attribute, an empty string is returned.
-
-Parameters
-* **attribute** *(boolean)* - Specifies the attribute
-
-Return type
-* *string*
-
----
-#### `get_currently_selected_text()`
-Get the text content that is currently highlighted/selected in the HtmlFrame.
-
-Return type
-* *string*
-
-
----
-
-#### **replace_widget**(oldwidget, newwidget)
-Removes the `oldwidget` from the document, and replaces it with the `newwidget`. Note that if both `oldwidget` and `newwidget` are currently shown in the document, their locations will be swapped.
-
-Parameters
-* **oldwidget** *(tkinter.Widget)* - Specifies the Tkinter widget to replace. This must be a valid Tkinter widget that is currently managed by TkinterWeb.
+* **oldwidget** *(tkinter.Widget)* - Specifies the Tkinter widget to replace. This widget must be currently managed by TkinterWeb.
 * **newwidget** *(tkinter.Widget)* - Specifies the new Tkinter widget to show. This may be any Tkinter widget.
 
 ---
-
-#### **replace_element**(cssselector, newwidget)
+#### `replace_element(cssselector, newwidget)`
 Replaces the content of the element matching the specified CSS selector with the specified widget. This command will scan the document for any elements that match the specified CSS selector. If multiple elements match the specified selector, only the first element will be replaced. For example, the following code will replace the 'text' HTML element with a button. 
+
 ```
-yourbutton = tkinter.Button(yourframe)
-yourframe.load_html("<p id='text'>some text</p>")
-yourframe.replace_element("#text", yourbutton)
+yourbutton = tkinter.Button(yourhtmlframe)
+yourhtmlframe.load_html("<p id='text'>some text</p>")
+yourhtmlframe.replace_element("#text", yourbutton)
 ```
+
 Parameters
 * **cssselector** *(string)* - Specifies the CSS selector to search for.
 * **newwidget** *(tkinter.Widget)* - Specifies the new Tkinter widget to show. This may be any Tkinter widget.
 
 ---
-
-#### **remove_widget**(oldwidget)
+#### `remove_widget(oldwidget)`
 Removes the specified widget from the document. 
 
 Parameters
-* **oldwidget** *(tkinter.Widget)* - Specifies the Tkinter widget to remove. This must be a valid Tkinter widget that is currently managed by TkinterWeb.
+* **oldwidget** *(tkinter.Widget)* - Specifies the Tkinter widget to remove. This widget must be currently managed by TkinterWeb.

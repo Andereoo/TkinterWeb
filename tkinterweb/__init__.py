@@ -43,11 +43,12 @@ class Demo():
         import tkinter as tk
 
         self.root = root = tk.Tk()
-        self.frame = frame = HtmlFrame(root, messages_enabled=False,)
-        self.frame2 = HtmlFrame(root, download_failed_func=self.on_error)
+        self.frame = frame = HtmlFrame(root, messages_enabled=False)
+        self.frame2 = HtmlFrame(root, on_navigate_fail=self.on_error)
+        self.button = tk.Button(root)
 
         self.afters = []
-        self.button = tk.Button(root)
+        
         self.load()
         frame.bind("<<TitleChanged>>", lambda event: self.root.title(self.frame.title))
         frame.pack(expand=True, fill="both")

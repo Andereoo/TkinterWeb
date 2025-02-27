@@ -31,7 +31,7 @@ class HtmlFrame(ttk.Frame):
         self._button = None
 
         self.htmlframe_options = {
-            "on_download_failed": self._on_download_fail,
+            "on_navigate_fail": self.show_error_page,
             "vertical_scrollbar": "auto",
             "horizontal_scrollbar": False,
             "about_page_background": style.lookup('TFrame', 'background'),
@@ -416,6 +416,12 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         self.html.post_message("Saved!")
         return html
     
+    def show_error_page(self, url, error, code):
+        if not self._button:
+            self._button = tk.Button(self, text="Try Again")
+        self._button.configure(command=lambda url=self.current_url: self.load_url(url, None, True))
+        self.load_html(BUILTIN_PAGES["about:error"].format(self.about_page_background, self.about_page_foreground, code, self._button), url)
+    
     def _check_value(self, old, new):
         expected_type = type(old)
         if callable(old) or old == None:
@@ -548,15 +554,9 @@ This might also happen if your Python distribution does not come installed with 
 This is a known Python bug on older MacOS systems. \
 Running something along the lines of \"/Applications/Python {'.'.join(PYTHON_VERSION[:2])}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
 Otherwise, use 'configure(insecure_https=True)' to ignore website certificates.")
-            self.on_download_failed(url, error, code)
+            self.on_navigate_fail(url, error, code)
 
         self._thread_in_progress = None
-
-    def _on_download_fail(self, url, error, code):
-        if not self._button:
-            self._button = tk.Button(self, text="Try Again")
-        self._button.configure(command=lambda url=self.current_url: self.load_url(url, None, True))
-        self.load_html(BUILTIN_PAGES["about:error"].format(self.about_page_background, self.about_page_foreground, code, self._button), url)
 
     def _finish_css(self):        
         if self._waiting_for_reset:

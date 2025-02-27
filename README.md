@@ -73,7 +73,7 @@ See [Frequently Asked Questions](https://github.com/Andereoo/TkinterWeb/blob/mai
 * Most CSS pseudo-elements, such as `:hover` and `:active` are also supported. 
 
 **JavaScript:**
-* Javascript is not supported at the moment, but it is possible to manipulate the document through Python. See [DOM Manipulation with TkinterWeb](/docs/DOM.md).
+* Javascript is not supported at the moment. It is up to the user to connect a JavaScript interpreter by registering a callback for scripts and manipulating the document through Python. See [DOM Manipulation with TkinterWeb](/docs/DOM.md).
 
 **Images:**
 * TkinterWeb supports nearly 50 different image types through PIL. However, in order to load Scalable Vector Graphic images:
@@ -97,5 +97,7 @@ Thanks to the [TkinterHtml package](https://bitbucket.org/aivarannamaa/tkinterht
 
 Thanks to the [BRL-CAD project](https://github.com/BRL-CAD/brlcad) for providing modifications for Tkhtml on 64-bit Windows platforms.
 
-A special thanks to everyone else who helped this project by reporting bugs, creating pull requests, and providing suggestions!
+Thanks to [Google Fonts](https://github.com/google/fonts) for providing the font used for generating alternate text when images fail to load.
+
+A huge thanks to everyone else who helped this project by reporting bugs, providing suggestions, and creating pull requests!
 

@@ -9,6 +9,7 @@ Copyright (c) 2025 Andereoo
 
 from tkinter import TclError
 
+
 def escape_Tcl(string):
     string = str(string)
     escaped = ""
@@ -55,6 +56,7 @@ def camel_case_to_property(string):
     # from re import finditer
     # matches = finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)', string)
     # return "-".join([m.group(0).lower() for m in matches])
+
 
 class HTMLDocument:
     def __init__(self, htmlwidget):
@@ -156,7 +158,6 @@ class HTMLDocument:
             return [TclNode_to_html %s]
             """ % (int(deep), extract_nested(node))
         )
-
 
 
 class CSSStyleDeclaration:
@@ -380,6 +381,7 @@ class HTMLElement:
         return tuple(HTMLElement(self.html, node) for node in nodes)
     
     def scrollIntoView(self):
+        "Scroll the viewport so that this element is visible"
         self.html.yview(self.node)
     
     def _insert_children(self, children, before=None):

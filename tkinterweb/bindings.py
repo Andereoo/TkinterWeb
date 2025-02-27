@@ -128,6 +128,14 @@ class TkinterWeb(tk.Widget):
         self.use_prebuilt_tkhtml = True
         self.experimental = False
 
+        self.find_match_highlight_color = "#ef0fff"
+        self.find_match_text_color = "#fff"
+        self.find_current_highlight_color = "#38d878"
+        self.find_current_text_color = "#fff"
+        self.selected_text_highlight_color = "#3584e4"
+        self.selected_text_color = "#fff"
+        self.visited_links = []
+
         self.image_alternate_text_font = get_alt_font()
         self.image_alternate_text_size = 14
         self.image_alternate_text_threshold = 10
@@ -251,7 +259,7 @@ class TkinterWeb(tk.Widget):
         if self._dark_theme_enabled != enabled:
             self._dark_theme_enabled = enabled    
             if enabled:
-                self.post_message("Dark theme was enabled. This feature may cause freezes or crashes on some pages.")
+                self.post_message("Dark theme was enabled. This feature may cause hangs or crashes on some pages.")
             self.update_default_style()
 
     @property
@@ -264,7 +272,7 @@ class TkinterWeb(tk.Widget):
         if self._image_inversion_enabled != enabled:
             self._image_inversion_enabled = enabled
             if enabled:
-                self.post_message("Image inversion was enabled. This feature may cause freezes or crashes on some pages.")
+                self.post_message("Image inversion was enabled. This feature may cause hangs or crashes on some pages.")
 
     @property
     def threading_enabled(self):
@@ -546,7 +554,7 @@ class TkinterWeb(tk.Widget):
         The returned image should be deleted when the script has finished with it.
         Note that this command is mainly intended for automated testing.
         Be wary of running this command on large documents.
-        Does not work on windows unless experimental Tkhtml is used."""
+        Does not work on Windows unless experimental Tkhtml is used."""
         full = "-full" if full else ""
         name = self.tk.call(self._w, "image", full)
         return name, self.tk.call(name, "data")

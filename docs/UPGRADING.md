@@ -114,8 +114,8 @@
 * Enabling/disabling caches now enables/disables the Tkhtml image cache.
 * Threading now cannot be enabled if the Tcl/Tk build does not support it.
 
-* `HTMLElement.remove()` now raises a TclError when invoked on <html> or <body> elements, which previously caused segmentation faults.
-* `HTMLElement.innerHTML` and `.textContent` now raise a TclError when invoked on <html> elements, which previously caused segmentation faults.
+* `HTMLElement.remove()` now raises a TclError when invoked on `<html>` or `<body>` elements, which previously caused segmentation faults.
+* `HTMLElement.innerHTML` and `.textContent` now raise a TclError when invoked on `<html>` elements, which previously caused segmentation faults.
 
   
 * The ability to style color selector inputs was improved.

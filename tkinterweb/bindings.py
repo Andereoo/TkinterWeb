@@ -679,13 +679,9 @@ class TkinterWeb(tk.Widget):
         if stylecmd:
             if handledelete:
                 self.tk.call(
-                    node,
-                    "replace",
-                    widgetid,
-                    "-deletecmd",
-                    self.register(deletecmd),
-                    "-stylecmd",
-                    self.register(stylecmd),
+                    node, "replace", widgetid,
+                    "-deletecmd", self.register(deletecmd),
+                    "-stylecmd", self.register(stylecmd),
                 )
             else:
                 self.tk.call(

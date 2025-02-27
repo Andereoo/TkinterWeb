@@ -152,7 +152,7 @@ Refer to [DOM Manipulation with TkinterWeb](DOM.md).
 
 ### HtmlFrame constructors:
 * `master`: Parent (Tkinter widget)
-*`**kwargs`: Any supported configuration options. See [`configure()`](#key-methods) for a list of options.
+*`**kwargs`: Any supported configuration options. See [`configure()`](#configure-kwargs) for a list of options.
 
 ### Key Subclasses:
 * `document` (`tkinterweb.dom.HTMLDocument` instance): see [DOM Manipulation with TkinterWeb](DOM.md).

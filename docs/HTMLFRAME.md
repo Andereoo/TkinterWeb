@@ -93,7 +93,7 @@ Use `find_text` to search the page for specific text. To search the document for
 ```
 number_of_matches = yourhtmlframe.find_text("python")
 ```
-Refer to the API reference for more information and [Bug 18](https://github.com/Andereoo/TkinterWeb/issues/18#issuecomment-881649007) or the [sample web browser](../examples/TkinterWebBrowser.py) for see the code for and try out a sample find bar.
+Refer to the API reference for more information and [bug 18](https://github.com/Andereoo/TkinterWeb/issues/18#issuecomment-881649007) or the [sample web browser](../examples/TkinterWebBrowser.py) for a sample find bar.
 
 ---
 *Embed a widget*

@@ -51,15 +51,15 @@
 * `HtmlFrame.get_currently_selected_text()` -> `HtmlFrame.get_selection()`
 
 * `TkwDocumentObjectModel` -> `HTMLDocument`
-* `HTMLElement` -> `HTMLElement`
+* `HtmlElement` -> `HTMLElement`
 
-* `HTMLElement.style()` -> `HTMLElement.style`
-* `HTMLElement.innerHTML()` -> `HTMLElement.innerHTML`
-* `HTMLElement.textContent()` -> `HTMLElement.textContent`
-* `HTMLElement.attributes()` -> `HTMLElement.attributes`
-* `HTMLElement.tagName()` -> `HTMLElement.tagName`
-* `HTMLElement.parentElement()` -> `HTMLElement.parentElement`
-* `HTMLElement.children()` -> `HTMLElement.children`
+* `HtmlElement.style()` -> `HTMLElement.style`
+* `HtmlElement.innerHTML()` -> `HTMLElement.innerHTML`
+* `HtmlElement.textContent()` -> `HTMLElement.textContent`
+* `HtmlElement.attributes()` -> `HTMLElement.attributes`
+* `HtmlElement.tagName()` -> `HTMLElement.tagName`
+* `HtmlElement.parentElement()` -> `HTMLElement.parentElement`
+* `HtmlElement.children()` -> `HTMLElement.children`
 
 * The `scroll-x` attribute was changed to the `tkinterweb-scroll-x` attribute. Like the `overflow` CSS property, valid options are now "auto", "visible", "clip", "scroll", and "hidden".
 

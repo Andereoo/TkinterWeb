@@ -347,35 +347,29 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
             self.html.post_message("A screenshot could not be taken because it screenshot_page is an experimental feature on Windows")
             return None
 
-    def print_page(self, file=None, cnf={}, **kwargs):
+    def print_page(self, filename=None, cnf={}, **kwargs):
         "Print the page"
         if self.html.experimental:
             cnf |= kwargs
             self.html.post_message(f"Printing {self.current_url}...")
-            if file:
-                cnf["file"] = file
+            if filename:
+                cnf["file"] = filename
             if "pagesize" in cnf:
-                pageheights = {
-                    "A3": "1191", "A4": "842", "A5": "595",
-                    "LEGAL": "792", "LETTER": "1008"
-                }
-                pagewidths = {
-                    "A3": "842", "A4": "595", "A5": "420",
-                    "LEGAL": "612", "LETTER": "612"
+                pagesizes = {
+                    "A3": "842x1191", "A4": "595x842", "A5": "420x595",
+                    "Legal": "612x792", "Letter": "612x1008"
                 }
                 try:
-                    cnf["pageheight"] = pageheights[cnf["pagesize"].upper()]
-                    cnf["pagewidth"] = pagewidths[cnf["pagesize"].upper()]
-                    self.html.post_message(f"Setting printer page size to {cnf['pageheight']}px by {cnf['pagewidth']}px.")
+                    cnf["pagesize"] = pagesizes[cnf["pagesize"].upper()]
+                    self.html.post_message(f"Setting printer page size to {cnf['pagesize']} PostScript points.")
                 except KeyError:
                     raise KeyError("Parameter 'pagesize' must be A3, A4, A5, Legal, or Letter")
-                del cnf["pagesize"]
 
             self.html.update() # update the root window to ensure HTML is rendered
             file = self.html.postscript(cnf)
             # no need to save - Tkhtml handles that for us
             self.html.post_message("Printed!")
-            return file
+            if file: return file
         else:
             self.html.post_message("The page could not be printed because print_page is an experimental feature")
             return ""

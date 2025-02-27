@@ -14,7 +14,7 @@ new_header.textContent = "Hello, world!"
 new_header.style.color = "blue"
 container.appendChild(new_header)
 ```
-To register a callback for <script> elements, use the `on_script` parameter:
+To register a callback for `<script>` elements, use the `on_script` parameter:
 ```
 yourhtmlframe = tkinterweb.HtmlFrame(root)
 yourhtmlframe.load_html("<div id='container'><script>// Do stuff</script><p>Test</p></div>")
@@ -25,11 +25,27 @@ yourhtmlframe.configure(on_script=handle_scripts)
 
 ## API Reference
 
+### Key Properties:
+#### `document.body` property
+Return the document's body element.
+
+Return type
+* *HTMLElement*
+
+---
+#### `document.documentElement` property
+Return the document's root element.
+
+Return type
+* *HTMLElement*
+
+---
+### Key Methods:
 #### `document.createElement(tagname)`
 Create a new HTML element with the given tag name.
 
 Parameters
-* **tagname** *(string)* - Specifies the new element's HTML tag
+* **tagname** *(string)* - Specifies the new element's HTML tag.
 
 Return type
 * *HTMLElement*
@@ -39,21 +55,7 @@ Return type
 Create a new text node with the given text content.
 
 Parameters
-* **text** *(string)* - Specifies the text content of the new node
-
-Return type
-* *HTMLElement*
-
----
-#### `document.body`
-Return the document's body element.
-
-Return type
-* *HTMLElement*
-
----
-#### `document.documentElement`
-Return the document's root element.
+* **text** *(string)* - Specifies the text content of the new node.
 
 Return type
 * *HTMLElement*
@@ -63,7 +65,7 @@ Return type
 Return an element given an id.
 
 Parameters
-* **query** *(string)* - Specifies the element id to be searched for 
+* **query** *(string)* - Specifies the element id to be searched for .
 
 Return type
 * *HTMLElement*
@@ -73,7 +75,7 @@ Return type
 Return all elements that match given a class name.
 
 Parameters
-* **query** *(string)* - Specifies the class name to be searched for 
+* **query** *(string)* - Specifies the class to be searched for. 
 
 Return type
 * *HTMLElement*
@@ -83,7 +85,7 @@ Return type
 Return all elements that match a given name attribute.
 
 Parameters
-* **query** *(string)* - Specifies the name to be searched for 
+* **query** *(string)* - Specifies the name to be searched for.
 
 Return type
 * *tuple*
@@ -93,17 +95,17 @@ Return type
 Return all elements that match a given tag name.
 
 Parameters
-* **query** *(string)* - Specifies the tag name to be searched for 
+* **query** *(string)* - Specifies the tag to be searched for.
 
 Return type
 * *tuple*
 
 ---
 #### `document.querySelector(query)`
-Return the first elementthat matches a given CSS selector.
+Return the first element that matches a given CSS selector.
 
 Parameters
-* **query** *(string)* - Specifies the CSS selector to be searched for 
+* **query** *(string)* - Specifies the CSS selector to be searched for.
 
 Return type
 * *HTMLElement*
@@ -113,7 +115,7 @@ Return type
 Return all elements that match a given CSS selector.
 
 Parameters
-* **query** *(string)* - Specifies the CSS selector to be searched for 
+* **query** *(string)* - Specifies the CSS selector to be searched for.
 
 Return type
 * *tuple*
@@ -123,11 +125,11 @@ Return type
 
 ### Key Variables:
 * `html`: The element's corresponding TkinterWeb instance.
-* `node`: The Tkhtml node associated with the element
+* `node`: The Tkhtml node associated with the element.
 
 ### Key Properties:
 #### `innerHTML` property
-Get and set the inner HTML of an element
+Get and set the inner HTML of an element.
 
 ---
 #### `textContent` property
@@ -152,11 +154,7 @@ Return type
 
 ---
 #### `style` property
-Get and set the value of the given CSS property
-
-Parameters
-* **property** *(string)* - Specifies the element's CSS property to set 
-* **value** *(string)* - If provided, specifies new value of the specified property 
+Manage the element's styling.
 
 Return type
 * *CSSStyleDeclaration*
@@ -181,7 +179,7 @@ Return type
 Get the value of the given attribute.
 
 Parameters
-* **attribute** *(string)* - Specifies the element's attribute to return 
+* **attribute** *(string)* - Specifies the attribute to return.
 
 Return type
 * *string*
@@ -191,8 +189,8 @@ Return type
 Set the value of the given attribute.
 
 Parameters
-* **attribute** *(string)* - Specifies the element's attribute to set 
-* **value** *(string)* - Specifies new value of the specified attribute 
+* **attribute** *(string)* - Specifies the attribute to set.
+* **value** *(string)* - Specifies the new value of the specified attribute.
 
 Return type
 * *string*
@@ -206,22 +204,22 @@ Delete the element.
 Insert the specified children into the element.
 
 Parameters
-* **children** *(list, tuple, or HTMLElement)* - Specifies the element(s) to be added into the element 
+* **children** *(list, tuple, or HTMLElement)* - Specifies the element(s) to be added into the element.
 
 ---
 #### `insertBefore(children, before)`
 Insert the specified children before a specified child element.
 
 Parameters
-* **children** *(list, tuple, or HTMLElement)* - Specifies the element(s) to be added into the element 
-* **before** *(HTMLElement)* - Specifies the child element that the added elements should be placed before
+* **children** *(list, tuple, or HTMLElement)* - Specifies the element(s) to be added into the element.
+* **before** *(HTMLElement)* - Specifies the child element that the added elements should be placed before.
 
 ---
 #### `getElementById(query)`
 Return an element that is a child of the current element and matches the given id.
 
 Parameters
-* **query** *(string)* - Specifies the element id to be searched for 
+* **query** *(string)* - Specifies the element id to be searched for.
 
 Return type
 * *HTMLElement*
@@ -231,7 +229,7 @@ Return type
 Return all elements that are children of the current element and match the given class name.
 
 Parameters
-* **query** *(string)* - Specifies the class name to be searched for 
+* **query** *(string)* - Specifies the class to be searched for.
 
 Return type
 * *HTMLElement*
@@ -241,7 +239,7 @@ Return type
 Return all elements that are children of the current element and match the given name attribute.
 
 Parameters
-* **query** *(string)* - Specifies the name to be searched for 
+* **query** *(string)* - Specifies the name to be searched for.
 
 Return type
 * *tuple*
@@ -251,7 +249,7 @@ Return type
 Return all elements that are children of the current element and match the given tag name.
 
 Parameters
-* **query** *(string)* - Specifies the tag name to be searched for 
+* **query** *(string)* - Specifies the tag to be searched for.
 
 Return type
 * *tuple*
@@ -261,7 +259,7 @@ Return type
 Return the first element that are children of the current element and match the given CSS selector.
 
 Parameters
-* **query** *(string)* - Specifies the CSS selector to be searched for 
+* **query** *(string)* - Specifies the CSS selector to be searched for.
 
 Return type
 * *HTMLElement*
@@ -271,13 +269,13 @@ Return type
 Return all elements that are children of the current element and match the given CSS selector.
 
 Parameters
-* **query** *(string)* - Specifies the CSS selector to be searched for 
+* **query** *(string)* - Specifies the CSS selector to be searched for.
 
 Return type
 * *tuple*
 
 ---
-#### `scrollIntoView():
+#### `scrollIntoView()`
 Scroll the viewport so that this element is visible.
 
 ---
@@ -289,10 +287,10 @@ Scroll the viewport so that this element is visible.
 
 
 ### Key Properties:
-**Camel-cased attributes for all supported CSS properties are valid properties.**
-Example properties include `color`, `backgroundColor`, and `fontFamily`.
+**All camel-cased supported CSS properties are valid properties.**
+Examples include `color`, `backgroundColor`, and `fontFamily`.
 
-CSS properties can also be returned or set as key-value pairs (eg. CSSStyleDeclaration["background-color"])
+CSS properties can also be returned or set as key-value pairs (eg. `CSSStyleDeclaration["background-color"]`)
 
 ---
 #### `cssText` property
@@ -303,7 +301,7 @@ Return type
 
 ---
 #### `length` property
-Get the number of style declarations the element's inline style declaration. Read-only.
+Get the number of style declarations in the element's inline style declaration. Read-only.
 
 Return type
 * *int*

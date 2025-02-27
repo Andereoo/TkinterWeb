@@ -78,7 +78,7 @@ Copy the selected text to the clipboard.
 
 ---
 #### `delete_node(node_handle)`
-Delete the given node.
+Remove the given node from the document.
 
 ---
 #### `destroy_node(node_handle)`
@@ -90,7 +90,7 @@ Search for and highlight specific text in the document.
 
 ---
 #### `get_computed_styles()`
-Get a tuple containing the computed CSS rules for each CSS selector
+Get a tuple containing the computed CSS rules for each CSS selector.
 
 ---
 #### `get_current_node(event)`
@@ -139,7 +139,6 @@ Return the current selection.
 ---
 #### `image(full=False)`
 Return the name of a new Tk image containing the rendered document.
-The returned image should be deleted when the script has finished with it.
 Note that this command is mainly intended for automated testing.
 Be wary of running this command on large documents.
 Does not work on Windows unless experimental Tkhtml is used.
@@ -216,9 +215,17 @@ Get full url from partial url.
 ---
 #### `search(selector, cnf={}, **kw)`
 Search the document for the specified CSS selector; return a TkHTML-3 node if found.
-	-root NODE	Search the sub-tree at NODE
-	-index IDX	return the idx'th list entry only
-	-length		return the length of the result only
+
+
+&nbsp;&nbsp;&nbsp;-root NODE	Search the sub-tree at NODE
+
+ 
+&nbsp;&nbsp;&nbsp;-index IDX	return the idx'th list entry only
+
+ 
+&nbsp;&nbsp;&nbsp;-length		return the length of the result only
+
+ 
 The -index and -length options are mutually exclusive.
 
 ---

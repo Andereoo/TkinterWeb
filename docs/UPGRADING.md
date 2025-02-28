@@ -30,7 +30,7 @@
 * `HtmlFrame.enable_objects()` - use `HtmlFrame.configure(objects_enabled=)`
 * `HtmlFrame.enable_caches()` - use `HtmlFrame.configure(caches_enabled=)`
 * `HtmlFrame.enable_dark_theme()` - use `HtmlFrame.configure(dark_theme_enabled=, image_inversion_enabled=)`
-* `HtmlFrame.on_image_setup()`
+* `HtmlFrame.on_image_setup()` - use `HtmlFrame.configure(on_resource_setup=)`
 * `HtmlFrame.on_downloading_resource()` - bind to `<<DownloadingResource>>`
 * `HtmlFrame.on_done_loading()` - bind to `<<DoneLoading>>`
 * `HtmlFrame.on_url_change()` - bind to `<<UrlChanged>>` and use `HtmlFrame.current_url`

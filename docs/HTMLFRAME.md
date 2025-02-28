@@ -196,6 +196,8 @@ Change the widget's configuration options. Below are the supported options:
   - The function to be called when a form is submitted. The target url, data, and method (GET or POST) will be passed as arguments. **Default: HtmlFrame.load_form_data**
 * `on_script`:
   - The function to be called when a `<script>` element is encountered. This can be used to connect a script handler, such as a JavaScript engine. The script element's attributes and contents will be passed as arguments. **Ignored by default.**
+* `on_resource_setup`: 
+  - The function to be called when an image or stylesheet load finishes. The resource's url, type ("stylesheet" or "image"), and whether setup was successful or not (True or False) will be passed as arguments. **Ignored by default.**
 * `message_func`:
   - The function to be called when a debug message is issued. The message will be passed as an argument. **Default: utilities.notifier**
     

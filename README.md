@@ -15,7 +15,7 @@ All [major operating systems](/docs/FAQ.md#a-note-on-tkhtml-binaries) running Py
 * A [label](/docs/HTMLLABEL.md) widget that can display styled HTML.
 * A [geometry manager](/docs/GEOMETRY.md) to display Tkinter widgets *and HTML elements* together in a Tkinter application.
 
-**TkinterWeb can be used in any Tkinter application. Here is an example:**
+**TkinterWeb can be used in any Tkinter application to display websites, help pages, documentation, and much more! Here is an example:**
 ```
 import tkinter as tk
 from tkinterweb import HtmlFrame # import the HtmlFrame widget

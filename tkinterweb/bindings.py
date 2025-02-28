@@ -147,6 +147,7 @@ class TkinterWeb(tk.Widget):
         self.on_form_submit = placeholder
         self.message_func = placeholder
         self.on_script = placeholder
+        self.on_resource_setup = placeholder
         
         self.recursive_hovering_count = 10
         self.maximum_thread_count = 20
@@ -592,11 +593,13 @@ class TkinterWeb(tk.Widget):
 
             except Exception as error:
                 self.post_message(f"Error loading stylesheet {errorurl}: {error}")
+                self.on_resource_setup(url, "stylesheet", False)
 
         if data and self.unstoppable:
             self.parse_css(f"{sheetid}.9999", handler, data)
             if url:
                 self.post_message(f"Successfully loaded {shorten(url)}")
+                self.on_resource_setup(url, "stylesheet", True)
         self._finish_download(thread)
 
     def load_alt_text(self, url, name):
@@ -646,6 +649,7 @@ class TkinterWeb(tk.Widget):
             except Exception as error:
                 self.load_alt_text(url, name)
                 self.post_message(f"Error loading image {url}: {error}")
+                self.on_resource_setup(url, "image", False)
 
         self._finish_download(thread)
 
@@ -658,21 +662,26 @@ class TkinterWeb(tk.Widget):
             if image:
                 self.loaded_images.add(image)
                 self.post_message(f"Successfully loaded {shorten(url)}")
+                self.on_resource_setup(url, "image", True)
                 if self.experimental:
                     node = self.search(f'img[src="{url}"]')
                     if self.get_node_children(node): self.delete_node(self.get_node_children(node))
             elif error == "no_pycairo":
                 self.load_alt_text(url, name)
                 self.post_message(f"Error loading image {url}: Pycairo is not installed but is required to parse .svg files")
+                self.on_resource_setup(url, "image", False)
             elif error == "no_rsvg":
                 self.load_alt_text(url, name)
                 self.post_message(f"Error loading image {url}: Rsvg is not installed but is required to parse .svg files")
+                self.on_resource_setup(url, "image", False)
             elif error == "corrupt":
                 self.load_alt_text(url, name)
                 self.post_message(f"The image {url} could not be shown")
+                self.on_resource_setup(url, "image", False)
         except Exception as error:
             self.load_alt_text(url, name)
             self.post_message(f"Error loading image {url}: {error}")
+            self.on_resource_setup(url, "image", False)
 
     def handle_node_replacement(self, node, widgetid, deletecmd, stylecmd=None, allowscrolling=True, handledelete=True):
         "Replace a Tkhtml3 node with a Tkinter widget"
@@ -1264,15 +1273,13 @@ class TkinterWeb(tk.Widget):
             thread = self._begin_download()
             name = url.replace("replace:", "")
             self._finish_download(thread)
-        elif any(
-            frozenset({
+        elif any({
                 url.startswith("linear-gradient("),
                 url.startswith("url("),
                 url.startswith("radial-gradient("),
                 url.startswith("repeating-linear-gradient("),
                 url.startswith("repeating-radial-gradient("),
-            })
-        ):
+            }):
             done = False
             self.post_message(f"Fetching image: {shorten(url)}")
             for image in url.split(","):
@@ -1285,6 +1292,7 @@ class TkinterWeb(tk.Widget):
             if not done:
                 self.load_alt_text(url, name)
                 self.post_message(f"The image {shorten(url)} could not be shown because it is not supported yet")
+                self.on_resource_setup(url, "image", False)
         else:
             url = url.split("'), url('", 1)[0]
             url = self.resolve_url(url)
@@ -1415,7 +1423,7 @@ class TkinterWeb(tk.Widget):
         )
         nodevalue = self.get_node_attribute(node, "value")
 
-        if nodetype in frozenset({"image", "submit", "reset", "button"}):
+        if nodetype in {"image", "submit", "reset", "button"}:
             widgetid = None
             self.form_get_commands[node] = placeholder
             self.form_reset_commands[node] = placeholder

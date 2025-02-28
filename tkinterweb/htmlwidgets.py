@@ -41,6 +41,7 @@ class HtmlFrame(ttk.Frame):
             "on_link_click": self.load_url,
             "on_form_submit": self.load_form_data,
             "on_script": placeholder,
+            "on_resource_setup": placeholder,
             "message_func": notifier,
             "messages_enabled": True,
             "selection_enabled": True,

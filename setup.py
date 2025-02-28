@@ -7,7 +7,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
     name="tkinterweb",
-    version="4.0.0",
+    version="4.0.1",
     description="HTML/CSS viewer for Tkinter",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -27,3 +27,4 @@ setup(
     include_package_data=True,
     install_requires=["pillow"],
 )
+print("The API has changed in this version. See https://github.com/Andereoo/TkinterWeb for details.")

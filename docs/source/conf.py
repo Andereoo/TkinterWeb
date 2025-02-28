@@ -2,12 +2,12 @@
 
 # -- Project information
 
-project = 'Lumache'
-copyright = '2021, Graziella'
-author = 'Graziella'
+project = 'TkinterWeb'
+copyright = '2025, Andereoo'
+author = 'Andereoo'
 
-release = '0.1'
-version = '0.1.0'
+release = '4.0'
+version = '4.0.3'
 
 # -- General configuration
 

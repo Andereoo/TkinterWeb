@@ -41,7 +41,7 @@ __title__ = 'TkinterWeb'
 __author__ = "Andereoo"
 __copyright__ = "Copyright (c) 2025 Andereoo"
 __license__ = "MIT"
-__version__ = '4.0.1'
+__version__ = '4.0.3'
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "tkhtml")

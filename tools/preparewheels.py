@@ -36,7 +36,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
     name="tkinterweb",
-    version="4.0.1",
+    version="4.0.3",
     description="HTML/CSS viewer for Tkinter",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -56,7 +56,7 @@ setup(
     include_package_data=True,
     install_requires=["pillow"],{}
 )
-print("The API has changed in this version. See https://github.com/Andereoo/TkinterWeb for details.")
+print("The API changed in version 4.0.0. See https://github.com/Andereoo/TkinterWeb for details.")
 """
 setup_py_contents = setup_py_contents_generic.format("""
 def get_platname():
@@ -187,3 +187,10 @@ print(f"Copying wheels to {DIST_ROOT_PATH}\n")
 for folder in wheel_folders_to_copy:
     for wheel in os.listdir(folder):
         shutil.copy2(os.path.join(folder, wheel), os.path.join(DIST_ROOT_PATH, wheel))
+
+        
+# Upload to pip
+#should_continue = input("Upload to pip (Y/N)?")
+#if should_continue.upper() == "Y":
+#    run_shell("twine", "upload", "dist/*", "-u", "__token__")
+#twine upload dist/* -u __token__

@@ -41,6 +41,7 @@ class HtmlFrame(ttk.Frame):
             "on_link_click": self.load_url,
             "on_form_submit": self.load_form_data,
             "on_script": placeholder,
+            "on_resource_setup": placeholder,
             "message_func": notifier,
             "messages_enabled": True,
             "selection_enabled": True,
@@ -331,7 +332,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
                 node = self.html.get_node_parent(self.html.current_node)
         return HTMLElement(self.html, node)
 
-    def screenshot_page(self, file=None, full=False):
+    def screenshot_page(self, filename=None, full=False):
         "Take a screenshot"
         if self.html.experimental or PLATFORM.system != "Windows":
             self.html.post_message(f"Taking a screenshot of {self.current_url}...")
@@ -339,58 +340,52 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
             height = len(data)
             width = len(data[0].split())
             image = create_RGB_image(data, width, height)
-            if file:
-                image.save(file)
+            if filename:
+                image.save(filename)
             self.html.post_message(f"Screenshot taken: {width}px by {height}px!")
             return image
         else:
             self.html.post_message("A screenshot could not be taken because it screenshot_page is an experimental feature on Windows")
             return None
 
-    def print_page(self, file=None, cnf={}, **kwargs):
+    def print_page(self, filename=None, cnf={}, **kwargs):
         "Print the page"
         if self.html.experimental:
             cnf |= kwargs
             self.html.post_message(f"Printing {self.current_url}...")
-            if file:
-                cnf["file"] = file
+            if filename:
+                cnf["file"] = filename
             if "pagesize" in cnf:
-                pageheights = {
-                    "A3": "1191", "A4": "842", "A5": "595",
-                    "LEGAL": "792", "LETTER": "1008"
-                }
-                pagewidths = {
-                    "A3": "842", "A4": "595", "A5": "420",
-                    "LEGAL": "612", "LETTER": "612"
+                pagesizes = {
+                    "A3": "842x1191", "A4": "595x842", "A5": "420x595",
+                    "Legal": "612x792", "Letter": "612x1008"
                 }
                 try:
-                    cnf["pageheight"] = pageheights[cnf["pagesize"].upper()]
-                    cnf["pagewidth"] = pagewidths[cnf["pagesize"].upper()]
-                    self.html.post_message(f"Setting printer page size to {cnf['pageheight']}px by {cnf['pagewidth']}px.")
+                    cnf["pagesize"] = pagesizes[cnf["pagesize"].upper()]
+                    self.html.post_message(f"Setting printer page size to {cnf['pagesize']} PostScript points.")
                 except KeyError:
                     raise KeyError("Parameter 'pagesize' must be A3, A4, A5, Legal, or Letter")
-                del cnf["pagesize"]
 
             self.html.update() # update the root window to ensure HTML is rendered
             file = self.html.postscript(cnf)
             # no need to save - Tkhtml handles that for us
             self.html.post_message("Printed!")
-            return file
+            if file: return file
         else:
             self.html.post_message("The page could not be printed because print_page is an experimental feature")
             return ""
 
-    def save_page(self, file=None):
+    def save_page(self, filename=None):
         "Save the page"
         self.html.post_message(f"Saving {self.current_url}...")
         html = self.document.documentElement.innerHTML
-        if file:
-            with open(file, "w+") as handle:
+        if filename:
+            with open(filename, "w+") as handle:
                 handle.write(html)
         self.html.post_message("Saved!")
         return html
     
-    def snapshot_page(self, file=None, allow_agent=False):
+    def snapshot_page(self, filename=None, allow_agent=False):
         "Save a snapshot of the page"
         self.html.post_message(f"Snapshotting {self.current_url}...")
         title = ""
@@ -410,8 +405,8 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         body = self.document.body.innerHTML
 
         html = f"""<html>\n    <head>{title}{icon}{base}{style}\n    </head>\n    <body>\n        {body}\n    </body>\n</html>"""
-        if file:
-            with open(file, "w+") as handle:
+        if filename:
+            with open(filename, "w+") as handle:
                 handle.write(html)
         self.html.post_message("Saved!")
         return html

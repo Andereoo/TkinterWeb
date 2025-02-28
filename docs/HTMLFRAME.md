@@ -178,7 +178,7 @@ Refer to [DOM Manipulation with TkinterWeb](DOM.md).
   - Generated whenever the content of any `<input>` element changes.
 
 ### State Variables:
-* `current_url`: The document's url. Read-only.
+* `current_url`: The document's url.
 * `base_url`: The documents's base url. This is automatically generated from the `current_url` but will also change if explicitly specified by the document. Read-only.
 * `title`: The document's title (if specified by the document). Read-only.
 * `icon`: The document's icon url (if specified by the document). Read-only.
@@ -196,6 +196,8 @@ Change the widget's configuration options. Below are the supported options:
   - The function to be called when a form is submitted. The target url, data, and method (GET or POST) will be passed as arguments. **Default: HtmlFrame.load_form_data**
 * `on_script`:
   - The function to be called when a `<script>` element is encountered. This can be used to connect a script handler, such as a JavaScript engine. The script element's attributes and contents will be passed as arguments. **Ignored by default.**
+* `on_resource_setup`: 
+  - The function to be called when an image or stylesheet load finishes. The resource's url, type ("stylesheet" or "image"), and whether setup was successful or not (True or False) will be passed as arguments. **Ignored by default.**
 * `message_func`:
   - The function to be called when a debug message is issued. The message will be passed as an argument. **Default: utilities.notifier**
     
@@ -268,10 +270,10 @@ Change the widget's configuration options. Below are the supported options:
 * `headers`:
   - The headers used by urllib's Request when fetching a resource (dict). **Default: utilities.HEADERS**
 * `experimental`:
-  - If True, experimental features will be enabled. You will need to compile the cutting-edge Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental and replace the default Tkhtml binary for your system with the experimental version. Unless you need to screenshot the page on Windows or print your page it is generally best to use the default Tkhtml binary and leave this setting alone. **Default: False**
+  - If True, experimental features will be enabled. You will need to compile the cutting-edge Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental and replace the default Tkhtml binary for your system with the experimental version. Unless you need to screenshot the page on Windows or print your page for now it is likely best to use the default Tkhtml binary and leave this setting alone. **Default: False**
 * `use_prebuilt_tkhtml`:
-  - If True, the Tkhtml binary for your system supplied by TkinterWeb will be used. If your system isn't supported and you don't want to compile the Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml yourself, you could try installing Tkhtml3 system-wide and set `use_prebuilt_tkhtml` to False. Note that some crash prevention features will no longer work. **Default: True
-    
+  - If True, the Tkhtml binary for your system supplied by TkinterWeb will be used. If your system isn't supported and you don't want to compile the Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml yourself, you could try installing Tkhtml3 system-wide and set `use_prebuilt_tkhtml` to False. Note that some crash prevention features will no longer work. **Default: True**
+
 * `parsemode`:
   - The parse mode. May be "xml", "xhtml", or "html". In "html" mode, explicit XML-style self-closing tags are not handled specially and unknown tags are ignored. "xhtml" mode is similar to "html" mode except that explicit self-closing tags are recognized. "xml" mode is similar to "xhtml" mode except that XML CDATA sections and unknown tag names are recognized. It is usually best to leave this setting alone. **Default: "xml"**
 * `mode`:

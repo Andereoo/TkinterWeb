@@ -4,13 +4,12 @@
 
 ### Changes include:
 * Faster load speed
-* Support for experimental Tkhtml features
-* Widget behaviour is now more closely aligned with standard Tkinter widgets
+* A more intuitive API
+* Support for experimental Tkhtml features, such as page printing
+* Widget behaviour and API is now more closely aligned with standard Tkinter widgets
+* The DOM API now more closely mirrors its JavaScript counterparts
 * Dozens of new configuration options, including access to more settings and the ability to link a JavaScript interpreter
 * More DOM improvements
-* DOM behaviour is now more closely aligned with that of JavaScript
-* A more intuitive API
-
 
 ### Removed:
 * `HtmlFrame.get_zoom()` - use `HtmlFrame.cget("zoom")`
@@ -22,7 +21,7 @@
 * `HtmlFrame.set_message_func()` - use `HtmlFrame.configure(message_func=)`
 * `HtmlFrame.set_broken_webpage_message()` - use `HtmlFrame.configure(on_navigate_fail=)`. Note that `on_navigate_fail` latter requires a function instead.
 * `HtmlFrame.set_maximum_thread_count()` - use `HtmlFrame.configure(threading_enabled=)`
-* `HtmlFrame.set_recursive_hover_depth()`
+* `HtmlFrame.set_recursive_hover_depth()` - use `HtmlFrame.html.recursive_hover_depth=`
 * `HtmlFrame.add_visited_links()` - use `HtmlFrame.configure(visited_links=)`
 * `HtmlFrame.clear_visited_links()` - use `HtmlFrame.configure(visited_links=)`
 * `HtmlFrame.enable_stylesheets()` - use `HtmlFrame.configure(stylesheets_enabled=)`
@@ -31,7 +30,7 @@
 * `HtmlFrame.enable_objects()` - use `HtmlFrame.configure(objects_enabled=)`
 * `HtmlFrame.enable_caches()` - use `HtmlFrame.configure(caches_enabled=)`
 * `HtmlFrame.enable_dark_theme()` - use `HtmlFrame.configure(dark_theme_enabled=, image_inversion_enabled=)`
-* `HtmlFrame.on_image_setup()`
+* `HtmlFrame.on_image_setup()` - use `HtmlFrame.configure(on_resource_setup=)`
 * `HtmlFrame.on_downloading_resource()` - bind to `<<DownloadingResource>>`
 * `HtmlFrame.on_done_loading()` - bind to `<<DoneLoading>>`
 * `HtmlFrame.on_url_change()` - bind to `<<UrlChanged>>` and use `HtmlFrame.current_url`
@@ -51,15 +50,15 @@
 * `HtmlFrame.get_currently_selected_text()` -> `HtmlFrame.get_selection()`
 
 * `TkwDocumentObjectModel` -> `HTMLDocument`
-* `HTMLElement` -> `HTMLElement`
+* `HtmlElement` -> `HTMLElement`
 
-* `HTMLElement.style()` -> `HTMLElement.style`
-* `HTMLElement.innerHTML()` -> `HTMLElement.innerHTML`
-* `HTMLElement.textContent()` -> `HTMLElement.textContent`
-* `HTMLElement.attributes()` -> `HTMLElement.attributes`
-* `HTMLElement.tagName()` -> `HTMLElement.tagName`
-* `HTMLElement.parentElement()` -> `HTMLElement.parentElement`
-* `HTMLElement.children()` -> `HTMLElement.children`
+* `HtmlElement.style()` -> `HTMLElement.style`
+* `HtmlElement.innerHTML()` -> `HTMLElement.innerHTML`
+* `HtmlElement.textContent()` -> `HTMLElement.textContent`
+* `HtmlElement.attributes()` -> `HTMLElement.attributes`
+* `HtmlElement.tagName()` -> `HTMLElement.tagName`
+* `HtmlElement.parentElement()` -> `HTMLElement.parentElement`
+* `HtmlElement.children()` -> `HTMLElement.children`
 
 * The `scroll-x` attribute was changed to the `tkinterweb-scroll-x` attribute. Like the `overflow` CSS property, valid options are now "auto", "visible", "clip", "scroll", and "hidden".
 
@@ -114,15 +113,15 @@
 * Enabling/disabling caches now enables/disables the Tkhtml image cache.
 * Threading now cannot be enabled if the Tcl/Tk build does not support it.
 
-* `HTMLElement.remove()` now raises a TclError when invoked on <html> or <body> elements, which previously caused segmentation faults.
-* `HTMLElement.innerHTML` and `.textContent` now raise a TclError when invoked on <html> elements, which previously caused segmentation faults.
+* `HTMLElement.remove()` now raises a TclError when invoked on `<html>` or `<body>` elements, which previously caused segmentation faults.
+* `HTMLElement.innerHTML` and `.textContent` now raise a TclError when invoked on `<html>` elements, which previously caused segmentation faults.
 
   
 * The ability to style color selector inputs was improved.
 * Text elements now emit the `<<Modified>>` event *after* the content updates.
   
 
-* The TkinterWeb demo and some of the built-in pages have been updated.* Many internal methods and variables of the HtmlFrame and TkinterWeb widgets were renamed.
+* The TkinterWeb demo and some of the built-in pages have been updated. Many internal methods and variables of the HtmlFrame and TkinterWeb widgets were renamed or moved.
 
 
 &nbsp;

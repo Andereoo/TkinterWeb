@@ -665,7 +665,8 @@ class TkinterWeb(tk.Widget):
                 self.on_resource_setup(url, "image", True)
                 if self.experimental:
                     node = self.search(f'img[src="{url}"]')
-                    if self.get_node_children(node): self.delete_node(self.get_node_children(node))
+                    if node:
+                        if self.get_node_children(node): self.delete_node(self.get_node_children(node))
             elif error == "no_pycairo":
                 self.load_alt_text(url, name)
                 self.post_message(f"Error loading image {url}: Pycairo is not installed but is required to parse .svg files")

@@ -332,7 +332,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
                 node = self.html.get_node_parent(self.html.current_node)
         return HTMLElement(self.html, node)
 
-    def screenshot_page(self, file=None, full=False):
+    def screenshot_page(self, filename=None, full=False):
         "Take a screenshot"
         if self.html.experimental or PLATFORM.system != "Windows":
             self.html.post_message(f"Taking a screenshot of {self.current_url}...")
@@ -340,8 +340,8 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
             height = len(data)
             width = len(data[0].split())
             image = create_RGB_image(data, width, height)
-            if file:
-                image.save(file)
+            if filename:
+                image.save(filename)
             self.html.post_message(f"Screenshot taken: {width}px by {height}px!")
             return image
         else:
@@ -375,17 +375,17 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
             self.html.post_message("The page could not be printed because print_page is an experimental feature")
             return ""
 
-    def save_page(self, file=None):
+    def save_page(self, filename=None):
         "Save the page"
         self.html.post_message(f"Saving {self.current_url}...")
         html = self.document.documentElement.innerHTML
-        if file:
-            with open(file, "w+") as handle:
+        if filename:
+            with open(filename, "w+") as handle:
                 handle.write(html)
         self.html.post_message("Saved!")
         return html
     
-    def snapshot_page(self, file=None, allow_agent=False):
+    def snapshot_page(self, filename=None, allow_agent=False):
         "Save a snapshot of the page"
         self.html.post_message(f"Snapshotting {self.current_url}...")
         title = ""
@@ -405,8 +405,8 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         body = self.document.body.innerHTML
 
         html = f"""<html>\n    <head>{title}{icon}{base}{style}\n    </head>\n    <body>\n        {body}\n    </body>\n</html>"""
-        if file:
-            with open(file, "w+") as handle:
+        if filename:
+            with open(filename, "w+") as handle:
                 handle.write(html)
         self.html.post_message("Saved!")
         return html

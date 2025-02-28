@@ -1,4 +1,0 @@
-[project]
-name = "lumache"
-authors = [{name = "Andereoo"}]
-dynamic = ["4.0.3", "HTML/CSS viewer for Tkinter"]

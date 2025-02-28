@@ -372,7 +372,7 @@ Return type
 Returns the element under the mouse. Useful for creating right-click menus or displaying hints when the mouse moves.
 
 Parameters
-* **ignore_text_nodes** *(boolean)* - If True, text nodes (i.e. the contents of a <p> element) will be ignored and their parent node returned. It is generally best to leave leave this set to True.
+* **ignore_text_nodes** *(boolean)* - If True, text nodes (i.e. the contents of a `<p>` element) will be ignored and their parent node returned. It is generally best to leave leave this set to True.
 
 Return type
 * *HTMLElement*

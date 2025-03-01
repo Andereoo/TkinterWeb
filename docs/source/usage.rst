@@ -13,11 +13,12 @@ To use TkinterWeb, first install it using pip:
 
    $ pip install tkinterweb
 
-
 You can run the TkinterWeb Demo to see if it worked!
 
 >>> from tkinterweb import Demo
 >>> Demo()
+
+TkinterWeb requires :py:mod:`Tkinter`, :py:mod:`PIL`, and :py:class:`PIL.ImageTk`. All dependencies should be installed when installing TkinterWeb, but on some systems :py:class:`PIL.ImageTk` may need to be installed seperately.
 
 Getting Started
 ----------------

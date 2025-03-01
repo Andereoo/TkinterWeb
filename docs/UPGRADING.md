@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> The TkinterWeb Documentation has moved to https://tkinterweb.readthedocs.io/en/latest/index.html. See you there!
+
 ## Porting to TkinterWeb v4+
 
 **The API changed significantly in version 4.0.0**

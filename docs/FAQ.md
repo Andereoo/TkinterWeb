@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> The TkinterWeb Documentation has moved to https://tkinterweb.readthedocs.io/en/latest/index.html. See you there!
+
 ## Frequently Asked Questions
 
 **How do I load websites or files?**

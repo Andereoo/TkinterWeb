@@ -255,7 +255,7 @@ class HtmlFrame(ttk.Frame):
 
         self._html.post_message(f"""Welcome to TkinterWeb {__version__}!
 
-The API has changed in this version.
+The API changed in version 4.
 See https://github.com/Andereoo/TkinterWeb for details.
 
 Debugging messages are enabled

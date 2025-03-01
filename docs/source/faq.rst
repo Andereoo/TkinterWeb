@@ -30,15 +30,3 @@ Frequently Asked Questions
 * This occurs when your Python script bundler isn't finding all the files nessessary for running TkinterWeb. You need to force it to get all the TkinterWeb files.
 * On PyInstaller: add the flag ``--collect-all tkinterweb`` when bundling your app.
 * On py2app / py2exe: Add ``'packages': ['tkinterweb']`` to the OPTIONS variable in your setup file.
-
-A Note on Tkhtml Binaries
--------------------------
-
-TkinterWeb supports all platforms but only ships with precompiled Tkhtml binaries for the most common platforms:
-
-* x86_64 Windows, Linux, and macOS
-* i686 Windows and Linux
-* ARM64 Macos and Linux
-* ARMv71 Linux
-
-If you are encountering issues on your system or are are using an unsupported system, feel free to submit a bug report or feature request. You may need to compile Tkhtml on your system. See https://github.com/Andereoo/TkinterWeb-Tkhtml/.

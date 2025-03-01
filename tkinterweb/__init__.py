@@ -45,7 +45,7 @@ class Demo():
         self.root = root = tk.Tk()
         self.frame = frame = HtmlFrame(root, messages_enabled=False)
         self.frame2 = HtmlFrame(root, on_navigate_fail=self.on_error)
-        self.button = tk.Button(root, cursor="hand1")
+        self.button = tk.Button(root, cursor="hand2")
 
         self.afters = []
         

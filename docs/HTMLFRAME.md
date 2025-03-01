@@ -2,7 +2,7 @@
 > The API changed significantly in version 4.0.0. See [Porting to TkinterWeb v4+](UPGRADING.md) for details.
 
 > [!IMPORTANT]
-> The TkinterWeb Documentation has moved to https://tkinterweb.readthedocs.io/en/latest/index.html. See you there!
+> The TkinterWeb documentation has moved to https://tkinterweb.readthedocs.io/en/latest/index.html. See you there!
 
 ## *`tkinterweb.HtmlFrame` Documentation*
 

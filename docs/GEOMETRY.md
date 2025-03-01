@@ -1,5 +1,5 @@
 > [!IMPORTANT]
-> The TkinterWeb Documentation has moved to https://tkinterweb.readthedocs.io/en/latest/index.html. See you there!
+> The TkinterWeb documentation has moved to https://tkinterweb.readthedocs.io/en/latest/index.html. See you there!
 
 ## Geometry Management with TkinterWeb
 

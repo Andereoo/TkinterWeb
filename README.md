@@ -6,14 +6,14 @@
 ## Overview
 **TkinterWeb offers bindings and extensions for the Tkhtml3 widget from http://tkhtml.tcl.tk, which enables displaying HTML and CSS code in Tkinter applications.**
 
-All [major operating systems](/docs/FAQ.md#a-note-on-tkhtml-binaries) running Python 3+ are supported. 
+All [major operating systems](https://tkinterweb.readthedocs.io/en/latest/faq.html#a-note-on-tkhtml-binaries) running Python 3+ are supported. 
 
 ## Usage
 
 **TkinterWeb provides:**
-* A [frame](/docs/HTMLFRAME.md) widget to display websites, help files, and any other styled HTML in Tkinter.
-* A [label](/docs/HTMLLABEL.md) widget that can display styled HTML.
-* A [geometry manager](/docs/GEOMETRY.md) to display Tkinter widgets *and HTML elements* together in a Tkinter application.
+* A [frame](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html) widget to display websites, help files, and any other styled HTML in Tkinter.
+* A [label](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html#tkinterweb.HtmlLabel) widget that can display styled HTML.
+* A [geometry manager](https://tkinterweb.readthedocs.io/en/latest/geometry.html) to display Tkinter widgets *and HTML elements* together in a Tkinter application.
 
 **TkinterWeb can be used in any Tkinter application to display websites, help pages, documentation, and much more! Here is an example:**
 ```
@@ -28,7 +28,7 @@ root.mainloop()
 ```
 ![TkinterWeb](/images/tkinterweb-tkhtml.png)
 
-Some other tricks, such as handling page title changes, link clicks, and navigation key presses, can be found in the [HtmlFrame documentation](/docs/HTMLFRAME.md#tips-and-tricks).
+See [Getting Started](https://tkinterweb.readthedocs.io/en/latest/usage.html) for more tips and tricks.
 
 ## Installation
 To install TkinterWeb, simply type `pip install tkinterweb` in the command prompt or terminal. That's it!
@@ -44,19 +44,17 @@ Pip will automatically install PIL when installing TkinterWeb.
 ## API Documentation
 
 > [!WARNING]
-> The API changed significantly in version 4.0.0. See [Porting to TkinterWeb v4+](/docs/UPGRADING.md) for details.
+> The API changed significantly in version 4.0.0. See [Porting to TkinterWeb v4+](https://tkinterweb.readthedocs.io/en/latest/upgrading.html) for details.
 
 **Documentation and additional information on built-in classes can be found in the corresponding API reference pages:**
-* [`tkinterweb.Demo`](/docs/DEMO.md)
-* [`tkinterweb.HtmlFrame`](/docs/HTMLFRAME.md)
-* [`tkinterweb.HtmlLabel`](/docs/HTMLLABEL.md)
-* [`tkinterweb.TkinterWeb`](/docs/TKINTERWEB.md)
-
-Other notable built-in classes:
-* `tkinterweb.Notebook` (a Tkhtml-compatible drop-in replacement for `ttk.Notebook`). See [Frequently Asked Questions](https://github.com/Andereoo/TkinterWeb/blob/main/docs/FAQ.md).
+* `tkinterweb.Demo`
+* [`tkinterweb.HtmlFrame`](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html)
+* [`tkinterweb.HtmlLabel`](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html#tkinterweb.HtmlLabel)
+* [`tkinterweb.TkinterWeb`](https://tkinterweb.readthedocs.io/en/latest/api/tkinterweb.html)
+* [`tkinterweb.Notebook`](https://tkinterweb.readthedocs.io/en/latest/api/notebook.html) (a Tkhtml-compatible drop-in replacement for `ttk.Notebook`)
 
 ## FAQs
-See [Frequently Asked Questions](https://github.com/Andereoo/TkinterWeb/blob/main/docs/FAQ.md).
+See [Frequently Asked Questions](https://tkinterweb.readthedocs.io/en/latest/faq.html).
 
 ## Webpage Compatability
 **HTML/CSS:**
@@ -64,7 +62,7 @@ See [Frequently Asked Questions](https://github.com/Andereoo/TkinterWeb/blob/mai
 * Most CSS pseudo-elements, such as `:hover` and `:active` are also supported. 
 
 **JavaScript:**
-* Javascript is not supported at the moment. It is up to the user to connect a JavaScript interpreter by registering a callback for scripts and manipulating the document through Python. See [DOM Manipulation with TkinterWeb](/docs/DOM.md).
+* Javascript is not supported at the moment. It is up to the user to connect a JavaScript interpreter by registering a callback for scripts and manipulating the document through Python. See [DOM Manipulation with TkinterWeb](https://tkinterweb.readthedocs.io/en/latest/dom.html).
 
 **Images:**
 * TkinterWeb supports nearly 50 different image types through PIL. However, in order to load Scalable Vector Graphic images:
@@ -75,7 +73,7 @@ See [Frequently Asked Questions](https://github.com/Andereoo/TkinterWeb/blob/mai
 ## Contributing
 **The best ways to contribute to this project are by submitting a [bug report](https://github.com/Andereoo/TkinterWeb/issues/new) to report bugs or suggest new features, or by submitting a [pull request](https://github.com/Andereoo/TkinterWeb/pulls) to offer fixes. Your help makes TkinterWeb become more stable and full-featured!**
 
-Please check the [FAQs](https://github.com/Andereoo/TkinterWeb/blob/main/docs/FAQ.md) and [closed bugs](https://github.com/Andereoo/TkinterWeb/issues?q=is%3Aissue) before submitting a bug report to see if your question as already been answered.
+Please check the [FAQs](https://tkinterweb.readthedocs.io/en/latest/faq.html) and [closed bugs](https://github.com/Andereoo/TkinterWeb/issues?q=is%3Aissue) before submitting a bug report to see if your question as already been answered.
 
 ## Credits
 **TkinterWeb is powered by the [Tkhtml project](http://tkhtml.tcl.tk/index.html).**

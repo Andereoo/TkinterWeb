@@ -16,7 +16,7 @@ from utilities import *
 
 
 class Combobox(tk.Widget):
-    "Bindings for Bryan Oakley's combobox widget"
+    "Bindings for Bryan Oakley's combobox widget."
 
     def __init__(self, master):
         try:
@@ -57,7 +57,7 @@ class Combobox(tk.Widget):
 
 
 class TkinterWeb(tk.Widget):
-    "Bindings for the Tkhtml3 HTML widget"
+    "Bindings for the Tkhtml3 HTML widget."
 
     def __init__(self, master, tkinterweb_options=None, **kwargs):
         self.master = master
@@ -105,7 +105,7 @@ class TkinterWeb(tk.Widget):
         self.post_message(f"Tkhtml3 successfully loaded from {folder}")
 
     def _setup_settings(self):
-        "Widget settings"
+        "Widget settings."
         self.allow_threading = self.master.tk.eval('set tcl_platform(threaded)') 
 
         self._caches_enabled = True
@@ -163,7 +163,7 @@ class TkinterWeb(tk.Widget):
         self.scrollable_node_tag = f"tkinterweb.{id(self)}.scrollablenodes"
 
     def _setup_status_variables(self):
-        "Widget status variables"
+        "Widget status variables."
         self.base_url = ""
         self.title = ""
         self.icon = ""
@@ -199,7 +199,7 @@ class TkinterWeb(tk.Widget):
         self.waiting_forms = 0
 
     def _setup_bindings(self):
-        "Widget bindtags and bindings"
+        "Widget bindtags and bindings."
         self._add_bindtags(self, False)
         self.bind("<<Copy>>", self.copy_selection, True)
         self.bind("<B1-Motion>", self._extend_selection, True)
@@ -209,7 +209,7 @@ class TkinterWeb(tk.Widget):
         self.bind_class(self.node_tag, "<Motion>", self._on_mouse_motion, True)
 
     def _setup_handlers(self):
-        "Register node handlers"
+        "Register node handlers."
         self.register_handler("script", "script", self._on_script)
         self.register_handler("script", "style", self._on_style)
         self.register_handler("node", "link", self._on_link)
@@ -233,7 +233,7 @@ class TkinterWeb(tk.Widget):
     
     @caches_enabled.setter
     def caches_enabled(self, enabled):
-        "Disable the Tkhtml image cache when disabling caches"
+        "Disable the Tkhtml image cache when disabling caches."
         if self._caches_enabled != enabled:
             self._caches_enabled = enabled
             self.enable_imagecache(enabled)
@@ -244,7 +244,7 @@ class TkinterWeb(tk.Widget):
     
     @crash_prevention_enabled.setter
     def crash_prevention_enabled(self, enabled):
-        "Warn the user when disabling crash prevention"
+        "Warn the user when disabling crash prevention."
         if self._crash_prevention_enabled != enabled:
             self._crash_prevention_enabled = enabled
             if not enabled:
@@ -256,7 +256,7 @@ class TkinterWeb(tk.Widget):
     
     @dark_theme_enabled.setter
     def dark_theme_enabled(self, enabled):
-        "Warn the user when enabling dark mode"
+        "Warn the user when enabling dark mode."
         if self._dark_theme_enabled != enabled:
             self._dark_theme_enabled = enabled    
             if enabled:
@@ -269,7 +269,7 @@ class TkinterWeb(tk.Widget):
     
     @image_inversion_enabled.setter
     def image_inversion_enabled(self, enabled):
-        "Warn the user when enabling image inversion"
+        "Warn the user when enabling image inversion."
         if self._image_inversion_enabled != enabled:
             self._image_inversion_enabled = enabled
             if enabled:
@@ -293,7 +293,7 @@ class TkinterWeb(tk.Widget):
     
     @maximum_thread_count.setter
     def maximum_thread_count(self, count):
-        "Ensure that maximum_thread_count is always zero if Tcl/Tk is not built with thread support"
+        "Ensure that maximum_thread_count is always zero if Tcl/Tk is not built with thread support."
         count = int(count)
         if self.allow_threading:
             self._maximum_thread_count = count
@@ -304,18 +304,18 @@ class TkinterWeb(tk.Widget):
             self.default_maximum_thread_count = self._maximum_thread_count = 0
 
     def post_event(self, event):
-        "Generate a virtual event"
+        "Generate a virtual event."
         if self.events_enabled:
             # thread safety
             self.after(0, lambda event=event: self.event_generate(event))
 
     def post_message(self, message):
-        "Post a message"
+        "Post a message."
         if self.messages_enabled:
             self.message_func(message)
 
     def parse(self, html):
-        "Parse HTML code"
+        "Parse HTML code."
         self.downloads_have_occured = False
         self.unstoppable = True
         html = self._crash_prevention(html)
@@ -326,14 +326,14 @@ class TkinterWeb(tk.Widget):
             self.post_event(DONE_LOADING_EVENT)
             
     def update_default_style(self):
-        "Update the default stylesheet based on color theme"
+        "Update the default stylesheet based on color theme."
         if self._dark_theme_enabled and self.dark_style:
             self.config(defaultstyle=self.dark_style)
         elif self.default_style:
             self.config(defaultstyle=self.default_style)
 
     def parse_css(self, sheetid=None, importcmd=None, data="", override=False):
-        "Parse CSS code"
+        "Parse CSS code."
         data = self._crash_prevention(data)
         if self._dark_theme_enabled:
             data = sub(self.style_dark_theme_regex, lambda match, matchtype=0: self._generate_altered_colour(match, matchtype), data)
@@ -350,7 +350,7 @@ class TkinterWeb(tk.Widget):
             self.tk.call(self._w, "style", data)
 
     def reset(self):
-        "Reset the widget"
+        "Reset the widget."
         self.stop()
         self.loaded_images = set()
         self.image_directory = {}
@@ -372,14 +372,13 @@ class TkinterWeb(tk.Widget):
         self.tk.call(self._w, "reset")
 
     def stop(self):
-        "Stop loading resources"
+        "Stop loading resources."
         self.unstoppable = False
         for thread in self.active_threads:
             thread.stop()
 
     def node(self, *args):
-        """Retrieve one or more document
-        node handles from the current document"""
+        "Retrieve one or more document node handles from the current document."
         nodes = self.tk.call(self._w, "node", *args)
         if nodes:
             return nodes
@@ -387,21 +386,19 @@ class TkinterWeb(tk.Widget):
             return None, None
 
     def text(self, *args):
-        "Enable interaction with the text of the HTML document"
+        "Enable interaction with the text of the HTML document."
         return self.tk.call(self._w, "text", *args)
 
     def tag(self, subcommand, tag_name, *args):
-        """Return the name of the Html tag that generated this
-        document node, or an empty string if the node is a text node"""
+        "Return the name of the Html tag that generated this document node, or an empty string if the node is a text node."
         return self.tk.call(self._w, "tag", subcommand, tag_name, *args)
 
     def search(self, selector, cnf={}, **kwargs):
-        """Search the document for the specified CSS
-        selector; return a Tkhtml3 node if found"""
+        """Search the document for the specified CSS selector; return a Tkhtml3 node if found."""
         return self.tk.call((self._w, "search", selector)+self._options(cnf, kwargs))
 
     def xview(self, *args):
-        "Used to control horizontal scrolling"
+        "Used to control horizontal scrolling."
         if args:
             return self.tk.call(self._w, "xview", *args)
         coords = map(float, self.tk.call(self._w, "xview").split())
@@ -417,20 +414,20 @@ class TkinterWeb(tk.Widget):
         return self.xview("moveto", number)
 
     def yview(self, *args):
-        "Used to control the vertical position of the document"
+        """Used to control vertical scrolling."""
         return self.tk.call(self._w, "yview", *args)
 
     def yview_scroll(self, number, what):
-        """Shifts the view in the window up or down, according to number and what.
+        """Shifts the view in the window left or right, according to number and what.
         "number" is an integer, and "what" is either "units" or "pages"."""
         return self.yview("scroll", number, what)
 
     def yview_moveto(self, number):
-        "Shifts the view vertically to the specified position"
+        "Moves the view vertically to the specified position."
         return self.yview("moveto", number)
 
     def bbox(self, node=None):
-        "Get the bounding box of the viewport or a specified node"
+        "Get the bounding box of the viewport or a specified node."
         return self.tk.call(self._w, "bbox", node)
 
     def parse_fragment(self, html):
@@ -449,31 +446,31 @@ class TkinterWeb(tk.Widget):
         return fragment
     
     def enable_imagecache(self, enabled):
-        "Enable or disable the Tkhtml imagecache"
+        "Enable or disable the Tkhtml imagecache."
         self.tk.call(self._w, "configure", "-imagecache", enabled)
 
     def get_node_text(self, node_handle, *args):
-        "Get the text content of the given node"
+        "Get the text content of the given node."
         return self.tk.call(node_handle, "text", *args)
 
     def set_node_text(self, node_handle, new):
-        "Set the text content of the given node"
+        "Set the text content of the given node."
         return self.tk.call(node_handle, "text", "set", new)
 
     def get_node_tag(self, node_handle):
-        "Get the HTML tag of the given node"
+        "Get the HTML tag of the given node."
         return self.tk.call(node_handle, "tag")
 
     def get_node_parent(self, node_handle):
-        "Get the parent of the given node"
+        "Get the parent of the given node."
         return self.tk.call(node_handle, "parent")
 
     def get_node_children(self, node_handle):
-        "Get the children of the given node"
+        "Get the children of the given node."
         return self.tk.call(node_handle, "children")
 
     def get_node_attribute(self, node_handle, attribute, default="", value=None):
-        "Get the specified attribute of the given node"
+        "Get the specified attribute of the given node."
         if value:  # backwards compatability
             return self.tk.call(node_handle, "attribute", attribute, value)
         else:
@@ -482,38 +479,38 @@ class TkinterWeb(tk.Widget):
             )
 
     def set_node_attribute(self, node_handle, attribute, value):
-        "Set the specified attribute of the given node"
+        "Set the specified attribute of the given node."
         return self.tk.call(node_handle, "attribute", attribute, value)
 
     def get_node_attributes(self, node_handle):
-        "Get the attributes of the given node"
+        "Get the attributes of the given node."
         attr = self.tk.call(node_handle, "attribute")
         return dict(zip(attr[0::2], attr[1::2]))
 
     def get_node_property(self, node_handle, node_property, *args):
-        "Get the specified CSS property of the given node"
+        "Get the specified CSS property of the given node."
         return self.tk.call(node_handle, "property", *args, node_property)
 
     def get_node_properties(self, node_handle, *args):
-        "Get the CSS properties of the given node"
+        "Get the CSS properties of the given node."
         prop = self.tk.call(node_handle, "property", *args)
         return dict(zip(prop[0::2], prop[1::2]))
 
     def override_node_properties(self, node_handle, *props):
-        """Get/set the CSS property override list"""
+        "Get/set the CSS property override list."
         if props: return self.tk.call(node_handle, "override", " ".join(props))
         return self.tk.call(node_handle, "override")
 
     def insert_node(self, node_handle, child_nodes):
-        "Experimental, insert the specified nodes into the parent node"
+        "Experimental, insert the specified nodes into the parent node."
         return self.tk.call(node_handle, "insert", child_nodes)
 
     def insert_node_before(self, node_handle, child_nodes, before):
-        "Experimental, place the specified nodes is before another node"
+        "Experimental, place the specified nodes is before another node."
         return self.tk.call(node_handle, "insert", "-before", before, child_nodes)
 
     def delete_node(self, node_handle):
-        "Delete the given node"
+        "Delete the given node."
         node_parent = self.get_node_parent(node_handle)
         if node_parent and self.get_node_tag(node_handle) != "body":
             # removing the body element causes a segfault
@@ -526,28 +523,29 @@ class TkinterWeb(tk.Widget):
         self.tk.call(node_handle, "destroy")
 
     def set_node_flags(self, node, name):
-        "Set dynamic flags on the given node"
+        "Set dynamic flags on the given node."
         self.tk.call(node, "dynamic", "set", name)
 
     def remove_node_flags(self, node, name):
-        "Set dynamic flags on the given node"
+        "Set dynamic flags on the given node."
         self.tk.call(node, "dynamic", "clear", name)
 
     def get_node_tkhtml(self, node_handle):
-        "Get pathName of node (I think)"
+        "Get pathName of node (I think)."
         return self.tk.call(node_handle, "html")
 
     def get_current_node(self, event):
-        "Get current node"
+        "Get current node."
         return self.tk.eval(
             f"""set node [lindex [lindex [{self} node {event.x} {event.y}] end] end]"""
         )
 
     def get_current_node_parent(self, node):
-        "Get the parent of the given node"
+        "Get the parent of the given node."
         return self.tk.eval(f"""set node [lindex [lindex [{node} parent] end] end]""")
     
     def register_handler(self, handler_type, node_tag, callback):
+        "Register a node handler"
         self.tk.call(self._w, "handler", handler_type, node_tag, self.register(callback))
 
     def image(self, full=False):
@@ -627,7 +625,7 @@ class TkinterWeb(tk.Widget):
             self.loaded_images.add(image)
 
     def fetch_images(self, url, name, urltype):
-        "Fetch images and display them in the document"
+        "Fetch images and display them in the document."
         thread = self._begin_download()
 
         self.post_message(f"Fetching image from {shorten(url)}")
@@ -685,7 +683,7 @@ class TkinterWeb(tk.Widget):
             self.on_resource_setup(url, "image", False)
 
     def handle_node_replacement(self, node, widgetid, deletecmd, stylecmd=None, allowscrolling=True, handledelete=True):
-        "Replace a Tkhtml3 node with a Tkinter widget"
+        "Replace a Tkhtml3 node with a Tkinter widget."
         if stylecmd:
             if handledelete:
                 self.tk.call(
@@ -760,12 +758,12 @@ class TkinterWeb(tk.Widget):
 
     
     def remove_widget(self, widgetid):
-        "Remove a stored widget"
+        "Remove the specified widget from the document."
         self.delete_node(self.stored_widgets[widgetid])
         del self.stored_widgets[widgetid]
 
     def replace_widget(self, widgetid, newwidgetid):
-        "Replace a stored widget"
+        "Remove the old widget from the document and replace it with the new widget."
         node = self.stored_widgets[widgetid]
         self.tk.call(node, "replace", newwidgetid)
 
@@ -777,13 +775,13 @@ class TkinterWeb(tk.Widget):
         self.stored_widgets[newwidgetid] = node
 
     def replace_element(self, selector, widgetid):
-        "Replace an HTML element with a widget"
+        "Replace the content of the element matching the specified CSS selector with the given widget."
         node = self.search(selector)[0]
         self.tk.call(node, "replace", widgetid)
         self.stored_widgets[widgetid] = node
 
     def find_text(self, searchtext, select, ignore_case, highlight_all):
-        "Search for and highlight specific text in the document"
+        "Search for and highlight specific text in the document."
         self.clear_selection()
 
         nmatches = 0
@@ -870,9 +868,9 @@ class TkinterWeb(tk.Widget):
             self.post_message(f"Error searching for {searchtext}: {error}")
             return nmatches, selected, matches
     
-    def resolve_url(self, href):
-        "Get full url from partial url"
-        return urljoin(self.base_url, href)
+    def resolve_url(self, url):
+        "Generate a full url from the specified url."
+        return urljoin(self.base_url, url)
     
     def update_tags(self):
         "Update selection and find tag colors"
@@ -881,7 +879,7 @@ class TkinterWeb(tk.Widget):
         self.tag("configure", "selection", "-bg", self.selected_text_highlight_color, "-fg", self.selected_text_color)
 
     def select_all(self):
-        "Select all of the text in the document"
+        """Select all text in the document."""
         if not self.selection_enabled:
             return
         
@@ -903,13 +901,12 @@ class TkinterWeb(tk.Widget):
         )
 
     def clear_selection(self):
-        "Clear current selection possible"
+        "Clear the current selection."
         self.tag("delete", "selection")
         self.selection_start_node = None
-
     
     def get_selection(self):
-        "Return the currently selected text"
+        "Return any selected text."
         if self.selection_start_node is None or self.selection_end_node is None:
             return
         if self.selection_type == 1:
@@ -959,14 +956,14 @@ class TkinterWeb(tk.Widget):
         return whole_text[start_index:end_index]
 
     def copy_selection(self, event=None):
-        "Copy the selected text to the clipboard"
+        "Copy the selected text to the clipboard."
         selected_text = self.get_selection()
         self.clipboard_clear()
         self.clipboard_append(selected_text)
         self.post_message(f"The text '{selected_text}' has been copied to the clipboard")
         
     def scroll_x11(self, event, widget=None):
-        "Manage scrolling on Linux"
+        "Manage scrolling on Linux."
         if not widget:
             widget = event.widget
             
@@ -988,7 +985,7 @@ class TkinterWeb(tk.Widget):
                 widget.yview_scroll(4, "units")
 
     def scroll(self, event):
-        "Manage scrolling on Windows/MacOS"
+        "Manage scrolling on Windows/MacOS."
         yview = self.yview()      
 
         if self.overflow_scroll_frame and event.delta > 0 and (yview[0] == 0 or self.vsb_type == 0):
@@ -1073,7 +1070,7 @@ class TkinterWeb(tk.Widget):
         return self.on_script(attributes, tagcontents)
 
     def _on_style(self, attributes, tagcontents):
-        "Handle <style> elements"
+        "Handle <style> elements."
         if not self.stylesheets_enabled or not self.unstoppable:
             return
         self.downloads_have_occured = True
@@ -1087,7 +1084,7 @@ class TkinterWeb(tk.Widget):
         self._style_thread_check(sheetid=ids, handler=handler_proc, data=tagcontents)
 
     def _on_link(self, node):
-        "Handle <link> elements"
+        "Handle <link> elements."
         try:
             rel = self.get_node_attribute(node, "rel").lower()
             media = self.get_node_attribute(node, "media", default="all").lower()
@@ -1124,7 +1121,7 @@ class TkinterWeb(tk.Widget):
             self.post_event(ICON_CHANGED_EVENT)
 
     def _on_atimport(self, parent_url, new_url):
-        "Load @import scripts"
+        "Load @import scripts."
         if not self.stylesheets_enabled or not self.unstoppable:
             return
         self.downloads_have_occured = True
@@ -1145,13 +1142,13 @@ class TkinterWeb(tk.Widget):
             self.post_message(f"Error loading stylesheet {new_url}: {error}")
 
     def _on_title(self, node):
-        "Handle <title> elements"
+        "Handle <title> elements."
         for child in self.tk.call(node, "children"):
             self.title = self.tk.call(child, "text")
             self.post_event(TITLE_CHANGED_EVENT)
 
     def _on_base(self, node):
-        "Handle <base> elements"
+        "Handle <base> elements."
         try:
             href = self.get_node_attribute(node, "href")
             self.base_url = self.resolve_url(href)
@@ -1159,7 +1156,7 @@ class TkinterWeb(tk.Widget):
             self.post_message("Error setting base url: a <base> element was found without an href attribute")
 
     def _on_a(self, node):
-        "Handle <a> elements"
+        "Handle <a> elements."
         self.set_node_flags(node, "link")
         try:
             href = self.get_node_attribute(node, "href")
@@ -1170,7 +1167,7 @@ class TkinterWeb(tk.Widget):
             pass
 
     def _on_iframe(self, node):
-        "Handle <iframe> elements"
+        "Handle <iframe> elements."
         if not self.objects_enabled or not self.unstoppable:
             return
 
@@ -1185,7 +1182,7 @@ class TkinterWeb(tk.Widget):
             self._create_iframe(node, src)
 
     def _on_object(self, node):
-        "Handle <object> elements"
+        "Handle <object> elements."
         if not self.objects_enabled or not self.unstoppable:
             return
 
@@ -1260,7 +1257,7 @@ class TkinterWeb(tk.Widget):
         self.image_directory[url] = node
 
     def _on_image_cmd(self, url):
-        "Handle images"
+        "Handle images."
         if not self.images_enabled or not self.unstoppable:
             return
 
@@ -1301,7 +1298,7 @@ class TkinterWeb(tk.Widget):
         return name
 
     def _on_form(self, node):
-        "Handle <form> elements"
+        "Handle <form> elements."
         if not self.forms_enabled:
             return
 
@@ -1324,7 +1321,7 @@ class TkinterWeb(tk.Widget):
             self.post_message("Successfully setup form")
 
     def _on_table(self, node):
-        "Handle <form> elements in tables; workaround for Bug #48"
+        "Handle <form> elements in tables; workaround for bug #48."
         if not self.forms_enabled:
             return
 
@@ -1352,7 +1349,7 @@ class TkinterWeb(tk.Widget):
                 self.waiting_forms -= 1
 
     def _on_select(self, node):
-        "Handle <select> elements"
+        "Handle <select> elements."
         if not self.forms_enabled:
             return
         text = []
@@ -1389,7 +1386,7 @@ class TkinterWeb(tk.Widget):
         )
 
     def _on_textarea(self, node):
-        "Handle <textarea> elements"
+        "Handle <textarea> elements."
         if not self.forms_enabled:
             return
         widgetid = ScrolledTextBox(
@@ -1415,7 +1412,7 @@ class TkinterWeb(tk.Widget):
         )
 
     def _on_input(self, node):
-        "Handle <input> elements"
+        "Handle <input> elements."
         if not self.forms_enabled:
             return
         self.tk.eval('set type ""')
@@ -1577,7 +1574,7 @@ class TkinterWeb(tk.Widget):
                 widgetid.configure(state="disabled")
 
     def _on_body(self, node, index):
-        "Wait for style changes on the root node"
+        "Wait for style changes on the root node."
         self.tk.call(node,
                     "replace",
                     node,
@@ -1612,7 +1609,7 @@ class TkinterWeb(tk.Widget):
             self.post_event(DONE_LOADING_EVENT)
 
     def _fix_css_urls(self, match, url):
-        "Make relative uris in CSS files absolute"
+        "Make relative uris in CSS files absolute."
         newurl = match.group()
         newurl = strip_css_url(newurl)
         newurl = urljoin(url, newurl)
@@ -1620,7 +1617,7 @@ class TkinterWeb(tk.Widget):
         return newurl
 
     def _remove_noto_emoji(self, match):
-        "Remove noto color emoji font, which causes Tkinter to crash"
+        "Remove noto color emoji font, which causes Tkinter to crash."
         match = match.group().lower()
         match = match.replace("noto color emoji", "arial")
         return match
@@ -1653,7 +1650,7 @@ class TkinterWeb(tk.Widget):
             thread.start()
 
     def _handle_link_click(self, node_handle):
-        "Handle link clicks"
+        "Handle link clicks."
         href = self.get_node_attribute(node_handle, "href")
         url = self.resolve_url(href)
         self.post_message(f"A link to '{shorten(url)}' was clicked")
@@ -1661,12 +1658,12 @@ class TkinterWeb(tk.Widget):
         self.on_link_click(url)
 
     def _handle_entry_reset(self, widgetid, content):
-        "Reset tk.Entry widgets in HTML forms"
+        "Reset tk.Entry widgets in HTML forms."
         widgetid.delete(0, "end")
         widgetid.insert(0, content)
 
     def _handle_form_reset(self, node):
-        "Reset HTML forms"
+        "Reset HTML forms."
         if (node not in self.form_elements) or (not self.forms_enabled):
             return
 
@@ -1677,7 +1674,7 @@ class TkinterWeb(tk.Widget):
             self.form_reset_commands[formelement]()
 
     def _handle_form_submission(self, node, event=None):
-        "Submit HTML forms"
+        "Submit HTML forms."
         if (node not in self.form_elements) or (not self.forms_enabled):
             return
 
@@ -1738,7 +1735,7 @@ class TkinterWeb(tk.Widget):
         return None
 
     def _set_overflow(self, node):
-        "Look for and handle the overflow property"
+        "Look for and handle the overflow property."
         # Eventually we'll make overflow a composite property of overflow-x and overflow-y
         # But for now it's its own thing and the only one of the three that is actually respected by Tkhtml in rendering
         if self.experimental: 
@@ -1763,7 +1760,7 @@ class TkinterWeb(tk.Widget):
             self.motion_frame.config(bg=background)
 
     def _set_cursor(self, cursor):
-        "Set document cursor"
+        "Set the document cursor."
         if self.current_cursor != cursor:
             cursor = CURSOR_MAP[cursor]
             self.master.config(cursor=cursor)
@@ -1776,7 +1773,7 @@ class TkinterWeb(tk.Widget):
             self.motion_frame.config(bg=self.motion_frame_bg)
 
     def _handle_recursive_hovering(self, node_handle, count):
-        "Set hover flags on the parents of the hovered element"
+        "Set hover flags on the parents of the hovered element."
         self.set_node_flags(node_handle, "hover")
         self.hovered_nodes.append(node_handle)
 
@@ -1824,7 +1821,7 @@ class TkinterWeb(tk.Widget):
             self.post_message(f"WARNING: the embedded page {url} could not be shown because no embed widget was provided.")
     
     def _on_click(self, event, redirected=False):
-        "Set active element flags"
+        "Set active element flags."
         if not self.current_node:
             # register current node if mouse has never moved
             self._on_mouse_motion(event)
@@ -1863,7 +1860,7 @@ class TkinterWeb(tk.Widget):
         self.current_node = None
 
     def _on_mouse_motion(self, event):
-        "Set hover flags and handle the CSS 'cursor' property"
+        "Set hover flags and handle the CSS 'cursor' property."
         if self.is_selecting:
             return
         if self.on_embedded_node:
@@ -1904,7 +1901,7 @@ class TkinterWeb(tk.Widget):
             pass
 
     def _on_click_release(self, event):
-        "Handle click releases on hyperlinks and form elements"
+        "Handle click releases on hyperlinks and form elements."
         if self.is_selecting:
             self.is_selecting = False
             self.current_node = None
@@ -1973,7 +1970,7 @@ class TkinterWeb(tk.Widget):
         return pre - beg, pre + end
 
     def _on_double_click(self, event):
-        "Cycle between normal selection, text selection, and element selection on multi-clicks"
+        "Cycle between normal selection, text selection, and element selection on multi-clicks."
         self._on_click(event, True)
 
         if not self.selection_enabled:
@@ -2026,7 +2023,7 @@ class TkinterWeb(tk.Widget):
             self._set_cursor("default")
 
     def _extend_selection(self, event):
-        "Alter selection and HTML element states based on mouse movement"
+        "Alter selection and HTML element states based on mouse movement."
         if not self.selection_enabled:
             return
                 
@@ -2122,7 +2119,7 @@ class TkinterWeb(tk.Widget):
         self._on_mouse_motion(event)
 
     def _add_bindtags(self, widgetid, allowscrolling=True):
-        "Add bindtags to allow scrolling and on_embedded_mouse function calls"
+        "Add bindtags to allow scrolling and on_embedded_mouse function calls."
         if allowscrolling:
             tags = (
                 self.node_tag,
@@ -2133,4 +2130,4 @@ class TkinterWeb(tk.Widget):
         widgetid.bindtags(widgetid.bindtags() + tags)
 
     def __call__(self):
-        "Mark this class as callable so it is accepted as a overflow_scroll_frame by HtmlFrame"
+        "Mark this class as callable so it is accepted as a overflow_scroll_frame by HtmlFrame."

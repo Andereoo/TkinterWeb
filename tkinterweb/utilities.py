@@ -41,7 +41,7 @@ __title__ = 'TkinterWeb'
 __author__ = "Andereoo"
 __copyright__ = "Copyright (c) 2025 Andereoo"
 __license__ = "MIT"
-__version__ = '4.0.3'
+__version__ = '4.0.4'
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "tkhtml")
@@ -696,11 +696,7 @@ class ColourSelector(tk.Frame):
 
 
 class Notebook(ttk.Frame):
-    """Drop-in replacement for the ttk.Notebook widget,
-    The ttk.Notebook widget is incompatable with Tkhtml on some platforms, causing crashes when selecting tabs
-    Workaround for Bug #19, this widget manages pages itself while a ttk.Notebook handles tabs.
-    Designed to look and behave exactly like a ttk.Notebook, just without any crashes.
-    """
+    "Drop-in replacement for the :py:class:`ttk.Notebook` widget."
 
     def __init__(self, master, takefocus=True, **kwargs):
         ttk.Frame.__init__(self, master, **kwargs)
@@ -732,6 +728,7 @@ class Notebook(ttk.Frame):
             pass
 
     def add(self, child, **kwargs):
+        "Adds a new tab to the notebook."
         if child in self.pages:
             raise ValueError(f"{child} is already managed by {self}.")
         frame = self.blankframe()
@@ -739,6 +736,7 @@ class Notebook(ttk.Frame):
         self.pages.append(child)
 
     def insert(self, where, child, **kwargs):
+        "Adds a new tab at the specified position."
         if child in self.pages:
             raise ValueError(f"{child} is already managed by {self}.")
         frame = self.blankframe()
@@ -746,9 +744,11 @@ class Notebook(ttk.Frame):
         self.pages.insert(where, child)
 
     def enable_traversal(self):
+        "Enable keyboard traversal for a toplevel window containing this notebook."
         self.notebook.enable_traversal()
 
     def select(self, tabId=None):
+        "Select the given tabId."
         if tabId in self.pages:
             tabId = self.pages.index(tabId)
             return self.notebook.select(tabId)
@@ -760,11 +760,13 @@ class Notebook(ttk.Frame):
         return self.pages[self.notebook.index(item)]
 
     def tab(self, tabId, option=None, **kwargs):
+        "Query or modify the options of the given tabId."
         if not isinstance(tabId, int) and tabId in self.pages:
             tabId = self.pages.index(tabId)
         return self.notebook.tab(tabId, option, **kwargs)
 
     def forget(self, tabId):
+        "Removes the tab specified by tabId and unmaps the associated window."
         if isinstance(tabId, int):
             del self.pages[tabId]
             self.notebook.forget(tabId)
@@ -774,12 +776,14 @@ class Notebook(ttk.Frame):
             self.notebook.forget(index)
 
     def index(self, child):
+        "Returns the numeric index of the tab specified by child, or the total number of tabs if child is the string “end”."
         try:
             return self.pages.index(child)
         except (IndexError, ValueError):
             return self.transcribe(self.notebook.index(child))
 
     def tabs(self):
+        "Returns a list of widgets managed by the notebook."
         return self.pages
 
 

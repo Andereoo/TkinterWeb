@@ -37,7 +37,7 @@ __all__ = ['HtmlFrame', 'HtmlLabel', 'TkinterWeb', 'Notebook', 'Demo']
 
 
 class Demo():
-    "A fun little demo showcasing DOM manipulation and website loading"
+    "A simple example of TkinterWeb in action displaying the Tkinter Wiki."
 
     def __init__(self):
         import tkinter as tk
@@ -45,7 +45,7 @@ class Demo():
         self.root = root = tk.Tk()
         self.frame = frame = HtmlFrame(root, messages_enabled=False)
         self.frame2 = HtmlFrame(root, on_navigate_fail=self.on_error)
-        self.button = tk.Button(root, cursor="pointer")
+        self.button = tk.Button(root, cursor="hand1")
 
         self.afters = []
         
@@ -96,4 +96,3 @@ if __name__ == "__main__":
         windll.shcore.SetProcessDpiAwareness(1)
 
     Demo()
-

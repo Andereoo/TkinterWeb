@@ -2,6 +2,11 @@
 
 # -- Project information
 
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname((os.path.realpath(__file__))))))
+
 project = 'TkinterWeb'
 copyright = '2025, Andereoo'
 author = 'Andereoo'

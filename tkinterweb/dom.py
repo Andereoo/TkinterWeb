@@ -353,16 +353,11 @@ class HTMLElement:
         )
 
     @property
-<<<<<<< HEAD
     def textContent(self):  # Original for this project
-        "Get the text content of an element."
-=======
-    def textContent(self):  # original for this project
         """Get and set the text content of an element. Cannot be used on ``<html>`` elements.
         
         :rtype: str
         :raises: :py:class:`tkinter.TclError`"""
->>>>>>> ced842f1523235d9dacc362e3a6caa7a1df4ab8e
         return self.html.tk.eval("""
             proc get_child_text {node} {
                 set txt ""
@@ -413,20 +408,11 @@ class HTMLElement:
 
     @property
     def parentElement(self):
-<<<<<<< HEAD
-        "Return the element's parent element"
-        return HTMLElement(self, self.html.get_node_parent(self.node))
-
-    @property
-    def children(self):
-        "Return the element's children elements"
-        return [HTMLElement(self, i) for i in self.html.get_node_children(self.node)]
-=======
         """Get the element's parent element.
         
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
-        return HTMLElement(self.html, self.html.get_node_parent(self.node))
+        return HTMLElement(self, self.html.get_node_parent(self.node))
 
     @property
     def children(self):
@@ -434,8 +420,7 @@ class HTMLElement:
         
         :rtype: list(:class:`HTMLElement`)
         :raises: :py:class:`tkinter.TclError`"""
-        return [HTMLElement(self.html, i) for i in self.html.get_node_children(self.node)]
->>>>>>> ced842f1523235d9dacc362e3a6caa7a1df4ab8e
+        return [HTMLElement(self, i) for i in self.html.get_node_children(self.node)]
 
     def getAttribute(self, attribute):
         """Return the value of the given attribute..

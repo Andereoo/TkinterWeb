@@ -56,6 +56,7 @@ class Page(tk.Frame):
         self.forward_history = []
 
         self.style = ttk.Style(self)
+        self.style.theme_use("default")
 
         topbar = ttk.Frame(self)
         self.bottombar = bottombar = ttk.Frame(self)

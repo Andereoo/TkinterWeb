@@ -345,7 +345,6 @@ body a[href]:visited { color: attr(vlink x body) }
 [height]           { height:           attr(height l) }
 basefont[size]     { font-size:        attr(size) }
 font[size]         { font-size:        tcl(::tkhtml::size_to_fontsize) }
-[bgcolor]       img   { background-color: attr(bgcolor) }
 BR[clear]          { clear: attr(clear) }
 BR[clear="all"]    { clear: both; }
 /* Standard html <img> tags - replace the node with the image at url $src */
@@ -393,6 +392,7 @@ TR[valign]>TD, TR[valign]>TH {vertical-align: attr(valign x tr)}
 TR>TD[valign], TR>TH[valign] {vertical-align: attr(valign)}
 /* Support the "text" attribute on the <body> tag */
 body[text]       {color: attr(text)}
+body[bgcolor]    { background-color: attr(bgcolor) }
 /* Allow background images to be specified using the "background" attribute.
  * According to HTML 4.01 this is only allowed for <body> elements, but
  * many websites use it arbitrarily.

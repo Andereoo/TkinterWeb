@@ -282,18 +282,13 @@ class CSSStyleDeclaration:
     
 
 class HTMLElement:
-<<<<<<< HEAD
-    def __init__(self, dom, node):
-        self.dom = dom
-        self.html = dom.html
-=======
     """:param htmlwidget: The :class:`~tkinterweb.TkinterWeb` instance this class is tied to.
     :type htmlwidget: :class:`~tkinterweb.TkinterWeb`
     :param node: The Tkhtml3 node this class represents.
     :type node: Tkhtml3 node"""
-    def __init__(self, htmlwidget, node):
-        self.html = htmlwidget
->>>>>>> ced842f1523235d9dacc362e3a6caa7a1df4ab8e
+    def __init__(self, tkw, node):
+        self.tkw = tkw
+        self.html = tkw.html
         self.node = node
         self.styleCache = None  # initialize style as None
         self.html.bbox(node)  # check if the node is valid
@@ -399,7 +394,7 @@ class HTMLElement:
             $node insert $textnode
             
             update  ;# This must be done to see changes on-screen
-            """ % (extract_nested(self.node), self.dom.createTextNode(contents))
+            """ % (extract_nested(self.node), self.tkw.createTextNode(contents))
         )
 
     @property

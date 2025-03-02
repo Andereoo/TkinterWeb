@@ -119,8 +119,8 @@ Added
 Changed
 -------
 
-* :attr:`.HtmlFrame.configure`, :attr:`.HtmlFrame.config`, :attr:`.HtmlFrame.cget`, and :attr:`.HtmlFrame.__init__()` now support more configuration options.
-* :attr:`.HtmlFrame.load_website`, :attr:`.HtmlFrame.load_file`, and :attr:`.HtmlFrame.load_url` no longer accept the ``insecure`` parameter. use ``HTMLElement.configure(insecure=)``.
+* :meth:`.HtmlFrame.configure`, :meth:`.HtmlFrame.config`, :meth:`.HtmlFrame.cget`, and :meth:`.HtmlFrame.__init__()` now support more configuration options.
+* :meth:`.HtmlFrame.load_website`, :meth:`.HtmlFrame.load_file`, and :meth:`.HtmlFrame.load_url` no longer accept the ``insecure`` parameter. use ``HTMLElement.configure(insecure=)``.
 
 * Enabling/disabling caches now enables/disables the Tkhtml image cache.
 * Threading now cannot be enabled if the Tcl/Tk build does not support it.

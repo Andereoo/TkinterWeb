@@ -16,9 +16,9 @@ This widget also emits the following Tkinter virtual events that can be bound to
 
 * ``<<DownloadingResource>>``/:py:attr:`utilities.DOWNLOADING_RESOURCE_EVENT`: Generated whenever a new resource is being downloaded.
 * ``<<DoneLoading>>``/:py:attr:`utilities.DONE_LOADING_EVENT`: Generated whenever all outstanding resources have been downloaded. This is generally a good indicator as to when the website is done loading, but may be generated multiple times while loading a page.
-* ``<<UrlChanged>>``/:py:attr:`utilities.URL_CHANGED_EVENT`: Generated whenever the url the widget is navigating to changes. Use :attr:`~tkinterweb.HtmlFrame.current_url` to get the url.
-* ``<<IconChanged>>``/:py:attr:`utilities.ICON_CHANGED_EVENT`: Generated whenever the icon of a webpage changes. Use :attr:`~tkinterweb.HtmlFrame.icon` to get the icon.
-* ``<<TitleChanged>>``/:py:attr:`utilities.TITLE_CHANGED_EVENT`: Generated whenever the title of a website or file has changed. Use :attr:`~tkinterweb.HtmlFrame.title` to get the title.
+* ``<<UrlChanged>>``/:py:attr:`utilities.URL_CHANGED_EVENT`: Generated whenever the url the widget is navigating to changes. Use :attr:`.HtmlFrame.current_url` to get the url.
+* ``<<IconChanged>>``/:py:attr:`utilities.ICON_CHANGED_EVENT`: Generated whenever the icon of a webpage changes. Use :attr:`.HtmlFrame.icon` to get the icon.
+* ``<<TitleChanged>>``/:py:attr:`utilities.TITLE_CHANGED_EVENT`: Generated whenever the title of a website or file has changed. Use :attr:`.HtmlFrame.title` to get the title.
 * ``<<Modified>>``: Generated whenever the content of any ``<input>`` element changes.
 
 .. autoclass:: tkinterweb.HtmlLabel

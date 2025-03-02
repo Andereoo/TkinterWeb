@@ -51,7 +51,7 @@ Tips and Tricks
 
 **Bindings**
 
-Like any other Tkinter widget, mouse and keyboard events can be bound to the :class:`HtmlFrame` widget.
+Like any other Tkinter widget, mouse and keyboard events can be bound to the :class:`~tkinterweb.HtmlFrame` widget.
 
 The following is an example of the usage of bingings to show a menu:
 
@@ -89,7 +89,7 @@ Similarily, the ``<<IconChanged>>`` event fires when the website's icon changes.
 
 **Url changes**
 
-Normally, a website's url may change when it is loaded. For example, https://github.com will redirect to https://www.github.com. This can be handled with a binding to ``<<UrlChanged>>``:
+Normally, a website's url may change when it is loaded. For example, "https://github.com" will redirect to "https://www.github.com". This can be handled with a binding to ``<<UrlChanged>>``:
 
 >>> def url_changed(event):
 >>>     updated_url = yourhtmlframe.current_url

@@ -212,7 +212,13 @@ class CSSStyleDeclaration:
     :param htmlwidget: The :class:`~tkinterweb.TkinterWeb` instance this class is tied to.
     :type htmlwidget: :class:`~tkinterweb.TkinterWeb`
     :param node: The Tkhtml3 node this class should modify.
-    :type node: Tkhtml3 node"""
+    :type node: Tkhtml3 node
+    
+    
+    All camel-cased supported CSS properties are valid properties. Examples include ``color``, ``backgroundColor``, and ``fontFamily``.
+
+    CSS properties can also be returned or set as key-value pairs (eg. ``CSSStyleDeclaration["background-color"]``)
+    """
     def __init__(self, htmlwidget, node):
         self.html = htmlwidget
         self.node = node
@@ -284,7 +290,7 @@ class HTMLElement:
         
     @property
     def style(self):
-        """Manage the element's styling.
+        """Manage the element's styling. For instance, to make the element have a blue background, use ``yourhtmlelememt.style.backgroundColor = "blue"``.
 
         :rtype: :class:`~tkinterweb.dom.CSSStyleDeclaration`
         """

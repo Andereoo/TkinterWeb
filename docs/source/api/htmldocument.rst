@@ -13,9 +13,5 @@ Document Object Model Documentation
 .. autoclass:: tkinterweb.dom.CSSStyleDeclaration
    :members:
 
-All camel-cased supported CSS properties are also valid properties. Examples include ``color``, ``backgroundColor``, and ``fontFamily``.
-
-CSS properties can also be returned or set as key-value pairs (eg. ``CSSStyleDeclaration["background-color"]``)
-
 
 Special thanks to `Zamy846692 <https://github.com/Zamy846692>`_ for the help making this happen!

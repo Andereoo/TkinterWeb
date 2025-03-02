@@ -51,8 +51,8 @@ PYTHON_VERSION = platform.python_version_tuple()
 
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha"
-    # Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 Firefox/4.0
+    "User-Agent": "Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 Firefox/4.0"
+    # The official Hv3 user agent is Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha
 }
 DEFAULT_PARSE_MODE = "xml"
 DEFAULT_ENGINE_MODE = "standards"
@@ -402,11 +402,11 @@ body[text]       {color: attr(text)}
  * <IMG>, <OBJECT> and <APPLET> only. Note that this attribute is
  * deprecated in HTML 4.01.
  */
-IMG[vspace], OBJECT[vspace], APPLET[vspace] {
+IMG[vspace], OBJECT[vspace], IFRAME[vspace], APPLET[vspace] {
     margin-top: attr(vspace l);
     margin-bottom: attr(vspace l);
 }
-IMG[hspace], OBJECT[hspace], APPLET[hspace] {
+IMG[hspace], OBJECT[hspace], IFRAME[hspace], APPLET[hspace] {
     margin-left: attr(hspace l);
     margin-right: attr(hspace l);
 }
@@ -421,6 +421,9 @@ BODY[marginwidth] {
 }
 SPAN[spancontent]:after {
   content: attr(spancontent);
+}
+IFRAME[frameborder]{
+  border-width: attr(frameborder l);
 }
 """
 
@@ -462,6 +465,10 @@ BUILTIN_PAGES = {
         <h2 style=\"margin:0;padding:0;font-weight:normal\">Oops</h2>\
         <h3 style=\"margin-top:10px;margin-bottom:25px;font-weight:normal\">The page you've requested could not be found :(</h3>\
         <object handleremoval allowscrolling style=\"cursor:pointer\" data=\"{}\"></object>\
+        </td></tr></table></body></html>",
+    "about:loading": "<html><head><style>html,body,table,tr,td{{background-color:{};color:{};width:100%;height:100%;margin:0}}</style></head>\
+        <body><table><tr><td tkinterweb-full-page style=\"text-align:center;vertical-align:middle\">\
+        <p>Loading...</p>\
         </td></tr></table></body></html>",
     "about:image": "<html><head><style>html,body,table,tr {{background-color:{};color:{};width:100%;height:100%;margin:0}}</style></head><body>\
         <table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle;padding:4px 4px 0px 4px'><img style='max-width:100%;max-height:100%' src='replace:{}'><h3 style=\"margin:0;padding:0;font-weight:normal\"></td></tr></table></body></html>",

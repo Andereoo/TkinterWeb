@@ -658,10 +658,11 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         :param code: The HTTP error code.
         :type code: str
         """
-        if not self._button:
-            self._button = tk.Button(self, text="Try Again")
-        self._button.configure(command=lambda url=self._current_url: self.load_url(url, None, True))
-        self.load_html(BUILTIN_PAGES["about:error"].format(self.about_page_background, self.about_page_foreground, code, self._button), url)
+        if self.winfo_exists():
+            if not self._button:
+                self._button = tk.Button(self, text="Try Again")
+            self._button.configure(command=lambda url=self._current_url: self.load_url(url, None, True))
+            self.load_html(BUILTIN_PAGES["about:error"].format(self.about_page_background, self.about_page_foreground, code, self._button), url)
 
     def select_all(self):
         """Select all text in the document."""
@@ -685,7 +686,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         :type url: str
         :return: The full, resolved url.
         :rtype: str"""
-        self._html.resolve_url(url)
+        return self._html.resolve_url(url)
 
     def yview(self, *args):
         """Adjust the viewport. 
@@ -743,7 +744,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         if callable(old) or old == None:
             if not callable(new):
                 raise TypeError(f"expected callable object, got \"{expected_type.__name__}\"")
-        elif not isinstance(new, expected_type):
+        elif not isinstance(new, expected_type) and old != "auto" and new != "auto":
             try:
                 new = expected_type(new)
             except (TypeError, ValueError,):
@@ -769,7 +770,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         if allow == None:
             allow = self.vertical_scrollbar
         if allow == "auto":
-            allow = 2 
+            allow = 2
         self._vsb.set_type(allow)
         return allow
     

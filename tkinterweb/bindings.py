@@ -66,9 +66,13 @@ class TkinterWeb(tk.Widget):
         self._setup_status_variables()
 
         # inherited settings
+        waiting_options = {}
         if tkinterweb_options:
             for item, value in tkinterweb_options.items():
-                setattr(self, item, value)    
+                try:
+                    setattr(self, item, value)    
+                except AttributeError:
+                    waiting_options[item] = value
 
         # provide OS information for troubleshooting
         self.post_message(f"Starting TkinterWeb for {PLATFORM.processor} {PLATFORM.system} with Python {'.'.join(PYTHON_VERSION)}")
@@ -98,6 +102,11 @@ class TkinterWeb(tk.Widget):
         # create a tiny, blank frame for cursor updating
         self.motion_frame = tk.Frame(self, bg=self.motion_frame_bg, width=1, height=1)
         self.motion_frame.place(x=0, y=0)
+
+        # If a setting required the widget to be initialized and couldn't be changed, change it now
+        if waiting_options:
+            for item, value in waiting_options.items():
+                setattr(self, item, value)    
 
         self._setup_bindings()
         self._setup_handlers()
@@ -307,7 +316,7 @@ class TkinterWeb(tk.Widget):
         "Generate a virtual event."
         if self.events_enabled:
             # thread safety
-            self.after(0, lambda event=event: self.event_generate(event))
+            self.after(0, lambda event=event: self._finish_posting_event(event))
 
     def post_message(self, message):
         "Post a message."
@@ -337,17 +346,21 @@ class TkinterWeb(tk.Widget):
         data = self._crash_prevention(data)
         if self._dark_theme_enabled:
             data = sub(self.style_dark_theme_regex, lambda match, matchtype=0: self._generate_altered_colour(match, matchtype), data)
-        if sheetid and importcmd:
-            self.tk.call(
-                self._w, "style", "-id", sheetid, "-importcmd", importcmd, data
-            )
-        elif override:
-            self.style_count += 1
-            self.tk.call(
-                self._w, "style", "-id", "author" + str(self.style_count).zfill(4), data
-            )
-        else:
-            self.tk.call(self._w, "style", data)
+        try:
+            if sheetid and importcmd:
+                self.tk.call(
+                    self._w, "style", "-id", sheetid, "-importcmd", importcmd, data
+                )
+            elif override:
+                self.style_count += 1
+                self.tk.call(
+                    self._w, "style", "-id", "author" + str(self.style_count).zfill(4), data
+                )
+            else:
+                self.tk.call(self._w, "style", data)
+        except tk.TclError:
+            # the widget doesn't exist anymore
+            pass
 
     def reset(self):
         "Reset the widget."
@@ -621,7 +634,7 @@ class TkinterWeb(tk.Widget):
                     )
                     self.loaded_images.add(image)
         elif not self.ignore_invalid_images:
-            image, error = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled)
+            image, error = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
             self.loaded_images.add(image)
 
     def fetch_images(self, url, name, urltype):
@@ -654,7 +667,7 @@ class TkinterWeb(tk.Widget):
     def finish_fetching_images(self, data, name, filetype, url):
         try:
             image, error = data_to_image(
-                data, name, filetype, self._image_inversion_enabled
+                data, name, filetype, self._image_inversion_enabled, self.dark_theme_limit
             )
             
             if image:
@@ -1001,6 +1014,14 @@ class TkinterWeb(tk.Widget):
                 return
             self.yview_scroll(int(-1*event.delta/30), "units")
 
+
+    def _finish_posting_event(self, event):
+        try:
+            self.event_generate(event)
+        except tk.TclError:
+            # the widget doesn't exist anymore
+            pass
+
     def _generate_altered_colour(self, match, matchtype=1):
         "Invert document colours. Highly experimental."
         colors = match.group(2).replace("\n", "")
@@ -1173,13 +1194,16 @@ class TkinterWeb(tk.Widget):
 
         src = self.get_node_attribute(node, "src")
         srcdoc = self.get_node_attribute(node, "srcdoc")
+        scrolling = "auto"
+        if self.get_node_attribute(node, "scrolling") == "no":
+            scrolling = False
 
         if srcdoc:
-            self._create_iframe(node, None, srcdoc)
+            self._create_iframe(node, None, srcdoc, scrolling)
         elif src and (src != self.base_url):
             src = self.resolve_url(src)
             self.post_message(f"Creating iframe from {shorten(src)}")
-            self._create_iframe(node, src)
+            self._create_iframe(node, src, vertical_scrollbar=scrolling)
 
     def _on_object(self, node):
         "Handle <object> elements."
@@ -1235,7 +1259,7 @@ class TkinterWeb(tk.Widget):
 
                     if data and filetype.startswith("image"):
                         image, error = data_to_image(
-                            data, name, filetype, self._image_inversion_enabled
+                            data, name, filetype, self._image_inversion_enabled, self.dark_theme_limit
                         )
                         self.loaded_images.add(image)
                         self.tk.call(
@@ -1782,10 +1806,13 @@ class TkinterWeb(tk.Widget):
             if parent:
                 self._handle_recursive_hovering(parent, count - 1)            
 
-    def _create_iframe(self, node, url, html=None):
+    def _create_iframe(self, node, url, html=None, vertical_scrollbar="auto"):
         if self.embed_obj:
             widgetid = self.embed_obj(self,
                                         messages_enabled=self.messages_enabled,
+                                        message_func=self.message_func,
+                                        events_enabled=self.events_enabled,
+                                        vertical_scrollbar=vertical_scrollbar,
                                         overflow_scroll_frame=self,
                                         stylesheets_enabled = self.stylesheets_enabled,
                                         images_enabled = self.images_enabled,
@@ -1811,7 +1838,7 @@ class TkinterWeb(tk.Widget):
             if html:
                 widgetid.load_html(html, url)
             elif url:
-                widgetid.load_html("<p>Loading...</p>")
+                widgetid.load_html(BUILTIN_PAGES["about:loading"].format(self.motion_frame_bg, "black"))
                 widgetid.load_url(url)
 
             self.handle_node_replacement(

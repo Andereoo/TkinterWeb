@@ -58,8 +58,7 @@ class HTMLDocument:
 
         :rtype: :class:`HTMLElement`"""
         return HTMLElement(
-            self.html,
-            self.html.tk.eval(f"""set body [lindex [[{self.html} node] children] 1]"""),
+            self, self.html.tk.eval(f"""set body [lindex [[{self.html} node] children] 1]"""),
         )
         #return self.querySelector("body")
 
@@ -69,8 +68,7 @@ class HTMLDocument:
 
         :rtype: :class:`HTMLElement`"""
         return HTMLElement(
-            self.html,
-            self.html.tk.eval(f"""set root [lindex [{self.html} node] 0]"""),
+            self, self.html.tk.eval(f"""set root [lindex [{self.html} node] 0]"""),
         )
     
     def createElement(self, tagname):  # taken from hv3_dom_core.tcl line 214
@@ -80,7 +78,7 @@ class HTMLDocument:
         :type tagname: str
         :rtype: :class:`HTMLElement`"""
         return HTMLElement(
-            self.html,
+            self,
             self.html.tk.eval("""
             set node [%s fragment "<%s>"]
             if {$node eq ""} {error "DOMException NOT_SUPPORTED_ERR"}

@@ -372,54 +372,54 @@ Return type
 Returns the element under the mouse. Useful for creating right-click menus or displaying hints when the mouse moves.
 
 Parameters
-* **ignore_text_nodes** *(boolean)* - If True, text nodes (i.e. the contents of a <p> element) will be ignored and their parent node returned. It is generally best to leave leave this set to True.
+* **ignore_text_nodes** *(boolean)* - If True, text nodes (i.e. the contents of a `<p>` element) will be ignored and their parent node returned. It is generally best to leave leave this set to True.
 
 Return type
 * *HTMLElement*
 
 ---
-#### `screenshot_page(self, file=None, full=False)`
+#### `screenshot_page(self, filename=None, full=False)`
 Take a screenshot.
 On Windows, this method requires experimental mode to be enabled.
 This command should be used with care, particularily if `full` is set to True, as large documents can result in very large images that take a long time to create and consume large amounts of memory. 
 
 Parameters
-* **file** *(string)* - Specifies the file path to save the screenshot to. If None, the image is not saved to the disk.
+* **filename** *(string)* - Specifies the file path to save the screenshot to. If None, the image is not saved to the disk.
 * **full** *(boolean)* - If True, the entire page is captured. If False, only the visible content is captured. 
 
 Return type
 * *PIL.Image*
 
 ---
-#### `print_page(self, file=None, cnf={}, **kwargs)`
+#### `print_page(self, filename=None, cnf={}, **kwargs)`
 Print the document to a PostScript file.
 This method is experimental and requires experimental mode to be enabled.
 
 Parameters
-* **file** *(string)* - Specifies the file path to print the page to. If None, the document is not saved to the disk.
+* **filename** *(string)* - Specifies the file path to print the page to. If None, the document is not saved to the disk.
 * **cnf |= kwargs** *(boolean)* - Valid options are colormap, colormode, file, fontmap, height, pageanchor, pageheight, pagesize (can be A3, A4, A5, LEGAL, and LETTER), pagewidth, pagex, pagey, nobg, noimages, rotate, width, x, and y. 
 
 Return type
 * *string*
 
 ---
-#### `save_page(self, file=None)`
+#### `save_page(self, filename=None)`
 Save the page as an HTML file.
 
 Parameters
-* **file** *(string)* - Specifies the file path to print the page to. If None, the document is not saved to the disk.
+* **filename** *(string)* - Specifies the file path to print the page to. If None, the document is not saved to the disk.
 
 Return type
 * *string*
 ---
 
-#### `snapshot_page(self, file=None, allow_agent=False)`
+#### `snapshot_page(self, filename=None, allow_agent=False)`
 Save a snapshot of the document. Unlike `save_page`, which returns the original document, `snapshot_page` returns the page as rendered. 
 `<link>` elements are ignored and instead one `<style>` element contains all of the necessary CSS information for the document.
 This can be useful for saving documents for offline use.
 
 Parameters
-* **file** *(string)* - Specifies the file path to print the page to. If None, the document is not saved to the disk.
+* **filename** *(string)* - Specifies the file path to print the page to. If None, the document is not saved to the disk.
 * **allow_agent** *(string)* - If True, CSS properties added by the rendering engine (eg. those affected by the widget's `default_style` option) are also included.
 
 Return type

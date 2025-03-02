@@ -43,6 +43,10 @@ def camel_case_to_property(string):
 
 
 class HTMLDocument:
+    """Access this class via the :attr:`~tkinterweb.HtmlFrame.document` property of the :attr:`~tkinterweb.HtmlFrame` and :attr:`~tkinterweb.HtmlLabel` widgets.
+    
+    :param htmlwidget: The :class:`~tkinterweb.TkinterWeb` instance this class is tied to.
+    :type htmlwidget: :class:`~tkinterweb.TkinterWeb`"""
     def __init__(self, htmlwidget):
         self.html = htmlwidget
         self.html.tk.createcommand("parse_fragment", self.html.parse_fragment)
@@ -80,7 +84,9 @@ class HTMLDocument:
 
     @property
     def body(self):  # taken from hv3_dom_html.tcl line 161
-        "Return the document body element"
+        """The document body element.
+
+        :rtype: :class:`HTMLElement`"""
         return HTMLElement(
             self.html,
             self.html.tk.eval(f"""set body [lindex [[{self.html} node] children] 1]"""),
@@ -89,42 +95,97 @@ class HTMLDocument:
 
     @property
     def documentElement(self):
-        "Return the document root element"
+        """The document root element.
+
+        :rtype: :class:`HTMLElement`"""
         return HTMLElement(
             self.html,
             self.html.tk.eval(f"""set root [lindex [{self.html} node] 0]"""),
         )
+    
+    def createElement(self, tagname):  # taken from hv3_dom_core.tcl line 214
+        """Create and return a new HTML element with the given tag name.
+
+        :param tagname: The new element's HTML tag.
+        :type tagname: str
+        :rtype: :class:`HTMLElement`"""
+        return HTMLElement(
+            self.html,
+            self.html.tk.eval("""
+            set node [%s fragment "<%s>"]
+            if {$node eq ""} {error "DOMException NOT_SUPPORTED_ERR"}
+            return $node
+            """ % (self.html, tagname)),
+        )
+
+    def createTextNode(self, text):
+        """Create and return a new text node with the given text content.
+        
+        :param text: The text content of the new node.
+        :type text: str
+        :rtype: :class:`HTMLElement`"""
+        return HTMLElement(self.html, generate_text_node(self.html, text))
 
     def getElementById(self, query):
-        "Return an element given an id"
+        """Return an element given an id.
+        
+        :param query: The element id to be searched for.
+        :type query: str
+        :rtype: :class:`HTMLElement`
+        :raises: :py:class:`tkinter.TclError`"""
         newquery = f"[id='{query}']"
         node = self.html.search(newquery, index=0)
         return HTMLElement(self, node)
 
     def getElementsByClassName(self, query):
-        "Return a list of elements given a class name"
+        """Return all elements that match given a class name.
+        
+        :param query: The class to be searched for.
+        :type query: str
+        :rtype: tuple[:class:`HTMLElement`]
+        :raises: :py:class:`tkinter.TclError`"""
         newquery = [f".{i}" for i in query.split()]
         nodes = self.html.search(" ".join(newquery))
         return tuple(HTMLElement(self, node) for node in nodes)
 
     def getElementsByName(self, query):
-        "Return a list of elements matching a given name attribute"
+        """Return all elements that match a given given name attribute.
+        
+        :param query: The name to be searched for.
+        :type query: str
+        :rtype: tuple[:class:`HTMLElement`]
+        :raises: :py:class:`tkinter.TclError`"""
         newquery = f"[name='{query}']"
         nodes = self.html.search(newquery)
         return tuple(HTMLElement(self, node) for node in nodes)
 
     def getElementsByTagName(self, query):
-        "Return a list of elements given a tag name"
+        """Return all elements that match a given tag name.
+        
+        :param query: The tag to be searched for.
+        :type query: str
+        :rtype: tuple[:class:`HTMLElement`]
+        :raises: :py:class:`tkinter.TclError`"""
         nodes = self.html.search(query)
         return tuple(HTMLElement(self, node) for node in nodes)
 
     def querySelector(self, query):
-        "Return the first element that matches a given CSS selector"
+        """Return the first element that matches a given CSS selector.
+        
+        :param query: The CSS selector to be searched for.
+        :type query: str
+        :rtype: :class:`HTMLElement`
+        :raises: :py:class:`tkinter.TclError`"""
         node = self.html.search(query, index=0)
         return HTMLElement(self, node)
 
     def querySelectorAll(self, query):
-        "Return a list of elements that match a given CSS selector"
+        """Return all elements that match a given CSS selector.
+        
+        :param query: The CSS selector to be searched for.
+        :type query: str
+        :rtype: tuple[:class:`HTMLElement`]
+        :raises: :py:class:`tkinter.TclError`"""
         nodes = self.html.search(query)
         return tuple(HTMLElement(self, node) for node in nodes)
     
@@ -160,6 +221,12 @@ class HTMLDocument:
 
 
 class CSSStyleDeclaration:
+    """Access this class via the :attr:`~tkinterweb.dom.HTMLElement.style` property of the :attr:`~tkinterweb.dom.HTMLElement` class.
+    
+    :param htmlwidget: The :class:`~tkinterweb.TkinterWeb` instance this class is tied to.
+    :type htmlwidget: :class:`~tkinterweb.TkinterWeb`
+    :param node: The Tkhtml3 node this class should modify.
+    :type node: Tkhtml3 node"""
     def __init__(self, htmlwidget, node):
         self.html = htmlwidget
         self.node = node
@@ -187,25 +254,46 @@ class CSSStyleDeclaration:
 
     @property
     def cssText(self):
+        """Return the text of the element's inline style declaration.
+        
+        :rtype: str"""
         return self.html.get_node_attribute(self.node, "style")
     
     @property
     def length(self):
+        """Return the number of style declarations in the element's inline style declaration.
+        
+        :rtype: int"""
         return len(self.html.get_node_properties(self.node, "-inline"))
     
     @property
     def cssProperties(self): # not a JS function, but could be useful
+        """Return all computed properties for the element.
+        
+        :rtype: dict"""
         return self.html.get_node_properties(self.node)
     
     @property # not a JS function, but could be useful
     def cssInlineProperties(self):
+        """Return all inline properties for the element. Similar to the :attr:`cssText` property, but formatted as a dictionary.
+        
+        :rtype: dict"""
         return self.html.get_node_properties(self.node, "-inline")
     
 
 class HTMLElement:
+<<<<<<< HEAD
     def __init__(self, dom, node):
         self.dom = dom
         self.html = dom.html
+=======
+    """:param htmlwidget: The :class:`~tkinterweb.TkinterWeb` instance this class is tied to.
+    :type htmlwidget: :class:`~tkinterweb.TkinterWeb`
+    :param node: The Tkhtml3 node this class represents.
+    :type node: Tkhtml3 node"""
+    def __init__(self, htmlwidget, node):
+        self.html = htmlwidget
+>>>>>>> ced842f1523235d9dacc362e3a6caa7a1df4ab8e
         self.node = node
         self.styleCache = None  # initialize style as None
         self.html.bbox(node)  # check if the node is valid
@@ -216,13 +304,20 @@ class HTMLElement:
         
     @property
     def style(self):
+        """Manage the element's styling.
+
+        :rtype: :class:`~tkinterweb.dom.CSSStyleDeclaration`
+        """
         if self.styleCache is None:  # lazy loading of style
             self.styleCache = CSSStyleDeclaration(self.html, self.node)
         return self.styleCache
 
     @property
     def innerHTML(self):  # taken from hv3_dom2.tcl line 61
-        "Get the inner HTML of an element"
+        """Get and set the inner HTML of the element. Cannot be used on ``<html>`` elements.
+        
+        :rtype: str
+        :raises: :py:class:`tkinter.TclError`"""
         return self.html.tk.eval("""
             set node %s
             if {[$node tag] eq ""} {error "$node is not an HTMLElement"}
@@ -263,8 +358,16 @@ class HTMLElement:
         )
 
     @property
+<<<<<<< HEAD
     def textContent(self):  # Original for this project
         "Get the text content of an element."
+=======
+    def textContent(self):  # original for this project
+        """Get and set the text content of an element. Cannot be used on ``<html>`` elements.
+        
+        :rtype: str
+        :raises: :py:class:`tkinter.TclError`"""
+>>>>>>> ced842f1523235d9dacc362e3a6caa7a1df4ab8e
         return self.html.tk.eval("""
             proc get_child_text {node} {
                 set txt ""
@@ -301,15 +404,21 @@ class HTMLElement:
 
     @property
     def attributes(self):
+        """Return the attributes of the element.
+        
+        :rtype: str"""
         return self.html.get_node_attributes(self.node)
 
     @property
     def tagName(self):
-        "Return the tag name of the element"
+        """Return the tag name of the element"
+
+        :rtype: str"""
         return self.html.get_node_tag(self.node)
 
     @property
     def parentElement(self):
+<<<<<<< HEAD
         "Return the element's parent element"
         return HTMLElement(self, self.html.get_node_parent(self.node))
 
@@ -317,13 +426,38 @@ class HTMLElement:
     def children(self):
         "Return the element's children elements"
         return [HTMLElement(self, i) for i in self.html.get_node_children(self.node)]
+=======
+        """Get the element's parent element.
+        
+        :rtype: :class:`HTMLElement`
+        :raises: :py:class:`tkinter.TclError`"""
+        return HTMLElement(self.html, self.html.get_node_parent(self.node))
+
+    @property
+    def children(self):
+        """Get the element's children elements.
+        
+        :rtype: list(:class:`HTMLElement`)
+        :raises: :py:class:`tkinter.TclError`"""
+        return [HTMLElement(self.html, i) for i in self.html.get_node_children(self.node)]
+>>>>>>> ced842f1523235d9dacc362e3a6caa7a1df4ab8e
 
     def getAttribute(self, attribute):
-        "Get the value of the given attribute"
+        """Return the value of the given attribute..
+        
+        :param attribute: The attribute to return.
+        :type attribute: str
+        :rtype: str"""
         return self.html.get_node_attribute(self.node, attribute)
 
     def setAttribute(self, attribute, value):
-        "Set the value of the given attribute"
+        """Set the value of the given attribute..
+        
+        :param attribute: The attribute to return.
+        :type attribute: str
+        :param value: The new value of the given attribute.
+        :type value: str
+        :rtype: str"""
         self.html.set_node_attribute(self.node, attribute, value)
 
         tag = self.tagName
@@ -335,52 +469,93 @@ class HTMLElement:
             self.html._on_iframe(self.node)
         
     def remove(self):
-        "Delete the element"
+        """Delete the element. Cannot be used on ``<html>`` or ``<body>`` elements.
+
+        :raises: :py:class:`tkinter.TclError`"""
         self.html.delete_node(self.node)
 
     def appendChild(self, children):
-        "Insert the specified children into the element"
+        """Insert the specified children into the element.
+        
+        :param children: The element(s) to be added into the element.
+        :type children: list, tuple, or HTMLElement"""
         self._insert_children(children)
 
     def insertBefore(self, children, before):
-        "Insert the specified children before a specified child element"
+        """Insert the specified children before a given child element.
+        
+        :param children: The element(s) to be added into the element.
+        :type children: list, tuple, or HTMLElement
+        :param before: The child element that the added elements should be placed before.
+        :type before: HTMLElement
+        :raises: :py:class:`tkinter.TclError`"""
         self._insert_children(children, before)
 
     def getElementById(self, query):
-        "Return an element given an id"
+        """Return an element that is a child of the current element and matches the given id.
+        
+        :param query: The element id to be searched for.
+        :type query: str
+        :rtype: :class:`HTMLElement`
+        :raises: :py:class:`tkinter.TclError`"""
         newquery = f"[id='{query}']"
         node = self.html.search(newquery, index=0, root=self.node)
         return HTMLElement(self, node)
 
     def getElementsByClassName(self, query):
-        "Return a list of elements given a class name"
+        """Return all elements that are children of the current element and match the given class name.
+        
+        :param query: The class to be searched for.
+        :type query: str
+        :rtype: tuple[:class:`HTMLElement`]
+        :raises: :py:class:`tkinter.TclError`"""
         newquery = [f".{i}" for i in query.split()]
         nodes = self.html.search(" ".join(newquery), root=self.node)
         return tuple(HTMLElement(self, node) for node in nodes)
 
     def getElementsByName(self, query):
-        "Return a list of elements matching a given name attribute"
+        """Return all elements that are children of the current element and match the given name attribute.
+        
+        :param query: The name to be searched for.
+        :type query: str
+        :rtype: tuple[:class:`HTMLElement`]
+        :raises: :py:class:`tkinter.TclError`"""
         newquery = f"[name='{query}']"
         nodes = self.html.search(newquery, root=self.node)
         return tuple(HTMLElement(self, node) for node in nodes)
 
     def getElementsByTagName(self, query):
-        "Return a list of elements given a tag name"
+        """Return all elements that are children of the current element and match the given tag name.
+        
+        :param query: The tag to be searched for.
+        :type query: str
+        :rtype: tuple[:class:`HTMLElement`]
+        :raises: :py:class:`tkinter.TclError`"""
         nodes = self.html.search(query, root=self.node)
         return tuple(HTMLElement(self, node) for node in nodes)
 
     def querySelector(self, query):
-        "Return the first element that matches a given CSS selector"
+        """Return the first element that are children of the current element and match the given CSS selector.
+        
+        :param query: The CSS selector to be searched for.
+        :type query: str
+        :rtype: :class:`HTMLElement`
+        :raises: :py:class:`tkinter.TclError`"""
         node = self.html.search(query, index=0, root=self.node)
         return HTMLElement(self, node)
 
     def querySelectorAll(self, query):
-        "Return a list of elements that match a given CSS selector"
+        """Return all elements that are children of the current element and match the given CSS selector.
+        
+        :param query: The CSS selector to be searched for.
+        :type query: str
+        :rtype: tuple[:class:`HTMLElement`]
+        :raises: :py:class:`tkinter.TclError`"""
         nodes = self.html.search(query, root=self.node)
         return tuple(HTMLElement(self, node) for node in nodes)
     
     def scrollIntoView(self):
-        "Scroll the viewport so that this element is visible"
+        "Scroll the viewport so that this element is visible."
         self.html.yview(self.node)
     
     def _insert_children(self, children, before=None):

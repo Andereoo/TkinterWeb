@@ -286,9 +286,9 @@ class HTMLElement:
     :type htmlwidget: :class:`~tkinterweb.TkinterWeb`
     :param node: The Tkhtml3 node this class represents.
     :type node: Tkhtml3 node"""
-    def __init__(self, tkw, node):
-        self.tkw = tkw
-        self.html = tkw.html
+    def __init__(self, htmlFrame, node):
+        self.tkw = htmlFrame
+        self.html = htmlFrame.html
         self.node = node
         self.styleCache = None  # initialize style as None
         self.html.bbox(node)  # check if the node is valid

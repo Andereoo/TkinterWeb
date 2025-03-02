@@ -298,7 +298,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
 
     @property
     def base_url(self):
-        """The documents's base url. This is automatically generated from :prop:`HtmlFrame.current_url` but will also change if explicitly specified by the document.
+        """The documents's base url. This is automatically generated from :prop:`~tkinterweb.HtmlFrame.current_url` but will also change if explicitly specified by the document.
         
         :rtype: str"""
         return self._html.base_url
@@ -541,7 +541,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
     def screenshot_page(self, filename=None, full=False):
         """Take a screenshot. 
         
-        On Windows, this method requires experimental mode to be enabled. This command should be used with care on large documents if ``full`` is set to True, as it may generate in very large images that take a long time to create and consume large amounts of memory.
+        On Windows, this method requires experimental mode to be enabled. This command should be used with care on large documents if :attr:`full` is set to True, as it may generate in very large images that take a long time to create and consume large amounts of memory.
         
         :param filename: The file path to save the screenshot to. If None, the image is not saved to the disk.
         :type filename: str or None, optional

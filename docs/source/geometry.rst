@@ -22,9 +22,9 @@ To place a Tkinter widget inside an HTML document, add the ``data=[yourwidget]``
 >>> source_html = f"<i>This is some text</i><br><object data={yourbutton}></object>"
 >>> yourframe.load_html(source_html) # or use add_html to add onto the existing document
   
-* Add the ``allowscrolling`` attribute to allow scrolling the document when the mouse is over the button. 
-* Add the ``handledelete`` attribute to automatically call :meth:`~tkinter.Widget.destroy` on the widget when it is removed from the page (i.e. if another webpage is loaded).
-* Add the ``allowstyling`` attribute to automatically change the widget's background color, text color, and font to match the containing HTML element.
+* Add the :attr:`allowscrolling` attribute to allow scrolling the document when the mouse is over the button. 
+* Add the :attr:`handledelete` attribute to automatically call :meth:`~tkinter.Widget.destroy` on the widget when it is removed from the page (i.e. if another webpage is loaded).
+* Add the :attr:`allowstyling` attribute to automatically change the widget's background color, text color, and font to match the containing HTML element.
 
 Widget position and sizing can be modified using CSS styling on the widget's associated ``<object>`` element.
 

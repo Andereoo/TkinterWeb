@@ -58,7 +58,7 @@ Renamed
 * ``HtmlFrame.get_currently_selected_text()`` -> :meth:`.HtmlFrame.get_selection`
 
 * ``TkwDocumentObjectModel`` -> :class:`.HTMLDocument`
-* ``HtmlElement`` -> :class:`HTMLElement`
+* ``HtmlElement`` -> :class:`.HTMLElement`
 
 * ``HtmlElement.style()`` -> :attr:`.HTMLElement.style`
 * ``HtmlElement.innerHTML()`` -> :attr:`.HTMLElement.innerHTML`

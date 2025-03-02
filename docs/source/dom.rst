@@ -13,7 +13,7 @@ Overview
 How-To
 --------
 
-To manipulate the Document Object Model, use the :attr:`~tkinterweb.HtmlFrame.document` property of your :class:`tkinterweb.HtmlFrame` or :class:`tkinterweb.HtmlLabel` widget (new since version 3.25). For example, to create a heading with blue text inside of an element with the id "container", one can use the following:
+To manipulate the Document Object Model, use the :attr:`HtmlFrame.document` property of your :class:`tkinterweb.HtmlFrame` or :class:`tkinterweb.HtmlLabel` widget (new since version 3.25). For example, to create a heading with blue text inside of an element with the id "container", one can use the following:
 
 >>> yourhtmlframe = tkinterweb.HtmlFrame(root)
 >>> yourhtmlframe.load_html("<div id='container'><p>Test</p></div>")
@@ -34,5 +34,3 @@ To register a callback for ``<script>`` elements, use the :attr:`on_script` para
 See the :doc:`api/htmldocument` for a complete list of commands.
 
 Please report bugs or request new features on the `issues page <https://github.com/Andereoo/TkinterWeb/issues>`_.
-
-Special thanks to `Zamy846692 <https://github.com/Zamy846692>`_ for the help making this happen!

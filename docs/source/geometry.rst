@@ -1,6 +1,9 @@
 Geometry Management with TkinterWeb
 ===================================
 
+.. warning::
+    The API changed significantly in version 4.0.0. See :doc:`upgrading` for details.
+
 Overview
 --------
 
@@ -20,10 +23,10 @@ To place a Tkinter widget inside an HTML document, add the ``data=[yourwidget]``
 >>> yourframe.load_html(source_html) # or use add_html to add onto the existing document
   
 * Add the ``allowscrolling`` attribute to allow scrolling the document when the mouse is over the button. 
-* Add the ``handledelete`` attribute to automatically call `destroy()` on the widget when it is removed from the page (i.e. if another webpage is loaded).
-* Add the ``allowstyling`` attribute to automatically change the widget's background color, text color, and font to match the HTML element containing it.
+* Add the ``handledelete`` attribute to automatically call :meth:`~tkinter.Widget.destroy` on the widget when it is removed from the page (i.e. if another webpage is loaded).
+* Add the ``allowstyling`` attribute to automatically change the widget's background color, text color, and font to match the containing HTML element.
 
-Widget position and sizing can be modified through CSS styling on the containing element.
+Widget position and sizing can be modified using CSS styling on the widget's associated ``<object>`` element.
 
 Widget Handling
 ---------------
@@ -33,7 +36,7 @@ Use the methods outlined in :doc:`dom` (new since version 3.25) and in the :doc:
 Example
 -------
 
-This code will display a blue button on the left, an image in the center, and an orange button on the right. Clicking a button will flip it's location with the other button:
+This code will display a blue button on the left, an image in the center, and an orange button on the right. Clicking a button will flip its location with the other button:
 
 >>> from tkinterweb import HtmlFrame
 >>> import tkinter as tk

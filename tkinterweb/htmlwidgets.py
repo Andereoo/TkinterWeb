@@ -24,32 +24,32 @@ class HtmlFrame(ttk.Frame):
 
     The following flags are optional and can be used to register callbacks:
 
-    :param on_navigate_fail: The function to be called when a url cannot be loaded. The target url, error, and code will be passed as arguments. By default the error page is shown.
-    :type on_navigate_fail: callable
+    :param on_navigate_fail: The function to be called when a url cannot be loaded. The target url, error, and code will be passed as arguments. By default the TkinterWeb error page is shown.
+    :type on_navigate_fail: function
     :param on_link_click: The function to be called when a hyperlink is clicked. The target url will be passed as an argument. By default the url is navigated to.
-    :type on_link_click: callable
-    :param on_form_submit: The function to be called when a form is submitted. The target url, data, and method (GET or POST) will be passed as arguments. By default the response is loaded.
-    :type on_form_submit: callable
-    :param on_script: The function to be called when a <script> element is encountered. This can be used to connect a script handler, such as a JavaScript engine. The script element's attributes and contents will be passed as arguments.
-    :type on_script: callable
+    :type on_link_click: function
+    :param on_form_submit: The function to be called when a form is submitted. The target url, data, and method ("GET" or "POST") will be passed as arguments. By default the response is loaded.
+    :type on_form_submit: function
+    :param on_script: The function to be called when a ``<script>`` element is encountered. This can be used to connect a script handler, such as a JavaScript engine. The script element's attributes and contents will be passed as arguments.
+    :type on_script: function
     :param on_resource_setup: The function to be called when an image or stylesheet load finishes. The resource's url, type ("stylesheet" or "image"), and whether setup was successful or not (True or False) will be passed as arguments.
-    :type on_resource_setup: callable
-    :param message_func: The function to be called when a debug message is issued. This only works if `messages_enabled` is set to True. The message will be passed as an argument. By default the message is printed.
-    :type message_func: callable
+    :type on_resource_setup: function
+    :param message_func: The function to be called when a debug message is issued. This only works if :attr:`messages_enabled` is set to True. The message will be passed as an argument. By default the message is printed.
+    :type message_func: function
 
     The following flags are optional and can be used to change the widget's appearance:
 
-    :param visited_links: The list used to determine if a hyperlink should be given the CSS `:visited` flag.
+    :param visited_links: The list used to determine if a hyperlink should be given the CSS ``:visited`` flag.
     :type visited_links: list
     :param zoom: The page zoom multiplier.
     :type zoom: float
     :param fontscale: The page fontscale multiplier.
     :type fontscale: float
-    :param vertical_scrollbar: Show the vertical scrollbar. Consider using the CSS overflow property on the ``<html>`` or ``<body>`` element instead.
+    :param vertical_scrollbar: Show the vertical scrollbar. Consider using the CSS ``overflow`` property on the ``<html>`` or ``<body>`` element instead.
     :type vertical_scrollbar: bool or "auto"
-    :param horizontal_scrollbar: Show the horizontal scrollbar. It is usually best to leave this hidden. Consider adding the ``tkinterweb-overflow-x="scroll" | "auto" | "hidden"`` attribute on the <html> or <body> element instead.
+    :param horizontal_scrollbar: Show the horizontal scrollbar. It is usually best to leave this hidden. Consider adding the ``tkinterweb-overflow-x="scroll" | "auto" | "hidden"`` attribute on the ``<html>`` or ``<body>`` element instead.
     :type horizontal_scrollbar: bool or "auto"
-    :param shrink: If False, the widget's width and height are set by the width and height options as per usual. You may still need to call grid_propagate(0) or pack_propagate(0) for Tkinter to respect the set width and height. If this option is set to True, the widget's requested width and height are determined by the current document.
+    :param shrink: If False, the widget's width and height are set by the width and height options as per usual. You may still need to call ``grid_propagate(0)`` or ``pack_propagate(0)`` for Tkinter to respect the set width and height. If this option is set to True, the widget's requested width and height are determined by the current document.
     :type shrink: bool
 
     The following flags are optional and can be used to enable or disable certain features:
@@ -85,7 +85,7 @@ class HtmlFrame(ttk.Frame):
 
     The following flags are optional and can be used to change widget colors and styling:
 
-    :param about_page_background: The default background color of built-in pages. By default this matches the :py:func:`ttk.Frame` color to better integrate custom documents with Tkinter.
+    :param about_page_background: The default background color of built-in pages. By default this matches the :py:func:`ttk.Frame` background color to better integrate custom documents with Tkinter.
     :type about_page_background: str
     :param about_page_foreground: The default text color of built-in pages.
     :type about_page_foreground: str
@@ -108,16 +108,16 @@ class HtmlFrame(ttk.Frame):
 
     The following flags are optional and can be used to change download behaviour:
 
-    :param insecure_https: If True, website certificate errors are ignored. This can be used to work around issues where `ssl` is unable to get a page's certificate on some older Mac systems.
+    :param insecure_https: If True, website certificate errors are ignored. This can be used to work around issues where :py:mod:`ssl` is unable to get a page's certificate on some older Mac systems.
     :type insecure_https: bool
-    :param headers: The headers used by urllib's Request when fetching a resource (dict).
+    :param headers: The headers used by urllib's :py:class:`~urllib.request.Request` when fetching a resource.
     :type headers: dict
 
     The following flags are optional and can be used to change HTML rendering behaviour:
 
     :param experimental: If True, experimental features will be enabled. You will need to compile the cutting-edge Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental and replace the default Tkhtml binary for your system with the experimental version. Unless you need to screenshot the page on Windows or print your page for now it is likely best to use the default Tkhtml binary and leave this setting alone.
     :type experimental: bool
-    :param use_prebuilt_tkhtml: If True (the default), the Tkhtml binary for your system supplied by TkinterWeb will be used. If your system isn't supported and you don't want to compile the Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml yourself, you could try installing Tkhtml3 system-wide and set use_prebuilt_tkhtml to False. Note that some crash prevention features will no longer work.
+    :param use_prebuilt_tkhtml: If True (the default), the Tkhtml binary for your system supplied by TkinterWeb will be used. If your system isn't supported and you don't want to compile the Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml yourself, you could try installing Tkhtml3 system-wide and set :attr:`use_prebuilt_tkhtml` to False. Note that some crash prevention features will no longer work.
     :type use_prebuilt_tkhtml: bool
     :param parsemode: The parse mode. In "html" mode, explicit XML-style self-closing tags are not handled specially and unknown tags are ignored. "xhtml" mode is similar to "html" mode except that explicit self-closing tags are recognized. "xml" mode is similar to "xhtml" mode except that XML CDATA sections and unknown tag names are recognized. It is usually best to leave this setting alone.
     :type parsemode: "xml", "xhtml", or "html"
@@ -270,7 +270,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
     
     @property
     def icon(self):
-        """The document's icon url.
+        """The document icon's url.
         
         :rtype: str"""
         return self._html.icon
@@ -284,9 +284,9 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
     
     @property
     def document(self):
-        """The DOM manager. Use this to access :py:class:`HTMLDocument` methods to manupulate the DOM.
+        """The DOM manager. Use this to access :class:`~tkinterweb.dom.HTMLDocument` methods to manupulate the DOM.
         
-        :rtype: :class:`HTMLDocument`"""
+        :rtype: :class:`tkinterweb.dom.HTMLDocument`"""
         return self._document
     
     @property
@@ -298,7 +298,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
 
     @property
     def base_url(self):
-        """The documents's base url. This is automatically generated from `current_url` but will also change if explicitly specified by the document.
+        """The documents's base url. This is automatically generated from :prop:`HtmlFrame.current_url` but will also change if explicitly specified by the document.
         
         :rtype: str"""
         return self._html.base_url
@@ -352,9 +352,9 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         self.configure(**{key: value})
 
     def load_html(self, html_source, base_url=None):
-        """Clear the current page and parse the supplied HTML code.
+        """Clear the current page and parse the given HTML code.
         
-        :param html_source: HTML code to render.
+        :param html_source: The HTML code to render.
         :type html_source: str
         :param base_url: The base url to use when parsing stylesheets and images. If this argument is not supplied, it will be set to the current working directory.
         :type base_url: str, optional"""
@@ -395,7 +395,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         
         :param website_url: The url to load.
         :type website_url: str
-        :param decode: The decoding to use when loading the file.
+        :param decode: The decoding to use when loading the website.
         :type decode: str or None, optional
         :param force: Force the page to reload all elements.
         :type force: bool, optional"""
@@ -407,7 +407,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         self.load_url(website_url, decode, force)
 
     def load_url(self, url, decode=None, force=False):
-        """Loads and parses HTML from the given url. 
+        """Loads and renders HTML from the given url. 
         
         A local file will be loaded if the url begins with "file://". 
         A website will be loaded if the url begins with "https://" or "http://". 
@@ -416,7 +416,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         
         :param url: The url to load.
         :type url: str
-        :param decode: The decoding to use when loading the file.
+        :param decode: The decoding to use when loading the url.
         :type decode: str or None, optional
         :param force: Force the page to reload all elements.
         :type force: bool, optional"""
@@ -453,8 +453,8 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         :type url: str
         :param data: The data to pass to the server.
         :type data: str
-        :param method: The form submission method. This may be either "GET" or "POST".
-        :type method: str, optional
+        :param method: The form submission method.
+        :type method: "GET" or "POST", optional
         :param decode: The decoding to use when loading the file.
         :type decode: str or None, optional"""
         self._previous_url = self._current_url
@@ -469,7 +469,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
             self._continue_loading(url, data, method, decode)
 
     def add_html(self, html_source):
-        """Parse HTML and add it to the end of the current document. Unlike ``load_html``, ``add_html`` adds rendered HTML code without clearing the original document.
+        """Parse HTML and add it to the end of the current document. Unlike :meth:`HtmlFrame.load_html`, :meth:`HtmlFrame.add_html` adds rendered HTML code without clearing the original document.
         
         :param html_source: The HTML code to render.
         """
@@ -486,7 +486,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         self._handle_resize(force=True)
 
     def add_css(self, css_source):
-        """Send CSS stylesheets to the parser. This can be used to alter the appearance of already loaded documents.
+        """Send CSS stylesheets to the parser. This can be used to alter the appearance of already-loaded documents.
         
         :param css_source: The CSS code to parse.
         :type url: str"""
@@ -496,7 +496,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
             self._html.parse_css(data=css_source, override=True)
 
     def stop(self):
-        """Stop loading this page. This will abandon all pending requests."""
+        """Stop loading this page and abandon all pending requests."""
         if self._thread_in_progress:
             self._thread_in_progress.stop()
         self._html.stop()
@@ -517,7 +517,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         :type highlight_all: bool, optional
         :param detailed: If True, this method will also return information on the nodes that were found. See `bug #93 <https://github.com/Andereoo/TkinterWeb/issues/93#issuecomment-2052516492>`_ for more details.
         :type detailed: bool, optional
-        :return: The number of matches. If `detailed` is True, also returns a Tkhtml3 node and a list of Tkhtml3 nodes.
+        :return: The number of matches. If `detailed` is True, also returns selected match's Tkhtml3 node and a list of matching Tkhtml3 nodes.
         :rtype: int | int, Tkhtml3 node, list(Tkhtml3 node)"""
         nmatches, selected, matches = self._html.find_text(text, select, ignore_case, highlight_all)
         if detailed:
@@ -620,7 +620,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
                 
         :param filename: The file path to save the page to. If None, the image is not saved to the disk.
         :type filename: str or None, optional
-        :param allow_agent: If True, CSS properties added by the rendering engine (eg. those affected by the widget's ``default_style`` option) are also included.
+        :param allow_agent: If True, CSS properties added by the rendering engine (eg. those affected by the widget's :attr:`default_style` option) are also included.
         :type allow_agent: bool, optional
         :return: A string containing the page's rendered HTML/CSS code.
         :rtype: str"""
@@ -681,7 +681,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
     def resolve_url(self, url):
         """Generate a full url from the specified url. This can be used to generate full urls when given a relative url.
 
-        :param url: The url to modify as needed.
+        :param url: The url to modify if needed.
         :type url: str
         :return: The full, resolved url.
         :rtype: str"""
@@ -690,7 +690,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
     def yview(self, *args):
         """Adjust the viewport. 
         
-        This method uses the standard interface copied from the Tkinter Canvas and Text widgets. If a Tkhtml3 node is supplied as an argument, the document will scroll to the top of the given node."""
+        This method uses the standard interface copied from other built-in scrollable Tkinter widgets. Additionally, if a Tkhtml3 node is supplied as an argument, the document will scroll to the top of the given node."""
         self._html.yview(*args)
 
     def yview_moveto(self, number):
@@ -709,34 +709,34 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         :type what: str"""
         self._html.yview_scroll(number, what)
 
-    def replace_widget(self, widgetid, newwidgetid):
+    def replace_widget(self, old_widget, new_widget):
         """Removes the old widget from the document, and replaces it with the new widget. 
         
         If both widgets are already shown in the document, their locations will be swapped.
         
-        :param widgetid: The Tkinter widget to replace. This widget must be currently managed by TkinterWeb.
-        :type widgetid: :py:class:`tkinter.Widget`
-        :param newwidgetid: The new Tkinter widget to show. This may be any Tkinter widget.
-        :type newwidgetid: :py:class:`tkinter.Widget`"""
-        self._html.replace_widget(widgetid, newwidgetid)
+        :param old_widget: The Tkinter widget to replace. This widget must be currently managed by TkinterWeb.
+        :type old_widget: :py:class:`tkinter.Widget`
+        :param new_widget: The new Tkinter widget to show. This may be any Tkinter widget.
+        :type new_widget: :py:class:`tkinter.Widget`"""
+        self._html.replace_widget(old_widget, new_widget)
 
-    def replace_element(self, selector, widgetid):
+    def replace_element(self, selector, new_widget):
         """Replaces the content of the element matching the specified CSS selector with the specified widget. 
         
-        This command will scan the document for any elements that match the specified CSS selector. If multiple elements match the specified selector, only the first element will be replaced. For example, the following code will replace the 'text' HTML element with a button.
+        This command will scan the document for any elements that match the specified CSS selector. If multiple elements match the specified selector, only the first element will be replaced.
         
         :param selector: Specifies the CSS selector to search for.
         :type selector: str
-        :param newwidgetid: The new Tkinter widget to show. This may be any Tkinter widget.
-        :type newwidgetid: :py:class:`tkinter.Widget`"""
-        self._html.replace_element(selector, widgetid)
+        :param new_widget: The new Tkinter widget to show. This may be any Tkinter widget.
+        :type new_widget: :py:class:`tkinter.Widget`"""
+        self._html.replace_element(selector, new_widget)
         
-    def remove_widget(self, widgetid):
+    def remove_widget(self, old_widget):
         """Removes the specified widget from the document.
         
-        :param widgetid: The Tkinter widget to remove. This widget must be currently managed by TkinterWeb.
-        :type widgetid: :py:class:`tkinter.Widget`"""
-        self._html.remove_widget(widgetid)
+        :param old_widget: The Tkinter widget to remove. This widget must be currently managed by TkinterWeb.
+        :type old_widget: :py:class:`tkinter.Widget`"""
+        self._html.remove_widget(old_widget)
 
     def _check_value(self, old, new):
         expected_type = type(old)
@@ -882,7 +882,7 @@ Otherwise, use 'configure(insecure_https=True)' to ignore website certificates."
             self._accumulated_styles = []
 
 class HtmlLabel(HtmlFrame):
-    """The :class:`~tkinterweb.HtmlLabel` widget inherits from the :class:`HtmlFrame`. For a complete list of avaliable methods, configuration options, generated events, and state variables, see the :class:`HtmlFrame` docs.
+    """The :class:`HtmlLabel` widget inherits from the :class:`HtmlFrame`. For a complete list of avaliable methods, configuration options, generated events, and state variables, see the :class:`HtmlFrame` docs.
     
     This class also accepts one additional parameter:
 

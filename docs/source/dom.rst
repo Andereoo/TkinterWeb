@@ -13,7 +13,7 @@ Overview
 How-To
 --------
 
-To manipulate the Document Object Model, use the :attr:`HtmlFrame.document` property of your :class:`HtmlFrame` or :class:`HtmlLabel` widget (new since version 3.25). For example, to create a heading with blue text inside of an element with the id "container", one can use the following:
+To manipulate the Document Object Model, use the :attr:`~tkinterweb.HtmlFrame.document` property of your :class:`HtmlFrame` or :class:`HtmlLabel` widget (new since version 3.25). For example, to create a heading with blue text inside of an element with the id "container", one can use the following:
 
 >>> yourhtmlframe = tkinterweb.HtmlFrame(root)
 >>> yourhtmlframe.load_html("<div id='container'><p>Test</p></div>")

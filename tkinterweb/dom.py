@@ -59,7 +59,7 @@ def camel_case_to_property(string):
 
 
 class HTMLDocument:
-    """Access this class via the :attr:`HtmlFrame.document` property of the :attr:`HtmlFrame` and :attr:`HtmlLabel` widgets.
+    """Access this class via the :attr:`~tkinterweb.HtmlFrame.document` property of the :class:`HtmlFrame` and :class:`HtmlLabel` widgets.
     
     :param htmlwidget: The :class:`TkinterWeb` instance this class is tied to.
     :type htmlwidget: :class:`TkinterWeb`"""

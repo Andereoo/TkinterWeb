@@ -118,8 +118,7 @@ class HTMLDocument:
         :type query: str
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
-        newquery = f"[id='{query}']"
-        node = self.html.search(newquery, index=0)
+        node = self.html.search(f"[id='{query}']", index=0)
         return HTMLElement(self, node)
 
     def getElementsByClassName(self, query):
@@ -129,8 +128,7 @@ class HTMLDocument:
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        newquery = [f".{i}" for i in query.split()]
-        nodes = self.html.search(" ".join(newquery))
+        nodes = self.html.search(" ".join(f".{i}" for i in query.split()))
         return tuple(HTMLElement(self, node) for node in nodes)
 
     def getElementsByName(self, query):
@@ -140,8 +138,7 @@ class HTMLDocument:
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        newquery = f"[name='{query}']"
-        nodes = self.html.search(newquery)
+        nodes = self.html.search(f"[name='{query}']")
         return tuple(HTMLElement(self, node) for node in nodes)
 
     def getElementsByTagName(self, query):
@@ -463,8 +460,7 @@ class HTMLElement:
         :type query: str
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
-        newquery = f"[id='{query}']"
-        node = self.html.search(newquery, index=0, root=self.node)
+        node = self.html.search(f"[id='{query}']", index=0, root=self.node)
         return HTMLElement(self, node)
 
     def getElementsByClassName(self, query):
@@ -474,8 +470,7 @@ class HTMLElement:
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        newquery = [f".{i}" for i in query.split()]
-        nodes = self.html.search(" ".join(newquery), root=self.node)
+        nodes = self.html.search(" ".join(f".{i}" for i in query.split()), root=self.node)
         return tuple(HTMLElement(self, node) for node in nodes)
 
     def getElementsByName(self, query):
@@ -485,8 +480,7 @@ class HTMLElement:
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        newquery = f"[name='{query}']"
-        nodes = self.html.search(newquery, root=self.node)
+        nodes = self.html.search(f"[name='{query}']", root=self.node)
         return tuple(HTMLElement(self, node) for node in nodes)
 
     def getElementsByTagName(self, query):

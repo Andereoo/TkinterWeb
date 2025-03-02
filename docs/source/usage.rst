@@ -130,7 +130,7 @@ When binding to ``<<DoneLoading>>`` to, for example, change a 'stop' button to a
 
 **Stop loading**
 
-The method :meth:`HtmlFrame.stop` can be used to stop loading a webpage. If :meth:`HtmlFrame.load_url`, :meth:`HtmlFrame.load_website`, or :meth:`HtmlFrame.load_file` was used to load the document, passing ``yourhtmlframe.current_url`` with ``force=True``  will force a page refresh.
+The method :meth:`~tkinterweb.HtmlFrame.stop` can be used to stop loading a webpage. If :meth:`~tkinterweb.HtmlFrame.load_url`, :meth:`~tkinterweb.HtmlFrame.load_website`, or :meth:`~tkinterweb.HtmlFrame.load_file` was used to load the document, passing ``yourhtmlframe.current_url`` with ``force=True``  will force a page refresh.
 
 **Link clicks**
 

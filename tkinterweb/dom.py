@@ -185,7 +185,12 @@ class HTMLDocument:
                     if {%d} {
                         append ret [node_to_childrenHtml $node]
                     }
-                    append ret </$tag>
+                    set selfclose {br img input hr meta link base col embed param source track wbr}
+                    if {[lsearch -exact $selfclose $tag] >= 0} {
+                        append ret </$tag>
+                    } else {  ;# Don't add closing tags if is self-closing (void-elements)
+                        append ret ""
+                    }
                 }
             }
             proc node_to_childrenHtml {node} {

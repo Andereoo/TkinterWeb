@@ -61,7 +61,7 @@ class HTMLDocument:
 
     def createTextNode(self, text):  # taken from hv3_dom_core.tcl line 219
         "Create a new text node with the given text conent"
-        return htmlwidget.tk.eval("""
+        return self.html.tk.eval("""
             set tkw %s
             set text "%s"
             if {$text eq ""} {
@@ -75,7 +75,7 @@ class HTMLDocument:
                 set node [parse_fragment $escaped]
             }
             return $node
-            """ % (htmlwidget, escape_Tcl(text))
+            """ % (self.html, escape_Tcl(text))
         )
 
     @property
@@ -263,41 +263,40 @@ class HTMLElement:
         )
 
     @property
-    def textContent(self):  # original for this project
+    def textContent(self):  # Original for this project
         "Get the text content of an element."
         return self.html.tk.eval("""
             proc get_child_text {node} {
-                set z ""
+                set txt ""
                 foreach child [$node children] {
                     if {[$child tag] eq ""} {
-                        append z [$child text -pre]
+                        append txt [$child text -pre]
                     } else {
-                        append z [get_child_text $child]
+                        append txt [get_child_text $child]
                     }
                 }
-                return $z
+                return $txt
             }
-            set node %s
-            return [get_child_text $node]
+            return [get_child_text %s]
             """ % extract_nested(self.node)
         )
 
     @textContent.setter
-    def textContent(self, contents):  # ditto
+    def textContent(self, contents):  # Ditto
         "Set the text content of an element."
         self.html.tk.eval("""
             set node %s
-            set tag [$node tag]
             set textnode %s
             if {$textnode eq ""} {error "$node is empty"}
-            if {$tag eq "html"} {error "textContent cannot be set on <$tag> elements"}
+            if {[$node tag] eq "html"} {error "textContent cannot be set on <$tag> elements"}
             $node remove [$node children]
-            #foreach child [$node children] {
-            #    $child destroy
-            #}
+            foreach child [$node children] {
+                $child destroy
+            }
             $node insert $textnode
+            
             update  ;# This must be done to see changes on-screen
-            """ % (extract_nested(self.node), createTextNode)
+            """ % (extract_nested(self.node), self.dom.createTextNode(contents))
         )
 
     @property

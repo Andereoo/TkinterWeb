@@ -274,8 +274,8 @@ class CSSStyleDeclaration:
     
 
 class HTMLElement:
-    """:param htmlwidget: The :class:`TkinterWeb` instance this class is tied to.
-    :type htmlwidget: :class:`TkinterWeb`
+    """:param htmlwidget: The :class:`~tkinterweb.TkinterWeb` instance this class is tied to.
+    :type htmlwidget: :class:`~tkinterweb.TkinterWeb`
     :param node: The Tkhtml3 node this class represents.
     :type node: Tkhtml3 node"""
     def __init__(self, htmlwidget, node):

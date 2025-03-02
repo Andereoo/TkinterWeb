@@ -39,9 +39,9 @@ Removed
 * ``HtmlFrame.on_image_setup()`` - use ``HtmlFrame.configure(on_resource_setup=)``
 * ``HtmlFrame.on_downloading_resource()`` - bind to ``<<DownloadingResource>>``
 * ``HtmlFrame.on_done_loading()`` - bind to ``<<DoneLoading>>``
-* ``HtmlFrame.on_url_change()`` - bind to ``<<UrlChanged>>`` and use ``HtmlFrame.current_url``
-* ``HtmlFrame.on_icon_change()`` - bind to ``<<IconChanged>>`` and use ``HtmlFrame.icon``
-* ``HtmlFrame.on_title_change()`` - bind to ``<<TitleChanged>>`` and use ``HtmlFrame.title``
+* ``HtmlFrame.on_url_change()`` - bind to ``<<UrlChanged>>`` and use :attr:`.HtmlFrame.current_url`
+* ``HtmlFrame.on_icon_change()`` - bind to ``<<IconChanged>>`` and use :attr:`.HtmlFrame.title`
+* ``HtmlFrame.on_title_change()`` - bind to ``<<TitleChanged>>`` and use :attr:`.HtmlFrame.title`
 * ``HtmlFrame.on_form_submit()`` - use ``HtmlFrame.configure(on_form_submit=)``
 * ``HtmlFrame.on_link_click()`` - use ``HtmlFrame.configure(on_link_click=)``
 * ``HtmlFrame.yview_towidget()`` - use :meth:`.HTMLElement.scrollIntoView`

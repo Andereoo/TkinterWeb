@@ -13,5 +13,4 @@ Document Object Model Documentation
 .. autoclass:: tkinterweb.dom.CSSStyleDeclaration
    :members:
 
-
 Special thanks to `Zamy846692 <https://github.com/Zamy846692>`_ for the help making this happen!

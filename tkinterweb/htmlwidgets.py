@@ -628,20 +628,20 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         title = ""
         icon = ""
         base = ""
-        style = ""
+        style = "\n"
         
         for rule in self._html.get_computed_styles():
             selector, prop, origin = rule
             if origin == "agent" and not allow_agent: continue
-            style += f"{selector} {{{prop.replace('-tkhtml-no-color', 'transparent')}}}\n"
+            style += f"\t\t\t{selector} {{{prop.replace('-tkhtml-no-color', 'transparent')}}}\n"
 
-        if self._html.title: title = f"\n        <title>{self._html.title}</title>"
-        if self._html.icon: icon = f"\n        <link rel=\"icon\" type=\"image/x-icon\" href=\"/{self._html.icon}\">"
-        if self._html.base_url: base = f"\n        <base href=\"{self._html.base_url}\"></base>"
-        if style: style = f"\n        <style>{style}</style>"
+        if self._html.title: title = f"\n\t\t<title>{self._html.title}</title>"
+        if self._html.icon: icon = f"\n\t\t<link rel=\"icon\" type=\"image/x-icon\" href=\"/{self._html.icon}\">"
+        if self._html.base_url: base = f"\n\t\t<base href=\"{self._html.base_url}\"></base>"
+        if style: style = f"\n\t\t<style>{style}\t\t</style>"
         body = self._document.body.innerHTML
 
-        html = f"""<html>\n    <head>{title}{icon}{base}{style}\n    </head>\n    <body>\n        {body}\n    </body>\n</html>"""
+        html = f"""<html>\n\t<head>{title}{icon}{base}{style}\n\t</head>\n\t<body>\n\t{body}\n\t</body>\n</html>"""
         if filename:
             with open(filename, "w+") as handle:
                 handle.write(html)

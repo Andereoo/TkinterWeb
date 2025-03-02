@@ -52,36 +52,6 @@ class HTMLDocument:
         self.html.tk.createcommand("parse_fragment", self.html.parse_fragment)
         self.html.tk.createcommand("node_to_html", self._node_to_html)
 
-    def createElement(self, tagname):  # taken from hv3_dom_core.tcl line 214
-        "Create a new HTML element with the given tag name"
-        return HTMLElement(
-            self.html,
-            self.html.tk.eval("""
-            set node [%s fragment "<%s>"]
-            if {$node eq ""} {error "DOMException NOT_SUPPORTED_ERR"}
-            return $node
-            """ % (self.html, tagname)),
-        )
-
-    def createTextNode(self, text):  # taken from hv3_dom_core.tcl line 219
-        "Create a new text node with the given text conent"
-        return self.html.tk.eval("""
-            set tkw %s
-            set text "%s"
-            if {$text eq ""} {
-                # Special case - The [fragment] API usually parses an empty string
-                # to an empty fragment. So create a text node with text "X", then 
-                # set the text to an empty string.
-                set node [$tkw fragment X]
-                $node text set ""
-            } else {
-                set escaped [string map {< &lt; > &gt;} $text]
-                set node [parse_fragment $escaped]
-            }
-            return $node
-            """ % (self.html, escape_Tcl(text))
-        )
-
     @property
     def body(self):  # taken from hv3_dom_html.tcl line 161
         """The document body element.
@@ -124,7 +94,22 @@ class HTMLDocument:
         :param text: The text content of the new node.
         :type text: str
         :rtype: :class:`HTMLElement`"""
-        return HTMLElement(self.html, generate_text_node(self.html, text))
+        return self.html.tk.eval("""
+            set tkw %s
+            set text "%s"
+            if {$text eq ""} {
+                # Special case - The [fragment] API usually parses an empty string
+                # to an empty fragment. So create a text node with text "X", then 
+                # set the text to an empty string.
+                set node [$tkw fragment X]
+                $node text set ""
+            } else {
+                set escaped [string map {< &lt; > &gt;} $text]
+                set node [parse_fragment $escaped]
+            }
+            return $node
+            """ % (self.html, escape_Tcl(text))
+        )
 
     def getElementById(self, query):
         """Return an element given an id.

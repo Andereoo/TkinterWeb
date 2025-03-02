@@ -13,7 +13,7 @@ To use TkinterWeb, first install it using pip:
 
    $ pip install tkinterweb
 
-You can run the TkinterWeb Demo to see if it worked!
+You can run the TkinterWeb demo to see if it worked!
 
 >>> from tkinterweb import Demo
 >>> Demo()

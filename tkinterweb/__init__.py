@@ -6,11 +6,10 @@ which displays styled HTML documents in Tkinter.
 Copyright (c) 2025 Andereoo
 """
 
-if __name__ == "__main__":
-    import os
-    import sys
+import os
+import sys
 
-    sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
 try:
     from htmlwidgets import HtmlFrame, HtmlLabel

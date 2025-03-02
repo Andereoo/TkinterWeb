@@ -44,7 +44,7 @@ Getting Started
     
     To load any generic url, call ``yourhtmlframe.load_url(yourwebsiteorfile)``. Keep in mind that the url must be properly formatted and include the url scheme.
 
-The :class:`HtmlFrame` widget behaves like any other Tkinter widget and supports bindings. It also supports link clicks, form submittions, website title changes, and much, much more! Refer below for more tips and tricks!
+The :class:`~tkinterweb.HtmlFrame` widget behaves like any other Tkinter widget and supports bindings. It also supports link clicks, form submittions, website title changes, and much, much more! Refer below for more tips and tricks!
 
 Tips and Tricks
 ---------------
@@ -102,7 +102,7 @@ This is highly recomended if your app includes an address bar. This event will f
 
 **Search the page**
 
-Use :meth:`HtmlFrame.find_text` to search the page for specific text. To search the document for the word 'python', for example, the following can be used:
+Use :meth:`~tkinterweb.HtmlFrame.find_text` to search the page for specific text. To search the document for the word 'python', for example, the following can be used:
 
 >>> number_of_matches = yourhtmlframe.find_text("python")
 
@@ -115,7 +115,7 @@ Refer to the API reference for more information and `bug 18 <https://github.com/
 
 **Embed a widget**
 
-There are many ways to embed widgets in an :class:`HtmlFrame` widget. One way is to use ``<object>`` elements:
+There are many ways to embed widgets in an :class:`~tkinterweb.HtmlFrame` widget. One way is to use ``<object>`` elements:
 
 >>> yourcanvas = tkinter.Canvas(yourhtmlframe)
 >>> yourhtmlframe.load_html(f"<p>This is a canvas!</p><object data="{yourcanvas}"></object>")
@@ -147,7 +147,7 @@ Similarily, :attr:`on_form_submit` can be used to override the default form subm
 
 **Zooming**
 
-Setting the zoom of the :class:`HtmlFrame` widget is very easy. This can be used to improve accessibility in your application. To set the zoom to 2x magnification the following can be used: 
+Setting the zoom of the :class:`~tkinterweb.HtmlFrame` widget is very easy. This can be used to improve accessibility in your application. To set the zoom to 2x magnification the following can be used: 
 
 >>> yourhtmlframe = HtmlFrame(master, zoom=2)
 >>> # or yourhtmlframe.configure(zoom=2)

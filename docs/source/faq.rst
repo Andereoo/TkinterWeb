@@ -3,12 +3,12 @@ Frequently Asked Questions
 
 **How do I load websites or files?**
 
-* Use the :meth:`HtmlFrame.load_website` or :meth:`HtmlFrame.load_file` commands. Alternatively, use the :meth:`HtmlFrame.load_url` command to load any generic url, but keep in mind that the url must be properly formatted, because the url scheme will not be automatically applied. As always, check out the :doc:`api/htmlframe` for more information.
+* Use the :meth:`~tkinterweb.HtmlFrame.load_website` or :meth:`~tkinterweb.HtmlFrame.load_file` commands. Alternatively, use the :meth:`~tkinterweb.HtmlFrame.load_url` command to load any generic url, but keep in mind that the url must be properly formatted, because the url scheme will not be automatically applied. As always, check out the :doc:`api/htmlframe` for more information.
 
 **How do I manage clicks and use custom bindings?**
 
 * The :attr:`on_link_click` configuration option can be used to assign a custom function to link clicks. Likewise :attr:`on_form_submit` can be used to handle form submissions. See the :doc:`api/htmlframe` for more information.
-* Like any other Tkinter widget, mouse and keyboard events can be bound to the :class:`HtmlFrame` widget. See the :doc:`usage` page for examples of binding navigation keys and opening menus on right-clicks.
+* Like any other Tkinter widget, mouse and keyboard events can be bound to the :class:`~tkinterweb.HtmlFrame` widget. See the :doc:`usage` page for examples of binding navigation keys and opening menus on right-clicks.
  
 **TkinterWeb is crashing. Help?**
 

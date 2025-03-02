@@ -291,9 +291,9 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
     
     @property
     def html(self):
-        """The underlying html widget. Use this to access underlying :py:class:`TkinterWeb` methods.
+        """The underlying html widget. Use this to access underlying :py:class:`~tkinterweb.TkinterWeb` methods.
         
-        :rtype: :class:`TkinterWeb`"""
+        :rtype: :class:`~tkinterweb.TkinterWeb`"""
         return self._html
 
     @property

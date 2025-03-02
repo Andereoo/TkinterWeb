@@ -20,28 +20,12 @@ def escape_Tcl(string):
         escaped += char
     return escaped
 
+
 def extract_nested(nested):
     if isinstance(nested, tuple) and len(nested):
         return extract_nested(nested[0])
     return nested
 
-def generate_text_node(htmlwidget, text):  # taken from hv3_dom_core.tcl line 219
-    return htmlwidget.tk.eval("""
-        set tkw %s
-        set text "%s"
-        if {$text eq ""} {
-            # Special case - The [fragment] API usually parses an empty string
-            # to an empty fragment. So create a text node with text "X", then 
-            # set the text to an empty string.
-            set node [$tkw fragment X]
-            $node text set ""
-        } else {
-            set escaped [string map {< &lt; > &gt;} $text]
-            set node [parse_fragment $escaped]
-        }
-        return $node
-        """ % (htmlwidget, escape_Tcl(text))
-    )
 
 def camel_case_to_property(string):
     new_string = ""
@@ -75,9 +59,24 @@ class HTMLDocument:
             """ % (self.html, tagname)),
         )
 
-    def createTextNode(self, text):
+    def createTextNode(self, text):  # taken from hv3_dom_core.tcl line 219
         "Create a new text node with the given text conent"
-        return HTMLElement(self.html, generate_text_node(self.html, text))
+        return htmlwidget.tk.eval("""
+            set tkw %s
+            set text "%s"
+            if {$text eq ""} {
+                # Special case - The [fragment] API usually parses an empty string
+                # to an empty fragment. So create a text node with text "X", then 
+                # set the text to an empty string.
+                set node [$tkw fragment X]
+                $node text set ""
+            } else {
+                set escaped [string map {< &lt; > &gt;} $text]
+                set node [parse_fragment $escaped]
+            }
+            return $node
+            """ % (htmlwidget, escape_Tcl(text))
+        )
 
     @property
     def body(self):  # taken from hv3_dom_html.tcl line 161
@@ -100,34 +99,34 @@ class HTMLDocument:
         "Return an element given an id"
         newquery = f"[id='{query}']"
         node = self.html.search(newquery, index=0)
-        return HTMLElement(self.html, node)
+        return HTMLElement(self, node)
 
     def getElementsByClassName(self, query):
         "Return a list of elements given a class name"
         newquery = [f".{i}" for i in query.split()]
         nodes = self.html.search(" ".join(newquery))
-        return tuple(HTMLElement(self.html, node) for node in nodes)
+        return tuple(HTMLElement(self, node) for node in nodes)
 
     def getElementsByName(self, query):
         "Return a list of elements matching a given name attribute"
         newquery = f"[name='{query}']"
         nodes = self.html.search(newquery)
-        return tuple(HTMLElement(self.html, node) for node in nodes)
+        return tuple(HTMLElement(self, node) for node in nodes)
 
     def getElementsByTagName(self, query):
         "Return a list of elements given a tag name"
         nodes = self.html.search(query)
-        return tuple(HTMLElement(self.html, node) for node in nodes)
+        return tuple(HTMLElement(self, node) for node in nodes)
 
     def querySelector(self, query):
         "Return the first element that matches a given CSS selector"
         node = self.html.search(query, index=0)
-        return HTMLElement(self.html, node)
+        return HTMLElement(self, node)
 
     def querySelectorAll(self, query):
         "Return a list of elements that match a given CSS selector"
         nodes = self.html.search(query)
-        return tuple(HTMLElement(self.html, node) for node in nodes)
+        return tuple(HTMLElement(self, node) for node in nodes)
     
     def _node_to_html(self, node, deep=True):
         return self.html.tk.eval(r"""
@@ -204,8 +203,9 @@ class CSSStyleDeclaration:
     
 
 class HTMLElement:
-    def __init__(self, htmlwidget, node):
-        self.html = htmlwidget
+    def __init__(self, dom, node):
+        self.dom = dom
+        self.html = dom.html
         self.node = node
         self.styleCache = None  # initialize style as None
         self.html.bbox(node)  # check if the node is valid
@@ -297,7 +297,7 @@ class HTMLElement:
             #}
             $node insert $textnode
             update  ;# This must be done to see changes on-screen
-            """ % (extract_nested(self.node), generate_text_node(self.html, contents))
+            """ % (extract_nested(self.node), createTextNode)
         )
 
     @property
@@ -312,12 +312,12 @@ class HTMLElement:
     @property
     def parentElement(self):
         "Return the element's parent element"
-        return HTMLElement(self.html, self.html.get_node_parent(self.node))
+        return HTMLElement(self, self.html.get_node_parent(self.node))
 
     @property
     def children(self):
         "Return the element's children elements"
-        return [HTMLElement(self.html, i) for i in self.html.get_node_children(self.node)]
+        return [HTMLElement(self, i) for i in self.html.get_node_children(self.node)]
 
     def getAttribute(self, attribute):
         "Get the value of the given attribute"
@@ -351,34 +351,34 @@ class HTMLElement:
         "Return an element given an id"
         newquery = f"[id='{query}']"
         node = self.html.search(newquery, index=0, root=self.node)
-        return HTMLElement(self.html, node)
+        return HTMLElement(self, node)
 
     def getElementsByClassName(self, query):
         "Return a list of elements given a class name"
         newquery = [f".{i}" for i in query.split()]
         nodes = self.html.search(" ".join(newquery), root=self.node)
-        return tuple(HTMLElement(self.html, node) for node in nodes)
+        return tuple(HTMLElement(self, node) for node in nodes)
 
     def getElementsByName(self, query):
         "Return a list of elements matching a given name attribute"
         newquery = f"[name='{query}']"
         nodes = self.html.search(newquery, root=self.node)
-        return tuple(HTMLElement(self.html, node) for node in nodes)
+        return tuple(HTMLElement(self, node) for node in nodes)
 
     def getElementsByTagName(self, query):
         "Return a list of elements given a tag name"
         nodes = self.html.search(query, root=self.node)
-        return tuple(HTMLElement(self.html, node) for node in nodes)
+        return tuple(HTMLElement(self, node) for node in nodes)
 
     def querySelector(self, query):
         "Return the first element that matches a given CSS selector"
         node = self.html.search(query, index=0, root=self.node)
-        return HTMLElement(self.html, node)
+        return HTMLElement(self, node)
 
     def querySelectorAll(self, query):
         "Return a list of elements that match a given CSS selector"
         nodes = self.html.search(query, root=self.node)
-        return tuple(HTMLElement(self.html, node) for node in nodes)
+        return tuple(HTMLElement(self, node) for node in nodes)
     
     def scrollIntoView(self):
         "Scroll the viewport so that this element is visible"

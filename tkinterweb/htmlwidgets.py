@@ -298,7 +298,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
 
     @property
     def base_url(self):
-        """The documents's base url. This is automatically generated from :prop:`~tkinterweb.HtmlFrame.current_url` but will also change if explicitly specified by the document.
+        """The documents's base url. This is automatically generated from :attr:`HtmlFrame.current_url` but will also change if explicitly specified by the document.
         
         :rtype: str"""
         return self._html.base_url

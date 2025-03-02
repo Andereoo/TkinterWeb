@@ -608,16 +608,15 @@ class TkinterWeb(tk.Widget):
                 if self.experimental:
                     self.insert_node(node, self.parse_fragment(alt))
                 else:
-                    nodebox = self.bbox(node)
                     image = text_to_image(
-                        name, alt, nodebox,
+                        name, alt, self.bbox(node),
                         self.image_alternate_text_font,
                         self.image_alternate_text_size,
                         self.image_alternate_text_threshold,
                     )
                     self.loaded_images.add(image)
             if not self.ignore_invalid_images:
-                image = newimage(self.broken_image, name, "image/png", self.image_inversion_enabled)
+                image, error = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled)
                 self.loaded_images.add(image)
 
     def fetch_images(self, url, name, urltype):

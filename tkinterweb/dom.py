@@ -410,7 +410,7 @@ class HTMLElement:
     def children(self):
         """Get the element's children elements.
         
-        :rtype: list[class:`HTMLElement`]
+        :rtype: list[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
         return [HTMLElement(self.html, i) for i in self.html.get_node_children(self.node)]
 

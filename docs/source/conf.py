@@ -7,12 +7,14 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname((os.path.realpath(__file__))))))
 
-project = 'TkinterWeb'
-copyright = '2025, Andereoo'
-author = 'Andereoo'
+from tkinterweb import __title__, __author__, __version__
 
-release = '4.0'
-version = '4.0.4'
+project = __title__
+copyright = '2025, Andereoo'
+author = __author__
+
+release = ".".join(__version__.split(".")[:2])
+version = __version__
 
 # -- General configuration
 

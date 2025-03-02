@@ -57,8 +57,8 @@ Renamed
 
 * ``HtmlFrame.get_currently_selected_text()`` -> :meth:`.HtmlFrame.get_selection`
 
-* ``TkwDocumentObjectModel`` -> ``HTMLDocument``
-* ``HtmlElement`` -> ``HTMLElement``
+* ``TkwDocumentObjectModel`` -> :class:`.HTMLDocument`
+* ``HtmlElement`` -> :class:`HTMLElement`
 
 * ``HtmlElement.style()`` -> :attr:`.HTMLElement.style`
 * ``HtmlElement.innerHTML()`` -> :attr:`.HTMLElement.innerHTML`
@@ -119,7 +119,7 @@ Added
 Changed
 -------
 
-* :meth:`.HtmlFrame.configure`, :meth:`.HtmlFrame.config`, :meth:`.HtmlFrame.cget`, and :meth:`.HtmlFrame.__init__()` now support more configuration options.
+* :meth:`.HtmlFrame.configure`, :meth:`.HtmlFrame.config`, :meth:`.HtmlFrame.cget`, and :meth:`.HtmlFrame.__init__` now support more configuration options.
 * :meth:`.HtmlFrame.load_website`, :meth:`.HtmlFrame.load_file`, and :meth:`.HtmlFrame.load_url` no longer accept the ``insecure`` parameter. use ``HTMLElement.configure(insecure=)``.
 
 * Enabling/disabling caches now enables/disables the Tkhtml image cache.

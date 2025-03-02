@@ -1,5 +1,5 @@
-Porting to TkinterWeb v4+
-=========================
+Porting to TkinterWeb 4+
+========================
 
 
 **The API changed significantly in version 4.0.0**
@@ -25,7 +25,7 @@ Removed
 * ``HtmlFrame.get_parsemode()`` - use ``HtmlFrame.cget("parsemode")``
 * ``HtmlFrame.set_parsemode()`` - use ``HtmlFrame.configure(parsemode=)``
 * ``HtmlFrame.set_message_func()`` - use ``HtmlFrame.configure(message_func=)``
-* ``HtmlFrame.set_broken_webpage_message()`` - use ``HtmlFrame.configure(on_navigate_fail=)``. Note that ``on_navigate_fail`` latter requires a function instead.
+* ``HtmlFrame.set_broken_webpage_message()`` - use ``HtmlFrame.configure(on_navigate_fail=)``. Note that :attr:`on_navigate_fail` requires a function instead.
 * ``HtmlFrame.set_maximum_thread_count()`` - use ``HtmlFrame.configure(threading_enabled=)``
 * ``HtmlFrame.set_recursive_hover_depth()`` - use ``HtmlFrame.html.recursive_hover_depth=``
 * ``HtmlFrame.add_visited_links()`` - use ``HtmlFrame.configure(visited_links=)``
@@ -44,11 +44,11 @@ Removed
 * ``HtmlFrame.on_title_change()`` - bind to ``<<TitleChanged>>`` and use ``HtmlFrame.title``
 * ``HtmlFrame.on_form_submit()`` - use ``HtmlFrame.configure(on_form_submit=)``
 * ``HtmlFrame.on_link_click()`` - use ``HtmlFrame.configure(on_link_click=)``
-* ``HtmlFrame.yview_towidget()`` - use ``HTMLElement.scrollIntoView()``
-* ``HtmlFrame.get_currently_hovered_node_text()`` - use ``HtmlFrame.get_currently_hovered_element()``
-* ``HtmlFrame.get_currently_hovered_node_tag()`` - use ``HtmlFrame.get_currently_hovered_element()``
-* ``HtmlFrame.get_currently_hovered_node_attribute()`` - use ``HtmlFrame.get_currently_hovered_element()``
-* ``HtmlFrame.get_current_link()`` - use ``HtmlFrame.get_currently_hovered_element()``
+* ``HtmlFrame.yview_towidget()`` - use :meth:`.HTMLElement.scrollIntoView`
+* ``HtmlFrame.get_currently_hovered_node_text()`` - :meth:`.HtmlFrame.get_currently_hovered_element`
+* ``HtmlFrame.get_currently_hovered_node_tag()`` - :meth:`.HtmlFrame.get_currently_hovered_element`
+* ``HtmlFrame.get_currently_hovered_node_attribute()`` - :meth:`.HtmlFrame.get_currently_hovered_element`
+* ``HtmlFrame.get_current_link()`` - use :meth:`.HtmlFrame.get_currently_hovered_element`
     
 * The ``widgetid`` attribute no longer embeds widgets. Use ``<object data=name_of_your_widget></object>`` instead. This improves load speeds and allows for widget style handling.
 
@@ -126,7 +126,7 @@ Changed
 * Threading now cannot be enabled if the Tcl/Tk build does not support it.
 
 * :meth:`.HTMLElement.remove` now raises a TclError when invoked on ``<html>`` or ``<body>`` elements, which previously caused segmentation faults.
-* :attr:`.HTMLElement.innerHTML` and :meth:`.HTMLElement.textContent` now raise a TclError when invoked on ``<html>`` elements, which previously caused segmentation faults.
+* :attr:`.HTMLElement.innerHTML` and :attr:`.HTMLElement.textContent` now raise a TclError when invoked on ``<html>`` elements, which previously caused segmentation faults.
 
   
 * The ability to style color selector inputs was improved.

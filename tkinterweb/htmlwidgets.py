@@ -286,7 +286,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
     def document(self):
         """The DOM manager. Use this to access :class:`~tkinterweb.dom.HTMLDocument` methods to manupulate the DOM.
         
-        :rtype: :class:`tkinterweb.dom.HTMLDocument`"""
+        :rtype: :class:`~tkinterweb.dom.HTMLDocument`"""
         return self._document
     
     @property
@@ -531,7 +531,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         :param ignore_text_nodes: If True, text nodes (i.e. the contents of a ``<p>`` element) will be ignored and their parent node returned. It is generally best to leave leave this at the default.
         :type ignore_text_nodes: bool, optional
         :return: The element under the mouse.
-        :rtype: :class:`HTMLElement`"""
+        :rtype: :class:`~tkinterweb.dom.HTMLElement`"""
         node = self._html.current_node
         if ignore_text_nodes:
             if not self._html.get_node_tag(self._html.current_node):

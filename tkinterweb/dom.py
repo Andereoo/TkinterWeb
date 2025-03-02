@@ -61,8 +61,8 @@ def camel_case_to_property(string):
 class HTMLDocument:
     """Access this class via the :attr:`~tkinterweb.HtmlFrame.document` property of the :class:`~tkinterweb.HtmlFrame` and :class:`~tkinterweb.HtmlLabel` widgets.
     
-    :param htmlwidget: The :class:`tkinterweb.TkinterWeb` instance this class is tied to.
-    :type htmlwidget: :class:`tkinterweb.TkinterWeb`"""
+    :param htmlwidget: The :class:`~tkinterweb.TkinterWeb` instance this class is tied to.
+    :type htmlwidget: :class:`~tkinterweb.TkinterWeb`"""
     def __init__(self, htmlwidget):
         self.html = htmlwidget
         self.html.tk.createcommand("parse_fragment", self.html.parse_fragment)
@@ -209,8 +209,8 @@ class HTMLDocument:
 class CSSStyleDeclaration:
     """Access this class via the :attr:`~tkinterweb.dom.HTMLElement.style` property of the :attr:`~tkinterweb.dom.HTMLElement` class.
     
-    :param htmlwidget: The :class:`TkinterWeb` instance this class is tied to.
-    :type htmlwidget: :class:`TkinterWeb`
+    :param htmlwidget: The :class:`~tkinterweb.TkinterWeb` instance this class is tied to.
+    :type htmlwidget: :class:`~tkinterweb.TkinterWeb`
     :param node: The Tkhtml3 node this class should modify.
     :type node: Tkhtml3 node"""
     def __init__(self, htmlwidget, node):

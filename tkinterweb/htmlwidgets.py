@@ -214,7 +214,7 @@ class HtmlFrame(ttk.Frame):
         self._html = html = TkinterWeb(self, self.tkinterweb_options, **self.tkhtml_options)
         self._hsb = hsb = AutoScrollbar(self, orient="horizontal", command=html.xview)
         self._vsb = vsb = AutoScrollbar(self, orient="vertical", command=html.yview)
-        self._document = HTMLDocument(html)
+        self.DOMCache = None
 
         html.configure(xscrollcommand=hsb.set, yscrollcommand=vsb.set)
 
@@ -287,7 +287,9 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         """The DOM manager. Use this to access :py:class:`HTMLDocument` methods to manupulate the DOM.
         
         :rtype: :class:`HTMLDocument`"""
-        return self._document
+        if self.DOMCache is None:  # lazy loading of Document Object Model
+            self.DOMCache = HTMLDocument(self.html)
+        return self.DOMCache
     
     @property
     def html(self):
@@ -606,7 +608,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         :return: A string containing the page's HTML/CSS code.
         :rtype: str"""
         self._html.post_message(f"Saving {self._current_url}...")
-        html = self._document.documentElement.innerHTML
+        html = self.document.documentElement.innerHTML
         if filename:
             with open(filename, "w+") as handle:
                 handle.write(html)
@@ -639,7 +641,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         if self._html.icon: icon = f"\n\t\t<link rel=\"icon\" type=\"image/x-icon\" href=\"/{self._html.icon}\">"
         if self._html.base_url: base = f"\n\t\t<base href=\"{self._html.base_url}\"></base>"
         if style: style = f"\n\t\t<style>{style}\t\t</style>"
-        body = self._document.body.innerHTML
+        body = self.document.body.innerHTML
 
         html = f"""<html>\n\t<head>{title}{icon}{base}{style}\n\t</head>\n\t<body>\n\t{body}\n\t</body>\n</html>"""
         if filename:
@@ -759,7 +761,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         else:
             height = self._html.winfo_height()
         if self._prev_height != height or force:
-            resizeable_elements = self._document.querySelectorAll(f"[{BUILTIN_ATTRIBUTES['vertical-align']}]")
+            resizeable_elements = self.document.querySelectorAll(f"[{BUILTIN_ATTRIBUTES['vertical-align']}]")
             for element in resizeable_elements:
                 element.style.height = f"{height/self['zoom']}px"
         self._prev_height = height

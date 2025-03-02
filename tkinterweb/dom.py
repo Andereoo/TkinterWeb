@@ -305,7 +305,7 @@ class HTMLElement:
             foreach child [$node children] {
                 append ret [node_to_html $child 1]
             }
-            update
+            update  ;# This must be done to see changes on-screen
             return $ret
             """ % extract_nested(self.node)
         )
@@ -332,7 +332,7 @@ class HTMLElement:
             set children [parse_fragment $newHtml]
             $node insert $children
 
-            update
+            update  ;# This must be done to see changes on-screen
             """ % (extract_nested(self.node), escape_Tcl(contents))
         )
 

@@ -165,7 +165,7 @@ class CSSStyleDeclaration:
         self.node = node
 
     def __getitem__(self, prop):
-        return self.html.get_node_property(self.node, prop)
+        return self.html.get_node_property(self.node, prop, "-inline")
 
     def __setitem__(self, prop, value):
         style = self.html.get_node_properties(self.node, "-inline")

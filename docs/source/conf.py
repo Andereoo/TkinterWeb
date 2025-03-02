@@ -12,7 +12,7 @@ copyright = '2025, Andereoo'
 author = 'Andereoo'
 
 release = '4.0'
-version = '4.0.3'
+version = '4.0.4'
 
 # -- General configuration
 

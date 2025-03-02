@@ -128,7 +128,7 @@ class HTMLDocument:
         nodes = self.html.search(query)
         return tuple(HTMLElement(self, node) for node in nodes)
     
-    def _node_to_html(self, node, deep=True):
+    def _node_to_html(self, node, deep=True):  # From hv3_dom_core.tcl line 311 and line 329
         return self.html.tk.eval(r"""
             proc TclNode_to_html {node} {
                 set tag [$node tag]
@@ -156,7 +156,7 @@ class HTMLDocument:
             }
             return [TclNode_to_html %s]
             """ % (int(deep), extract_nested(node))
-        )
+        ) # May split this into 2 methods in future
 
 
 class CSSStyleDeclaration:
@@ -225,14 +225,14 @@ class HTMLElement:
         "Get the inner HTML of an element"
         return self.html.tk.eval("""
             set node %s
-                if {[$node tag] eq ""} {error "$node is not an HTMLElement"}
+            if {[$node tag] eq ""} {error "$node is not an HTMLElement"}
 
-                set ret ""
-                foreach child [$node children] {
-                    append ret [node_to_html $child 1]
-                }
-                update
-                return $ret
+            set ret ""
+            foreach child [$node children] {
+                append ret [node_to_html $child 1]
+            }
+            update
+            return $ret
             """ % extract_nested(self.node)
         )
 

@@ -6,6 +6,7 @@ Copyright (c) 2025 Andereoo
 """
 
 from urllib.parse import urldefrag, urlparse
+from os import path
 
 from bindings import TkinterWeb
 from utilities import *
@@ -640,11 +641,13 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         if self._html.title: title = f"\n\t\t<title>{self._html.title}</title>"
         if self._html.icon: icon = f"\n\t\t<link rel=\"icon\" type=\"image/x-icon\" href=\"/{self._html.icon}\">"
         if self._html.base_url: base = f"\n\t\t<base href=\"{self._html.base_url}\"></base>"
-        if style: style = f"\n\t\t<style>{style}\t\t</style>"
+        if style.strip(): style = f"\n\t\t<style>{style}\t\t</style>"
         body = self.document.body.innerHTML
 
         html = f"""<html>\n\t<head>{title}{icon}{base}{style}\n\t</head>\n\t<body>\n\t{body}\n\t</body>\n</html>"""
         if filename:
+            if not path.splitext(filename)[1]:
+                filename = f"{filename}.{self.cget('parsemode')}"
             with open(filename, "w+") as handle:
                 handle.write(html)
         self._html.post_message("Saved!")

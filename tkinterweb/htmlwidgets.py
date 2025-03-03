@@ -76,9 +76,9 @@ class HtmlFrame(ttk.Frame):
     :type threading_enabled: bool
     :param image_alternate_text_enabled: Enable/disable the display of alt text for broken images. This is enabled by default.
     :type image_alternate_text_enabled: bool
-    :param dark_theme_enabled: Enable/disable dark mode. May cause hangs or crashes on more complex websites.
+    :param dark_theme_enabled: Enable/disable dark mode. This feature is a work-in-progress and may cause hangs or crashes on more complex websites.
     :type dark_theme_enabled: bool
-    :param image_inversion_enabled: Enable/disable image inversion. May cause hangs or crashes on more complex websites.
+    :param image_inversion_enabled: Enable/disable image inversion. If enabled, an algorithm will attempt to detect and invert images with a predominantly light-coloured background. Photographs and dark-coloured images should be left as is. This feature is a work-in-progress and may cause hangs or crashes on more complex websites.
     :type image_inversion_enabled: bool
     :param ignore_invalid_images: If enabled and alt text is disabled or the image has no alt text, a broken image icon will be displayed in place of the image.
     :type ignore_invalid_images: bool

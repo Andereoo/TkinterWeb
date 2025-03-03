@@ -161,4 +161,13 @@ To scale only the text, use ``fontscale=2`` instead.
 
 Refer to :doc:`dom` (new since version 3.25).
 
+**Dark mode**
+
+You can set ``dark_theme_enabled=True`` when creating your :class:`~tkinterweb.HtmlFrame` or calling :meth:`~tkinterweb.HtmlFrame.configure` to turn on dark mode and automatically modify page colours.
+
+If you set ``image_inversion_enabled=True``, an algorithm will attempt to detect and invert images with a predominantly light-coloured background. This helps make light-coloured images or pictures with a white background darker.
+
+Refresh the page for these features to take full effect. This features are a work-in-progress and may cause hangs or crashes on more complex websites.
+
+
 See the :doc:`api/htmlframe` for a complete list of available commands.

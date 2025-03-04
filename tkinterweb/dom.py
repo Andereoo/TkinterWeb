@@ -185,10 +185,13 @@ class HTMLDocument:
                     if {%d} {
                         append ret [node_to_childrenHtml $node]
                     }
-                    if {$tag ne "img"} {  ;# <img> doesn't have a closing tag
-                        append ret </$tag>
-                    } else {
+                    set void {
+                        area base br col embed hr img input keygen link meta param source track wbr
+                    }  ;# Don't add closing tags if is self-closing (void-elements)
+                    if {[lsearch -exact $void $tag] != -1} {
                         append ret ""
+                    } else {
+                        append ret </$tag>
                     }
                 }
             }

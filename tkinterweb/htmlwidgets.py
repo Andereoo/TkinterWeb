@@ -215,7 +215,7 @@ class HtmlFrame(ttk.Frame):
         self._html = html = TkinterWeb(self, self.tkinterweb_options, **self.tkhtml_options)
         self._hsb = hsb = AutoScrollbar(self, orient="horizontal", command=html.xview)
         self._vsb = vsb = AutoScrollbar(self, orient="vertical", command=html.yview)
-        self.DOMCache = None
+        self._DOMCache = None
 
         html.configure(xscrollcommand=hsb.set, yscrollcommand=vsb.set)
 
@@ -288,9 +288,9 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         """The DOM manager. Use this to access :py:class:`HTMLDocument` methods to manupulate the DOM.
         
         :rtype: :class:`HTMLDocument`"""
-        if self.DOMCache is None:  # lazy loading of Document Object Model
-            self.DOMCache = HTMLDocument(self.html)
-        return self.DOMCache
+        if self._DOMCache is None:  # lazy loading of Document Object Model
+            self._DOMCache = HTMLDocument(self.html)
+        return self._DOMCache
     
     @property
     def html(self):

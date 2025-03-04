@@ -305,7 +305,6 @@ class HTMLElement:
             foreach child [$node children] {
                 append ret [node_to_html $child 1]
             }
-            update  ;# This must be done to see changes on-screen
             return $ret
             """ % extract_nested(self.node)
         )
@@ -316,19 +315,18 @@ class HTMLElement:
         self.html.tk.eval("""
             set node %s
             set tag [$node tag]
-                
             if {$tag eq ""} {error "$node is not an HTMLElement"}
             if {$tag eq "html"} {error "innerHTML cannot be set on <$tag> elements"}
 
             # Destroy the existing children (and their descendants) of $node.
             set children [$node children]
             $node remove $children
-            #foreach child $children {
-            #    $child destroy
-            #}
+            foreach child $children {
+                $child destroy
+            }
 
-            set newHtml "%s"
             # Insert the new descendants, created by parseing $newHtml.
+            set newHtml "%s"
             set children [parse_fragment $newHtml]
             $node insert $children
 

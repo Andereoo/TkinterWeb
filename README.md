@@ -15,7 +15,7 @@ All [major operating systems](https://tkinterweb.readthedocs.io/en/latest/faq.ht
 ## Usage
 
 **TkinterWeb provides:**
-* A [frame](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html) widget to display websites, help files, and any other styled HTML in Tkinter.
+* A [frame](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html) widget to display simple websites, help files, RSS feeds, and any other styled HTML in Tkinter.
 * A [label](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html#tkinterweb.HtmlLabel) widget that can display styled HTML.
 * A [geometry manager](https://tkinterweb.readthedocs.io/en/latest/geometry.html) to display Tkinter widgets *and HTML elements* together in a Tkinter application.
 

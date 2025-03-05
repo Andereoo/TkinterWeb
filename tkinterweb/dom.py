@@ -20,28 +20,12 @@ def escape_Tcl(string):
         escaped += char
     return escaped
 
+
 def extract_nested(nested):
     if isinstance(nested, tuple) and len(nested):
         return extract_nested(nested[0])
     return nested
 
-def generate_text_node(htmlwidget, text):  # taken from hv3_dom_core.tcl line 219
-    return htmlwidget.tk.eval("""
-        set tkw %s
-        set text "%s"
-        if {$text eq ""} {
-            # Special case - The [fragment] API usually parses an empty string
-            # to an empty fragment. So create a text node with text "X", then 
-            # set the text to an empty string.
-            set node [$tkw fragment X]
-            $node text set ""
-        } else {
-            set escaped [string map {< &lt; > &gt;} $text]
-            set node [parse_fragment $escaped]
-        }
-        return $node
-        """ % (htmlwidget, escape_Tcl(text))
-    )
 
 def camel_case_to_property(string):
     new_string = ""
@@ -67,15 +51,14 @@ class HTMLDocument:
         self.html = htmlwidget
         self.html.tk.createcommand("parse_fragment", self.html.parse_fragment)
         self.html.tk.createcommand("node_to_html", self._node_to_html)
-    
+
     @property
     def body(self):  # taken from hv3_dom_html.tcl line 161
         """The document body element.
 
         :rtype: :class:`HTMLElement`"""
         return HTMLElement(
-            self.html,
-            self.html.tk.eval(f"""set body [lindex [[{self.html} node] children] 1]"""),
+            self, self.html.tk.eval(f"""set body [lindex [[{self.html} node] children] 1]"""),
         )
         #return self.querySelector("body")
 
@@ -85,8 +68,7 @@ class HTMLDocument:
 
         :rtype: :class:`HTMLElement`"""
         return HTMLElement(
-            self.html,
-            self.html.tk.eval(f"""set root [lindex [{self.html} node] 0]"""),
+            self, self.html.tk.eval(f"""set root [lindex [{self.html} node] 0]"""),
         )
     
     def createElement(self, tagname):  # taken from hv3_dom_core.tcl line 214
@@ -96,7 +78,7 @@ class HTMLDocument:
         :type tagname: str
         :rtype: :class:`HTMLElement`"""
         return HTMLElement(
-            self.html,
+            self,
             self.html.tk.eval("""
             set node [%s fragment "<%s>"]
             if {$node eq ""} {error "DOMException NOT_SUPPORTED_ERR"}
@@ -110,7 +92,22 @@ class HTMLDocument:
         :param text: The text content of the new node.
         :type text: str
         :rtype: :class:`HTMLElement`"""
-        return HTMLElement(self.html, generate_text_node(self.html, text))
+        return self.html.tk.eval("""
+            set tkw %s
+            set text "%s"
+            if {$text eq ""} {
+                # Special case - The [fragment] API usually parses an empty string
+                # to an empty fragment. So create a text node with text "X", then 
+                # set the text to an empty string.
+                set node [$tkw fragment X]
+                $node text set ""
+            } else {
+                set escaped [string map {< &lt; > &gt;} $text]
+                set node [parse_fragment $escaped]
+            }
+            return $node
+            """ % (self.html, escape_Tcl(text))
+        )
 
     def getElementById(self, query):
         """Return an element given an id.
@@ -119,9 +116,8 @@ class HTMLDocument:
         :type query: str
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
-        newquery = f"[id='{query}']"
-        node = self.html.search(newquery, index=0)
-        return HTMLElement(self.html, node)
+        node = self.html.search(f"[id='{query}']", index=0)
+        return HTMLElement(self, node)
 
     def getElementsByClassName(self, query):
         """Return all elements that match given a class name.
@@ -130,9 +126,8 @@ class HTMLDocument:
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        newquery = [f".{i}" for i in query.split()]
-        nodes = self.html.search(" ".join(newquery))
-        return tuple(HTMLElement(self.html, node) for node in nodes)
+        nodes = self.html.search(" ".join(f".{i}" for i in query.split()))
+        return tuple(HTMLElement(self, node) for node in nodes)
 
     def getElementsByName(self, query):
         """Return all elements that match a given given name attribute.
@@ -141,9 +136,8 @@ class HTMLDocument:
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        newquery = f"[name='{query}']"
-        nodes = self.html.search(newquery)
-        return tuple(HTMLElement(self.html, node) for node in nodes)
+        nodes = self.html.search(f"[name='{query}']")
+        return tuple(HTMLElement(self, node) for node in nodes)
 
     def getElementsByTagName(self, query):
         """Return all elements that match a given tag name.
@@ -153,7 +147,7 @@ class HTMLDocument:
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
         nodes = self.html.search(query)
-        return tuple(HTMLElement(self.html, node) for node in nodes)
+        return tuple(HTMLElement(self, node) for node in nodes)
 
     def querySelector(self, query):
         """Return the first element that matches a given CSS selector.
@@ -163,7 +157,7 @@ class HTMLDocument:
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
         node = self.html.search(query, index=0)
-        return HTMLElement(self.html, node)
+        return HTMLElement(self, node)
 
     def querySelectorAll(self, query):
         """Return all elements that match a given CSS selector.
@@ -173,9 +167,9 @@ class HTMLDocument:
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
         nodes = self.html.search(query)
-        return tuple(HTMLElement(self.html, node) for node in nodes)
+        return tuple(HTMLElement(self, node) for node in nodes)
     
-    def _node_to_html(self, node, deep=True):
+    def _node_to_html(self, node, deep=True):  # From hv3_dom_core.tcl line 311 and line 329
         return self.html.tk.eval(r"""
             proc TclNode_to_html {node} {
                 set tag [$node tag]
@@ -188,7 +182,12 @@ class HTMLDocument:
                         append ret " $zKey=\"$zEscaped\""
                     }
                     append ret >
-                    if {%d} {
+                    set void {
+                        area base br col embed hr img input keygen link meta param source track wbr
+                    }  ;# Don't add closing tags if is self-closing (void-elements)
+                    if {[lsearch -exact $void $tag] != -1} {
+                        return $ret
+                    } elseif {%d} {
                         append ret [node_to_childrenHtml $node]
                     }
                     append ret </$tag>
@@ -203,7 +202,7 @@ class HTMLDocument:
             }
             return [TclNode_to_html %s]
             """ % (int(deep), extract_nested(node))
-        )
+        ) # May split this into 2 methods in future
 
 
 class CSSStyleDeclaration:
@@ -218,7 +217,7 @@ class CSSStyleDeclaration:
         self.node = node
 
     def __getitem__(self, prop):
-        return self.html.get_node_property(self.node, prop)
+        return self.html.get_node_property(self.node, prop, "-inline")
 
     def __setitem__(self, prop, value):
         style = self.html.get_node_properties(self.node, "-inline")
@@ -272,8 +271,9 @@ class HTMLElement:
     :type htmlwidget: :class:`~tkinterweb.TkinterWeb`
     :param node: The Tkhtml3 node this class represents.
     :type node: Tkhtml3 node"""
-    def __init__(self, htmlwidget, node):
-        self.html = htmlwidget
+    def __init__(self, htmlFrame, node):
+        self.tkw = htmlFrame
+        self.html = htmlFrame.html
         self.node = node
         self.styleCache = None  # initialize style as None
         self.html.bbox(node)  # check if the node is valid
@@ -300,14 +300,13 @@ class HTMLElement:
         :raises: :py:class:`tkinter.TclError`"""
         return self.html.tk.eval("""
             set node %s
-                if {[$node tag] eq ""} {error "$node is not an HTMLElement"}
+            if {[$node tag] eq ""} {error "$node is not an HTMLElement"}
 
-                set ret ""
-                foreach child [$node children] {
-                    append ret [node_to_html $child 1]
-                }
-                update
-                return $ret
+            set ret ""
+            foreach child [$node children] {
+                append ret [node_to_html $child 1]
+            }
+            return $ret
             """ % extract_nested(self.node)
         )
 
@@ -317,65 +316,63 @@ class HTMLElement:
         self.html.tk.eval("""
             set node %s
             set tag [$node tag]
-                
             if {$tag eq ""} {error "$node is not an HTMLElement"}
             if {$tag eq "html"} {error "innerHTML cannot be set on <$tag> elements"}
 
             # Destroy the existing children (and their descendants) of $node.
             set children [$node children]
             $node remove $children
-            #foreach child $children {
-            #    $child destroy
-            #}
+            foreach child $children {
+                $child destroy
+            }
 
-            set newHtml "%s"
             # Insert the new descendants, created by parseing $newHtml.
+            set newHtml "%s"
             set children [parse_fragment $newHtml]
             $node insert $children
 
-            update
+            update  ;# This must be done to see changes on-screen
             """ % (extract_nested(self.node), escape_Tcl(contents))
         )
 
     @property
-    def textContent(self):  # original for this project
+    def textContent(self):  # Original for this project
         """Get and set the text content of an element. Cannot be used on ``<html>`` elements.
         
         :rtype: str
         :raises: :py:class:`tkinter.TclError`"""
         return self.html.tk.eval("""
             proc get_child_text {node} {
-                set z ""
+                set txt ""
                 foreach child [$node children] {
                     if {[$child tag] eq ""} {
-                        append z [$child text -pre]
+                        append txt [$child text -pre]
                     } else {
-                        append z [get_child_text $child]
+                        append txt [get_child_text $child]
                     }
                 }
-                return $z
+                return $txt
             }
-            set node %s
-            return [get_child_text $node]
+            return [get_child_text %s]
             """ % extract_nested(self.node)
         )
 
     @textContent.setter
-    def textContent(self, contents):  # ditto
+    def textContent(self, contents):  # Ditto
         "Set the text content of an element."
         self.html.tk.eval("""
             set node %s
-            set tag [$node tag]
             set textnode %s
             if {$textnode eq ""} {error "$node is empty"}
-            if {$tag eq "html"} {error "textContent cannot be set on <$tag> elements"}
+            if {[$node tag] eq "html"} {error "textContent cannot be set on <$tag> elements"}
             $node remove [$node children]
-            #foreach child [$node children] {
-            #    $child destroy
-            #}
+            foreach child [$node children] {
+                $child destroy
+            }
             $node insert $textnode
+            
             update  ;# This must be done to see changes on-screen
-            """ % (extract_nested(self.node), generate_text_node(self.html, contents))
+            """ % (extract_nested(self.node), self.tkw.createTextNode(contents))
         )
 
     @property
@@ -398,7 +395,7 @@ class HTMLElement:
         
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
-        return HTMLElement(self.html, self.html.get_node_parent(self.node))
+        return HTMLElement(self, self.html.get_node_parent(self.node))
 
     @property
     def children(self):
@@ -406,7 +403,7 @@ class HTMLElement:
         
         :rtype: list(:class:`HTMLElement`)
         :raises: :py:class:`tkinter.TclError`"""
-        return [HTMLElement(self.html, i) for i in self.html.get_node_children(self.node)]
+        return [HTMLElement(self, i) for i in self.html.get_node_children(self.node)]
 
     def getAttribute(self, attribute):
         """Return the value of the given attribute..
@@ -464,9 +461,8 @@ class HTMLElement:
         :type query: str
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
-        newquery = f"[id='{query}']"
-        node = self.html.search(newquery, index=0, root=self.node)
-        return HTMLElement(self.html, node)
+        node = self.html.search(f"[id='{query}']", index=0, root=self.node)
+        return HTMLElement(self, node)
 
     def getElementsByClassName(self, query):
         """Return all elements that are children of the current element and match the given class name.
@@ -475,9 +471,8 @@ class HTMLElement:
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        newquery = [f".{i}" for i in query.split()]
-        nodes = self.html.search(" ".join(newquery), root=self.node)
-        return tuple(HTMLElement(self.html, node) for node in nodes)
+        nodes = self.html.search(" ".join(f".{i}" for i in query.split()), root=self.node)
+        return tuple(HTMLElement(self, node) for node in nodes)
 
     def getElementsByName(self, query):
         """Return all elements that are children of the current element and match the given name attribute.
@@ -486,9 +481,8 @@ class HTMLElement:
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        newquery = f"[name='{query}']"
-        nodes = self.html.search(newquery, root=self.node)
-        return tuple(HTMLElement(self.html, node) for node in nodes)
+        nodes = self.html.search(f"[name='{query}']", root=self.node)
+        return tuple(HTMLElement(self, node) for node in nodes)
 
     def getElementsByTagName(self, query):
         """Return all elements that are children of the current element and match the given tag name.
@@ -498,7 +492,7 @@ class HTMLElement:
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
         nodes = self.html.search(query, root=self.node)
-        return tuple(HTMLElement(self.html, node) for node in nodes)
+        return tuple(HTMLElement(self, node) for node in nodes)
 
     def querySelector(self, query):
         """Return the first element that are children of the current element and match the given CSS selector.
@@ -508,7 +502,7 @@ class HTMLElement:
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
         node = self.html.search(query, index=0, root=self.node)
-        return HTMLElement(self.html, node)
+        return HTMLElement(self, node)
 
     def querySelectorAll(self, query):
         """Return all elements that are children of the current element and match the given CSS selector.
@@ -518,7 +512,7 @@ class HTMLElement:
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
         nodes = self.html.search(query, root=self.node)
-        return tuple(HTMLElement(self.html, node) for node in nodes)
+        return tuple(HTMLElement(self, node) for node in nodes)
     
     def scrollIntoView(self):
         "Scroll the viewport so that this element is visible."

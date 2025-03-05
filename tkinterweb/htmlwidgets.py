@@ -6,6 +6,7 @@ Copyright (c) 2025 Andereoo
 """
 
 from urllib.parse import urldefrag, urlparse
+from os import path
 
 from bindings import TkinterWeb
 from utilities import *
@@ -214,7 +215,7 @@ class HtmlFrame(ttk.Frame):
         self._html = html = TkinterWeb(self, self.tkinterweb_options, **self.tkhtml_options)
         self._hsb = hsb = AutoScrollbar(self, orient="horizontal", command=html.xview)
         self._vsb = vsb = AutoScrollbar(self, orient="vertical", command=html.yview)
-        self._document = HTMLDocument(html)
+        self._DOMCache = None
 
         html.configure(xscrollcommand=hsb.set, yscrollcommand=vsb.set)
 
@@ -287,7 +288,9 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         """The DOM manager. Use this to access :py:class:`HTMLDocument` methods to manupulate the DOM.
         
         :rtype: :class:`HTMLDocument`"""
-        return self._document
+        if self._DOMCache is None:  # lazy loading of Document Object Model
+            self._DOMCache = HTMLDocument(self.html)
+        return self._DOMCache
     
     @property
     def html(self):
@@ -606,7 +609,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         :return: A string containing the page's HTML/CSS code.
         :rtype: str"""
         self._html.post_message(f"Saving {self._current_url}...")
-        html = self._document.documentElement.innerHTML
+        html = self.document.documentElement.innerHTML
         if filename:
             with open(filename, "w+") as handle:
                 handle.write(html)
@@ -628,21 +631,23 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         title = ""
         icon = ""
         base = ""
-        style = ""
+        style = "\n"
         
         for rule in self._html.get_computed_styles():
             selector, prop, origin = rule
             if origin == "agent" and not allow_agent: continue
-            style += f"{selector} {{{prop.replace('-tkhtml-no-color', 'transparent')}}}\n"
+            style += f"\t\t\t{selector} {{{prop.replace('-tkhtml-no-color', 'transparent')}}}\n"
 
-        if self._html.title: title = f"\n        <title>{self._html.title}</title>"
-        if self._html.icon: icon = f"\n        <link rel=\"icon\" type=\"image/x-icon\" href=\"/{self._html.icon}\">"
-        if self._html.base_url: base = f"\n        <base href=\"{self._html.base_url}\"></base>"
-        if style: style = f"\n        <style>{style}</style>"
-        body = self._document.body.innerHTML
+        if self._html.title: title = f"\n\t\t<title>{self._html.title}</title>"
+        if self._html.icon: icon = f"\n\t\t<link rel=\"icon\" type=\"image/x-icon\" href=\"/{self._html.icon}\">"
+        if self._html.base_url: base = f"\n\t\t<base href=\"{self._html.base_url}\"></base>"
+        if style.strip(): style = f"\n\t\t<style>{style}\t\t</style>"
+        body = self.document.body.innerHTML
 
-        html = f"""<html>\n    <head>{title}{icon}{base}{style}\n    </head>\n    <body>\n        {body}\n    </body>\n</html>"""
+        html = f"""<html>\n\t<head>{title}{icon}{base}{style}\n\t</head>\n\t<body>\n\t{body}\n\t</body>\n</html>"""
         if filename:
+            if not path.splitext(filename)[1]:
+                filename = f"{filename}.{self.cget('parsemode')}"
             with open(filename, "w+") as handle:
                 handle.write(html)
         self._html.post_message("Saved!")
@@ -759,7 +764,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         else:
             height = self._html.winfo_height()
         if self._prev_height != height or force:
-            resizeable_elements = self._document.querySelectorAll(f"[{BUILTIN_ATTRIBUTES['vertical-align']}]")
+            resizeable_elements = self.document.querySelectorAll(f"[{BUILTIN_ATTRIBUTES['vertical-align']}]")
             for element in resizeable_elements:
                 element.style.height = f"{height/self['zoom']}px"
         self._prev_height = height

@@ -601,28 +601,23 @@ class TkinterWeb(tk.Widget):
         self._finish_download(thread)
 
     def load_alt_text(self, url, name):
-        if self.image_alternate_text_enabled and (url in self.image_directory):
+        if (url in self.image_directory):
             node = self.image_directory[url]
             alt = self.get_node_attribute(node, "alt")
-            if self.experimental:
-                # eventually this will be all we need
-                if alt: 
+            if alt and self.image_alternate_text_enabled:
+                if self.experimental:
                     self.insert_node(node, self.parse_fragment(alt))
-            else:
-                nodebox = self.bbox(node)
-                if alt:
+                else:
                     image = text_to_image(
-                        name,
-                        alt,
-                        nodebox,
+                        name, alt, self.bbox(node),
                         self.image_alternate_text_font,
                         self.image_alternate_text_size,
                         self.image_alternate_text_threshold,
                     )
                     self.loaded_images.add(image)
-        elif not self.ignore_invalid_images:
-            image, error = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled)
-            self.loaded_images.add(image)
+            if not self.ignore_invalid_images:
+                image, error = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled)
+                self.loaded_images.add(image)
 
     def fetch_images(self, url, name, urltype):
         "Fetch images and display them in the document."
@@ -1744,6 +1739,7 @@ class TkinterWeb(tk.Widget):
             self._handle_overflow_property(overflow, self.manage_hsb_func)
         else:
             overflow_options = ("overflow",)
+            
         for overflow_type in overflow_options:
             overflow = self.get_node_property(node, overflow_type) 
             overflow = self._handle_overflow_property(overflow, self.manage_vsb_func)

@@ -182,17 +182,15 @@ class HTMLDocument:
                         append ret " $zKey=\"$zEscaped\""
                     }
                     append ret >
-                    if {%d} {
-                        append ret [node_to_childrenHtml $node]
-                    }
                     set void {
                         area base br col embed hr img input keygen link meta param source track wbr
                     }  ;# Don't add closing tags if is self-closing (void-elements)
                     if {[lsearch -exact $void $tag] != -1} {
-                        append ret ""
-                    } else {
-                        append ret </$tag>
+                        return $ret
+                    } elseif {%d} {
+                        append ret [node_to_childrenHtml $node]
                     }
+                    append ret </$tag>
                 }
             }
             proc node_to_childrenHtml {node} {

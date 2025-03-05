@@ -1739,6 +1739,7 @@ class TkinterWeb(tk.Widget):
             self._handle_overflow_property(overflow, self.manage_hsb_func)
         else:
             overflow_options = ("overflow",)
+            
         for overflow_type in overflow_options:
             overflow = self.get_node_property(node, overflow_type) 
             overflow = self._handle_overflow_property(overflow, self.manage_vsb_func)

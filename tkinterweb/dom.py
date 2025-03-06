@@ -490,26 +490,66 @@ class CSSStyleDeclaration:
         self.html = element_manager.html
         self.node = element_manager.node
 
-    def __getitem__(self, prop):
-        return self.html.get_node_property(self.node, prop, "-inline")
+    def __getitem__(self, property):
+        #value = self.html.get_node_property(self.node, property, "-inline")
+        style = self.cssInlineStyles
+        if property in style: 
+            value = style[property]
+        else:
+            style = self.html.get_node_properties(self.node, "-inline")
+            if property in style: 
+                value = style[property]
+            else:
+                value = []
+                for prop in style:
+                    newprop = prop.split("-")
+                    if len(newprop) == 3:
+                        newprop = f"{newprop[0]}-{newprop[2]}"
+                    if newprop == property:
+                        value.append(style[prop])
+                value = " ".join(value)
+        return value
 
-    def __setitem__(self, prop, value):
-        style = self.html.get_node_properties(self.node, "-inline")
-        style[prop] = value
+    def __setitem__(self, property, value):
+        #style = self.html.get_node_properties(self.node, "-inline")
+        style = self.cssInlineStyles
+        style[property] = value
         sStr = " ".join(f"{p}: {v};" for p, v in style.items())
         self.html.set_node_attribute(self.node, "style", sStr)
 
-    def __setattr__(self, prop, value):
-        if prop in ("node", "html"):
-            super().__setattr__(prop, value)
+    def __delitem__(self, property):
+        style = self.cssInlineStyles
+        if property in style: 
+            old = style.pop(property)
         else:
-            self.__setitem__(camel_case_to_property(prop), value)
+            style = self.html.get_node_properties(self.node, "-inline")
+            if property in style: 
+                old = style.pop(property)
+            else:
+                value = []
+                for prop in set(style.keys()):
+                    newprop = prop.split("-")
+                    if len(newprop) == 3:
+                        newprop = f"{newprop[0]}-{newprop[2]}"
+                    if newprop == property:
+                        value.append(style.pop(prop))
+                old = " ".join(value)
 
-    def __getattr__(self, prop):
+        sStr = " ".join(f"{p}: {v};" for p, v in style.items())
+        self.html.set_node_attribute(self.node, "style", sStr)
+        return old
+
+    def __setattr__(self, property, value):
+        if property in ("node", "html"):
+            super().__setattr__(property, value)
+        else:
+            self.__setitem__(camel_case_to_property(property), value)
+
+    def __getattr__(self, property):
         try:
-            return self.__getitem__(camel_case_to_property(prop))
+            return self.__getitem__(camel_case_to_property(property))
         except TclError:
-            raise TclError(f"no such property: {prop}")
+            raise TclError(f"no such property: {property}")
 
     @property
     def cssText(self):
@@ -538,3 +578,55 @@ class CSSStyleDeclaration:
         
         :rtype: dict"""
         return self.html.get_node_properties(self.node, "-inline")
+    
+    @property 
+    def cssInlineStyles(self):
+        """Return the content of the element's ``style`` attribute, formatted as a dictionary.
+        
+        :rtype: dict"""
+        inline = (self.html.get_node_attribute(self.node, "style"))
+        style = {}
+        for item in inline.split(";"):
+            if item:
+                key, old = item.split(":", 1)
+                style[key.strip()] = old.strip()
+        return style
+    
+    def getPropertyPriority(self, property):
+        """Return the priority of the given inline CSS property.
+        
+        :param property: The CSS property to search for.
+        :type property: str
+        :return: "important" or "".
+        :rtype: str"""
+        style = self.cssInlineStyles
+        if property in style:
+            value = style[property]
+            if value.endswith("!important"): return "important"
+        return ""
+
+    def getPropertyValue(self, property):
+        """Return the value of the given inline CSS property.
+        
+        :param property: The CSS property to get.
+        :type property: str
+        :rtype: str"""
+        return self.__getitem__(property)
+
+    def removeProperty(self, property):
+        """Remove the given inline CSS property.
+        
+        :param property: The CSS property to remove.
+        :type property: str
+        :returns: the old value of the given property, or "" if the property did not exist.
+        :rtype: str"""
+        return self.__delitem__(property)
+
+    def setProperty(self, property, value):
+        """Set the value of the given inline CSS property.
+        
+        :param property: The CSS property to set.
+        :type property: str
+        :returns: the old value of the given property, or "" if the property did not exist.
+        :rtype: str"""
+        self.__setitem__(property, value)

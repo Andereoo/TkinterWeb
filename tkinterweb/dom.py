@@ -10,6 +10,21 @@ Copyright (c) 2025 Andereoo
 from tkinter import TclError
 
 
+COMPOSITE_PROPERTIES = {
+    "margin": ("margin-top", "margin-right", "margin-bottom", "margin-left"),
+    "padding": ("padding-top", "padding-right", "padding-bottom", "padding-left"),
+    "border-width": ("border-top-width", "border-right-width", "border-bottom-width", "border-left-width"),
+    "border-style": ("border-top-style", "border-right-style", "border-bottom-style", "border-left-style"),
+    "border-color": ("border-top-color", "border-right-color", "border-bottom-color", "border-left-color"),
+    "border": ("border-width", "border-style", "border-color"),
+    "outline": ("outline-color", "outline-style", "outline-width"),
+    "background": ("background-color", "background-image", "background-repeat", "background-attachment", "background-position"),
+    "list-style": ("list-style-type", "list-style-position", "list-style-image"),
+    "cue": ("cue-before", "cue-after"),
+    "font": ("font-style", "font-variant", "font-weight", "font-size", "line-height", "font-family"),
+}
+
+
 def escape_Tcl(string):
     string = str(string)
     escaped = ""
@@ -486,58 +501,74 @@ class CSSStyleDeclaration:
     
     :param element_manager: The :class:`~tkinterweb.dom.HTMLElement` instance this class is tied to.
     :type element_manager: :class:`~tkinterweb.dom.HTMLElement`"""
-    def __init__(self, element_manager,):
+    def __init__(self, element_manager):
         self.html = element_manager.html
         self.node = element_manager.node
 
     def __getitem__(self, property):
-        #value = self.html.get_node_property(self.node, property, "-inline")
-        style = self.cssInlineStyles
-        if property in style: 
-            value = style[property]
-        else:
-            style = self.html.get_node_properties(self.node, "-inline")
-            if property in style: 
-                value = style[property]
-            else:
-                value = []
-                for prop in style:
-                    newprop = prop.split("-")
-                    if len(newprop) == 3:
-                        newprop = f"{newprop[0]}-{newprop[2]}"
-                    if newprop == property:
-                        value.append(style[prop])
-                value = " ".join(value)
+        # Get value from Tkhtml if it is a real and existing property
+        try:
+            value = self.html.get_node_property(self.node, property, "-inline")
+        except TclError:
+            # Ignore invalid properties
+            value = ""
+
+        if not value:
+            # Get value from sub-properties if it is a composite property
+            if property in COMPOSITE_PROPERTIES:
+                values = []
+                for key in COMPOSITE_PROPERTIES[property]:
+                    computed = self.__getitem__(key)
+                    if len(computed.split()) > 1:
+                        return ""
+                    if computed: values.append(computed)
+            
+                if len(values) == len(COMPOSITE_PROPERTIES[property]):
+                    if all(x == values[0] for x in values): value = values[0]
+                    else: value = " ".join(values)
+
+            if not value:
+                # Otherwise attempt to get value from 'style' attribute
+                style = self.cssInlineStyles
+                if property in style: 
+                    value = style[property]
+                    
         return value
 
     def __setitem__(self, property, value):
-        #style = self.html.get_node_properties(self.node, "-inline")
-        style = self.cssInlineStyles
+        style = self.html.get_node_properties(self.node, "-inline")
         style[property] = value
         sStr = " ".join(f"{p}: {v};" for p, v in style.items())
         self.html.set_node_attribute(self.node, "style", sStr)
 
     def __delitem__(self, property):
-        style = self.cssInlineStyles
+        value = self.__getitem__(property)
+
+        # Delete the property from the Tkhtml properties list if it exists 
+        style = self.html.get_node_properties(self.node, "-inline")
         if property in style: 
-            old = style.pop(property)
+            del style[property]
         else:
-            style = self.html.get_node_properties(self.node, "-inline")
+            # Delete the property from the 'style' attribute if it exists 
+            style = self.cssInlineStyles
             if property in style: 
-                old = style.pop(property)
-            else:
-                value = []
-                for prop in set(style.keys()):
-                    newprop = prop.split("-")
-                    if len(newprop) == 3:
-                        newprop = f"{newprop[0]}-{newprop[2]}"
-                    if newprop == property:
-                        value.append(style.pop(prop))
-                old = " ".join(value)
+                del style[property]
+
+        # Delete the property's sub-properties properties if applicable
+        # Do this regardless of what happens above in case the property exists as a composite while its sub-properties were also set seperately
+        if property in COMPOSITE_PROPERTIES:
+            def clean(property):
+                for key in COMPOSITE_PROPERTIES[property]:
+                    if key in COMPOSITE_PROPERTIES:
+                        clean(key)
+                    elif key in style:
+                        del style[key]
+            clean(property)
 
         sStr = " ".join(f"{p}: {v};" for p, v in style.items())
         self.html.set_node_attribute(self.node, "style", sStr)
-        return old
+
+        return value
 
     def __setattr__(self, property, value):
         if property in ("node", "html"):
@@ -546,10 +577,7 @@ class CSSStyleDeclaration:
             self.__setitem__(camel_case_to_property(property), value)
 
     def __getattr__(self, property):
-        try:
-            return self.__getitem__(camel_case_to_property(property))
-        except TclError:
-            raise TclError(f"no such property: {property}")
+        return self.__getitem__(camel_case_to_property(property))
 
     @property
     def cssText(self):

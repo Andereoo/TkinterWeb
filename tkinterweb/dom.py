@@ -228,7 +228,7 @@ class HTMLElement:
         :rtype: :class:`~tkinterweb.dom.CSSStyleDeclaration`
         """
         if self.style_cache is None:  # lazy loading of style
-            self.style_cache = CSSStyleDeclaration(self, self.node)
+            self.style_cache = CSSStyleDeclaration(self)
         return self.style_cache
 
     @property
@@ -485,12 +485,10 @@ class CSSStyleDeclaration:
     """Access this class via the :attr:`~tkinterweb.dom.HTMLElement.style` property of the :attr:`~tkinterweb.dom.HTMLElement` class.
     
     :param element_manager: The :class:`~tkinterweb.dom.HTMLElement` instance this class is tied to.
-    :type element_manager: :class:`~tkinterweb.dom.HTMLElement`
-    :param node: The Tkhtml3 node this class should modify.
-    :type node: Tkhtml3 node"""
-    def __init__(self, element_manager, node):
+    :type element_manager: :class:`~tkinterweb.dom.HTMLElement`"""
+    def __init__(self, element_manager,):
         self.html = element_manager.html
-        self.node = node
+        self.node = element_manager.node
 
     def __getitem__(self, prop):
         return self.html.get_node_property(self.node, prop, "-inline")

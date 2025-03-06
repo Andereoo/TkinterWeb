@@ -520,12 +520,17 @@ class CSSStyleDeclaration:
                 for key in COMPOSITE_PROPERTIES[property]:
                     computed = self.__getitem__(key)
                     if len(computed.split()) > 1:
+                        # If the sub-properties have multiple values (eg. have their own sub-properties),
+                        # Then this property does not have a valid value
                         return ""
                     if computed: values.append(computed)
             
                 if len(values) == len(COMPOSITE_PROPERTIES[property]):
-                    if all(x == values[0] for x in values): value = values[0]
-                    else: value = " ".join(values)
+                    if all(x == values[0] for x in values): 
+                        # Simplify the return value if the values of the sub-properties are all the same
+                        value = values[0]
+                    else: 
+                        value = " ".join(values)
 
             if not value:
                 # Otherwise attempt to get value from 'style' attribute

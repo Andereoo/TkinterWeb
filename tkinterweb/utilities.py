@@ -650,15 +650,20 @@ class FileSelector(tk.Frame):
 
     def select_file(self):
         if self.multiple:
-            self.files = files = filedialog.askopenfilenames(
+            files = filedialog.askopenfilenames(
                 title="Select files", filetypes=self.filetypes
             )
+            if files:
+                self.files = []
+                for file in files:
+                    self.files.append(os.path.basename(file.replace('\\', '/')))
+                files = self.files
         else:
             files = filedialog.askopenfilename(
                 title="Select file", filetypes=self.filetypes
             )
             if files:
-                self.files = files = (files,)
+                self.files = files = (os.path.basename(files.replace('\\', '/')),)
         number = len(files)
         if number == 0:
             self.label.config(text="No files selected.")

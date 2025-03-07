@@ -265,6 +265,7 @@ INPUT, TEXTAREA, SELECT, BUTTON {
 INPUT[type="image"][src] {
   -tkhtml-replacement-image: attr(src);
   cursor: pointer;
+  border-width: 0;
 }
 INPUT[type="checkbox"], INPUT[type="radio"], input[type="file"], input[type="range"], input[type="color"] {
   background-color: transparent;

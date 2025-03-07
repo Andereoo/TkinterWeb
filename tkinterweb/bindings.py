@@ -1453,7 +1453,7 @@ class TkinterWeb(tk.Widget):
         )
         nodevalue = self.get_node_attribute(node, "value")
 
-        if nodetype in {"image", "submit", "reset", "button", "hidden"}:
+        if nodetype in {"image", "submit", "reset", "button"}:
             widgetid = None
         elif nodetype == "file":
             accept = self.get_node_attribute(node, "accept")
@@ -1734,7 +1734,7 @@ class TkinterWeb(tk.Widget):
             if nodeattrname:
                 if formelement in self.form_nodes:
                     nodevalue = self.form_nodes[formelement].get()
-                else:
+                elif self.get_node_tag(formelement) == "hidden":
                     nodevalue = self.get_node_attribute(formelement, "value")
                 nodetype = self.get_node_attribute(formelement, "type")
                 if nodetype == "submit" or nodetype == "reset":

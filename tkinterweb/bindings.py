@@ -1513,9 +1513,14 @@ class TkinterWeb(tk.Widget):
             variable = tk.IntVar(self, value=nodevalue)
             from_ = self.get_node_attribute(node, "min", 0)
             to = self.get_node_attribute(node, "max", 100)
+            step = float(self.get_node_attribute(node, "step", 10))
+            def update_value(*args):
+                value = round(float(variable.get()) / step) * step
+                widgetid.set(value)
+                self._on_input_change(node, widgetid)
             widgetid = ttk.Scale(self, variable=variable, from_=from_, to=to)
             variable.trace(
-                "w", lambda *_, widgetid=widgetid: self._on_input_change(node, widgetid)
+                "w", update_value
             )
             widgetid.reset = lambda: variable.set(nodevalue)
             self.form_nodes[node] = widgetid

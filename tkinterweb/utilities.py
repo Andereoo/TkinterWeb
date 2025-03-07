@@ -526,15 +526,17 @@ class AutoScrollbar(ttk.Scrollbar):
 class ScrolledTextBox(tk.Frame):
     "Text widget with a scrollbar"
 
-    def __init__(self, parent, **kwargs):
-
+    def __init__(self, parent, content, **kwargs):
         tk.Frame.__init__(self, parent)
         self.parent = parent
+        self.content = content
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.tbox = tbox = tk.Text(self, **kwargs)
         tbox.grid(row=0, column=0, sticky="nsew")
+
+        self.tbox.insert("1.0", content)
     
         self.vsb = vsb = AutoScrollbar(self, command=tbox.yview)
         vsb.grid(row=0, column=1, sticky="nsew")
@@ -543,6 +545,13 @@ class ScrolledTextBox(tk.Frame):
         tbox.bind("<MouseWheel>", self.scroll)
         tbox.bind("<Button-4>", self.scroll_x11)
         tbox.bind("<Button-5>", self.scroll_x11)
+        tbox.bind("<Control-Key-a>", self.select_all)
+
+    def select_all(self, event):
+        self.tbox.tag_add("sel", "1.0", "end")
+        self.tbox.mark_set("insert", "1.0")
+        self.tbox.see("insert")
+        return "break"
 
     def scroll(self, event):
         yview = self.tbox.yview()
@@ -565,10 +574,19 @@ class ScrolledTextBox(tk.Frame):
         return self.tbox.insert(*args, **kwargs)
 
     def get(self, *args, **kwargs):
+        if not args and not kwargs:
+            args = ("1.0", "end-1c")
         return self.tbox.get(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         self.tbox.delete(*args, **kwargs)
+
+    def reset(self):
+        self.set(self.content)
+
+    def set(self, value):
+        self.tbox.delete("0.0", "end")
+        self.tbox.insert("1.0", value)
 
 
 class FileSelector(tk.Frame):
@@ -579,10 +597,10 @@ class FileSelector(tk.Frame):
         self.selector = selector = tk.Button(
             self, text="Browse", command=self.select_file
         )
-        self.label = label = tk.Label(self, text="No files selected.")
+        self.label = label = tk.Label(self, bg="red", text="No files selected.")
 
-        selector.pack(side="left")
-        label.pack(side="right", fill="both")
+        selector.grid(row=0, column=1)
+        label.grid(row=0, column=2, padx=5)
 
         self.generate_filetypes(accept)
 

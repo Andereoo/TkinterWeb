@@ -48,6 +48,10 @@ class Combobox(tk.Widget):
             self.default = self.values.index(selected)
         self.reset()
 
+    def set(self, value):
+        if value in self.values:
+            self.tk.call(self._w, "select", self.values.index(value))
+
     def reset(self):
         self.tk.call(self._w, "select", self.default)
 
@@ -192,8 +196,7 @@ class TkinterWeb(tk.Widget):
         self.motion_frame_bg = "white"
 
         # enable form resetting and submission
-        self.form_get_commands = {}
-        self.form_reset_commands = {}
+        self.form_nodes = {}
         self.form_elements = {}
         self.loaded_forms = {}
         self.radio_buttons = {}
@@ -357,6 +360,7 @@ class TkinterWeb(tk.Widget):
         self.image_directory = {}
         self.form_get_commands = {}
         self.form_elements = {}
+        self.form_nodes = {}
         self.loaded_forms = {}
         self.waiting_forms = 0
         self.radio_buttons = {}
@@ -1401,8 +1405,7 @@ class TkinterWeb(tk.Widget):
         widgetid = Combobox(self)
         widgetid.insert(text, values, selected)
         widgetid.configure(onchangecommand=lambda *_, widgetid=widgetid: self._on_input_change(node, widgetid))
-        self.form_get_commands[node] = lambda: widgetid.get()
-        self.form_reset_commands[node] = lambda: widgetid.reset()
+        self.form_nodes[node] = widgetid
         state = self.get_node_attribute(node, "disabled", False) != "0"
         if state:
             widgetid.configure(state="disabled")
@@ -1421,14 +1424,13 @@ class TkinterWeb(tk.Widget):
             return
         widgetid = ScrolledTextBox(
             self,
+            self.get_node_text(self.get_node_children(node), "-pre"),
             borderwidth=0,
             selectborderwidth=0,
             highlightthickness=0,
         )
 
-        self.form_get_commands[node] = lambda: widgetid.get("1.0", "end-1c")
-        self.form_reset_commands[node] = lambda: widgetid.delete("0.0", "end")
-        widgetid.insert("1.0", self.get_node_text(self.get_node_children(node), "-pre"))
+        self.form_nodes[node] = widgetid
         state = self.get_node_attribute(node, "disabled", False) != "0"
         if state:
             widgetid.configure(state="disabled")
@@ -1451,10 +1453,8 @@ class TkinterWeb(tk.Widget):
         )
         nodevalue = self.get_node_attribute(node, "value")
 
-        if nodetype in {"image", "submit", "reset", "button"}:
+        if nodetype in {"image", "submit", "reset", "button", "hidden"}:
             widgetid = None
-            self.form_get_commands[node] = placeholder
-            self.form_reset_commands[node] = placeholder
         elif nodetype == "file":
             accept = self.get_node_attribute(node, "accept")
             multiple = (
@@ -1462,8 +1462,7 @@ class TkinterWeb(tk.Widget):
                 != self.radiobutton_token
             )
             widgetid = FileSelector(self, accept, multiple)
-            self.form_get_commands[node] = widgetid.get
-            self.form_reset_commands[node] = widgetid.reset
+            self.form_nodes[node] = widgetid
             self.handle_node_replacement(
                 node,
                 widgetid,
@@ -1474,22 +1473,19 @@ class TkinterWeb(tk.Widget):
             )
         elif nodetype == "color":
             widgetid = ColourSelector(self, nodevalue)
-            self.form_get_commands[node] = widgetid.get
-            self.form_reset_commands[node] = widgetid.reset
+            self.form_nodes[node] = widgetid
             self.handle_node_replacement(
                 node,
                 widgetid,
                 lambda widgetid=widgetid: self.handle_node_removal(widgetid),
                 placeholder,
             )
-        elif nodetype == "hidden":
-            widgetid = None
-            self.form_get_commands[node] = lambda node=node: self.get_node_attribute(
-                node, "value"
-            )
-            self.form_reset_commands[node] = lambda: None
         elif nodetype == "checkbox":
-            variable = tk.IntVar(self)
+            check = 0
+            checked = self.get_node_attribute(node, "checked", "false")
+            if checked != "false": check=1
+
+            variable = tk.IntVar(self, value=check)
             widgetid = tk.Checkbutton(
                 self,
                 borderwidth=0,
@@ -1501,8 +1497,10 @@ class TkinterWeb(tk.Widget):
             variable.trace(
                 "w", lambda *_, widgetid=widgetid: self._on_input_change(node, widgetid)
             )
-            self.form_get_commands[node] = lambda: variable.get()
-            self.form_reset_commands[node] = lambda: variable.set(0)
+            widgetid.reset = lambda: variable.set(check)
+            widgetid.set = lambda value, node=node: self.set_node_attribute(node, "value", value)
+            widgetid.get = lambda nodevalue=nodevalue: nodevalue
+            self.form_nodes[node] = widgetid
             self.handle_node_replacement(
                 node,
                 widgetid,
@@ -1519,8 +1517,8 @@ class TkinterWeb(tk.Widget):
             variable.trace(
                 "w", lambda *_, widgetid=widgetid: self._on_input_change(node, widgetid)
             )
-            self.form_get_commands[node] = widgetid.get
-            self.form_reset_commands[node] = lambda: variable.set(0)
+            widgetid.reset = lambda: variable.set(nodevalue)
+            self.form_nodes[node] = widgetid
             self.handle_node_replacement(
                 node,
                 widgetid,
@@ -1559,8 +1557,15 @@ class TkinterWeb(tk.Widget):
                     "w", lambda *_, widgetid=widgetid: self._on_input_change(node, widgetid)
                 )
                 self.radio_buttons[name] = variable
-            self.form_get_commands[node] = variable.get
-            self.form_reset_commands[node] = lambda: variable.set("")
+
+            checked = self.get_node_attribute(node, "checked", "false")
+            if checked != "false": 
+                variable.set(nodevalue)
+                widgetid.reset = lambda: variable.set(nodevalue)
+            else:
+                widgetid.reset = lambda: variable.set(variable.get())
+            widgetid.get = variable.get
+            self.form_nodes[node] = widgetid
             self.handle_node_replacement(
                 node,
                 widgetid,
@@ -1583,12 +1588,12 @@ class TkinterWeb(tk.Widget):
                     node=node, event=event
                 ),
             )
-            self.form_get_commands[node] = widgetid.get
-            self.form_reset_commands[node] = (
-                lambda widgetid=widgetid, content=nodevalue: self._handle_entry_reset(
-                    widgetid, content
-                )
+            widgetid.set = lambda content, widgetid=widgetid: self._handle_entry_set(widgetid, content)
+            widgetid.reset = (
+                lambda widgetid=widgetid, content=nodevalue: self._handle_entry_set(
+                    widgetid, content)
             )
+            self.form_nodes[node] = widgetid
             self.handle_node_replacement(
                 node,
                 widgetid,
@@ -1697,7 +1702,7 @@ class TkinterWeb(tk.Widget):
         self.visited_links.append(url)
         self.on_link_click(url)
 
-    def _handle_entry_reset(self, widgetid, content):
+    def _handle_entry_set(self, widgetid, content):
         "Reset tk.Entry widgets in HTML forms."
         widgetid.delete(0, "end")
         widgetid.insert(0, content)
@@ -1711,7 +1716,8 @@ class TkinterWeb(tk.Widget):
         #action = self.get_node_attribute(form, "action")
 
         for formelement in self.loaded_forms[form]:
-            self.form_reset_commands[formelement]()
+            if formelement in self.form_nodes:
+                self.form_nodes[formelement].reset()
 
     def _handle_form_submission(self, node, event=None):
         "Submit HTML forms."
@@ -1726,7 +1732,10 @@ class TkinterWeb(tk.Widget):
         for formelement in self.loaded_forms[form]:
             nodeattrname = self.get_node_attribute(formelement, "name")
             if nodeattrname:
-                nodevalue = self.form_get_commands[formelement]()
+                if formelement in self.form_nodes:
+                    nodevalue = self.form_nodes[formelement].get()
+                else:
+                    nodevalue = self.get_node_attribute(formelement, "value")
                 nodetype = self.get_node_attribute(formelement, "type")
                 if nodetype == "submit" or nodetype == "reset":
                     continue

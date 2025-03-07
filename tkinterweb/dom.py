@@ -56,6 +56,12 @@ def camel_case_to_property(string):
     # matches = finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)', string)
     # return "-".join([m.group(0).lower() for m in matches])
 
+def flatten(data):
+    """Recursively flattens nested tuples and lists into a single list."""
+    if isinstance(data, tuple):
+        return flatten(data[0])
+    else:
+        return data
 
 class HTMLDocument:
     """Access this class via the :attr:`~tkinterweb.HtmlFrame.document` property of the :attr:`~tkinterweb.HtmlFrame` and :attr:`~tkinterweb.HtmlLabel` widgets.
@@ -144,7 +150,7 @@ class HTMLDocument:
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
         nodes = self.html.search(" ".join(f".{i}" for i in query.split()), root=_root)
-        return tuple(HTMLElement(self, node) for node in nodes)
+        return HTMLCollection(HTMLElement(self, node) for node in nodes)
 
     def getElementsByName(self, query, _root=None):
         """Return all elements that match a given given name attribute.
@@ -154,7 +160,7 @@ class HTMLDocument:
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
         nodes = self.html.search(f"[name='{query}']", root=_root)
-        return tuple(HTMLElement(self, node) for node in nodes)
+        return HTMLCollection(HTMLElement(self, node) for node in nodes)
 
     def getElementsByTagName(self, query, _root=None):
         """Return all elements that match a given tag name.
@@ -164,7 +170,7 @@ class HTMLDocument:
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
         nodes = self.html.search(query, root=_root)
-        return tuple(HTMLElement(self, node) for node in nodes)
+        return HTMLCollection(HTMLElement(self, node) for node in nodes)
 
     def querySelector(self, query, _root=None):
         """Return the first element that matches a given CSS selector.
@@ -184,7 +190,7 @@ class HTMLDocument:
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
         nodes = self.html.search(query, root=_root)
-        return tuple(HTMLElement(self, node) for node in nodes)
+        return HTMLCollection(HTMLElement(self, node) for node in nodes)
     
     def _node_to_html(self, node, deep=True):  # From hv3_dom_core.tcl line 311 and line 329
         return self.html.tk.eval(r"""
@@ -230,7 +236,7 @@ class HTMLElement:
     def __init__(self, document_manager, node):
         self.document = document_manager
         self.html = document_manager.html
-        self.node = node
+        self.node = flatten(node)
         self.style_cache = None  # initialize style as None
         self.html.bbox(node)  # check if the node is valid
 
@@ -327,7 +333,7 @@ class HTMLElement:
             $node insert $textnode
             
             update  ;# This must be done to see changes on-screen
-            """ % (extract_nested(self.node), self.document.createTextNode(contents))
+            """ % (extract_nested(self.node), self.document.createTextNode(contents).node)
         )
 
     @property
@@ -359,6 +365,16 @@ class HTMLElement:
         :rtype: list(:class:`HTMLElement`)
         :raises: :py:class:`tkinter.TclError`"""
         return [HTMLElement(self, i) for i in self.html.get_node_children(self.node)]
+    
+    @property
+    def value(self):
+        if self.node in self.html.form_nodes:
+            return self.html.form_nodes[self.node].get()
+        
+    @value.setter
+    def value(self, value):
+        if self.node in self.html.form_nodes:
+            self.html.form_nodes[self.node].set(value)
 
     def getAttribute(self, attribute):
         """Return the value of the given attribute..
@@ -495,6 +511,20 @@ class HTMLElement:
         #        self.html._on_object(self.node)
         #    if tag == "iframe":
         #        self.html._on_iframe(self.node)
+
+class HTMLCollection(list):
+    # For some reason this stuff doesn't work in JavaScript
+    @property
+    def length(self):
+        return len(self)
+    
+    def item(self, index):
+        return self[int(index)]
+    
+    def namedItem(self, name):
+        for i in self:
+            if i.getAttribute("id") == name or i.getAttribute("name") == name:
+                return i
 
 class DOMRect:
     """This class generates and stores information about the element's position and size at this point in time.

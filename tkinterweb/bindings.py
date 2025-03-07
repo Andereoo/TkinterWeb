@@ -576,6 +576,28 @@ class TkinterWeb(tk.Widget):
         "Get a tuple containing the computed CSS rules for each CSS selector"
         return self.tk.call(self._w, "_styleconfig")
 
+    def fetch_scripts(self, attributes, url):
+        "Fetch stylesheets and parse the CSS code they contain"
+        thread = self._begin_download()
+        data = None
+
+        if url and self.unstoppable:
+            try:
+                if url.startswith("file://") or (not self._caches_enabled):
+                    data = download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))[0]
+                else:
+                    data = cache_download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))[0]
+
+            except Exception as error:
+                self.post_message(f"Error loading script {url}: {error}")
+                self.on_resource_setup(url, "script", False)
+
+        if data and self.unstoppable:
+            self.post_message(f"Successfully loaded {shorten(url)}")
+            self.on_resource_setup(url, "script", True)
+            self.after(0, self.on_script, attributes, data) # thread safety
+        self._finish_download(thread)
+
     def fetch_styles(self, sheetid, handler, errorurl="", url=None, data=None):
         "Fetch stylesheets and parse the CSS code they contain"
         thread = self._begin_download()
@@ -965,6 +987,9 @@ class TkinterWeb(tk.Widget):
             
         yview = widget.yview()  
 
+        for node_handle in widget.hovered_nodes:
+            widget._submit_element_js(node_handle, "onscroll")
+
         if event.num == 4:
             if widget.overflow_scroll_frame and (yview[0] == 0 or widget.vsb_type == 0):
                 widget.overflow_scroll_frame.scroll_x11(event, widget.overflow_scroll_frame)
@@ -982,7 +1007,10 @@ class TkinterWeb(tk.Widget):
 
     def scroll(self, event):
         "Manage scrolling on Windows/MacOS."
-        yview = self.yview()      
+        yview = self.yview() 
+
+        for node_handle in self.hovered_nodes:
+            self._submit_element_js(node_handle, "onscroll")     
 
         if self.overflow_scroll_frame and event.delta > 0 and (yview[0] == 0 or self.vsb_type == 0):
             self.overflow_scroll_frame.scroll(event)
@@ -1063,7 +1091,12 @@ class TkinterWeb(tk.Widget):
         """A JavaScript engine could be used here to parse the script.
         Returning any HTMl code here (should) cause it to be parsed in place of the script tag."""
         if self.javascript_enabled:
-            return self.on_script(attributes, tag_contents)
+            attributes = attributes.split()
+            attributes = dict(zip(attributes[::2], attributes[1::2]))
+            if "src" in attributes:
+                self._script_thread_check(attributes, self.resolve_url(attributes["src"]))
+            else:
+                return self.on_script(attributes, tag_contents)
 
     def _on_style(self, attributes, tag_contents):
         "Handle <style> elements."
@@ -1617,7 +1650,16 @@ class TkinterWeb(tk.Widget):
         match = match.group().lower()
         match = match.replace("noto color emoji", "arial")
         return match
-
+                
+    def _script_thread_check(self, *args):
+        if self._maximum_thread_count == 0:
+            self.fetch_scripts(*args)
+        elif len(self.active_threads) >= self._maximum_thread_count:
+            self.after(500, lambda args=args: self._script_thread_check(*args))
+        else:
+            thread = StoppableThread(target=self.fetch_scripts, args=args)
+            thread.start()
+            
     def _style_thread_check(self, **kwargs):
         if self._maximum_thread_count == 0:
             self.fetch_styles(**kwargs)

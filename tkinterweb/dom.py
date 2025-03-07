@@ -107,7 +107,9 @@ class HTMLDocument:
         :param text: The text content of the new node.
         :type text: str
         :rtype: :class:`HTMLElement`"""
-        return self.html.tk.eval("""
+        return HTMLElement(
+            self, 
+            self.html.tk.eval("""
             set tkw %s
             set text "%s"
             if {$text eq ""} {
@@ -121,7 +123,7 @@ class HTMLDocument:
                 set node [parse_fragment $escaped]
             }
             return $node
-            """ % (self.html, escape_Tcl(text))
+            """ % (self.html, escape_Tcl(text)))
         )
 
     def getElementById(self, query, _root=None):
@@ -240,8 +242,7 @@ class HTMLElement:
     def style(self):
         """Manage the element's styling.
 
-        :rtype: :class:`~tkinterweb.dom.CSSStyleDeclaration`
-        """
+        :rtype: :class:`~tkinterweb.dom.CSSStyleDeclaration`"""
         if self.style_cache is None:  # lazy loading of style
             self.style_cache = CSSStyleDeclaration(self)
         return self.style_cache
@@ -465,6 +466,12 @@ class HTMLElement:
     def scrollIntoView(self):
         "Scroll the viewport so that this element is visible."
         self.html.yview(self.node)
+
+    def getBoundingClientRect(self):
+        """Get the element's position and size.
+
+        :rtype: :class:`~tkinterweb.dom.DOMRect`"""
+        return DOMRect(self)
     
     def _insert_children(self, children, before=None):
         "Helper method to insert children at a specified position"
@@ -489,6 +496,21 @@ class HTMLElement:
         #    if tag == "iframe":
         #        self.html._on_iframe(self.node)
 
+class DOMRect:
+    """This class generates and stores information about the element's position and size at this point in time.
+
+    Valid properties are x, y, width, and height.
+    
+    :param element_manager: The :class:`~tkinterweb.dom.HTMLElement` instance this class is tied to.
+    :type element_manager: :class:`~tkinterweb.dom.HTMLElement`"""
+    def __init__(self, element_manager):
+        self.html = element_manager.html
+        self.node = element_manager.node
+
+        self.x, self.y, x2, y2 = self.html.bbox(self.node)
+
+        self.width = x2 - self.x
+        self.height = y2 - self.y
 
 class CSSStyleDeclaration:
     """Access this class via the :attr:`~tkinterweb.dom.HTMLElement.style` property of the :attr:`~tkinterweb.dom.HTMLElement` class.

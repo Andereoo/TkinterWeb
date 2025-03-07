@@ -149,7 +149,6 @@ class TkinterWeb(tk.Widget):
         self.on_script = placeholder
         self.on_resource_setup = placeholder
         
-        self.recursive_hovering_count = 10
         self.maximum_thread_count = 20
         self.insecure_https = False
         self.headers = {}
@@ -1768,15 +1767,16 @@ class TkinterWeb(tk.Widget):
             # it's wierd but hey, it works
             self.motion_frame.config(bg=self.motion_frame_bg)
 
-    def _handle_recursive_hovering(self, node_handle, count):
+    def _handle_recursive_hovering(self, node_handle, prev_hovered_nodes):
         "Set hover flags on the parents of the hovered element."
-        self.set_node_flags(node_handle, "hover")
         self.hovered_nodes.append(node_handle)
 
-        if count >= 1:
-            parent = self.get_current_node_parent(node_handle)
-            if parent:
-                self._handle_recursive_hovering(parent, count - 1)            
+        if node_handle not in prev_hovered_nodes:
+            self.set_node_flags(node_handle, "hover")
+
+        parent = self.get_current_node_parent(node_handle)
+        if parent:
+            self._handle_recursive_hovering(parent, prev_hovered_nodes)            
 
     def _create_iframe(self, node, url, html=None):
         if self.embed_obj:
@@ -1884,14 +1884,17 @@ class TkinterWeb(tk.Widget):
                         self._set_cursor("text")
                     else:
                         self._set_cursor("default")
-                    
-                    for node in self.hovered_nodes:
+
+                    prev_hovered_nodes = set(self.hovered_nodes)
+                    self.hovered_nodes = []
+
+                    self._handle_recursive_hovering(
+                        node_handle, prev_hovered_nodes
+                    )
+
+                    for node in prev_hovered_nodes - set(self.hovered_nodes):
                         self.remove_node_flags(node, "hover")
 
-                    self.hovered_nodes = []
-                    self._handle_recursive_hovering(
-                        node_handle, self.recursive_hovering_count
-                    )
         except tk.TclError:
             # sometimes errors are thrown if the mouse is moving while the page is loading
             pass

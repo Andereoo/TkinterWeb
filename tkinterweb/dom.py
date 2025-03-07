@@ -124,64 +124,64 @@ class HTMLDocument:
             """ % (self.html, escape_Tcl(text))
         )
 
-    def getElementById(self, query):
+    def getElementById(self, query, _root=None):
         """Return an element given an id.
         
         :param query: The element id to be searched for.
         :type query: str
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
-        node = self.html.search(f"[id='{query}']", index=0)
+        node = self.html.search(f"[id='{query}']", index=0, root=_root)
         return HTMLElement(self, node)
 
-    def getElementsByClassName(self, query):
+    def getElementsByClassName(self, query, _root=None):
         """Return all elements that match given a class name.
         
         :param query: The class to be searched for.
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        nodes = self.html.search(" ".join(f".{i}" for i in query.split()))
+        nodes = self.html.search(" ".join(f".{i}" for i in query.split()), root=_root)
         return tuple(HTMLElement(self, node) for node in nodes)
 
-    def getElementsByName(self, query):
+    def getElementsByName(self, query, _root=None):
         """Return all elements that match a given given name attribute.
         
         :param query: The name to be searched for.
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        nodes = self.html.search(f"[name='{query}']")
+        nodes = self.html.search(f"[name='{query}']", root=_root)
         return tuple(HTMLElement(self, node) for node in nodes)
 
-    def getElementsByTagName(self, query):
+    def getElementsByTagName(self, query, _root=None):
         """Return all elements that match a given tag name.
         
         :param query: The tag to be searched for.
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        nodes = self.html.search(query)
+        nodes = self.html.search(query, root=_root)
         return tuple(HTMLElement(self, node) for node in nodes)
 
-    def querySelector(self, query):
+    def querySelector(self, query, _root=None):
         """Return the first element that matches a given CSS selector.
         
         :param query: The CSS selector to be searched for.
         :type query: str
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
-        node = self.html.search(query, index=0)
+        node = self.html.search(query, index=0, root=_root)
         return HTMLElement(self, node)
 
-    def querySelectorAll(self, query):
+    def querySelectorAll(self, query, _root=None):
         """Return all elements that match a given CSS selector.
         
         :param query: The CSS selector to be searched for.
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        nodes = self.html.search(query)
+        nodes = self.html.search(query, root=_root)
         return tuple(HTMLElement(self, node) for node in nodes)
     
     def _node_to_html(self, node, deep=True):  # From hv3_dom_core.tcl line 311 and line 329
@@ -415,8 +415,7 @@ class HTMLElement:
         :type query: str
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
-        node = self.html.search(f"[id='{query}']", index=0, root=self.node)
-        return HTMLElement(self, node)
+        return self.document.getElementById(query, self.node)
 
     def getElementsByClassName(self, query):
         """Return all elements that are children of the current element and match the given class name.
@@ -425,8 +424,7 @@ class HTMLElement:
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        nodes = self.html.search(" ".join(f".{i}" for i in query.split()), root=self.node)
-        return tuple(HTMLElement(self, node) for node in nodes)
+        return self.document.getElementsByClassName(query, self.node)
 
     def getElementsByName(self, query):
         """Return all elements that are children of the current element and match the given name attribute.
@@ -435,8 +433,7 @@ class HTMLElement:
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        nodes = self.html.search(f"[name='{query}']", root=self.node)
-        return tuple(HTMLElement(self, node) for node in nodes)
+        return self.document.getElementsByName(query, self.node)
 
     def getElementsByTagName(self, query):
         """Return all elements that are children of the current element and match the given tag name.
@@ -445,8 +442,7 @@ class HTMLElement:
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        nodes = self.html.search(query, root=self.node)
-        return tuple(HTMLElement(self, node) for node in nodes)
+        return self.document.getElementsByTagName(query, self.node)
 
     def querySelector(self, query):
         """Return the first element that are children of the current element and match the given CSS selector.
@@ -455,8 +451,7 @@ class HTMLElement:
         :type query: str
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
-        node = self.html.search(query, index=0, root=self.node)
-        return HTMLElement(self, node)
+        return self.document.querySelector(query, self.node)
 
     def querySelectorAll(self, query):
         """Return all elements that are children of the current element and match the given CSS selector.
@@ -465,8 +460,7 @@ class HTMLElement:
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        nodes = self.html.search(query, root=self.node)
-        return tuple(HTMLElement(self, node) for node in nodes)
+        return self.document.querySelectorAll(query, self.node)
     
     def scrollIntoView(self):
         "Scroll the viewport so that this element is visible."

@@ -120,6 +120,7 @@ class TkinterWeb(tk.Widget):
         self.images_enabled = True
         self.forms_enabled = True
         self.objects_enabled = True
+        self.javascript_enabled = False
         self.ignore_invalid_images = True
         self.image_alternate_text_enabled = True
         self.overflow_scroll_frame = None
@@ -147,6 +148,7 @@ class TkinterWeb(tk.Widget):
         self.on_form_submit = placeholder
         self.message_func = placeholder
         self.on_script = placeholder
+        self.on_element_script = placeholder
         self.on_resource_setup = placeholder
         
         self.maximum_thread_count = 20
@@ -1057,13 +1059,13 @@ class TkinterWeb(tk.Widget):
                 html = sub(regex, self._generate_altered_colour, html, flags=IGNORECASE)
         return html
 
-    def _on_script(self, attributes, tagcontents):
-        """Currently not doing anything with script.
-        A javascript engine could be used here to parse the script.
-        Returning any HTMl code here causes it to be parsed in place of the script tag."""
-        return self.on_script(attributes, tagcontents)
+    def _on_script(self, attributes, tag_contents):
+        """A JavaScript engine could be used here to parse the script.
+        Returning any HTMl code here (should) cause it to be parsed in place of the script tag."""
+        if self.javascript_enabled:
+            return self.on_script(attributes, tag_contents)
 
-    def _on_style(self, attributes, tagcontents):
+    def _on_style(self, attributes, tag_contents):
         "Handle <style> elements."
         if not self.stylesheets_enabled or not self.unstoppable:
             return
@@ -1075,7 +1077,7 @@ class TkinterWeb(tk.Widget):
                 parent_url, new_url
             )
         )
-        self._style_thread_check(sheetid=ids, handler=handler_proc, data=tagcontents)
+        self._style_thread_check(sheetid=ids, handler=handler_proc, data=tag_contents)
 
     def _on_link(self, node):
         "Handle <link> elements."
@@ -1767,12 +1769,22 @@ class TkinterWeb(tk.Widget):
             # it's wierd but hey, it works
             self.motion_frame.config(bg=self.motion_frame_bg)
 
+    def _submit_element_js(self, node_handle, attribute):
+        if self.javascript_enabled:
+            mouse = self.get_node_attribute(node_handle, attribute)
+            if mouse:
+                self.on_element_script(node_handle, attribute, mouse)
+
     def _handle_recursive_hovering(self, node_handle, prev_hovered_nodes):
         "Set hover flags on the parents of the hovered element."
         self.hovered_nodes.append(node_handle)
 
         if node_handle not in prev_hovered_nodes:
             self.set_node_flags(node_handle, "hover")
+
+            self._submit_element_js(node_handle, "onmouseover")
+        
+        self._submit_element_js(node_handle, "onmousemove")
 
         parent = self.get_current_node_parent(node_handle)
         if parent:
@@ -1827,6 +1839,10 @@ class TkinterWeb(tk.Widget):
 
         self.focus_set()
         self.tag("delete", "selection")
+
+        for node_handle in self.hovered_nodes:
+            self._submit_element_js(node_handle, "onmousedown")
+
         node_handle = self.get_current_node(event)
 
         if node_handle:
@@ -1888,12 +1904,18 @@ class TkinterWeb(tk.Widget):
                     prev_hovered_nodes = set(self.hovered_nodes)
                     self.hovered_nodes = []
 
+                    self._submit_element_js(node_handle, "onmouseenter")
+
                     self._handle_recursive_hovering(
                         node_handle, prev_hovered_nodes
                     )
 
                     for node in prev_hovered_nodes - set(self.hovered_nodes):
                         self.remove_node_flags(node, "hover")
+
+                        self._submit_element_js(node_handle, "onmouseout")
+                        if node == old_handle:
+                            self._submit_element_js(node_handle, "onmouseleave")
 
         except tk.TclError:
             # sometimes errors are thrown if the mouse is moving while the page is loading
@@ -1906,6 +1928,10 @@ class TkinterWeb(tk.Widget):
             self.current_node = None
             self._on_mouse_motion(event)
             return
+        
+        for node_handle in self.hovered_nodes:
+            self._submit_element_js(node_handle, "onmouseup")
+            self._submit_element_js(node_handle, "onclick")
 
         node_handle = self.get_current_node(event)
 
@@ -1971,6 +1997,9 @@ class TkinterWeb(tk.Widget):
     def _on_double_click(self, event):
         "Cycle between normal selection, text selection, and element selection on multi-clicks."
         self._on_click(event, True)
+
+        for node_handle in self.hovered_nodes:
+            self._submit_element_js(node_handle, "ondblclick")
 
         if not self.selection_enabled:
             return

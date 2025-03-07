@@ -17,6 +17,9 @@ from dom import HTMLDocument, HTMLElement
 from tkinter import ttk
 
 
+pythonmonkey = None
+
+
 class HtmlFrame(ttk.Frame):
     """TkinterWeb's flagship HTML widget.
 
@@ -33,6 +36,8 @@ class HtmlFrame(ttk.Frame):
     :type on_form_submit: callable
     :param on_script: The function to be called when a <script> element is encountered. This can be used to connect a script handler, such as a JavaScript engine. The script element's attributes and contents will be passed as arguments.
     :type on_script: callable
+    :param on_element_script: The function to be called when a JS attribute of an element is encountered. This can be used to connect a script handler, such as a JavaScript engine. The element's corresponding Tkhtml3 node, relevant attribute, and attribute contents will be passed as arguments.
+    :type on_element_script: callable
     :param on_resource_setup: The function to be called when an image or stylesheet load finishes. The resource's url, type ("stylesheet" or "image"), and whether setup was successful or not (True or False) will be passed as arguments.
     :type on_resource_setup: callable
     :param message_func: The function to be called when a debug message is issued. This only works if `messages_enabled` is set to True. The message will be passed as an argument. By default the message is printed.
@@ -75,6 +80,8 @@ class HtmlFrame(ttk.Frame):
     :type events_enabled: bool
     :param threading_enabled: Enable/disable threading. Has no effect if the Tcl/Tk build does not support threading. This is enabled by default.
     :type threading_enabled: bool
+    :param javascript_enabled: Enable/disable JavaScript support. This is disabled by default. Highly experimental. 
+    :type javascript_enabled: bool
     :param image_alternate_text_enabled: Enable/disable the display of alt text for broken images. This is enabled by default.
     :type image_alternate_text_enabled: bool
     :param dark_theme_enabled: Enable/disable dark mode. May cause hangs or crashes on more complex websites.
@@ -152,7 +159,8 @@ class HtmlFrame(ttk.Frame):
         self.tkinterweb_options = {
             "on_link_click": self.load_url,
             "on_form_submit": self.load_form_data,
-            "on_script": placeholder,
+            "on_script": self._on_script,
+            "on_element_script": self._on_element_script,
             "on_resource_setup": placeholder,
             "message_func": notifier,
             "messages_enabled": True,
@@ -167,6 +175,7 @@ class HtmlFrame(ttk.Frame):
             "crash_prevention_enabled": True,
             "events_enabled": True,
             "threading_enabled": True,
+            "javascript_enabled": True,
             "image_alternate_text_enabled": True,
             "ignore_invalid_images": True,
             "visited_links": [],
@@ -743,6 +752,17 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         :type widgetid: :py:class:`tkinter.Widget`"""
         self._html.remove_widget(widgetid)
 
+    def register_JS_object(self, name, object):
+        """Register new JavaScript object. This can be used to access Python variables, functions, and classes from JavaScript.
+        
+        :param name: The name of the new JavaScript object.
+        :type name: str
+        :param name: The Python object to pass.
+        :type name: anything"""
+        if self.html.javascript_enabled and not pythonmonkey:
+            self._initialize_javascript()
+        pythonmonkey.eval(f"(function(pyObj) {{globalThis.{name} = pyObj}})")(object)
+
     def _check_value(self, old, new):
         expected_type = type(old)
         if callable(old) or old == None:
@@ -885,6 +905,28 @@ Otherwise, use 'configure(insecure_https=True)' to ignore website certificates."
             for style in self._accumulated_styles:
                 self.add_css(style)
             self._accumulated_styles = []
+
+    def _initialize_javascript(self):
+        # Lazy loading of JS engine
+        global pythonmonkey
+        try:
+            import pythonmonkey
+            self.register_JS_object("document", self.document)
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError("PythonMonkey is required to run JavaScript files but is not installed.")
+
+    def _on_script(self, attributes, tag_contents):
+        global pythonmonkey
+        if self.html.javascript_enabled and not pythonmonkey:
+            self._initialize_javascript()
+        pythonmonkey.eval(tag_contents)
+
+    def _on_element_script(self, node_handle, attribute, attr_contents):
+        global pythonmonkey
+        if self.html.javascript_enabled and not pythonmonkey:
+            self._initialize_javascript()
+        pythonmonkey.eval(attr_contents)
+
 
 class HtmlLabel(HtmlFrame):
     """The :class:`~tkinterweb.HtmlLabel` widget inherits from the :class:`HtmlFrame`. For a complete list of avaliable methods, configuration options, generated events, and state variables, see the :class:`HtmlFrame` docs.

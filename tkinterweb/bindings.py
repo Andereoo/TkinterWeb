@@ -1400,6 +1400,7 @@ class TkinterWeb(tk.Widget):
             selected = values[0]
         widgetid = Combobox(self)
         widgetid.insert(text, values, selected)
+        widgetid.configure(onchangecommand=lambda *_, widgetid=widgetid: self._on_input_change(node, widgetid))
         self.form_get_commands[node] = lambda: widgetid.get()
         self.form_reset_commands[node] = lambda: widgetid.reset()
         state = self.get_node_attribute(node, "disabled", False) != "0"
@@ -1498,7 +1499,7 @@ class TkinterWeb(tk.Widget):
                 variable=variable,
             )
             variable.trace(
-                "w", lambda *_, widgetid=widgetid: self._on_input_change(widgetid)
+                "w", lambda *_, widgetid=widgetid: self._on_input_change(node, widgetid)
             )
             self.form_get_commands[node] = lambda: variable.get()
             self.form_reset_commands[node] = lambda: variable.set(0)
@@ -1516,7 +1517,7 @@ class TkinterWeb(tk.Widget):
             to = self.get_node_attribute(node, "max", 100)
             widgetid = ttk.Scale(self, variable=variable, from_=from_, to=to)
             variable.trace(
-                "w", lambda *_, widgetid=widgetid: self._on_input_change(widgetid)
+                "w", lambda *_, widgetid=widgetid: self._on_input_change(node, widgetid)
             )
             self.form_get_commands[node] = widgetid.get
             self.form_reset_commands[node] = lambda: variable.set(0)
@@ -1555,7 +1556,7 @@ class TkinterWeb(tk.Widget):
                     highlightthickness=0,
                 )
                 variable.trace(
-                    "w", lambda *_, widgetid=widgetid: self._on_input_change(widgetid)
+                    "w", lambda *_, widgetid=widgetid: self._on_input_change(node, widgetid)
                 )
                 self.radio_buttons[name] = variable
             self.form_get_commands[node] = variable.get
@@ -1573,7 +1574,7 @@ class TkinterWeb(tk.Widget):
                 self, borderwidth=0, highlightthickness=0
             )
             widgetid.insert(0, nodevalue) 
-            widgetid.bind("<KeyRelease>", lambda *_, widgetid=widgetid: self._on_input_change(widgetid))
+            widgetid.bind("<KeyRelease>", lambda *_, widgetid=widgetid: self._on_input_change(node, widgetid))
             if nodetype == "password":
                 widgetid.configure(show="*")
             widgetid.bind(
@@ -1610,8 +1611,9 @@ class TkinterWeb(tk.Widget):
                     "-stylecmd",
                     self.register(lambda node=node: self._set_overflow(node)))
 
-    def _on_input_change(self, widgetid):
+    def _on_input_change(self, node, widgetid):
         widgetid.event_generate("<<Modified>>")
+        self._submit_element_js(node, "onchange")
         return True
 
     def _crash_prevention(self, data):

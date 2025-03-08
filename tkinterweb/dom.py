@@ -295,6 +295,7 @@ class HTMLElement:
             update  ;# This must be done to see changes on-screen
             """ % (extract_nested(self.node), escape_Tcl(contents))
         )
+        self.html.send_onload()
 
     @property
     def textContent(self):  # Original for this project
@@ -500,6 +501,7 @@ class HTMLElement:
             self.html.insert_node_before(self.node, tkhtml_children_nodes, before.node)
         else:
             self.html.insert_node(self.node, tkhtml_children_nodes)
+        self.html.send_onload()
 
         #for node in tkhtml_children_nodes:
         #    print(node)

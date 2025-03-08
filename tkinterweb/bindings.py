@@ -191,6 +191,7 @@ class TkinterWeb(tk.Widget):
         self.prev_active_node = None
         self.current_node = None
         self.hovered_nodes = []
+        self.loaded_elements = []
         self.current_cursor = ""
         self.vsb_type = 2
         self.selection_type = 0
@@ -330,7 +331,15 @@ class TkinterWeb(tk.Widget):
         if not self.downloads_have_occured:
             self.post_event(DONE_LOADING_EVENT)
             self._submit_deferred_scripts()
-            
+
+        self.send_onload()
+
+    def send_onload(self):
+        # We keep this a seperate command so that it can be run after inserting elements or changing the innerHTML
+        for node in self.search("[onload]"):
+            if self.get_node_tag(node) not in {"img", "object", "iframe", "link"}: # these tags require downloads and are handled seperately
+                self._submit_element_js(node, "onload")
+
     def update_default_style(self):
         "Update the default stylesheet based on color theme."
         if self._dark_theme_enabled and self.dark_style:
@@ -367,6 +376,7 @@ class TkinterWeb(tk.Widget):
         self.waiting_forms = 0
         self.radio_buttons = {}
         self.hovered_nodes = []
+        self.loaded_elements = []
         self.current_node = None
         self.on_embedded_node = None
         self.selection_start_node = None
@@ -628,6 +638,9 @@ class TkinterWeb(tk.Widget):
 
         if data and self.unstoppable:
             self.parse_css(f"{sheetid}.9999", handler, data)
+            if thread.node:
+                # thread safety
+                self.after(0, self._submit_element_js, thread.node, "onload")
             if url:
                 self.post_message(f"Successfully loaded {shorten(url)}")
                 self.on_resource_setup(url, "stylesheet", True)
@@ -670,7 +683,7 @@ class TkinterWeb(tk.Widget):
 
                 if self.unstoppable and data:
                     # thread safety
-                    self.after(0, self.finish_fetching_images, data, name, filetype, url)
+                    self.after(0, self.finish_fetching_images, data, name, filetype, url, thread)
 
             except Exception as error:
                 self.load_alt_text(url, name)
@@ -678,7 +691,7 @@ class TkinterWeb(tk.Widget):
                 self.on_resource_setup(url, "image", False)
         self._finish_download(thread)
 
-    def finish_fetching_images(self, data, name, filetype, url):
+    def finish_fetching_images(self, data, name, filetype, url, thread):
         try:
             image, error = data_to_image(
                 data, name, filetype, self._image_inversion_enabled
@@ -688,6 +701,9 @@ class TkinterWeb(tk.Widget):
                 self.loaded_images.add(image)
                 self.post_message(f"Successfully loaded {shorten(url)}")
                 self.on_resource_setup(url, "image", True)
+                if thread.node:
+                    # thread safety
+                    self.after(0, self._submit_element_js, thread.node, "onload")
                 if self.experimental:
                     node = self.search(f'img[src="{url}"]')
                     if node:
@@ -1150,7 +1166,7 @@ class TkinterWeb(tk.Widget):
                     )
                 )
                 self._style_thread_check(
-                    sheetid=ids, handler=handler_proc, errorurl=href, url=url
+                    sheetid=ids, handler=handler_proc, errorurl=href, url=url, node=node
                 )
             except Exception as error:
                 self.post_message(f"ERROR: could not read stylesheet {href}: {error}")
@@ -1159,6 +1175,10 @@ class TkinterWeb(tk.Widget):
             url = self.resolve_url(href)
             self.icon = url
             self.post_event(ICON_CHANGED_EVENT)
+
+            self._submit_element_js(node, "onload")
+        else:
+            self._submit_element_js(node, "onload")
 
     def _on_atimport(self, parent_url, new_url):
         "Load @import scripts."
@@ -1219,6 +1239,8 @@ class TkinterWeb(tk.Widget):
             self.post_message(f"Creating iframe from {shorten(src)}")
             self._create_iframe(node, src)
 
+        self._submit_element_js(node, "onload")
+
     def _on_object(self, node):
         "Handle <object> elements."
         if not self.objects_enabled or not self.unstoppable:
@@ -1255,6 +1277,7 @@ class TkinterWeb(tk.Widget):
                     allowscrolling,
                     False,
                 )
+                self._submit_element_js(node, "onload")
             except KeyError:
                 url = self.resolve_url(url)
                 if url == self.base_url:
@@ -1281,6 +1304,7 @@ class TkinterWeb(tk.Widget):
                         )
                     elif data and filetype == "text/html":
                         self._create_iframe(node, newurl, data)
+                    self._submit_element_js(node, "onload")
                 except Exception as error:
                     self.post_message(f"ERROR: could not load object element: {error}")
 
@@ -1684,13 +1708,13 @@ class TkinterWeb(tk.Widget):
             thread = StoppableThread(target=self.fetch_scripts, args=args)
             thread.start()
             
-    def _style_thread_check(self, **kwargs):
+    def _style_thread_check(self, node=None, **kwargs):
         if self._maximum_thread_count == 0:
             self.fetch_styles(**kwargs)
         elif len(self.active_threads) >= self._maximum_thread_count:
             self.after(500, lambda kwargs=kwargs: self._style_thread_check(**kwargs))
         else:
-            thread = StoppableThread(target=self.fetch_styles, kwargs=kwargs)
+            thread = StoppableThread(target=self.fetch_styles, node=node, kwargs=kwargs)
             thread.start()
 
     def _image_thread_check(self, url, name):
@@ -1701,8 +1725,13 @@ class TkinterWeb(tk.Widget):
                 500, lambda url=url, name=name: self._image_thread_check(url, name)
             )
         else:
+            if url in self.image_directory:
+                node = self.image_directory[url]
+            else:
+                node = None
             thread = StoppableThread(
                 target=self.fetch_images,
+                node=node,
                 args=(
                     url,
                     name,
@@ -1841,6 +1870,12 @@ class TkinterWeb(tk.Widget):
 
     def _submit_element_js(self, node_handle, attribute):
         if self.javascript_enabled:
+            if attribute == "onload":
+                if node_handle in self.loaded_elements:
+                    # don't run the onload script twice
+                    return
+                else:
+                    self.loaded_elements.append(node_handle)
             mouse = self.get_node_attribute(node_handle, attribute)
             if mouse:
                 self.on_element_script(node_handle, attribute, mouse)

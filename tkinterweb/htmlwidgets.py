@@ -753,7 +753,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         self._html.remove_widget(widgetid)
 
     def register_JS_object(self, name, object):
-        """Register new JavaScript object. This can be used to access Python variables, functions, and classes from JavaScript.
+        """Register new JavaScript object. This can be used to access Python variables, functions, and classes from JavaScript (eg. to add a callback for the JavaScript alert() function).
         
         :param name: The name of the new JavaScript object.
         :type name: str

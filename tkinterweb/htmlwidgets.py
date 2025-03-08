@@ -572,7 +572,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
             self._html.post_message(f"Screenshot taken: {width}px by {height}px!")
             return image
         else:
-            self._html.post_message("A screenshot could not be taken because it screenshot_page is an experimental feature on Windows")
+            self._html.post_message("ERROR: A screenshot could not be taken because it screenshot_page is an experimental feature on Windows")
             return None
 
     def print_page(self, filename=None, cnf={}, **kwargs):
@@ -607,7 +607,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
             self._html.post_message("Printed!")
             if file: return file
         else:
-            self._html.post_message("The page could not be printed because print_page is an experimental feature")
+            self._html.post_message("ERROR: The page could not be printed because print_page is an experimental feature")
             return ""
 
     def save_page(self, filename=None):
@@ -888,7 +888,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
                 except Exception:
                     pass
         except Exception as error:
-            self._html.post_message(f"Error loading {url}: {error}")
+            self._html.post_message(f"ERROR: could not load {url}: {error}")
             if "CERTIFICATE_VERIFY_FAILED" in str(error):
                 self._html.post_message(f"Check that you are using the right url scheme. Some websites only support http.\n\
 This might also happen if your Python distribution does not come installed with website certificates.\n\
@@ -919,13 +919,22 @@ Otherwise, use 'configure(insecure_https=True)' to ignore website certificates."
         global pythonmonkey
         if self.html.javascript_enabled and not pythonmonkey:
             self._initialize_javascript()
-        pythonmonkey.eval(tag_contents)
+        try:
+            pythonmonkey.eval(tag_contents)
+        except Exception as error:
+            if "src" in attributes:
+                self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running the script from {attributes["src"]}: {error}")
+            else:
+                self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running a script: {error}")
 
     def _on_element_script(self, node_handle, attribute, attr_contents):
         global pythonmonkey
         if self.html.javascript_enabled and not pythonmonkey:
             self._initialize_javascript()
-        pythonmonkey.eval(attr_contents)
+        try:
+            pythonmonkey.eval(attr_contents)
+        except Exception as error:
+            self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running an {attribute} script: {error}")
 
 
 class HtmlLabel(HtmlFrame):

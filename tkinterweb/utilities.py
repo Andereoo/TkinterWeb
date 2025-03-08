@@ -51,8 +51,8 @@ PYTHON_VERSION = platform.python_version_tuple()
 
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha"
-    # Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 Firefox/4.0
+    "User-Agent": "Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 Firefox/4.0"
+    # The Hv3 User Agent is: Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha
 }
 DEFAULT_PARSE_MODE = "xml"
 DEFAULT_ENGINE_MODE = "standards"

@@ -181,6 +181,7 @@ class TkinterWeb(tk.Widget):
         self.image_name_prefix = f"_tkinterweb_img_{id(self)}_"
         self.is_selecting = False
         self.downloads_have_occured = False
+        self.pending_scripts = []
         self.unstoppable = True
         self.on_embedded_node = None
         self.selection_start_node = None
@@ -328,6 +329,7 @@ class TkinterWeb(tk.Widget):
         # we assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
         if not self.downloads_have_occured:
             self.post_event(DONE_LOADING_EVENT)
+            self._submit_deferred_scripts()
             
     def update_default_style(self):
         "Update the default stylesheet based on color theme."
@@ -448,6 +450,7 @@ class TkinterWeb(tk.Widget):
         # We assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
         if not self.downloads_have_occured:
             self.post_event(DONE_LOADING_EVENT)
+            self._submit_deferred_scripts()
         return fragment
     
     def enable_imagecache(self, enabled):
@@ -581,7 +584,7 @@ class TkinterWeb(tk.Widget):
         return self.tk.call(self._w, "_styleconfig")
 
     def fetch_scripts(self, attributes, url):
-        "Fetch stylesheets and parse the CSS code they contain"
+        "Fetch and run scripts"
         thread = self._begin_download()
         data = None
 
@@ -593,13 +596,16 @@ class TkinterWeb(tk.Widget):
                     data = cache_download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))[0]
 
             except Exception as error:
-                self.post_message(f"Error loading script {url}: {error}")
+                self.post_message(f"ERROR: could not load script {url}: {error}")
                 self.on_resource_setup(url, "script", False)
 
         if data and self.unstoppable:
             self.post_message(f"Successfully loaded {shorten(url)}")
             self.on_resource_setup(url, "script", True)
-            self.after(0, self.on_script, attributes, data) # thread safety
+            if "defer" in attributes:
+                self.pending_scripts.append((attributes, data))
+            else:
+                self.after(0, self.on_script, attributes, data) # thread safety
         self._finish_download(thread)
 
     def fetch_styles(self, sheetid, handler, errorurl="", url=None, data=None):
@@ -617,7 +623,7 @@ class TkinterWeb(tk.Widget):
                 data = sub(r"url\((.*?)\)", matcher, data)
 
             except Exception as error:
-                self.post_message(f"Error loading stylesheet {errorurl}: {error}")
+                self.post_message(f"ERROR: could not load stylesheet {errorurl}: {error}")
                 self.on_resource_setup(url, "stylesheet", False)
 
         if data and self.unstoppable:
@@ -654,7 +660,7 @@ class TkinterWeb(tk.Widget):
 
         if url == self.base_url:
             self.load_alt_text(url, name)
-            self.post_message(f"Error: image url not specified")
+            self.post_message(f"ERROR: image url not specified")
         else:
             try:
                 if url.startswith("file://") or (not self._caches_enabled):
@@ -668,9 +674,8 @@ class TkinterWeb(tk.Widget):
 
             except Exception as error:
                 self.load_alt_text(url, name)
-                self.post_message(f"Error loading image {url}: {error}")
+                self.post_message(f"ERROR: could not load image {url}: {error}")
                 self.on_resource_setup(url, "image", False)
-
         self._finish_download(thread)
 
     def finish_fetching_images(self, data, name, filetype, url):
@@ -689,19 +694,19 @@ class TkinterWeb(tk.Widget):
                         if self.get_node_children(node): self.delete_node(self.get_node_children(node))
             elif error == "no_pycairo":
                 self.load_alt_text(url, name)
-                self.post_message(f"Error loading image {url}: Pycairo is not installed but is required to parse .svg files")
+                self.post_message(f"ERROR: could not load image {url}: Pycairo is not installed but is required to parse .svg files")
                 self.on_resource_setup(url, "image", False)
             elif error == "no_rsvg":
                 self.load_alt_text(url, name)
-                self.post_message(f"Error loading image {url}: Rsvg is not installed but is required to parse .svg files")
+                self.post_message(f"ERROR: could not load image {url}: Rsvg is not installed but is required to parse .svg files")
                 self.on_resource_setup(url, "image", False)
             elif error == "corrupt":
                 self.load_alt_text(url, name)
-                self.post_message(f"The image {url} could not be shown")
+                self.post_message(f"ERROR: the image {url} could not be shown")
                 self.on_resource_setup(url, "image", False)
         except Exception as error:
             self.load_alt_text(url, name)
-            self.post_message(f"Error loading image {url}: {error}")
+            self.post_message(f"ERROR: could not load image {url}: {error}")
             self.on_resource_setup(url, "image", False)
 
     def handle_node_replacement(self, node, widgetid, deletecmd, stylecmd=None, allowscrolling=True, handledelete=True):
@@ -887,7 +892,7 @@ class TkinterWeb(tk.Widget):
                 self.post_message(f"No results for the search key '{searchtext}' could be found")
             return nmatches, selected, matches
         except Exception as error:
-            self.post_message(f"Error searching for {searchtext}: {error}")
+            self.post_message(f"ERROR: an error was encountered while searching for {searchtext}: {error}")
             return nmatches, selected, matches
     
     def resolve_url(self, url):
@@ -1099,6 +1104,8 @@ class TkinterWeb(tk.Widget):
             attributes = dict(zip(attributes[::2], attributes[1::2]))
             if "src" in attributes:
                 self._script_thread_check(attributes, self.resolve_url(attributes["src"]))
+            elif "defer" in attributes:
+                self.pending_scripts.append((attributes, tag_contents))
             else:
                 return self.on_script(attributes, tag_contents)
 
@@ -1146,7 +1153,7 @@ class TkinterWeb(tk.Widget):
                     sheetid=ids, handler=handler_proc, errorurl=href, url=url
                 )
             except Exception as error:
-                self.post_message(f"Error reading stylesheet {href}: {error}")
+                self.post_message(f"ERROR: could not read stylesheet {href}: {error}")
         elif "icon" in rel:
             href = self.get_node_attribute(node, "href")
             url = self.resolve_url(href)
@@ -1172,7 +1179,7 @@ class TkinterWeb(tk.Widget):
             )
 
         except Exception as error:
-            self.post_message(f"Error loading stylesheet {new_url}: {error}")
+            self.post_message(f"ERROR: could not load stylesheet {new_url}: {error}")
 
     def _on_title(self, node):
         "Handle <title> elements."
@@ -1182,11 +1189,9 @@ class TkinterWeb(tk.Widget):
 
     def _on_base(self, node):
         "Handle <base> elements."
-        try:
-            href = self.get_node_attribute(node, "href")
+        href = self.get_node_attribute(node, "href", "")
+        if href:
             self.base_url = self.resolve_url(href)
-        except Exception:
-            self.post_message("Error setting base url: a <base> element was found without an href attribute")
 
     def _on_a(self, node):
         "Handle <a> elements."
@@ -1277,11 +1282,11 @@ class TkinterWeb(tk.Widget):
                     elif data and filetype == "text/html":
                         self._create_iframe(node, newurl, data)
                 except Exception as error:
-                    self.post_message(f"Error loading object element: {error}")
+                    self.post_message(f"ERROR: could not load object element: {error}")
 
     def _on_draw_cleanup_crash_cmd(self):
         if self._crash_prevention_enabled:
-            self.post_message("HtmlDrawCleanup has encountered a critical error. This is being ignored because crash prevention is enabled.")
+            self.post_message("ERROR: HtmlDrawCleanup has encountered a critical error. This is being ignored because crash prevention is enabled.")
         else:
             self.destroy()
 
@@ -1322,7 +1327,7 @@ class TkinterWeb(tk.Widget):
                     done = True
             if not done:
                 self.load_alt_text(url, name)
-                self.post_message(f"The image {shorten(url)} could not be shown because it is not supported yet")
+                self.post_message(f"ERROR: the image {shorten(url)} could not be shown because it is not supported yet")
                 self.on_resource_setup(url, "image", False)
         else:
             url = url.split("'), url('", 1)[0]
@@ -1648,7 +1653,14 @@ class TkinterWeb(tk.Widget):
         self.active_threads.remove(thread)
         if len(self.active_threads) == 0:
             self.post_event(DONE_LOADING_EVENT)
+            self._submit_deferred_scripts()
 
+    def _submit_deferred_scripts(self):
+        for index, script in enumerate(self.pending_scripts):
+            # thread safety
+            self.after(0, self.on_script, *script)
+        self.pending_scripts = []
+           
     def _fix_css_urls(self, match, url):
         "Make relative uris in CSS files absolute."
         newurl = match.group()

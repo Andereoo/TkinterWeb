@@ -336,11 +336,14 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
                     self._handle_resize(force=True)
         super().configure(**kwargs)
 
-    def config(self, **kwargs):
+    def config(self, _override=False, **kwargs):
         """
         Change the widget's configuration options. See above for options.
         """
-        self.configure(**kwargs)
+        if _override:
+            super().configure(**kwargs)
+        else:
+            self.configure(**kwargs)
 
     def cget(self, key):
         """
@@ -548,7 +551,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         if ignore_text_nodes:
             if not self._html.get_node_tag(self._html.current_node):
                 node = self._html.get_node_parent(self._html.current_node)
-        return HTMLElement(self._DOM_cache, node)
+        return HTMLElement(self.document, node)
 
     def screenshot_page(self, filename=None, full=False):
         """Take a screenshot. 
@@ -752,16 +755,16 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         :type widgetid: :py:class:`tkinter.Widget`"""
         self._html.remove_widget(widgetid)
 
-    def register_JS_object(self, name, object):
+    def register_JS_object(self, name, obj):
         """Register new JavaScript object. This can be used to access Python variables, functions, and classes from JavaScript (eg. to add a callback for the JavaScript alert() function).
         
         :param name: The name of the new JavaScript object.
         :type name: str
-        :param name: The Python object to pass.
-        :type name: anything"""
+        :param obj: The Python object to pass.
+        :type obj: anything"""
         if self.html.javascript_enabled and not pythonmonkey:
             self._initialize_javascript()
-        pythonmonkey.eval(f"(function(pyObj) {{globalThis.{name} = pyObj}})")(object)
+        pythonmonkey.eval(f"(function(pyObj) {{globalThis.{name} = pyObj}})")(obj)
 
     def _check_value(self, old, new):
         expected_type = type(old)
@@ -932,7 +935,8 @@ Otherwise, use 'configure(insecure_https=True)' to ignore website certificates."
         if self.html.javascript_enabled and not pythonmonkey:
             self._initialize_javascript()
         try:
-            pythonmonkey.eval(attr_contents)
+            element = HTMLElement(self.document, node_handle)
+            pythonmonkey.eval(f"(element) => {{function run() {{ {attr_contents} }}; run.bind(element)()}}")(element)
         except Exception as error:
             self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running an {attribute} script: {error}")
 

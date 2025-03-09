@@ -198,8 +198,8 @@ class TkinterWeb(tk.Widget):
         self.motion_frame_bg = "white"
 
         # enable form resetting and submission
+        self.form_widgets = {}
         self.form_nodes = {}
-        self.form_elements = {}
         self.loaded_forms = {}
         self.radio_buttons = {}
         self.waiting_forms = 0
@@ -210,6 +210,8 @@ class TkinterWeb(tk.Widget):
         self.bind("<<Copy>>", self.copy_selection, True)
         self.bind("<B1-Motion>", self._extend_selection, True)
         self.bind("<Button-1>", self._on_click, True)
+        self.bind("<Button-2>", self._on_middle_click, True)
+        self.bind("<Button-3>", self._on_right_click, True)
         self.bind("<Double-Button-1>", self._on_double_click, True)
         self.bind("<ButtonRelease-1>", self._on_click_release, True)
         self.bind_class(self.node_tag, "<Motion>", self._on_mouse_motion, True)
@@ -327,6 +329,7 @@ class TkinterWeb(tk.Widget):
         html = self._crash_prevention(html)
         html = self._dark_mode(html)
         self.tk.call(self._w, "parse", html)
+
         # we assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
         if not self.downloads_have_occured:
             self.post_event(DONE_LOADING_EVENT)
@@ -334,9 +337,10 @@ class TkinterWeb(tk.Widget):
 
         self.send_onload()
 
-    def send_onload(self):
+    def send_onload(self, root=None):
         # We keep this a seperate command so that it can be run after inserting elements or changing the innerHTML
-        for node in self.search("[onload]"):
+
+        for node in self.search("[onload]", root=root):
             if self.get_node_tag(node) not in {"img", "object", "iframe", "link"}: # these tags require downloads and are handled seperately
                 self._submit_element_js(node, "onload")
 
@@ -370,8 +374,8 @@ class TkinterWeb(tk.Widget):
         self.loaded_images = set()
         self.image_directory = {}
         self.form_get_commands = {}
-        self.form_elements = {}
         self.form_nodes = {}
+        self.form_widgets = {}
         self.loaded_forms = {}
         self.waiting_forms = 0
         self.radio_buttons = {}
@@ -1364,18 +1368,10 @@ class TkinterWeb(tk.Widget):
         if not self.forms_enabled:
             return
 
-        inputs = []
+        inputs = self.search("input, select, textarea, button", root=node)
+        for i in inputs:
+            self.form_nodes[i] = node
 
-        def scan(form):
-            for i in self.get_node_children(form):
-                tag = self.get_node_tag(i)
-                if tag:
-                    scan(i)
-                if tag.lower() in {"input", "select", "textarea", "button"}:
-                    inputs.append(i)
-                    self.form_elements[i] = node
-
-        scan(node)
         if len(inputs) == 0:
             self.waiting_forms += 1
         else:
@@ -1383,28 +1379,28 @@ class TkinterWeb(tk.Widget):
             self.post_message("Successfully setup form")
 
     def _on_table(self, node):
-        "Handle <form> elements in tables; workaround for bug #48."
+        """Handle <form> elements in tables; workaround for bug #48."
+        In tables, Tkhtml doesn't seem to notice that forms have children.
+        We get all children of the table and associate inputs with the previous form.
+        Not perfect, but it usually works.
+        If a <td> tag is not present, this fails, as Tkhtml seems to not even notice inputs at all"""
+
         if not self.forms_enabled:
             return
-
+        
         if self.waiting_forms > 0:
+            form = None
             inputs = {}
 
-            def scan(element, form):
-                for i in self.get_node_children(element):
-                    tag = self.get_node_tag(i).lower()
-                    if tag == "form":
-                        form = i
-                    elif tag.lower() in {"input", "select", "textarea", "button"}:
-                        if form in inputs:
-                            inputs[form].append(i)
-                        else:
-                            inputs[form] = [i]
-                        self.form_elements[i] = form
-                    if tag:
-                        scan(i, form)
-
-            scan(node, node)
+            for node in (self.search("*")):
+                tag = self.get_node_tag(node)
+                if tag == "form":
+                    form = node
+                    inputs[form] = []
+                elif tag.lower() in {"input", "select", "textarea", "button"} and form:
+                    self.form_nodes[node] = form
+                    inputs[form].append(node)
+           
             for form in inputs:
                 self.loaded_forms[form] = inputs[form]
                 self.post_message("Successfully setup table form")
@@ -1434,7 +1430,7 @@ class TkinterWeb(tk.Widget):
         widgetid = Combobox(self)
         widgetid.insert(text, values, selected)
         widgetid.configure(onchangecommand=lambda *_, widgetid=widgetid: self._on_input_change(node, widgetid))
-        self.form_nodes[node] = widgetid
+        self.form_widgets[node] = widgetid
         state = self.get_node_attribute(node, "disabled", False) != "0"
         if state:
             widgetid.configure(state="disabled")
@@ -1459,7 +1455,7 @@ class TkinterWeb(tk.Widget):
             highlightthickness=0,
         )
 
-        self.form_nodes[node] = widgetid
+        self.form_widgets[node] = widgetid
         state = self.get_node_attribute(node, "disabled", False) != "0"
         if state:
             widgetid.configure(state="disabled")
@@ -1491,7 +1487,8 @@ class TkinterWeb(tk.Widget):
                 != self.radiobutton_token
             )
             widgetid = FileSelector(self, accept, multiple)
-            self.form_nodes[node] = widgetid
+            widgetid.onchangecommand = lambda *_, widgetid=widgetid: self._on_input_change(node, widgetid)
+            self.form_widgets[node] = widgetid
             self.handle_node_replacement(
                 node,
                 widgetid,
@@ -1502,7 +1499,8 @@ class TkinterWeb(tk.Widget):
             )
         elif nodetype == "color":
             widgetid = ColourSelector(self, nodevalue)
-            self.form_nodes[node] = widgetid
+            widgetid.onchangecommand = lambda *_, widgetid=widgetid: self._on_input_change(node, widgetid)
+            self.form_widgets[node] = widgetid
             self.handle_node_replacement(
                 node,
                 widgetid,
@@ -1529,7 +1527,7 @@ class TkinterWeb(tk.Widget):
             widgetid.reset = lambda: variable.set(check)
             widgetid.set = lambda value, node=node: self.set_node_attribute(node, "value", value)
             widgetid.get = lambda nodevalue=nodevalue: nodevalue
-            self.form_nodes[node] = widgetid
+            self.form_widgets[node] = widgetid
             self.handle_node_replacement(
                 node,
                 widgetid,
@@ -1539,20 +1537,22 @@ class TkinterWeb(tk.Widget):
                 ),
             )
         elif nodetype == "range":
-            variable = tk.IntVar(self, value=nodevalue)
+            variable = tk.DoubleVar(self, value=nodevalue)
             from_ = self.get_node_attribute(node, "min", 0)
             to = self.get_node_attribute(node, "max", 100)
-            step = float(self.get_node_attribute(node, "step", 10))
+            step = float(self.get_node_attribute(node, "step", 1))
+            step_str = str(step)
+            decimal_places = len(step_str.split('.')[-1]) if '.' in step_str else 0
             def update_value(*args):
-                value = round(float(variable.get()) / step) * step
-                widgetid.set(value)
+                value = round(variable.get() / step) * step
+                widgetid.set(round(value, decimal_places))
                 self._on_input_change(node, widgetid)
             widgetid = ttk.Scale(self, variable=variable, from_=from_, to=to)
             variable.trace(
                 "w", update_value
             )
             widgetid.reset = lambda: variable.set(nodevalue)
-            self.form_nodes[node] = widgetid
+            self.form_widgets[node] = widgetid
             self.handle_node_replacement(
                 node,
                 widgetid,
@@ -1599,7 +1599,7 @@ class TkinterWeb(tk.Widget):
             else:
                 widgetid.reset = lambda: variable.set(variable.get())
             widgetid.get = variable.get
-            self.form_nodes[node] = widgetid
+            self.form_widgets[node] = widgetid
             self.handle_node_replacement(
                 node,
                 widgetid,
@@ -1627,7 +1627,7 @@ class TkinterWeb(tk.Widget):
                 lambda widgetid=widgetid, content=nodevalue: self._handle_entry_set(
                     widgetid, content)
             )
-            self.form_nodes[node] = widgetid
+            self.form_widgets[node] = widgetid
             self.handle_node_replacement(
                 node,
                 widgetid,
@@ -1755,31 +1755,31 @@ class TkinterWeb(tk.Widget):
 
     def _handle_form_reset(self, node):
         "Reset HTML forms."
-        if (node not in self.form_elements) or (not self.forms_enabled):
+        if (node not in self.form_nodes) or (not self.forms_enabled):
             return
 
-        form = self.form_elements[node]
+        form = self.form_nodes[node]
         #action = self.get_node_attribute(form, "action")
 
         for formelement in self.loaded_forms[form]:
-            if formelement in self.form_nodes:
-                self.form_nodes[formelement].reset()
+            if formelement in self.form_widgets:
+                self.form_widgets[formelement].reset()
 
     def _handle_form_submission(self, node, event=None):
         "Submit HTML forms."
-        if (node not in self.form_elements) or (not self.forms_enabled):
+        if (node not in self.form_nodes) or (not self.forms_enabled):
             return
 
         data = []
-        form = self.form_elements[node]
+        form = self.form_nodes[node]
         action = self.get_node_attribute(form, "action")
         method = self.get_node_attribute(form, "method", "GET").upper()
 
         for formelement in self.loaded_forms[form]:
             nodeattrname = self.get_node_attribute(formelement, "name")
             if nodeattrname:
-                if formelement in self.form_nodes:
-                    nodevalue = self.form_nodes[formelement].get()
+                if formelement in self.form_widgets:
+                    nodevalue = self.form_widgets[formelement].get()
                 elif self.get_node_tag(formelement) == "hidden":
                     nodevalue = self.get_node_attribute(formelement, "value")
                 nodetype = self.get_node_attribute(formelement, "type")
@@ -1859,7 +1859,10 @@ class TkinterWeb(tk.Widget):
         "Set the document cursor."
         if self.current_cursor != cursor:
             cursor = CURSOR_MAP[cursor]
-            self.master.config(cursor=cursor)
+            try:
+                self.master.config(cursor=cursor, _override=True)
+            except tk.TclError:
+                self.master.config(cursor=cursor)
             self.current_cursor = cursor
             # I've noticed that the cursor won't always update when the binding is tied to a different widget than the one we are changing the cursor of
             # however, the html widget doesn't support the cursor property so there's not much we can do about this
@@ -1932,6 +1935,15 @@ class TkinterWeb(tk.Widget):
             )
         else:
             self.post_message(f"WARNING: the embedded page {url} could not be shown because no embed widget was provided.")
+
+    def _on_right_click(self, event):
+        for node_handle in self.hovered_nodes:
+            self._submit_element_js(node_handle, "onmousedown")
+            self._submit_element_js(node_handle, "oncontextmenu")
+
+    def _on_middle_click(self, event):
+        for node_handle in self.hovered_nodes:
+            self._submit_element_js(node_handle, "onmousedown")
     
     def _on_click(self, event, redirected=False):
         "Set active element flags."

@@ -295,7 +295,7 @@ class HTMLElement:
             update  ;# This must be done to see changes on-screen
             """ % (extract_nested(self.node), escape_Tcl(contents))
         )
-        self.html.send_onload()
+        self.html.send_onload(self.node)
 
     @property
     def textContent(self):  # Original for this project
@@ -369,13 +369,13 @@ class HTMLElement:
     
     @property
     def value(self):
-        if self.node in self.html.form_nodes:
-            return self.html.form_nodes[self.node].get()
+        if self.node in self.html.form_widgets:
+            return self.html.form_widgets[self.node].get()
         
     @value.setter
     def value(self, value):
-        if self.node in self.html.form_nodes:
-            self.html.form_nodes[self.node].set(value)
+        if self.node in self.html.form_widgets:
+            self.html.form_widgets[self.node].set(value)
 
     def getAttribute(self, attribute):
         """Return the value of the given attribute..
@@ -501,7 +501,7 @@ class HTMLElement:
             self.html.insert_node_before(self.node, tkhtml_children_nodes, before.node)
         else:
             self.html.insert_node(self.node, tkhtml_children_nodes)
-        self.html.send_onload()
+        self.html.send_onload(self.node)
 
         #for node in tkhtml_children_nodes:
         #    print(node)

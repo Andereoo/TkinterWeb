@@ -607,6 +607,7 @@ class FileSelector(tk.Frame):
 
         self.multiple = multiple
         self.files = []
+        self.onchangecommand = None
 
     def generate_filetypes(self, accept):
         if accept:
@@ -673,10 +674,14 @@ class FileSelector(tk.Frame):
         else:
             self.label.config(text=f"{number} files selected.")
         self.event_generate("<<Modified>>")
+        if self.onchangecommand:
+            self.onchangecommand()
 
     def reset(self):
         self.label.config(text="No files selected.")
         self.event_generate("<<Modified>>")
+        if self.onchangecommand:
+            self.onchangecommand()
 
     def get(self):
         return self.files
@@ -704,16 +709,21 @@ class ColourSelector(tk.Frame):
             borderwidth=0,
         )
         self.default_colour = colour
+        self.onchangecommand = None
 
     def select_colour(self):
         colour = colorchooser.askcolor(title="Choose color", initialcolor=self.cget("bg"))[1]
         if colour:
             self.config(bg=colour, activebackground=colour)
             self.event_generate("<<Modified>>")
+            if self.onchangecommand:
+                self.onchangecommand()
 
     def reset(self):
         self.config(bg=self.default_colour, activebackground=self.default_colour)
         self.event_generate("<<Modified>>")
+        if self.onchangecommand:
+            self.onchangecommand()
 
     def get(self):
         return self.cget("bg")

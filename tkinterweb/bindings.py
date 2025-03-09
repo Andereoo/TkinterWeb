@@ -333,8 +333,8 @@ class TkinterWeb(tk.Widget):
         # we assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
         if not self.downloads_have_occured:
             self.post_event(DONE_LOADING_EVENT)
-            self._submit_deferred_scripts()
 
+        self._submit_deferred_scripts()
         self.send_onload()
 
     def send_onload(self, root=None, children=None):
@@ -469,7 +469,7 @@ class TkinterWeb(tk.Widget):
         # We assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
         if not self.downloads_have_occured:
             self.post_event(DONE_LOADING_EVENT)
-            self._submit_deferred_scripts()
+        self._submit_deferred_scripts()
         return fragment
     
     def enable_imagecache(self, enabled):
@@ -1144,6 +1144,9 @@ class TkinterWeb(tk.Widget):
             return cache_download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))
     
     def _thread_check(self, callback, *args, **kwargs):
+        if not self.downloads_have_occured:
+            self.downloads_have_occured = True
+            
         if self._maximum_thread_count == 0:
             callback(*args, **kwargs)
         elif len(self.active_threads) >= self._maximum_thread_count:
@@ -1158,7 +1161,6 @@ class TkinterWeb(tk.Widget):
         if not self.javascript_enabled or not self.unstoppable:
             return
 
-        self.downloads_have_occured = True
         attributes = attributes.split()
         attributes = dict(zip(attributes[::2], attributes[1::2])) # make attributes a dict
 
@@ -1173,8 +1175,6 @@ class TkinterWeb(tk.Widget):
         "Handle <style> elements."
         if not self.stylesheets_enabled or not self.unstoppable:
             return
-        
-        self.downloads_have_occured = True
 
         self._thread_check(self.fetch_styles, data=tag_contents)
 
@@ -1196,7 +1196,6 @@ class TkinterWeb(tk.Widget):
             and ("all" in media or "screen" in media)
             and self.stylesheets_enabled
         ):
-            self.downloads_have_occured = True
             self._thread_check(self.fetch_styles, node, url)
             # onload is fired if and when the stylesheet is parsed
         elif "icon" in rel:
@@ -1210,7 +1209,6 @@ class TkinterWeb(tk.Widget):
         "Load @import scripts."
         if not self.stylesheets_enabled or not self.unstoppable:
             return
-        self.downloads_have_occured = True
         try:
             url = urljoin(parent_url, new_url)
             self.post_message(f"Loading stylesheet from {shorten(url)}")
@@ -1319,16 +1317,13 @@ class TkinterWeb(tk.Widget):
         if not self.images_enabled or not self.unstoppable:
             return
 
-        self.downloads_have_occured = True
         name = self.image_name_prefix + str(len(self.loaded_images))
 
         image = blank_image(name)
         self.loaded_images.add(image)
 
         if url.startswith("replace:"):
-            thread = self._begin_download()
             name = url.replace("replace:", "")
-            self._finish_download(thread)
         elif any({
                 url.startswith("linear-gradient("),
                 url.startswith("url("),
@@ -1677,13 +1672,13 @@ class TkinterWeb(tk.Widget):
         self.active_threads.remove(thread)
         if len(self.active_threads) == 0:
             self.post_event(DONE_LOADING_EVENT)
-            self._submit_deferred_scripts()
 
     def _submit_deferred_scripts(self):
-        for index, script in enumerate(self.pending_scripts):
-            # thread safety
-            self.after(0, self.on_script, *script)
-        self.pending_scripts = []
+        if self.pending_scripts:
+            for index, script in enumerate(self.pending_scripts):
+                # thread safety
+                self.after(0, self.on_script, *script)
+            self.pending_scripts = []
            
     def _fix_css_urls(self, match, url):
         "Make relative uris in CSS files absolute."

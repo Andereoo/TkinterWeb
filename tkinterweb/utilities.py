@@ -824,9 +824,8 @@ class Notebook(ttk.Frame):
 class StoppableThread(threading.Thread):
     "A thread that stores a state flag that can be set and used to check if the thread is supposed to be running"
 
-    def __init__(self, *args, node=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         threading.Thread.__init__(self, *args, **kwargs)
-        self.node = node
         self.daemon = True
         self.running = True
 
@@ -840,8 +839,6 @@ class StoppableThread(threading.Thread):
 class PlaceholderThread:
     "Fake StoppableThread. The only purpose of this is to provide fake methods that mirror the StoppableThread class."
     "This means that if a download is running in the MainThread, the stop flags can still be set without raising errors, though they won't do anything."
-    def __init__(self):
-        self.node = None
 
     def stop(self):
         return

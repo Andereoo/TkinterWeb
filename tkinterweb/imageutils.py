@@ -88,10 +88,10 @@ def data_to_image(data, name, imagetype, invert, return_image=False):
     if "svg" in imagetype:
         if not cairoimport:
             photoimage = None
-            error = "no_pycairo"
+            error = "Pycairo"
         elif not rsvgimport:
             photoimage = None
-            error = "no_rsvg"
+            error = "Rsvg"
         elif rsvgimport == 'girsvg':
             handle = Rsvg.Handle()
             svg = handle.new_from_data(data.encode("utf-8"))
@@ -120,9 +120,6 @@ def data_to_image(data, name, imagetype, invert, return_image=False):
             image_data = cairosvg.svg2png(bytestring=data)
             image = Image.open(BytesIO(image_data))
             photoimage = PhotoImage(image, name=name)
-        else:
-            photoimage = None
-            error = "corrupt"
     elif invert:
         image = invert_image(Image.open(BytesIO(data)))
         photoimage = PhotoImage(image=image, name=name)

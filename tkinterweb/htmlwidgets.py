@@ -175,7 +175,7 @@ class HtmlFrame(ttk.Frame):
             "crash_prevention_enabled": True,
             "events_enabled": True,
             "threading_enabled": True,
-            "javascript_enabled": True,
+            "javascript_enabled": False,
             "image_alternate_text_enabled": True,
             "ignore_invalid_images": True,
             "visited_links": [],
@@ -862,7 +862,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
                         if self._current_url != newurl:
                             self._html.post_event(URL_CHANGED_EVENT)
                         name = self._html.image_name_prefix + str(len(self._html.loaded_images))
-                        self._html.finish_fetching_images(data, name, filetype, newurl)
+                        self._html.finish_fetching_images(None, data, name, filetype, newurl)
                         self.add_html(BUILTIN_PAGES["about:image"].format(self.about_page_background, self.about_page_foreground, name))
                     else:
                         if self._current_url != newurl:

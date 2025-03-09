@@ -337,12 +337,17 @@ class TkinterWeb(tk.Widget):
 
         self.send_onload()
 
-    def send_onload(self, root=None):
-        # We keep this a seperate command so that it can be run after inserting elements or changing the innerHTML
-
-        for node in self.search("[onload]", root=root):
-            if self.get_node_tag(node) not in {"img", "object", "iframe", "link"}: # these tags require downloads and are handled seperately
-                self._submit_element_js(node, "onload")
+    def send_onload(self, root=None, children=None):
+        """Send the onload signal for nodes that aren't handled at runtime.
+        We keep this a seperate command so that it can be run after inserting elements or changing the innerHTML"""
+        if children:
+            for node in children:
+                if self.get_node_tag(node) not in {"img", "object", "link"}:
+                    self._submit_element_js(node, "onload")
+        else:
+            for node in self.search("[onload]", root=root):
+                if self.get_node_tag(node) not in {"img", "object", "link"}:
+                    self._submit_element_js(node, "onload")
 
     def update_default_style(self):
         "Update the default stylesheet based on color theme."
@@ -597,57 +602,83 @@ class TkinterWeb(tk.Widget):
         "Get a tuple containing the computed CSS rules for each CSS selector"
         return self.tk.call(self._w, "_styleconfig")
 
-    def fetch_scripts(self, attributes, url):
+    def fetch_scripts(self, attributes, url=None, data=None):
         "Fetch and run scripts"
         thread = self._begin_download()
-        data = None
 
         if url and self.unstoppable:
+            self.post_message(f"Fetching script from {shorten(url)}")
             try:
-                if url.startswith("file://") or (not self._caches_enabled):
-                    data = download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))[0]
-                else:
-                    data = cache_download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))[0]
-
+                data = self._download_url(url)[0]
             except Exception as error:
                 self.post_message(f"ERROR: could not load script {url}: {error}")
                 self.on_resource_setup(url, "script", False)
 
         if data and self.unstoppable:
-            self.post_message(f"Successfully loaded {shorten(url)}")
-            self.on_resource_setup(url, "script", True)
             if "defer" in attributes:
                 self.pending_scripts.append((attributes, data))
             else:
                 self.after(0, self.on_script, attributes, data) # thread safety
+                
+            if url:
+                self.post_message(f"Successfully loaded {shorten(url)}")
+                self.on_resource_setup(url, "script", True)
         self._finish_download(thread)
 
-    def fetch_styles(self, sheetid, handler, errorurl="", url=None, data=None):
+    def fetch_styles(self, node=None, url=None, data=None):
         "Fetch stylesheets and parse the CSS code they contain"
         thread = self._begin_download()
 
         if url and self.unstoppable:
+            self.post_message(f"Fetching stylesheet from {shorten(url)}")
             try:
-                if url.startswith("file://") or (not self._caches_enabled):
-                    data = download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))[0]
-                else:
-                    data = cache_download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))[0]
-
-                matcher = lambda match, url=url: self._fix_css_urls(match, url)
-                data = sub(r"url\((.*?)\)", matcher, data)
-
+                data = sub(r"url\((.*?)\)", 
+                           lambda match, url=url: self._fix_css_urls(match, url), 
+                           self._download_url(url)[0]
+                           )
             except Exception as error:
-                self.post_message(f"ERROR: could not load stylesheet {errorurl}: {error}")
+                self.post_message(f"ERROR: could not load stylesheet {url}: {error}")
                 self.on_resource_setup(url, "stylesheet", False)
 
         if data and self.unstoppable:
+            self.style_count += 1
+            sheetid = "user." + str(self.style_count).zfill(4)
+
+            handler = self.register(
+                lambda new_url, parent_url=url: self._on_atimport(
+                    parent_url, new_url
+                )
+            )
+
             self.parse_css(f"{sheetid}.9999", handler, data)
-            if thread.node:
+            if node:
                 # thread safety
-                self.after(0, self._submit_element_js, thread.node, "onload")
+                self.after(0, self._submit_element_js, node, "onload")
             if url:
                 self.post_message(f"Successfully loaded {shorten(url)}")
                 self.on_resource_setup(url, "stylesheet", True)
+        self._finish_download(thread)
+
+    def fetch_objects(self, node, url):
+        thread = self._begin_download()
+
+        try:
+            data, newurl, filetype, code = self._download_url(url)
+
+            if data and filetype.startswith("image"):
+                name = self.image_name_prefix + str(len(self.loaded_images))
+                image, error = data_to_image(
+                    data, name, filetype, self._image_inversion_enabled
+                )
+                self.loaded_images.add(image) 
+                self.override_node_properties(node, "-tkhtml-replacement-image", f"url(replace:{image})")
+            elif data and filetype == "text/html":
+                self.after(0, self._create_iframe, node, newurl, data)
+
+            self.after(0, self._submit_element_js, node, "onload")
+        except Exception as error:
+            self.post_message(f"ERROR: could not load object element: {error}")
+        
         self._finish_download(thread)
 
     def load_alt_text(self, url, name):
@@ -669,7 +700,7 @@ class TkinterWeb(tk.Widget):
                     )
                     self.loaded_images.add(image)
 
-    def fetch_images(self, url, name, urltype):
+    def fetch_images(self, node, url, name):
         "Fetch images and display them in the document."
         thread = self._begin_download()
 
@@ -680,14 +711,11 @@ class TkinterWeb(tk.Widget):
             self.post_message(f"ERROR: image url not specified")
         else:
             try:
-                if url.startswith("file://") or (not self._caches_enabled):
-                    data, newurl, filetype, code = download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))
-                else:
-                    data, newurl, filetype, code = cache_download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))
+                data, newurl, filetype, code = self._download_url(url)
 
                 if self.unstoppable and data:
                     # thread safety
-                    self.after(0, self.finish_fetching_images, data, name, filetype, url, thread)
+                    self.after(0, self.finish_fetching_images, node, data, name, filetype, url)
 
             except Exception as error:
                 self.load_alt_text(url, name)
@@ -695,7 +723,7 @@ class TkinterWeb(tk.Widget):
                 self.on_resource_setup(url, "image", False)
         self._finish_download(thread)
 
-    def finish_fetching_images(self, data, name, filetype, url, thread):
+    def finish_fetching_images(self, node, data, name, filetype, url):
         try:
             image, error = data_to_image(
                 data, name, filetype, self._image_inversion_enabled
@@ -705,25 +733,18 @@ class TkinterWeb(tk.Widget):
                 self.loaded_images.add(image)
                 self.post_message(f"Successfully loaded {shorten(url)}")
                 self.on_resource_setup(url, "image", True)
-                if thread.node:
+                if node:
                     # thread safety
-                    self.after(0, self._submit_element_js, thread.node, "onload")
+                    self.after(0, self._submit_element_js, node, "onload")
                 if self.experimental:
                     node = self.search(f'img[src="{url}"]')
                     if node:
                         if self.get_node_children(node): self.delete_node(self.get_node_children(node))
-            elif error == "no_pycairo":
+            else:
                 self.load_alt_text(url, name)
-                self.post_message(f"ERROR: could not load image {url}: Pycairo is not installed but is required to parse .svg files")
+                self.post_message(f"ERROR: the image {url} could not be shown: {error} is not installed but is required to parse .svg files")
                 self.on_resource_setup(url, "image", False)
-            elif error == "no_rsvg":
-                self.load_alt_text(url, name)
-                self.post_message(f"ERROR: could not load image {url}: Rsvg is not installed but is required to parse .svg files")
-                self.on_resource_setup(url, "image", False)
-            elif error == "corrupt":
-                self.load_alt_text(url, name)
-                self.post_message(f"ERROR: the image {url} could not be shown")
-                self.on_resource_setup(url, "image", False)
+
         except Exception as error:
             self.load_alt_text(url, name)
             self.post_message(f"ERROR: could not load image {url}: {error}")
@@ -1116,38 +1137,57 @@ class TkinterWeb(tk.Widget):
                 html = sub(regex, self._generate_altered_colour, html, flags=IGNORECASE)
         return html
 
+    def _download_url(self, url):
+        if url.startswith("file://") or (not self._caches_enabled):
+            return download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))
+        else:
+            return cache_download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))
+    
+    def _thread_check(self, callback, *args, **kwargs):
+        if self._maximum_thread_count == 0:
+            callback(*args, **kwargs)
+        elif len(self.active_threads) >= self._maximum_thread_count:
+            self.after(500, lambda callback=callback, args=args: self._thread_check(callback, *args, **kwargs))
+        else:
+            thread = StoppableThread(target=callback, args=args, kwargs=kwargs)
+            thread.start()
+
     def _on_script(self, attributes, tag_contents):
         """A JavaScript engine could be used here to parse the script.
         Returning any HTMl code here (should) cause it to be parsed in place of the script tag."""
-        if self.javascript_enabled:
-            attributes = attributes.split()
-            attributes = dict(zip(attributes[::2], attributes[1::2]))
-            if "src" in attributes:
-                self._script_thread_check(attributes, self.resolve_url(attributes["src"]))
-            elif "defer" in attributes:
-                self.pending_scripts.append((attributes, tag_contents))
-            else:
-                return self.on_script(attributes, tag_contents)
+        if not self.javascript_enabled or not self.unstoppable:
+            return
+
+        self.downloads_have_occured = True
+        attributes = attributes.split()
+        attributes = dict(zip(attributes[::2], attributes[1::2])) # make attributes a dict
+
+        if "src" in attributes:
+            self._thread_check(self.fetch_scripts, attributes, self.resolve_url(attributes["src"]))
+        elif "defer" in attributes:
+            self.pending_scripts.append((attributes, tag_contents))
+        else:
+            return self.on_script(attributes, tag_contents)
 
     def _on_style(self, attributes, tag_contents):
         "Handle <style> elements."
         if not self.stylesheets_enabled or not self.unstoppable:
             return
+        
         self.downloads_have_occured = True
-        self.style_count += 1
-        ids = "user." + str(self.style_count).zfill(4)
-        handler_proc = self.register(
-            lambda new_url, parent_url=self.base_url: self._on_atimport(
-                parent_url, new_url
-            )
-        )
-        self._style_thread_check(sheetid=ids, handler=handler_proc, data=tag_contents)
+
+        self._thread_check(self.fetch_styles, data=tag_contents)
 
     def _on_link(self, node):
         "Handle <link> elements."
+        if not self.unstoppable:
+            return
+        
         try:
             rel = self.get_node_attribute(node, "rel").lower()
             media = self.get_node_attribute(node, "media", default="all").lower()
+            href = self.get_node_attribute(node, "href")
+            url = self.resolve_url(href)
         except tk.TclError:
             return
 
@@ -1155,31 +1195,13 @@ class TkinterWeb(tk.Widget):
             ("stylesheet" in rel)
             and ("all" in media or "screen" in media)
             and self.stylesheets_enabled
-            and self.unstoppable
         ):
             self.downloads_have_occured = True
-            href = self.get_node_attribute(node, "href")
-            try:
-                url = self.resolve_url(href)
-                self.post_message(f"Fetching stylesheet from {shorten(url)}")
-                self.style_count += 1
-                ids = "user." + str(self.style_count).zfill(4)
-                handler_proc = self.register(
-                    lambda new_url, parent_url=url: self._on_atimport(
-                        parent_url, new_url
-                    )
-                )
-                self._style_thread_check(
-                    sheetid=ids, handler=handler_proc, errorurl=href, url=url, node=node
-                )
-            except Exception as error:
-                self.post_message(f"ERROR: could not read stylesheet {href}: {error}")
+            self._thread_check(self.fetch_styles, node, url)
+            # onload is fired if and when the stylesheet is parsed
         elif "icon" in rel:
-            href = self.get_node_attribute(node, "href")
-            url = self.resolve_url(href)
             self.icon = url
             self.post_event(ICON_CHANGED_EVENT)
-
             self._submit_element_js(node, "onload")
         else:
             self._submit_element_js(node, "onload")
@@ -1189,18 +1211,11 @@ class TkinterWeb(tk.Widget):
         if not self.stylesheets_enabled or not self.unstoppable:
             return
         self.downloads_have_occured = True
-        self.style_count += 1
         try:
             url = urljoin(parent_url, new_url)
             self.post_message(f"Loading stylesheet from {shorten(url)}")
-            ids = "user." + str(self.style_count).zfill(4)
-            handler_proc = self.register(
-                lambda new_url, parent_url=url: self._on_atimport(parent_url, new_url)
-            )
 
-            self._style_thread_check(
-                sheetid=ids, handler=handler_proc, errorurl=new_url, url=url
-            )
+            self._thread_check(self.fetch_styles, url=new_url)
 
         except Exception as error:
             self.post_message(f"ERROR: could not load stylesheet {new_url}: {error}")
@@ -1243,20 +1258,17 @@ class TkinterWeb(tk.Widget):
             self.post_message(f"Creating iframe from {shorten(src)}")
             self._create_iframe(node, src)
 
-        self._submit_element_js(node, "onload")
-
     def _on_object(self, node):
         "Handle <object> elements."
         if not self.objects_enabled or not self.unstoppable:
             return
 
-        name = self.image_name_prefix + str(len(self.loaded_images))
-        url = self.get_node_attribute(node, "data")
+        data = self.get_node_attribute(node, "data")
 
-        if url != "":
+        if data != "":
             try:
                 # load widgets presented in <object> elements
-                widgetid = self.nametowidget(url)
+                widgetid = self.nametowidget(data)
                 if widgetid.winfo_ismapped():  # Don't display the same widget twice
                     return
 
@@ -1283,34 +1295,14 @@ class TkinterWeb(tk.Widget):
                 )
                 self._submit_element_js(node, "onload")
             except KeyError:
-                url = self.resolve_url(url)
-                if url == self.base_url:
+                data = self.resolve_url(data)
+                if data == self.base_url:
                     # Don't load the object if it is the same as the current file
                     # Otherwise the page will load the same object indefinitely and freeze the GUI forever
                     return
 
-                self.post_message(f"Creating object from {shorten(url)}")
-                try:
-                    if url.startswith("file://") or (not self._caches_enabled):
-                        data, newurl, filetype, code = download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))
-                    elif url:
-                        data, newurl, filetype, code = cache_download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))
-                    else:
-                        return
-
-                    if data and filetype.startswith("image"):
-                        image, error = data_to_image(
-                            data, name, filetype, self._image_inversion_enabled
-                        )
-                        self.loaded_images.add(image)
-                        self.tk.call(
-                            node, "override", f"-tkhtml-replacement-image url(replace:{image})"
-                        )
-                    elif data and filetype == "text/html":
-                        self._create_iframe(node, newurl, data)
-                    self._submit_element_js(node, "onload")
-                except Exception as error:
-                    self.post_message(f"ERROR: could not load object element: {error}")
+                self.post_message(f"Creating object from {shorten(data)}")
+                self._thread_check(self.fetch_objects, node, data)
 
     def _on_draw_cleanup_crash_cmd(self):
         if self._crash_prevention_enabled:
@@ -1351,16 +1343,24 @@ class TkinterWeb(tk.Widget):
                     url = url.split("'), url('", 1)[0]
                     image = strip_css_url(image)
                     url = self.resolve_url(image)
-                    self._image_thread_check(url, name)
+                    if url in self.image_directory:
+                        node = self.image_directory[url]
+                    else:
+                        node = None
+                    self._thread_check(self.fetch_images, node, url, name)
                     done = True
-            if not done:
-                self.load_alt_text(url, name)
-                self.post_message(f"ERROR: the image {shorten(url)} could not be shown because it is not supported yet")
-                self.on_resource_setup(url, "image", False)
+                else:
+                    self.load_alt_text(url, name)
+                    self.post_message(f"ERROR: the image {shorten(url)} could not be shown because it is not supported yet")
+                    self.on_resource_setup(url, "image", False)
         else:
             url = url.split("'), url('", 1)[0]
             url = self.resolve_url(url)
-            self._image_thread_check(url, name)
+            if url in self.image_directory:
+                node = self.image_directory[url]
+            else:
+                node = None
+            self._thread_check(self.fetch_images, node, url, name)
         return name
 
     def _on_form(self, node):
@@ -1698,47 +1698,6 @@ class TkinterWeb(tk.Widget):
         match = match.group().lower()
         match = match.replace("noto color emoji", "arial")
         return match
-                
-    def _script_thread_check(self, *args):
-        if self._maximum_thread_count == 0:
-            self.fetch_scripts(*args)
-        elif len(self.active_threads) >= self._maximum_thread_count:
-            self.after(500, lambda args=args: self._script_thread_check(*args))
-        else:
-            thread = StoppableThread(target=self.fetch_scripts, args=args)
-            thread.start()
-            
-    def _style_thread_check(self, node=None, **kwargs):
-        if self._maximum_thread_count == 0:
-            self.fetch_styles(**kwargs)
-        elif len(self.active_threads) >= self._maximum_thread_count:
-            self.after(500, lambda kwargs=kwargs: self._style_thread_check(**kwargs))
-        else:
-            thread = StoppableThread(target=self.fetch_styles, node=node, kwargs=kwargs)
-            thread.start()
-
-    def _image_thread_check(self, url, name):
-        if self._maximum_thread_count == 0:
-            self.fetch_images(url, name, url)
-        elif len(self.active_threads) >= self._maximum_thread_count:
-            self.after(
-                500, lambda url=url, name=name: self._image_thread_check(url, name)
-            )
-        else:
-            if url in self.image_directory:
-                node = self.image_directory[url]
-            else:
-                node = None
-            thread = StoppableThread(
-                target=self.fetch_images,
-                node=node,
-                args=(
-                    url,
-                    name,
-                    url,
-                ),
-            )
-            thread.start()
 
     def _handle_link_click(self, node_handle):
         "Handle link clicks."
@@ -1901,33 +1860,32 @@ class TkinterWeb(tk.Widget):
     def _create_iframe(self, node, url, html=None):
         if self.embed_obj:
             widgetid = self.embed_obj(self,
-                                        messages_enabled=self.messages_enabled,
-                                        overflow_scroll_frame=self,
-                                        stylesheets_enabled = self.stylesheets_enabled,
-                                        images_enabled = self.images_enabled,
-                                        forms_enabled = self.forms_enabled,
-                                        objects_enabled = self.objects_enabled,
-                                        ignore_invalid_images = self.ignore_invalid_images,
-                                        crash_prevention_enabled = self.crash_prevention_enabled,
-                                        dark_theme_enabled = self._dark_theme_enabled,
-                                        image_inversion_enabled = self._image_inversion_enabled,
-                                        caches_enabled = self._caches_enabled,
-                                        image_alternate_text_enabled = self.image_alternate_text_enabled,
-                                        selection_enabled = self.selection_enabled,
-                                        find_match_highlight_color = self.find_match_highlight_color,
-                                        find_match_text_color = self.find_match_text_color,
-                                        find_current_highlight_color = self.find_current_highlight_color,
-                                        find_current_text_color = self.find_current_text_color,
-                                        selected_text_highlight_color = self.selected_text_highlight_color,
-                                        selected_text_color = self.selected_text_color,
-                                        visited_links = self.visited_links,
-                                        insecure_https = self.insecure_https,
+                messages_enabled=self.messages_enabled,
+                overflow_scroll_frame=self,
+                stylesheets_enabled = self.stylesheets_enabled,
+                images_enabled = self.images_enabled,
+                forms_enabled = self.forms_enabled,
+                objects_enabled = self.objects_enabled,
+                ignore_invalid_images = self.ignore_invalid_images,
+                crash_prevention_enabled = self.crash_prevention_enabled,
+                dark_theme_enabled = self._dark_theme_enabled,
+                image_inversion_enabled = self._image_inversion_enabled,
+                caches_enabled = self._caches_enabled,
+                image_alternate_text_enabled = self.image_alternate_text_enabled,
+                selection_enabled = self.selection_enabled,
+                find_match_highlight_color = self.find_match_highlight_color,
+                find_match_text_color = self.find_match_text_color,
+                find_current_highlight_color = self.find_current_highlight_color,
+                find_current_text_color = self.find_current_text_color,
+                selected_text_highlight_color = self.selected_text_highlight_color,
+                selected_text_color = self.selected_text_color,
+                visited_links = self.visited_links,
+                insecure_https = self.insecure_https,
             )
 
             if html:
                 widgetid.load_html(html, url)
             elif url:
-                widgetid.load_html("<p>Loading...</p>")
                 widgetid.load_url(url)
 
             self.handle_node_replacement(
@@ -2064,26 +2022,22 @@ class TkinterWeb(tk.Widget):
 
                 if self.prev_active_node and self.stylesheets_enabled:
                     self.remove_node_flags(self.prev_active_node, "active")
-                if node_tag == "a":
-                    self.set_node_flags(node_handle, "visited")
-                    self._handle_link_click(node_handle)
-                elif node_tag == "input" and node_type == "reset":
+                if node_tag == "input" and node_type == "reset":
                     self._handle_form_reset(node_handle)
-                elif node_tag == "input" and node_type == "submit":
-                    self._handle_form_submission(node_handle)
-                elif node_tag == "input" and node_type == "image":
-                    self._handle_form_submission(node_handle)
-                elif node_tag == "button" and node_type == "submit":
+                elif node_tag == "input" and node_type in {"submit", "image"}:
                     self._handle_form_submission(node_handle)
                 else:
                     for node in self.hovered_nodes:
-                        node_tag = self.get_node_tag(node).lower()
+                        if node != node_handle:
+                            node_tag = self.get_node_tag(node).lower()
                         if node_tag == "a":
                             self.set_node_flags(node, "visited")
                             self._handle_link_click(node)
                             break
                         elif node_tag == "button":
-                            if (self.get_node_attribute(node, "type").lower() == "submit"):
+                            if node != node_handle:
+                                node_type = self.get_node_attribute(node, "type").lower()
+                            if node_type == "submit":
                                 self._handle_form_submission(node)
                                 break
         except tk.TclError:

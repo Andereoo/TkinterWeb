@@ -1,7 +1,7 @@
 Notebook Documentation
 =======================
 
-The TkinterWeb Notebook widget should be used in place of :py:class:`ttk.Notebook`, which is incompatable with Tkhtml on some platforms and crashes when selecting tabs. See the `https://docs.python.org/3/library/tkinter.ttk.html#notebook <Tkinter Documentation>`_ for the full API.
+The TkinterWeb :class:`~tkinterweb.Notebook` widget should be used in place of :py:class:`ttk.Notebook`, which is incompatable with Tkhtml on some platforms and crashes when selecting tabs. See https://docs.python.org/3/library/tkinter.ttk.html#notebook for the full API.
 
 .. autoclass:: tkinterweb.Notebook
    :members:

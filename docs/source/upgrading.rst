@@ -1,5 +1,5 @@
-Porting to TkinterWeb v4+
-=========================
+Porting to TkinterWeb 4+
+========================
 
 
 **The API changed significantly in version 4.0.0**
@@ -25,7 +25,7 @@ Removed
 * ``HtmlFrame.get_parsemode()`` - use ``HtmlFrame.cget("parsemode")``
 * ``HtmlFrame.set_parsemode()`` - use ``HtmlFrame.configure(parsemode=)``
 * ``HtmlFrame.set_message_func()`` - use ``HtmlFrame.configure(message_func=)``
-* ``HtmlFrame.set_broken_webpage_message()`` - use ``HtmlFrame.configure(on_navigate_fail=)``. Note that ``on_navigate_fail`` latter requires a function instead.
+* ``HtmlFrame.set_broken_webpage_message()`` - use ``HtmlFrame.configure(on_navigate_fail=)``. Note that :attr:`on_navigate_fail` requires a function instead.
 * ``HtmlFrame.set_maximum_thread_count()`` - use ``HtmlFrame.configure(threading_enabled=)``
 * ``HtmlFrame.set_recursive_hover_depth()`` - use ``HtmlFrame.html.recursive_hover_depth=``
 * ``HtmlFrame.add_visited_links()`` - use ``HtmlFrame.configure(visited_links=)``
@@ -39,16 +39,16 @@ Removed
 * ``HtmlFrame.on_image_setup()`` - use ``HtmlFrame.configure(on_resource_setup=)``
 * ``HtmlFrame.on_downloading_resource()`` - bind to ``<<DownloadingResource>>``
 * ``HtmlFrame.on_done_loading()`` - bind to ``<<DoneLoading>>``
-* ``HtmlFrame.on_url_change()`` - bind to ``<<UrlChanged>>`` and use ``HtmlFrame.current_url``
-* ``HtmlFrame.on_icon_change()`` - bind to ``<<IconChanged>>`` and use ``HtmlFrame.icon``
-* ``HtmlFrame.on_title_change()`` - bind to ``<<TitleChanged>>`` and use ``HtmlFrame.title``
+* ``HtmlFrame.on_url_change()`` - bind to ``<<UrlChanged>>`` and use :attr:`.HtmlFrame.current_url`
+* ``HtmlFrame.on_icon_change()`` - bind to ``<<IconChanged>>`` and use :attr:`.HtmlFrame.title`
+* ``HtmlFrame.on_title_change()`` - bind to ``<<TitleChanged>>`` and use :attr:`.HtmlFrame.title`
 * ``HtmlFrame.on_form_submit()`` - use ``HtmlFrame.configure(on_form_submit=)``
 * ``HtmlFrame.on_link_click()`` - use ``HtmlFrame.configure(on_link_click=)``
-* ``HtmlFrame.yview_towidget()`` - use ``HTMLElement.scrollIntoView()``
-* ``HtmlFrame.get_currently_hovered_node_text()`` - use ``HtmlFrame.get_currently_hovered_element()``
-* ``HtmlFrame.get_currently_hovered_node_tag()`` - use ``HtmlFrame.get_currently_hovered_element()``
-* ``HtmlFrame.get_currently_hovered_node_attribute()`` - use ``HtmlFrame.get_currently_hovered_element()``
-* ``HtmlFrame.get_current_link()`` - use ``HtmlFrame.get_currently_hovered_element()``
+* ``HtmlFrame.yview_towidget()`` - use :meth:`.HTMLElement.scrollIntoView`
+* ``HtmlFrame.get_currently_hovered_node_text()`` - :meth:`.HtmlFrame.get_currently_hovered_element`
+* ``HtmlFrame.get_currently_hovered_node_tag()`` - :meth:`.HtmlFrame.get_currently_hovered_element`
+* ``HtmlFrame.get_currently_hovered_node_attribute()`` - :meth:`.HtmlFrame.get_currently_hovered_element`
+* ``HtmlFrame.get_current_link()`` - use :meth:`.HtmlFrame.get_currently_hovered_element`
     
 * The ``widgetid`` attribute no longer embeds widgets. Use ``<object data=name_of_your_widget></object>`` instead. This improves load speeds and allows for widget style handling.
 
@@ -57,8 +57,8 @@ Renamed
 
 * ``HtmlFrame.get_currently_selected_text()`` -> :meth:`.HtmlFrame.get_selection`
 
-* ``TkwDocumentObjectModel`` -> ``HTMLDocument``
-* ``HtmlElement`` -> ``HTMLElement``
+* ``TkwDocumentObjectModel`` -> :class:`.HTMLDocument`
+* ``HtmlElement`` -> :class:`.HTMLElement`
 
 * ``HtmlElement.style()`` -> :attr:`.HTMLElement.style`
 * ``HtmlElement.innerHTML()`` -> :attr:`.HTMLElement.innerHTML`
@@ -119,14 +119,14 @@ Added
 Changed
 -------
 
-* :attr:`.HtmlFrame.configure`, :attr:`.HtmlFrame.config`, :attr:`.HtmlFrame.cget`, and :attr:`.HtmlFrame.__init__()` now support more configuration options.
-* :attr:`.HtmlFrame.load_website`, :attr:`.HtmlFrame.load_file`, and :attr:`.HtmlFrame.load_url` no longer accept the ``insecure`` parameter. use ``HTMLElement.configure(insecure=)``.
+* :meth:`.HtmlFrame.configure`, :meth:`.HtmlFrame.config`, :meth:`.HtmlFrame.cget`, and :meth:`.HtmlFrame.__init__` now support more configuration options.
+* :meth:`.HtmlFrame.load_website`, :meth:`.HtmlFrame.load_file`, and :meth:`.HtmlFrame.load_url` no longer accept the ``insecure`` parameter. use ``HTMLElement.configure(insecure=)``.
 
 * Enabling/disabling caches now enables/disables the Tkhtml image cache.
 * Threading now cannot be enabled if the Tcl/Tk build does not support it.
 
 * :meth:`.HTMLElement.remove` now raises a TclError when invoked on ``<html>`` or ``<body>`` elements, which previously caused segmentation faults.
-* :attr:`.HTMLElement.innerHTML` and :meth:`.HTMLElement.textContent` now raise a TclError when invoked on ``<html>`` elements, which previously caused segmentation faults.
+* :attr:`.HTMLElement.innerHTML` and :attr:`.HTMLElement.textContent` now raise a TclError when invoked on ``<html>`` elements, which previously caused segmentation faults.
 
   
 * The ability to style color selector inputs was improved.

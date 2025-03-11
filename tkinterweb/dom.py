@@ -64,7 +64,7 @@ def flatten(data):
         return data
 
 class HTMLDocument:
-    """Access this class via the :attr:`~tkinterweb.HtmlFrame.document` property of the :attr:`~tkinterweb.HtmlFrame` and :attr:`~tkinterweb.HtmlLabel` widgets.
+    """Access this class via the :attr:`~tkinterweb.HtmlFrame.document` property of the :class:`~tkinterweb.HtmlFrame` and :class:`~tkinterweb.HtmlLabel` widgets.
     
     :param htmlwidget: The :class:`~tkinterweb.TkinterWeb` instance this class is tied to.
     :type htmlwidget: :class:`~tkinterweb.TkinterWeb`"""
@@ -132,8 +132,9 @@ class HTMLDocument:
             """ % (self.html, escape_Tcl(text)))
         )
 
-    def getElementById(self, query, _root=None):
-        """Return an element given an id.
+
+    def getElementById(self, query):
+        """Return an element that matches a given id.
         
         :param query: The element id to be searched for.
         :type query: str
@@ -142,8 +143,8 @@ class HTMLDocument:
         node = self.html.search(f"[id='{query}']", index=0, root=_root)
         return HTMLElement(self, node)
 
-    def getElementsByClassName(self, query, _root=None):
-        """Return all elements that match given a class name.
+    def getElementsByClassName(self, query):
+        """Return all elements that match a given class name.
         
         :param query: The class to be searched for.
         :type query: str
@@ -226,7 +227,7 @@ class HTMLDocument:
             return [TclNode_to_html %s]
             """ % (int(deep), extract_nested(node))
         ) # May split this into 2 methods in future
-    
+
 
 class HTMLElement:
     """:param document_manager: The :class:`~tkinterweb.dom.HTMLDocument` instance this class is tied to.
@@ -246,7 +247,7 @@ class HTMLElement:
         
     @property
     def style(self):
-        """Manage the element's styling.
+        """Manage the element's styling. For instance, to make the element have a blue background, use ``yourhtmlelememt.style.backgroundColor = "blue"``.
 
         :rtype: :class:`~tkinterweb.dom.CSSStyleDeclaration`"""
         if self.style_cache is None:  # lazy loading of style
@@ -339,14 +340,14 @@ class HTMLElement:
 
     @property
     def attributes(self):
-        """Return the attributes of the element.
+        """Return the element's attributes.
         
         :rtype: str"""
         return self.html.get_node_attributes(self.node)
 
     @property
     def tagName(self):
-        """Return the tag name of the element"
+        """Return the element's tag name.
 
         :rtype: str"""
         return self.html.get_node_tag(self.node)
@@ -363,7 +364,7 @@ class HTMLElement:
     def children(self):
         """Get the element's children elements.
         
-        :rtype: list(:class:`HTMLElement`)
+        :rtype: list[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
         return [HTMLElement(self, i) for i in self.html.get_node_children(self.node)]
     
@@ -595,11 +596,10 @@ class HTMLElement:
     def setAttribute(self, attribute, value):
         """Set the value of the given attribute..
         
-        :param attribute: The attribute to return.
+        :param attribute: The attribute to set.
         :type attribute: str
         :param value: The new value of the given attribute.
-        :type value: str
-        :rtype: str"""
+        :type value: str"""
         self.html.set_node_attribute(self.node, attribute, value)
         
     def remove(self):
@@ -612,16 +612,16 @@ class HTMLElement:
         """Insert the specified children into the element.
         
         :param children: The element(s) to be added into the element.
-        :type children: list, tuple, or HTMLElement"""
+        :type children: list, tuple, or :class:`HTMLElement`"""
         self._insert_children(children)
 
     def insertBefore(self, children, before):
         """Insert the specified children before a given child element.
         
         :param children: The element(s) to be added into the element.
-        :type children: list, tuple, or HTMLElement
+        :type children: list, tuple, or :class:`HTMLElement`
         :param before: The child element that the added elements should be placed before.
-        :type before: HTMLElement
+        :type before: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
         self._insert_children(children, before)
 
@@ -662,7 +662,7 @@ class HTMLElement:
         return self.document.getElementsByTagName(query, self.node)
 
     def querySelector(self, query):
-        """Return the first element that are children of the current element and match the given CSS selector.
+        """Return the first element that is a child of the current element and matches the given CSS selector.
         
         :param query: The CSS selector to be searched for.
         :type query: strvalue

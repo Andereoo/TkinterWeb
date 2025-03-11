@@ -6,6 +6,7 @@ Copyright (c) 2025 Andereoo
 """
 
 from urllib.parse import urldefrag, urlparse
+from os import path
 
 from bindings import TkinterWeb
 from utilities import *
@@ -14,6 +15,9 @@ from imageutils import create_RGB_image
 from dom import HTMLDocument, HTMLElement
 
 from tkinter import ttk
+
+
+pythonmonkey = None
 
 
 class HtmlFrame(ttk.Frame):
@@ -32,6 +36,8 @@ class HtmlFrame(ttk.Frame):
     :type on_form_submit: function
     :param on_script: The function to be called when a ``<script>`` element is encountered. This can be used to connect a script handler, such as a JavaScript engine. The script element's attributes and contents will be passed as arguments.
     :type on_script: function
+    :param on_element_script: The function to be called when a JS event attribute on an element is encountered. This can be used to connect a script handler, such as a JavaScript engine, or even to run your own Python code. The element's corresponding Tkhtml3 node, relevant attribute, and attribute contents will be passed as arguments.
+    :type on_element_script: callable
     :param on_resource_setup: The function to be called when an image or stylesheet load finishes. The resource's url, type ("stylesheet" or "image"), and whether setup was successful or not (True or False) will be passed as arguments.
     :type on_resource_setup: function
     :param message_func: The function to be called when a debug message is issued. This only works if :attr:`messages_enabled` is set to True. The message will be passed as an argument. By default the message is printed.
@@ -74,6 +80,8 @@ class HtmlFrame(ttk.Frame):
     :type events_enabled: bool
     :param threading_enabled: Enable/disable threading. Has no effect if the Tcl/Tk build does not support threading. This is enabled by default.
     :type threading_enabled: bool
+    :param javascript_enabled: Enable/disable JavaScript support. This is disabled by default. Highly experimental. 
+    :type javascript_enabled: bool
     :param image_alternate_text_enabled: Enable/disable the display of alt text for broken images. This is enabled by default.
     :type image_alternate_text_enabled: bool
     :param dark_theme_enabled: Enable/disable dark mode. This feature is a work-in-progress and may cause hangs or crashes on more complex websites.
@@ -139,6 +147,7 @@ class HtmlFrame(ttk.Frame):
         self._thread_in_progress = None
         self._prev_height = 0
         self._button = None
+        self._DOM_cache = None
 
         self._htmlframe_options = {
             "on_navigate_fail": self.show_error_page,
@@ -150,7 +159,8 @@ class HtmlFrame(ttk.Frame):
         self.tkinterweb_options = {
             "on_link_click": self.load_url,
             "on_form_submit": self.load_form_data,
-            "on_script": placeholder,
+            "on_script": self._on_script,
+            "on_element_script": self._on_element_script,
             "on_resource_setup": placeholder,
             "message_func": notifier,
             "messages_enabled": True,
@@ -165,6 +175,7 @@ class HtmlFrame(ttk.Frame):
             "crash_prevention_enabled": True,
             "events_enabled": True,
             "threading_enabled": True,
+            "javascript_enabled": False,
             "image_alternate_text_enabled": True,
             "ignore_invalid_images": True,
             "visited_links": [],
@@ -214,7 +225,6 @@ class HtmlFrame(ttk.Frame):
         self._html = html = TkinterWeb(self, self.tkinterweb_options, **self.tkhtml_options)
         self._hsb = hsb = AutoScrollbar(self, orient="horizontal", command=html.xview)
         self._vsb = vsb = AutoScrollbar(self, orient="vertical", command=html.yview)
-        self._document = HTMLDocument(html)
 
         html.configure(xscrollcommand=hsb.set, yscrollcommand=vsb.set)
 
@@ -286,8 +296,10 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
     def document(self):
         """The DOM manager. Use this to access :class:`~tkinterweb.dom.HTMLDocument` methods to manupulate the DOM.
         
-        :rtype: :class:`~tkinterweb.dom.HTMLDocument`"""
-        return self._document
+        :rtype: :class:`HTMLDocument`"""
+        if self._DOM_cache is None:  # lazy loading of Document Object Model
+            self._DOM_cache = HTMLDocument(self.html)
+        return self._DOM_cache
     
     @property
     def html(self):
@@ -324,11 +336,14 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
                     self._handle_resize(force=True)
         super().configure(**kwargs)
 
-    def config(self, **kwargs):
+    def config(self, _override=False, **kwargs):
         """
         Change the widget's configuration options. See above for options.
         """
-        self.configure(**kwargs)
+        if _override:
+            super().configure(**kwargs)
+        else:
+            self.configure(**kwargs)
 
     def cget(self, key):
         """
@@ -536,7 +551,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         if ignore_text_nodes:
             if not self._html.get_node_tag(self._html.current_node):
                 node = self._html.get_node_parent(self._html.current_node)
-        return HTMLElement(self._html, node)
+        return HTMLElement(self.document, node)
 
     def screenshot_page(self, filename=None, full=False):
         """Take a screenshot. 
@@ -560,7 +575,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
             self._html.post_message(f"Screenshot taken: {width}px by {height}px!")
             return image
         else:
-            self._html.post_message("A screenshot could not be taken because it screenshot_page is an experimental feature on Windows")
+            self._html.post_message("ERROR: A screenshot could not be taken because it screenshot_page is an experimental feature on Windows")
             return None
 
     def print_page(self, filename=None, cnf={}, **kwargs):
@@ -595,7 +610,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
             self._html.post_message("Printed!")
             if file: return file
         else:
-            self._html.post_message("The page could not be printed because print_page is an experimental feature")
+            self._html.post_message("ERROR: The page could not be printed because print_page is an experimental feature")
             return ""
 
     def save_page(self, filename=None):
@@ -606,7 +621,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         :return: A string containing the page's HTML/CSS code.
         :rtype: str"""
         self._html.post_message(f"Saving {self._current_url}...")
-        html = self._document.documentElement.innerHTML
+        html = self.document.documentElement.innerHTML
         if filename:
             with open(filename, "w+") as handle:
                 handle.write(html)
@@ -628,21 +643,23 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         title = ""
         icon = ""
         base = ""
-        style = ""
+        style = "\n"
         
         for rule in self._html.get_computed_styles():
             selector, prop, origin = rule
             if origin == "agent" and not allow_agent: continue
-            style += f"{selector} {{{prop.replace('-tkhtml-no-color', 'transparent')}}}\n"
+            style += f"\t\t\t{selector} {{{prop.replace('-tkhtml-no-color', 'transparent')}}}\n"
 
-        if self._html.title: title = f"\n        <title>{self._html.title}</title>"
-        if self._html.icon: icon = f"\n        <link rel=\"icon\" type=\"image/x-icon\" href=\"/{self._html.icon}\">"
-        if self._html.base_url: base = f"\n        <base href=\"{self._html.base_url}\"></base>"
-        if style: style = f"\n        <style>{style}</style>"
-        body = self._document.body.innerHTML
+        if self._html.title: title = f"\n\t\t<title>{self._html.title}</title>"
+        if self._html.icon: icon = f"\n\t\t<link rel=\"icon\" type=\"image/x-icon\" href=\"/{self._html.icon}\">"
+        if self._html.base_url: base = f"\n\t\t<base href=\"{self._html.base_url}\"></base>"
+        if style.strip(): style = f"\n\t\t<style>{style}\t\t</style>"
+        body = self.document.body.innerHTML
 
-        html = f"""<html>\n    <head>{title}{icon}{base}{style}\n    </head>\n    <body>\n        {body}\n    </body>\n</html>"""
+        html = f"""<html>\n\t<head>{title}{icon}{base}{style}\n\t</head>\n\t<body>\n\t{body}\n\t</body>\n</html>"""
         if filename:
+            if not path.splitext(filename)[1]:
+                filename = f"{filename}.{self.cget('parsemode')}"
             with open(filename, "w+") as handle:
                 handle.write(html)
         self._html.post_message("Saved!")
@@ -739,6 +756,17 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         :type old_widget: :py:class:`tkinter.Widget`"""
         self._html.remove_widget(old_widget)
 
+    def register_JS_object(self, name, obj):
+        """Register new JavaScript object. This can be used to access Python variables, functions, and classes from JavaScript (eg. to add a callback for the JavaScript alert() function).
+        
+        :param name: The name of the new JavaScript object.
+        :type name: str
+        :param obj: The Python object to pass.
+        :type obj: anything"""
+        if self.html.javascript_enabled and not pythonmonkey:
+            self._initialize_javascript()
+        pythonmonkey.eval(f"(function(pyObj) {{globalThis.{name} = pyObj}})")(obj)
+
     def _check_value(self, old, new):
         expected_type = type(old)
         if callable(old) or old == None:
@@ -760,7 +788,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         else:
             height = self._html.winfo_height()
         if self._prev_height != height or force:
-            resizeable_elements = self._document.querySelectorAll(f"[{BUILTIN_ATTRIBUTES['vertical-align']}]")
+            resizeable_elements = self.document.querySelectorAll(f"[{BUILTIN_ATTRIBUTES['vertical-align']}]")
             for element in resizeable_elements:
                 element.style.height = f"{height/self['zoom']}px"
         self._prev_height = height
@@ -835,7 +863,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
                         if self._current_url != newurl:
                             self._html.post_event(URL_CHANGED_EVENT)
                         name = self._html.image_name_prefix + str(len(self._html.loaded_images))
-                        self._html.finish_fetching_images(data, name, filetype, newurl)
+                        self._html.finish_fetching_images(None, data, name, filetype, newurl)
                         self.add_html(BUILTIN_PAGES["about:image"].format(self.about_page_background, self.about_page_foreground, name))
                     else:
                         if self._current_url != newurl:
@@ -864,7 +892,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
                 except Exception:
                     pass
         except Exception as error:
-            self._html.post_message(f"Error loading {url}: {error}")
+            self._html.post_message(f"ERROR: could not load {url}: {error}")
             if "CERTIFICATE_VERIFY_FAILED" in str(error):
                 self._html.post_message(f"Check that you are using the right url scheme. Some websites only support http.\n\
 This might also happen if your Python distribution does not come installed with website certificates.\n\
@@ -881,6 +909,38 @@ Otherwise, use 'configure(insecure_https=True)' to ignore website certificates."
             for style in self._accumulated_styles:
                 self.add_css(style)
             self._accumulated_styles = []
+
+    def _initialize_javascript(self):
+        # Lazy loading of JS engine
+        global pythonmonkey
+        try:
+            import pythonmonkey
+            self.register_JS_object("document", self.document)
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError("PythonMonkey is required to run JavaScript files but is not installed.")
+
+    def _on_script(self, attributes, tag_contents):
+        global pythonmonkey
+        if self.html.javascript_enabled and not pythonmonkey:
+            self._initialize_javascript()
+        try:
+            pythonmonkey.eval(tag_contents)
+        except Exception as error:
+            if "src" in attributes:
+                self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running the script from {attributes["src"]}: {error}")
+            else:
+                self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running a script: {error}")
+
+    def _on_element_script(self, node_handle, attribute, attr_contents):
+        global pythonmonkey
+        if self.html.javascript_enabled and not pythonmonkey:
+            self._initialize_javascript()
+        try:
+            element = HTMLElement(self.document, node_handle)
+            pythonmonkey.eval(f"(element) => {{function run() {{ {attr_contents} }}; run.bind(element)()}}")(element)
+        except Exception as error:
+            self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running an {attribute} script: {error}")
+
 
 class HtmlLabel(HtmlFrame):
     """The :class:`HtmlLabel` widget inherits from the :class:`HtmlFrame`. For a complete list of avaliable methods, configuration options, generated events, and state variables, see the :class:`HtmlFrame` docs.

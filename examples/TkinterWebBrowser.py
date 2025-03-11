@@ -11,6 +11,7 @@ This code was originally created for testing TkinterWeb and is a bit of a mess, 
  - searching pages
  - embedding Tkinter widgets
  - managing input elements
+ - using JavaScript and calling Python functions from JavaScript
  - manipulating the DOM
  - and others
  
@@ -90,7 +91,7 @@ class Page(tk.Frame):
         find_close = ttk.Button(findbar, text="Close", command=self.open_findbar, cursor="hand2")
 
         self.frame = frame = HtmlFrame(self, message_func=self.add_message, on_link_click=self.link_click, on_form_submit=self.form_submit)
-        self.sidebar = sidebar = HtmlFrame(frame, width=250, fontscale=0.8, selection_enabled=False, messages_enabled=False)
+        self.sidebar = sidebar = HtmlFrame(frame, width=250, fontscale=0.8, selection_enabled=False, messages_enabled=True, javascript_enabled=True)
         sidebar.grid_propagate(False)
 
         self.images_var = images_var = tk.IntVar(value=self.frame["images_enabled"])
@@ -131,32 +132,78 @@ class Page(tk.Frame):
         frame.grid(column=0, row=1, sticky="nsew")
         bottombar.grid(column=0, row=4, sticky="ew")
 
-        self.sidebar.load_html(f"""<html><body><style>body p, span {{margin-top: 5px; margin-bottom: 5px; cursor: default}} object {{width: 100%; cursor: pointer}}
-                               input[type="color"] {{height:15px; width:30px; border: 1px solid black; padding:0; margin:5px;background-color: transparent}} label {{margin-left: 5px}}</style>
-                               <object allowscrolling data={images_enabled}></object><br>
-                               <object allowscrolling data={styles_enabled}></object><br>
-                               <object allowscrolling data={forms_enabled}></object><br>
-                               <object allowscrolling data={objects_enabled}></object><br>
-                               <object allowscrolling data={caches_enabled}></object><br>
-                               <object allowscrolling data={emojis_enabled}></object>
-                               <object allowscrolling data={threads_enabled}></object><hr></hr>
-                               <object allowscrolling data={invert_page_enabled}></object><br>
-                               <object allowscrolling data={invert_images_enabled}></object><hr></hr>
-                               <div><p style="float:left">Zoom:</p><span style="float:right" id="zoom">{self.frame['zoom']}</span><input style="width: 100%" type="range" name="zoom" min="0.1" max="10" value="{self.frame['zoom']}"></div>
-                               <div><p style="float:left">Font scale:</p><span style="float:right" id="fontscale">{self.frame['fontscale']}</span><input style="width: 100%" type="range" name="fontscale" min="0.1" max="10" value="{self.frame['fontscale']}"></div><hr style="margin-bottom:10px;margin-top:10px"></hr>
-                               <p>User agent:</p><input style="padding: 5px 0px 3px 0px; width: 100%; color:black" type="text" value="{self.frame["headers"]["User-Agent"]}"></input><hr style="margin-bottom:10px;margin-top:0"></hr>
-                               <p>Parse mode:</p><select style="padding: 3px 0px 1px 0px; width:100%; color:black"><option value="xml">xml</option><option value="xhtml">xhtml</option><option value="html">html</option></select><hr style="margin-bottom:10px;margin-top:0"></hr>
-                               <input type="color" name="find_match_highlight_color" value="{self.frame['find_match_highlight_color']}" />
-                               <input type="color" name="find_match_text_color" value="{self.frame['find_match_text_color']}" /><label>Find matches</label><br>
-                               <input type="color" name="find_current_highlight_color" value="{self.frame['find_current_highlight_color']}" />
-                               <input type="color" name="find_current_text_color" value="{self.frame['find_current_text_color']}" /><label>Current match</label><br>
-                               <input type="color" name="selected_text_highlight_color" value="{self.frame['selected_text_highlight_color']}" />
-                               <input type="color" name="selected_text_color" value="{self.frame['selected_text_color']}" /><label>Selected text</label><br>
-                               <hr></hr>
-                               <div style="margin-top: 20px"><object allowscrolling data={view_source_button}></object>
-                               <object allowscrolling data={about_button}></object></div></body></html>
-        """)
-        sidebar.bind_class(self.sidebar.html.scrollable_node_tag, "<<Modified>>", self.on_modified)
+        self.sidebar.register_JS_object("zoom", lambda scale: self.frame.configure(zoom=scale))
+        self.sidebar.register_JS_object("fontscale", lambda scale: self.frame.configure(fontscale=scale))
+        self.sidebar.register_JS_object("parsemode", lambda parsemode: self.frame.configure(parsemode=parsemode))
+        def update_header(value):
+            self.frame["headers"]["User-Agent"] = value
+        self.sidebar.register_JS_object("headers", update_header)
+        def update_color(color, value):
+            self.frame[color] = value
+            self.frame.html.update_tags()
+        self.sidebar.register_JS_object("color", update_color)
+
+        self.sidebar.load_html(f"""<html>
+  <body>
+    <style>
+      body p, span {{ margin-top: 5px; margin-bottom: 5px; cursor: default; }}
+      object {{ width: 100%; cursor: pointer; }}
+      input[type="color"] {{ height: 15px; width: 30px; border: 1px solid black; padding: 0; margin: 5px; background-color: transparent; }}
+      label {{ margin-left: 5px; }}
+    </style>
+
+    <object allowscrolling data={images_enabled}></object><br>
+    <object allowscrolling data={styles_enabled}></object><br>
+    <object allowscrolling data={forms_enabled}></object><br>
+    <object allowscrolling data={objects_enabled}></object><br>
+    <object allowscrolling data={caches_enabled}></object><br>
+    <object allowscrolling data={emojis_enabled}></object>
+    <object allowscrolling data={threads_enabled}></object><hr>
+    
+    <object allowscrolling data={invert_page_enabled}></object><br>
+    <object allowscrolling data={invert_images_enabled}></object><hr>
+
+    <div>
+      <p style="float:left">Zoom:</p>
+      <span style="float:right" id="zoom">{self.frame['zoom']}</span>
+      <input onchange="document.getElementById('zoom').textContent = this.value; zoom(this.value)" style="width: 100%" type="range" min="0.1" max="10" step="0.1" value="{self.frame['zoom']}">
+    </div>
+    
+    <div>
+      <p style="float:left">Font scale:</p>
+      <span style="float:right" id="fontscale">{self.frame['fontscale']}</span>
+      <input onchange="document.getElementById('fontscale').textContent = this.value; fontscale(this.value)" style="width: 100%" type="range" min="0.1" max="10" step="0.1" value="{self.frame['fontscale']}">
+    </div>
+    
+    <hr style="margin-bottom:10px;margin-top:10px">
+    
+    <p>User agent:</p>
+    <input onchange="headers(this.value)" style="padding: 5px 0px 3px 0px; width: 100%; color:black" type="text" value="{self.frame['headers']['User-Agent']}">
+    <hr style="margin-bottom:10px;margin-top:0">
+    
+    <p>Parse mode:</p>
+    <select onchange="parsemode(this.value)" style="padding: 3px 0px 1px 0px; width:100%; color:black">
+      <option value="xml">xml</option>
+      <option value="xhtml">xhtml</option>
+      <option value="html">html</option>
+    </select>
+    <hr style="margin-bottom:10px;margin-top:0">
+
+    <input type="color" onchange="color('find_match_highlight_color', this.value)" value="{self.frame['find_match_highlight_color']}">
+    <input type="color" onchange="color('find_match_text_color', this.value)" value="{self.frame['find_match_text_color']}"><label>Find matches</label><br>
+    <input type="color" onchange="color('find_current_highlight_color', this.value)" value="{self.frame['find_current_highlight_color']}">
+    <input type="color" onchange="color('find_current_text_color', this.value)" value="{self.frame['find_current_text_color']}"><label>Current match</label><br>
+    <input type="color" onchange="color('selected_text_highlight_color', this.value)" value="{self.frame['selected_text_highlight_color']}">
+    <input type="color" onchange="color('selected_text_color', this.value)" value="{self.frame['selected_text_color']}"><label>Selected text</label><br>
+
+    <hr>
+    
+    <div style="margin-top: 20px">
+      <object allowscrolling data={view_source_button}></object>
+      <object allowscrolling data={about_button}></object>
+    </div>
+  </body>
+</html>""")
 
         linklabel.pack(expand=True, fill="both")
         topbar.columnconfigure(4, weight=1)
@@ -300,24 +347,6 @@ class Page(tk.Frame):
         # this only works on the non-experimental version of tkhtml
         self.sidebar.document.body.style.backgroundColor = "#F0F0F0"
         self.sidebar.document.body.style.color = "#000000"
-
-    def on_modified(self, event):
-        if "combobox" in str(event.widget):
-            self.frame["parsemode"] = event.widget.get()
-        elif "colourselector" in str(event.widget):
-            widgets = {v: k for k, v in self.sidebar.html.form_get_commands.items()}
-            node = widgets[event.widget.get]
-            name = self.sidebar.html.get_node_attribute(node, "name")
-            self.frame[name] = event.widget.get()
-            self.frame.html.update_tags()
-        elif "entry" in str(event.widget):
-            self.frame["headers"]["User-Agent"] = event.widget.get()
-        elif "scale" in str(event.widget):
-            widgets = {v: k for k, v in self.sidebar.html.form_get_commands.items()}
-            node = widgets[event.widget.get]
-            name = self.sidebar.html.get_node_attribute(node, "name")
-            self.frame[name] = event.widget.get()
-            self.sidebar.document.getElementById(name).textContent = round(float(event.widget.get()), 1)
 
     def select_all_in_entry(self, widget):
         widget.select_range(0, 'end')

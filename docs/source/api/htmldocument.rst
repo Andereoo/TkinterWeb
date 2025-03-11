@@ -13,4 +13,6 @@ Document Object Model Documentation
 .. autoclass:: tkinterweb.dom.CSSStyleDeclaration
    :members:
 
+All classes listed in this page have an ``html`` property corresponding to the element's :class:`~tkinterweb.TkinterWeb` instance and a ``node`` property corresponding to the Tkhtml node associated with the element.
+
 Special thanks to `Zamy846692 <https://github.com/Zamy846692>`_ for the help making this happen!

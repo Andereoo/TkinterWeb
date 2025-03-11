@@ -369,13 +369,220 @@ class HTMLElement:
     
     @property
     def value(self):
+        """Get the input's value. Only works on ``<input>``, ``<textarea>``, and ``<select>`` elements.
+        
+        :rtype: str"""
         if self.node in self.html.form_widgets:
             return self.html.form_widgets[self.node].get()
         
     @value.setter
     def value(self, value):
+        """Set the input's value. Only works on ``<input>``, ``<textarea>``, and ``<select>`` elements.
+        
+        :param value: The input's new value.
+        :type value: str"""
         if self.node in self.html.form_widgets:
             self.html.form_widgets[self.node].set(value)
+
+    @property
+    def checked(self):
+        """Convenience property for the ``checked`` HTML attribute. Check if the radio button or checkbox is checked.
+        
+        :rtype: str"""
+        if self.node in self.html.form_widgets:
+            if self.html.get_node_attribute(self.node, "checked", "false") != "false":
+                return True
+            else:
+                return False
+        
+    @checked.setter
+    def checked(self, value):
+        """Convenience property for the ``checked`` HTML attribute. Check/uncheck a radiobutton or checkbox.
+        
+        :param value: The input's new checked value.
+        :type value: str"""
+        if self.node in self.html.form_widgets:
+            self.html.set_node_attribute(self.node, "checked", value)
+
+    @property
+    def onchange(self):
+        """Convenience property for the ``onchange`` HTML attribute.
+        
+        :rtype: str"""
+        return self.getAttribute("onchange")
+    
+    @onchange.setter
+    def onchange(self, callback):
+        """Convenience property for the ``onchange`` HTML attribute. Set the code to execute when the input element's value changes.
+        
+        :param callback: The JavaScript callback.
+        :type callback: str"""
+        self.setAttribute("onchange", callback)
+
+    @property
+    def onload(self):
+        """Convenience property for the ``onload`` HTML attribute.
+        
+        :rtype: str"""
+        return self.getAttribute("onload")
+    
+    @onload.setter
+    def onload(self, callback):
+        """Convenience property for the ``onload`` HTML attribute. Set the code to execute when the element loads.
+        
+        :param callback: The JavaScript callback.
+        :type callback: str"""
+        self.setAttribute("onload", callback)
+
+    @property
+    def onclick(self):
+        """Convenience property for the ``onclick`` HTML attribute.
+        
+        :rtype: str"""
+        return self.getAttribute("onclick")
+    
+    @onclick.setter
+    def onclick(self, callback):
+        """Convenience property for the ``onclick`` HTML attribute. Set the code to execute when the element is clicked.
+        
+        :param callback: The JavaScript callback.
+        :type callback: str"""
+        self.setAttribute("onclick", callback)
+
+    @property
+    def oncontextmenu(self):
+        """Convenience property for the ``oncontextmenu`` HTML attribute.
+        
+        :rtype: str"""
+        return self.getAttribute("oncontextmenu")
+    
+    @oncontextmenu.setter
+    def oncontextmenu(self, callback):
+        """Convenience property for the ``oncontextmenu`` HTML attribute. Set the code to execute when the element is right-clicked.
+        
+        :param callback: The JavaScript callback.
+        :type callback: str"""
+        self.setAttribute("oncontextmenu", callback)
+
+    @property
+    def ondblclick(self):
+        """Convenience property for the ``ondblclick`` HTML attribute.
+        
+        :rtype: str"""
+        return self.getAttribute("ondblclick")
+    
+    @ondblclick.setter
+    def ondblclick(self, callback):
+        """Convenience property for the ``ondblclick`` HTML attribute. Set the code to execute when the element is double-clicked.
+        
+        :param callback: The JavaScript callback.
+        :type callback: str"""
+        self.setAttribute("ondblclick", callback)
+
+    @property
+    def onmousedown(self):
+        """Convenience property for the ``onmousedown`` HTML attribute.
+        
+        :rtype: str"""
+        return self.getAttribute("onmousedown")
+    
+    @onmousedown.setter
+    def onmousedown(self, callback):
+        """Convenience property for the ``onmousedown`` HTML attribute. Set the code to execute when any mouse button is pressed over the element.
+        
+        :param callback: The JavaScript callback.
+        :type callback: str"""
+        self.setAttribute("onmousedown", callback)
+
+    @property
+    def onmouseenter(self):
+        """Convenience property for the ``onmouseenter`` HTML attribute.
+        
+        :rtype: str"""
+        return self.getAttribute("onmouseenter")
+    
+    @onmouseenter.setter
+    def onmouseenter(self, callback):
+        """Convenience property for the ``onmouseenter`` HTML attribute. Set the code to execute when the mouse moves onto the element.
+        
+        :param callback: The JavaScript callback.
+        :type callback: str"""
+        self.setAttribute("onmouseenter", callback)
+
+    @property
+    def onmouseleave(self):
+        """Convenience property for the ``onmouseleave`` HTML attribute.
+        
+        :rtype: str"""
+        return self.getAttribute("onmouseleave")
+    
+    @onmouseleave.setter
+    def onmouseleave(self, callback):
+        """Convenience property for the ``onmouseleave`` HTML attribute. Set the code to execute when the mouse moves out of the element.
+        
+        :param callback: The JavaScript callback.
+        :type callback: str"""
+        self.setAttribute("onmouseleave", callback)
+
+    @property
+    def onmousemove(self):
+        """Convenience property for the ``onmousemove`` HTML attribute.
+        
+        :rtype: str"""
+        return self.getAttribute("onmousemove")
+    
+    @onmousemove.setter
+    def onmousemove(self, callback):
+        """Convenience property for the ``onmousemove`` HTML attribute. Set the code to execute when the mouse moves over the element.
+        
+        :param callback: The JavaScript callback.
+        :type callback: str"""
+        self.setAttribute("onmousemove", callback)
+
+    @property
+    def onmouseout(self):
+        """Convenience property for the ``onmouseout`` HTML attribute.
+        
+        :rtype: str"""
+        return self.getAttribute("onmouseout")
+    
+    @onmouseout.setter
+    def onmouseout(self, callback):
+        """Convenience property for the ``onmouseout`` HTML attribute. Set the code to execute when the mouse moves out of the element or its parent elements.
+        
+        :param callback: The JavaScript callback.
+        :type callback: str"""
+        self.setAttribute("onmouseout", callback)
+
+    @property
+    def onmouseover(self):
+        """Convenience property for the ``onmouseover`` HTML attribute.
+        
+        :rtype: str"""
+        return self.getAttribute("onmouseover")
+    
+    @onmouseover.setter
+    def onmouseover(self, callback):
+        """Convenience property for the ``onmouseover`` HTML attribute. Set the code to execute when the mouse moves into the element or its children elements.
+        
+        :param callback: The JavaScript callback.
+        :type callback: str"""
+        self.setAttribute("onmouseover", callback)
+
+    @property
+    def onmouseup(self):
+        """Convenience property for the ``onmouseup`` HTML attribute.
+        
+        :rtype: str"""
+        return self.getAttribute("onmouseup")
+    
+    @onmouseup.setter
+    def onmouseup(self, callback):
+        """Convenience property for the ``onmouseup`` HTML attribute. Set the code to execute when the mouse button is released over the element.
+        
+        :param callback: The JavaScript callback.
+        :type callback: str"""
+        self.setAttribute("onmouseup", callback)
 
     def getAttribute(self, attribute):
         """Return the value of the given attribute..
@@ -394,14 +601,6 @@ class HTMLElement:
         :type value: str
         :rtype: str"""
         self.html.set_node_attribute(self.node, attribute, value)
-
-        tag = self.tagName
-        if attribute == "href" and tag == "a":
-            self.html._on_a(self.node)
-        if attribute == "data" and tag == "object":
-            self.html._on_object(self.node)
-        if attribute in ("src", "srcdoc",) and tag == "iframe":
-            self.html._on_iframe(self.node)
         
     def remove(self):
         """Delete the element. Cannot be used on ``<html>`` or ``<body>`` elements.
@@ -466,7 +665,7 @@ class HTMLElement:
         """Return the first element that are children of the current element and match the given CSS selector.
         
         :param query: The CSS selector to be searched for.
-        :type query: str
+        :type query: strvalue
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
         return self.document.querySelector(query, self.node)

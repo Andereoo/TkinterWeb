@@ -527,17 +527,22 @@ class AutoScrollbar(ttk.Scrollbar):
 class ScrolledTextBox(tk.Frame):
     "Text widget with a scrollbar"
 
-    def __init__(self, parent, content, **kwargs):
-        tk.Frame.__init__(self, parent)
+    def __init__(self, parent, content="", onchangecommand=None, **kwargs):
         self.parent = parent
-        self.content = content
+        self.onchangecommand = onchangecommand
+
+        tk.Frame.__init__(self, parent)
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
-        self.tbox = tbox = tk.Text(self, **kwargs)
+        self.tbox = tbox = tk.Text(self, 
+                                    borderwidth=0,
+                                    selectborderwidth=0,
+                                    highlightthickness=0,
+                                    **kwargs)
         tbox.grid(row=0, column=0, sticky="nsew")
 
-        self.tbox.insert("1.0", content)
+        tbox.insert("1.0", content)
     
         self.vsb = vsb = AutoScrollbar(self, command=tbox.yview)
         vsb.grid(row=0, column=1, sticky="nsew")
@@ -547,6 +552,7 @@ class ScrolledTextBox(tk.Frame):
         tbox.bind("<Button-4>", self.scroll_x11)
         tbox.bind("<Button-5>", self.scroll_x11)
         tbox.bind("<Control-Key-a>", self.select_all)
+        tbox.bind('<KeyRelease>', lambda event: onchangecommand(self) if onchangecommand else None)
 
     def select_all(self, event):
         self.tbox.tag_add("sel", "1.0", "end")
@@ -582,18 +588,105 @@ class ScrolledTextBox(tk.Frame):
     def delete(self, *args, **kwargs):
         self.tbox.delete(*args, **kwargs)
 
-    def reset(self):
-        self.set(self.content)
-
     def set(self, value):
         self.tbox.delete("0.0", "end")
         self.tbox.insert("1.0", value)
+        if self.onchangecommand:
+            self.onchangecommand(self)
 
+class FormEntry(tk.Entry):
+    def __init__(self, parent, value="", entry_type="", onchangecommand=None, **kwargs):
+        tk.Entry.__init__(self, parent, borderwidth=0, highlightthickness=0, **kwargs)
+        self.insert(0, value)
+
+        self.bind("<KeyRelease>", lambda event: onchangecommand(self) if onchangecommand else None)
+        if entry_type == "password":
+            self.configure(show="*")
+            
+    def set(self, value):
+        self.delete(0, "end")
+        self.insert(0, value)
+
+class FormCheckbox(ttk.Checkbutton):
+    def __init__(self, parent, value=0, onchangecommand=None, **kwargs):
+        self.variable = variable = tk.IntVar(parent, value=value)
+
+        tk.Checkbutton.__init__(
+            self,
+            parent,
+            borderwidth=0,
+            padx=0,
+            pady=0,
+            highlightthickness=0,
+            variable=variable,
+            **kwargs
+        )
+        variable.trace_add("write", lambda *args: onchangecommand(self) if onchangecommand else None)
+
+class FormRadioButton(ttk.Checkbutton):
+    def __init__(self, parent, token, value=0, checked=False, variable=None, onchangecommand=None, **kwargs):
+        if not variable: 
+            variable = tk.StringVar(parent)
+            variable.trace_add("write", lambda *args: onchangecommand(self) if onchangecommand else None)
+        self.variable = variable
+
+        tk.Radiobutton.__init__(
+            self,
+            parent,
+            value=value,
+            variable=variable,
+            tristatevalue=token,
+            borderwidth=0,
+            padx=0,
+            pady=0,
+            highlightthickness=0,
+            **kwargs
+        )
+        if checked:
+            variable.set(value)
+
+    def set(self, value):
+        self.variable.set(value)
+        
+    def get(self):
+        return self.variable.get()
+
+class FormRange(ttk.Scale):
+    def __init__(self, parent, value=50, from_=0, to=100, step=1, onchangecommand=None, **kwargs):
+        step_str = str(step)
+        self.step = self._check_value(step, 1)
+        self.from_ = from_ = self._check_value(from_, 0)
+        self.to = to = self._check_value(to, 100)
+        self.onchangecommand = onchangecommand
+        self.decimal_places = len(step_str.split('.')[-1]) if '.' in step_str else 0
+        self.variable = variable = tk.DoubleVar(parent, value=self._check_value(value, (to - from_) / 2))
+
+        ttk.Scale.__init__(self, parent, variable=variable, from_=from_, to=to)
+
+        variable.trace_add("write", self._update_value)
+
+    def _update_value(self, *args):
+        value = round(self.variable.get() / self.step) * self.step
+        self.set(round(value, self.decimal_places))
+        self.onchangecommand(self)
+
+    def _check_value(self, value, default):
+        try: 
+            return float(value)
+        except ValueError:
+            return default
+        
+    def set(self, value):
+        super().set(self._check_value(value, (self.to - self.from_) / 2))
 
 class FileSelector(tk.Frame):
     "File selector widget"
 
-    def __init__(self, parent, accept, multiple, **kwargs):
+    def __init__(self, parent, accept, multiple, onchangecommand=None, **kwargs):
+        self.multiple = multiple
+        self.onchangecommand = onchangecommand
+        self.files = []
+
         tk.Frame.__init__(self, parent)
         self.selector = selector = tk.Button(
             self, text="Browse", command=self.select_file
@@ -604,10 +697,6 @@ class FileSelector(tk.Frame):
         label.grid(row=0, column=2, padx=5)
 
         self.generate_filetypes(accept)
-
-        self.multiple = multiple
-        self.files = []
-        self.onchangecommand = None
 
     def generate_filetypes(self, accept):
         if accept:
@@ -675,13 +764,13 @@ class FileSelector(tk.Frame):
             self.label.config(text=f"{number} files selected.")
         self.event_generate("<<Modified>>")
         if self.onchangecommand:
-            self.onchangecommand()
+            self.onchangecommand(self)
 
-    def reset(self):
+    def set(self, value):
         self.label.config(text="No files selected.")
         self.event_generate("<<Modified>>")
         if self.onchangecommand:
-            self.onchangecommand()
+            self.onchangecommand(self)
 
     def get(self):
         return self.files
@@ -699,7 +788,8 @@ class FileSelector(tk.Frame):
 class ColourSelector(tk.Frame):
     "Colour selector widget"
 
-    def __init__(self, parent, colour, **kwargs):
+    def __init__(self, parent, colour="#000000", onchangecommand=None, **kwargs):
+        self.onchangecommand = onchangecommand
         colour = colour if colour else "#000000"
         tk.Button.__init__(self, parent,
             bg=colour,
@@ -707,23 +797,20 @@ class ColourSelector(tk.Frame):
             activebackground=colour,
             highlightthickness=0,
             borderwidth=0,
+            **kwargs
         )
-        self.default_colour = colour
-        self.onchangecommand = None
 
     def select_colour(self):
         colour = colorchooser.askcolor(title="Choose color", initialcolor=self.cget("bg"))[1]
         if colour:
-            self.config(bg=colour, activebackground=colour)
-            self.event_generate("<<Modified>>")
-            if self.onchangecommand:
-                self.onchangecommand()
+            self.set(colour)
 
-    def reset(self):
-        self.config(bg=self.default_colour, activebackground=self.default_colour)
+    def set(self, colour):
+        colour = colour if colour else "#000000"
+        self.config(bg=colour, activebackground=colour)
         self.event_generate("<<Modified>>")
         if self.onchangecommand:
-            self.onchangecommand()
+            self.onchangecommand(self)
 
     def get(self):
         return self.cget("bg")

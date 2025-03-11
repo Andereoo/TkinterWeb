@@ -233,8 +233,12 @@ class TkinterWeb(tk.Widget):
         self.register_handler("node", "iframe", self._on_iframe)
         self.register_handler("node", "table", self._on_table)
         self.register_handler("node", "img", self._on_image)
-        self.register_handler("parse", "body", self._on_body) # for some reason using "node" and "body" doesn't return anything
-        self.register_handler("parse", "html", self._on_body) # for some reason using "node" and "html" doesn't return anything
+
+        # Node handlers don't work on body and html elements. 
+        # These elements also cannot be removed without causing a segfault. 
+        # Wierd.
+        self.register_handler("parse", "body", self._on_body)
+        self.register_handler("parse", "html", self._on_body)
 
         self.register_handler("attribute", "input", self._on_input_value_change)
         self.register_handler("attribute", "select", self._on_input_value_change)
@@ -1229,10 +1233,9 @@ class TkinterWeb(tk.Widget):
             self.post_message(f"ERROR: could not load stylesheet {new_url}: {error}")
 
     def _on_title(self, node):
-        "Handle <title> elements."
-        for child in self.tk.call(node, "children"):
-            self.title = self.tk.call(child, "text")
-            self.post_event(TITLE_CHANGED_EVENT)
+        "Handle <title> elements. We could use a script handler but then the node is no longer visible to the DOM."
+        self.title = self.get_node_text(self.get_node_children(node), "-pre")
+        self.post_event(TITLE_CHANGED_EVENT)
 
     def _on_base(self, node):
         "Handle <base> elements."

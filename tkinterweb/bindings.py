@@ -378,23 +378,31 @@ class TkinterWeb(tk.Widget):
         elif self.default_style:
             self.config(defaultstyle=self.default_style)
 
-    def parse_css(self, sheetid=None, importcmd=None, data="", override=False):
+    def parse_css(self, sheetid=None, data="", url=None, override=False):
         "Parse CSS code."
+        if not url:
+            url = self.base_url
         data = self._crash_prevention(data)
         if self._dark_theme_enabled:
             data = sub(self.style_dark_theme_regex, lambda match, matchtype=0: self._generate_altered_colour(match, matchtype), data)
         try:
-            if sheetid and importcmd:
+            #urlcmd = self.register(self.resolve_url)
+            importcmd = self.register(
+                lambda new_url, parent_url=url: self._on_atimport(
+                    parent_url, new_url
+                )
+            )
+            if override:
+                self.style_count += 1
+                self.tk.call(
+                    self._w, "style", "-id", "author" + str(self.style_count).zfill(4), "-importcmd", importcmd, data
+                )
+            elif sheetid:
                 self.tk.call(
                     self._w, "style", "-id", sheetid, "-importcmd", importcmd, data
                 )
-            elif override:
-                self.style_count += 1
-                self.tk.call(
-                    self._w, "style", "-id", "author" + str(self.style_count).zfill(4), data
-                )
             else:
-                self.tk.call(self._w, "style", data)
+                self.tk.call(self._w, "style", "-importcmd", importcmd, data)
         except tk.TclError:
             # the widget doesn't exist anymore
             pass
@@ -671,13 +679,7 @@ class TkinterWeb(tk.Widget):
             self.style_count += 1
             sheetid = "user." + str(self.style_count).zfill(4)
 
-            handler = self.register(
-                lambda new_url, parent_url=url: self._on_atimport(
-                    parent_url, new_url
-                )
-            )
-
-            self.parse_css(f"{sheetid}.9999", handler, data)
+            self.parse_css(f"{sheetid}.9999", data, url)
             if node:
                 # thread safety
                 self.after(0, self._submit_element_js, node, "onload")
@@ -1389,30 +1391,17 @@ class TkinterWeb(tk.Widget):
             name = url.replace("replace:", "")
         elif any({
                 url.startswith("linear-gradient("),
-                url.startswith("url("),
                 url.startswith("radial-gradient("),
                 url.startswith("repeating-linear-gradient("),
                 url.startswith("repeating-radial-gradient("),
             }):
-            done = False
             self.post_message(f"Fetching image: {shorten(url)}")
+            self.load_alt_text(url, name)
             for image in url.split(","):
-                if image.startswith("url("):
-                    url = url.split("'), url('", 1)[0]
-                    image = strip_css_url(image)
-                    url = self.resolve_url(image)
-                    if url in self.image_directory:
-                        node = self.image_directory[url]
-                    else:
-                        node = None
-                    self._thread_check(self.fetch_images, node, url, name)
-                    done = True
-                else:
-                    self.load_alt_text(url, name)
-                    self.post_message(f"ERROR: the image {shorten(url)} could not be shown because it is not supported yet")
-                    self.on_resource_setup(url, "image", False)
+                self.post_message(f"ERROR: the image {shorten(url)} could not be shown because it is not supported yet")
+            self.on_resource_setup(url, "image", False)
         else:
-            url = url.split("'), url('", 1)[0]
+            url = url.split("), url(", 1)[0].replace("'", "").replace('"', "")
             url = self.resolve_url(url)
             if url in self.image_directory:
                 node = self.image_directory[url]

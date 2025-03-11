@@ -2,12 +2,19 @@
 
 # -- Project information
 
-project = 'TkinterWeb'
-copyright = '2025, Andereoo'
-author = 'Andereoo'
+import os
+import sys
 
-release = '4.0'
-version = '4.0.3'
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname((os.path.realpath(__file__))))))
+
+from tkinterweb import __title__, __author__, __version__
+
+project = __title__
+copyright = '2025, Andereoo'
+author = __author__
+
+release = ".".join(__version__.split(".")[:2])
+version = __version__
 
 # -- General configuration
 

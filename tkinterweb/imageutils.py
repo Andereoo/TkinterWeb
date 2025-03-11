@@ -69,20 +69,43 @@ def text_to_image(name, alt, nodebox, font_type, font_size, threshold):
     image = PhotoImage(image, name=name)
     return image
 
-def invert_image(image):
+def is_mostly_one_color(image, tolerance=30):
+    from collections import Counter
+
+    pixels = list(image.resize((100, 100), Image.Resampling.NEAREST).getdata())
+    counter = Counter(pixels)
+    dominant_color = max(counter, key=counter.get)
+    def is_similar(c1, c2):
+        return sum(abs(a - b) for a, b in zip(c1, c2)) < tolerance * 3
+    similar_count = sum(1 for p in pixels if is_similar(p, dominant_color))
+    ratio = similar_count / len(pixels)
+
+    return ratio, dominant_color
+
+def invert_image(image, limit):
     from PIL import ImageOps
-    if image.mode == 'RGBA':
-        r,g,b,a = image.split()
-        image = Image.merge('RGB', (r,g,b))
-        image = ImageOps.invert(image)
-        r2,g2,b2 = image.split()
-        image = Image.merge('RGBA', (r2,g2,b2,a))
+
+    if image.mode in {'RGBA', 'LA', 'P'}:
+        image = image.convert("RGBA")
+        white_bg = Image.new("RGB", image.size, (255, 255, 255))
+        white_bg.paste(image, mask=image.split()[3])
+        ratio, dominant_color = is_mostly_one_color(white_bg)
+        if ratio >= 0.5 and all(i > limit for i in dominant_color):
+            r, g, b, a = image.split()
+            rgb_image = Image.merge('RGB', (r, g, b))
+            ratio, dominant_color = is_mostly_one_color(rgb_image)
+            inverted_rgb = ImageOps.invert(rgb_image)
+            r2, g2, b2 = inverted_rgb.split()
+            image = Image.merge('RGBA', (r2, g2, b2, a))
+        return image
     else:
         image = image.convert("RGB")
-        image = ImageOps.invert(image)
-    return image
+        ratio, dominant_color = is_mostly_one_color(image)
+        if ratio >= 0.5 and all(i > limit for i in dominant_color):
+            image = ImageOps.invert(image)
+        return image
 
-def data_to_image(data, name, imagetype, invert, return_image=False):
+def data_to_image(data, name, imagetype, invert, limit):
     image = None
     error = None
     if "svg" in imagetype:
@@ -121,10 +144,7 @@ def data_to_image(data, name, imagetype, invert, return_image=False):
             image = Image.open(BytesIO(image_data))
             photoimage = PhotoImage(image, name=name)
     elif invert:
-        image = invert_image(Image.open(BytesIO(data)))
-        photoimage = PhotoImage(image=image, name=name)
-    elif return_image:
-        image = Image.open(BytesIO(data))
+        image = invert_image(Image.open(BytesIO(data)), limit)
         photoimage = PhotoImage(image=image, name=name)
     elif imagetype in ("image/png", "image/gif", "image/ppm", "image/pgm",):
         # tkinter.PhotoImage has less overhead, so use it when possible
@@ -132,10 +152,7 @@ def data_to_image(data, name, imagetype, invert, return_image=False):
     else:
         photoimage = PhotoImage(data=data, name=name)
 
-    if return_image:
-        return photoimage, error, image
-    else:
-        return photoimage, error
+    return photoimage, error
 
 def blank_image(name):
     image = Image.new("RGBA", (1, 1))

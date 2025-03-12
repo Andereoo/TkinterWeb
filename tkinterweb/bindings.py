@@ -1065,10 +1065,11 @@ class TkinterWeb(tk.Widget):
         if not widget:
             widget = event.widget
             
-        yview = widget.yview()  
+        yview = widget.yview()
 
-        for node_handle in widget.hovered_nodes:
-            widget._submit_element_js(node_handle, "onscroll")
+        if self.javascript_enabled:
+            for node_handle in widget.hovered_nodes:
+                widget._submit_element_js(node_handle, "onscroll")
 
         if event.num == 4:
             if widget.overflow_scroll_frame and (yview[0] == 0 or widget.vsb_type == 0):
@@ -1089,8 +1090,9 @@ class TkinterWeb(tk.Widget):
         "Manage scrolling on Windows/MacOS."
         yview = self.yview() 
 
-        for node_handle in self.hovered_nodes:
-            self._submit_element_js(node_handle, "onscroll")     
+        if self.javascript_enabled:
+            for node_handle in self.hovered_nodes:
+                self._submit_element_js(node_handle, "onscroll")     
 
         if self.overflow_scroll_frame and event.delta > 0 and (yview[0] == 0 or self.vsb_type == 0):
             self.overflow_scroll_frame.scroll(event)
@@ -1789,7 +1791,7 @@ class TkinterWeb(tk.Widget):
         for overflow_type in overflow_options:
             overflow = self.get_node_property(node, overflow_type) 
             overflow = self._handle_overflow_property(overflow, self.manage_vsb_func)
-            if overflow:
+            if overflow != None:
                 self.vsb_type = overflow
                 break
         
@@ -1884,11 +1886,15 @@ class TkinterWeb(tk.Widget):
             self.post_message(f"WARNING: the embedded page {url} could not be shown because no embed widget was provided.")
 
     def _on_right_click(self, event):
+        if not self.javascript_enabled:
+            return
         for node_handle in self.hovered_nodes:
             self._submit_element_js(node_handle, "onmousedown")
             self._submit_element_js(node_handle, "oncontextmenu")
 
     def _on_middle_click(self, event):
+        if not self.javascript_enabled:
+            return
         for node_handle in self.hovered_nodes:
             self._submit_element_js(node_handle, "onmousedown")
     
@@ -1904,8 +1910,9 @@ class TkinterWeb(tk.Widget):
         self.focus_set()
         self.tag("delete", "selection")
 
-        for node_handle in self.hovered_nodes:
-            self._submit_element_js(node_handle, "onmousedown")
+        if self.javascript_enabled:
+            for node_handle in self.hovered_nodes:
+                self._submit_element_js(node_handle, "onmousedown")
 
         node_handle = self.get_current_node(event)
 
@@ -1993,9 +2000,10 @@ class TkinterWeb(tk.Widget):
             self._on_mouse_motion(event)
             return
         
-        for node_handle in self.hovered_nodes:
-            self._submit_element_js(node_handle, "onmouseup")
-            self._submit_element_js(node_handle, "onclick")
+        if self.javascript_enabled:
+            for node_handle in self.hovered_nodes:
+                self._submit_element_js(node_handle, "onmouseup")
+                self._submit_element_js(node_handle, "onclick")
 
         node_handle = self.get_current_node(event)
 
@@ -2058,8 +2066,9 @@ class TkinterWeb(tk.Widget):
         "Cycle between normal selection, text selection, and element selection on multi-clicks."
         self._on_click(event, True)
 
-        for node_handle in self.hovered_nodes:
-            self._submit_element_js(node_handle, "ondblclick")
+        if self.javascript_enabled:
+            for node_handle in self.hovered_nodes:
+                self._submit_element_js(node_handle, "ondblclick")
 
         if not self.selection_enabled:
             return

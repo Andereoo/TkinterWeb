@@ -56,8 +56,10 @@ class Demo():
 
     def load(self, url="https://wiki.python.org/moin/TkInter"):
         self.button.configure(text="Continue", command=self.change_button)
+        self.frame2.load_html(f"""<html><head><style>td {{text-align:center;vertical-align:middle}} html,body,table,tr{{width:100%;height:100%;margin:0}}</style></head><body><table><tr><td tkinterweb-full-page id="container">
+        <code>Still waiting for response from <a href="https://wiki.python.org/moin/TkInter">wiki.python.org</a>...</code></td></tr></table></body></html>""")
         self.frame2.load_url(url)
-        self.frame.load_html(f"""<html><head><title>TkinterWeb Demo<style>#viewer {{width:100%; height: 300px}} td {{text-align:center;vertical-align:middle;padding: 10px}} h3{{margin:0 0 10px 0;padding:0;font-weight:normal}} html,body,table,tr{{background-color:{self.frame["about_page_background"]};color:{self.frame["about_page_foreground"]};width:100%;height:100%;margin:0}}</style></head>
+        self.frame.load_html(f"""<html><head><title>TkinterWeb Demo</title><style>#viewer {{width:100%; height: 300px}} td {{text-align:center;vertical-align:middle;padding: 10px}} h3{{margin:0 0 10px 0;padding:0;font-weight:normal}} html,body,table,tr{{background-color:{self.frame["about_page_background"]};color:{self.frame["about_page_foreground"]};width:100%;height:100%;margin:0}}</style></head>
         <body><table><tr><td tkinterweb-full-page id="container">
         <h3 id="heading">Welcome to TkinterWeb!</h3><object id="button" data={self.button}></object>
         </td></tr></table></body></html>""")
@@ -66,7 +68,7 @@ class Demo():
         for after in self.afters:
             self.root.after_cancel(after)
         self.button.configure(text="Try Again", command=lambda url=self.frame2.current_url: self.load(url))
-        html = f"""<html><head><title>TkinterWeb Demo - Error {code}<style>td {{text-align:center;vertical-align:middle}} h3{{margin:0 0 10px 0;padding:0;font-weight:normal}} html,body,table,tr{{background-color:{self.frame["about_page_background"]};color:{self.frame["about_page_foreground"]};width:100%;height:100%;margin:0}}</style></head>
+        html = f"""<html><head><title>TkinterWeb Demo - Error {code}</title><style>td {{text-align:center;vertical-align:middle}} h3{{margin:0 0 10px 0;padding:0;font-weight:normal}} html,body,table,tr{{background-color:{self.frame["about_page_background"]};color:{self.frame["about_page_foreground"]};width:100%;height:100%;margin:0}}</style></head>
         <body><table><tr><td tkinterweb-full-page>
         <h3>Error {code}</h3><h3>An internet connection is required to display the TkinterWeb demo :(</h3><object id="button" data={self.button}></object>
         </td></tr></table></body></html>"""

@@ -781,9 +781,10 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         :type name: str
         :param obj: The Python object to pass.
         :type obj: anything"""
-        if self.html.javascript_enabled and not pythonmonkey:
-            self._initialize_javascript()
-        pythonmonkey.eval(f"(function(pyObj) {{globalThis.{name} = pyObj}})")(obj)
+        if self.html.javascript_enabled:
+            if not pythonmonkey:
+                self._initialize_javascript()
+            pythonmonkey.eval(f"(function(pyObj) {{globalThis.{name} = pyObj}})")(obj)
 
     def _check_value(self, old, new):
         expected_type = type(old)
@@ -938,7 +939,6 @@ Otherwise, use 'configure(insecure_https=True)' to ignore website certificates."
             raise ModuleNotFoundError("PythonMonkey is required to run JavaScript files but is not installed.")
 
     def _on_script(self, attributes, tag_contents):
-        global pythonmonkey
         if self.html.javascript_enabled and not pythonmonkey:
             self._initialize_javascript()
         try:
@@ -950,7 +950,6 @@ Otherwise, use 'configure(insecure_https=True)' to ignore website certificates."
                 self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running a script: {error}")
 
     def _on_element_script(self, node_handle, attribute, attr_contents):
-        global pythonmonkey
         if self.html.javascript_enabled and not pythonmonkey:
             self._initialize_javascript()
         try:

@@ -11,15 +11,17 @@ Webpage Compatibility
 
 **JavaScript:**
 
-* Javascript only partly supported at the moment. See :doc:`javascript` for more information.
+* JavaScript partly supported at the moment. See :doc:`javascript` for more information.
+
+  * To use JavaScript, :py:mod:`PythonMonkey`  must be installed.
+
 * It is also possible for the user to connect a JavaScript interpreter and then manipulate the document through Python. See :doc:`javascript` and :doc:`dom` for more information.
 
 **Images:**
 
-* TkinterWeb supports nearly 50 different image types through :py:mod:`PIL`. However, in order to load Scalable Vector Graphic images:
+* TkinterWeb supports nearly 50 different image types through :py:mod:`PIL`.
 
-  * :py:mod:`PyCairo` or :py:mod:`PyGObject` must be installed. 
-  * Either :py:mod:`Rsvg`, :py:mod:`PyGObject`, or :py:mod:`CairoSVG` must also be installed. 
+  * To load Scalable Vector Graphic images, :py:mod:`PyCairo` or :py:mod:`PyGObject` must be installed and either :py:mod:`Rsvg`, :py:mod:`PyGObject`, or :py:mod:`CairoSVG` must also be installed. 
   
 * Without these packages, TkinterWeb will still function properly, but SVG files will not be shown.
 

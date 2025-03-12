@@ -22,6 +22,15 @@ You can run the TkinterWeb demo to see if it worked!
 
 TkinterWeb requires :py:mod:`Tkinter`, :py:mod:`PIL`, and :py:class:`PIL.ImageTk`. All dependencies should be installed when installing TkinterWeb, but on some systems :py:class:`PIL.ImageTk` may need to be installed seperately.
 
+**Optional dependencies:**
+
+* To use JavaScript, you will need to install :py:mod:`PythonMonkey`.
+* To load Scalable Vector Graphic images, one of the following three combinations must be installed:
+
+  * :py:mod:`PyGObject`
+  * :py:mod:`PyCairo` and :py:mod:`Rsvg`
+  * :py:mod:`PyCairo` and :py:mod:`CairoSVG`
+
 Getting Started
 ----------------
 

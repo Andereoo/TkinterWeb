@@ -566,7 +566,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
 
         :param node: The node to get text from
         :return: The text"""
-        text = self.html.get_node_text(node)
+        text = self.html.get_node_text(node, "-pre")
         for child in self.html.get_node_children(node):
             text += self.get_element_text(child)
         return text
@@ -971,3 +971,26 @@ class HtmlLabel(TkinterWeb):
 
     def config(self, **kwargs):
         self.configure(**kwargs)
+
+class HtmlParse():
+    def __init__(self, markup, **kwargs):
+        self.master = tk.Tk()
+        self._html = TkinterWeb(self.master, kwargs)
+        self.document = HTMLDocument(self._html)
+        self._html.images_enabled = False
+        self._html.stylesheets_enabled = False
+
+        parsed_url = urlparse(markup)
+        
+        if parsed_url.netloc:
+            markup, url, file, r = cache_download(markup, headers=tuple(self._html.headers.items()))
+        elif os.path.isfile(markup):
+            markup = f"file:///{markup}"
+            markup, url, file, r = download(markup, headers=tuple(self._html.headers.items()))
+            
+        self._html.parse(markup)  
+        self.master.withdraw()
+
+    def __str__(self):
+        d = self.document.documentElement
+        return f"<{d.tagName}>{d.innerHTML}</{d.tagName}>"

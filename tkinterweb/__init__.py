@@ -12,7 +12,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
 try:
-    from htmlwidgets import HtmlFrame, HtmlLabel
+    from htmlwidgets import HtmlFrame, HtmlLabel, HtmlParse
     from bindings import TkinterWeb
     from utilities import Notebook, __title__, __author__, __copyright__, __license__, __version__
 except (ImportError, ModuleNotFoundError):

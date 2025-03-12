@@ -644,7 +644,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         if style.strip(): style = f"\n\t\t<style>{style}\t\t</style>"
         body = self.document.body.innerHTML
 
-        html = f"""<html>\n\t<head>{title}{icon}{base}{style}\n\t</head>\n\t<body>\n\t{body}\n\t</body>\n</html>"""
+        html = f"""<!DOCTYPE html>\n<html>\n\t<head>{title}{icon}{base}{style}\n\t</head>\n\t<body>\n\t{body}\n\t</body>\n</html>"""
         if filename:
             if not path.splitext(filename)[1]:
                 filename = f"{filename}.{self.cget('parsemode')}"
@@ -886,8 +886,8 @@ Otherwise, use 'configure(insecure_https=True)' to ignore website certificates."
                 self.add_css(style)
             self._accumulated_styles = []
 
-class HtmlLabel(HtmlFrame):
-    """The :class:`~tkinterweb.HtmlLabel` widget inherits from the :class:`HtmlFrame`. For a complete list of avaliable methods, configuration options, generated events, and state variables, see the :class:`HtmlFrame` docs.
+class HtmlLabel(TkinterWeb):
+    """The :class:`~tkinterweb.HtmlLabel` widget inherits from the :class:`TkinterWeb`. For a complete list of avaliable methods, configuration options, generated events, and state variables, see the :class:`TkinterWeb` docs.
     
     This class also accepts one additional parameter:
 
@@ -895,10 +895,49 @@ class HtmlLabel(HtmlFrame):
     :type text: str
     """
     def __init__(self, master, text="", **kwargs):
-        HtmlFrame.__init__(self, master, vertical_scrollbar=False, shrink=True, **kwargs)
+        TkinterWeb.__init__(self, master, shrink=True, **kwargs)
 
-        tags = list(self._html.bindtags())
+        tags = list(self.bindtags())
         tags.remove("Html")
-        self._html.bindtags(tags)
+        self.bindtags(tags)
 
-        self.load_html(text)
+        self.parse(text)
+        self.tk.createcommand("serialize_node", self._serializeNode)
+
+    def configure(self, **kwargs):
+        if "text" in kwargs:
+            self.reset()
+            self.parse(kwargs.pop("text"))
+        if kwargs: super().configure(**kwargs)
+
+    def cget(self, key):
+        if "text" == key:
+            return self._serializeNode(self.node()).split()
+        return super().cget(key)
+
+    def _serializeNode(self, node):  # From hv3_bookmarks.tcl lines 340; 355
+        return self.tk.eval(r"""
+            proc serialize {node} {
+                set tag [$node tag]
+                if {$tag eq ""} {
+                    return [string map {< &lt; > &gt;} [$node text -pre]]
+                }
+                set attr ""
+                foreach {k v} [$node attribute] {
+                    set v [string map {\" \\\"} $v]  ; # Escape quotes
+                    append attr " $k=\"$v\""
+                }
+                set void {area base br col embed hr img input keygen link meta param source track wbr}
+                if {[lsearch -exact $void $tag] != -1} {
+                    return <$tag$attr>
+                }
+                set content {}
+                foreach child [$node children] {
+                    append content [serialize_node $child]
+                }
+                return " <$tag$attr> $content </$tag> "
+            }
+            serialize %s """ % node)
+
+    def config(self, **kwargs):
+        self.configure(**kwargs)

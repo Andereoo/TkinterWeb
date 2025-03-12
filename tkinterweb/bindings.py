@@ -556,7 +556,9 @@ class TkinterWeb(tk.Widget):
         Does not work on Windows unless experimental Tkhtml is used."""
         full = "-full" if full else ""
         name = self.tk.call(self._w, "image", full)
-        return name, self.tk.call(name, "data")
+        data = self.tk.call(name, "data")
+        self.tk.eval(f"image delete {name}")
+        return name, data
 
     def postscript(self, cnf={}, **kwargs):
         """Print the contents of the canvas to a postscript file.
@@ -2125,5 +2127,5 @@ class TkinterWeb(tk.Widget):
             tags = (self.node_tag,)
         widgetid.bindtags(widgetid.bindtags() + tags)
 
-    def __call__(self):
+    #def __call__(self):
         "Mark this class as callable so it is accepted as a overflow_scroll_frame by HtmlFrame."

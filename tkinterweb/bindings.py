@@ -393,9 +393,9 @@ class TkinterWeb(tk.Widget):
         "Return the name of the Html tag that generated this document node, or an empty string if the node is a text node."
         return self.tk.call(self._w, "tag", subcommand, tag_name, *args)
 
-    def search(self, selector, cnf={}, **kwargs):
+    def search(self, selector, cnf={}, **kw):
         """Search the document for the specified CSS selector; return a Tkhtml3 node if found."""
-        return self.tk.call((self._w, "search", selector)+self._options(cnf, kwargs))
+        return self.tk.call((self._w, "search", selector)+self._options(cnf, kw))
 
     def xview(self, *args):
         "Used to control horizontal scrolling."
@@ -560,13 +560,13 @@ class TkinterWeb(tk.Widget):
         self.tk.eval(f"image delete {name}")
         return name, data
 
-    def postscript(self, cnf={}, **kwargs):
+    def postscript(self, cnf={}, **kw):
         """Print the contents of the canvas to a postscript file.
         Valid options: colormap, colormode, file, fontmap, height, 
         pageanchor, pageheight, pagesize, pagewidth, pagex, pagey, 
         nobg, noimages, rotate, width, x, and y.
         Does not work unless experimental Tkhtml is used."""
-        return self.tk.call((self._w, "postscript")+self._options(cnf, kwargs))
+        return self.tk.call((self._w, "postscript")+self._options(cnf, kw))
 
     def preload_image(self, url):
         """Preload an image. 

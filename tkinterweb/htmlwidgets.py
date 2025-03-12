@@ -6,7 +6,6 @@ Copyright (c) 2025 Andereoo
 """
 
 from urllib.parse import urldefrag, urlparse
-from os import path
 
 from bindings import TkinterWeb
 from utilities import *
@@ -179,12 +178,12 @@ class HtmlFrame(ttk.Frame):
             "image_alternate_text_enabled": True,
             "ignore_invalid_images": True,
             "visited_links": [],
-            "find_match_highlight_color": "#ef0fff",
-            "find_match_text_color": "#fff",
-            "find_current_highlight_color": "#38d878",
-            "find_current_text_color": "#fff",
-            "selected_text_highlight_color": "#3584e4",
-            "selected_text_color": "#fff",
+            "find_match_highlight_color": "#f1a1f7",
+            "find_match_text_color": "#000",
+            "find_current_highlight_color": "#8bf0b3",
+            "find_current_text_color": "#000",
+            "selected_text_highlight_color": "#9bc6fa",
+            "selected_text_color": "#000",
             "default_style": DEFAULT_STYLE,
             "dark_style": DARK_STYLE,
             "insecure_https": False,
@@ -553,15 +552,19 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
                 node = self._html.get_node_parent(self._html.current_node)
         return HTMLElement(self.document, node)
 
-    def screenshot_page(self, filename=None, full=False):
+    def screenshot_page(self, filename=None, full=False, show=False):
         """Take a screenshot. 
         
-        On Windows, this method requires experimental mode to be enabled. This command should be used with care on large documents if :attr:`full` is set to True, as it may generate in very large images that take a long time to create and consume large amounts of memory.
+        This command should be used with care on large documents if :attr:`full` is set to True, as it may generate in very large images that take a long time to create and consume large amounts of memory.
+
+        On Windows, if experimental mode is not enabled, ensure your script runs ``ctypes.windll.shcore.SetProcessDpiAwareness(1)`` before creating your Tkinter window or else the screenshot may be badly offset. On Windows it's good practice to run this anyway.
         
         :param filename: The file path to save the screenshot to. If None, the image is not saved to the disk.
         :type filename: str or None, optional
-        :param full: If True, the entire page is captured. If False, only the visible content is captured.
+        :param full: If True, the entire page is captured. On Windows, experimental mode must be enabled. If False, only the visible content is captured.
         :type full: bool, optional
+        :param show: Display the screenshot in the default system handler.
+        :type show: bool, optional
         :return: A PIL Image containing the rendered document.
         :rtype: :py:class:`PIL.Image`"""
         if self._html.experimental or PLATFORM.system != "Windows":
@@ -570,13 +573,29 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
             height = len(data)
             width = len(data[0].split())
             image = create_RGB_image(data, width, height)
-            if filename:
-                image.save(filename)
-            self._html.post_message(f"Screenshot taken: {width}px by {height}px!")
-            return image
+        elif not full:
+            # Vanilla Tkhtml image does not work on Windows
+            # We use PIL's ImageGrab instead for visible content
+            # We could also use this for visible content on other systems
+            # It's faster than Tkhtml image, but it does not work on Wayland and is less foolproof
+            from PIL import ImageGrab
+
+            x = self.winfo_rootx()
+            y = self.winfo_rooty()
+            width = self.winfo_width()
+            height = self.winfo_height()
+            
+            image = ImageGrab.grab(bbox=(x, y, x+width, y+height))
         else:
-            self._html.post_message("ERROR: A screenshot could not be taken because it screenshot_page is an experimental feature on Windows")
+            self._html.post_message("ERROR: A screenshot could not be taken because screenshot_page(full=True) is an experimental feature on Windows")
             return None
+        
+        if filename:
+            image.save(filename)
+            self._html.post_message(f"Screenshot taken: {width}px by {height}px!")
+        if show:
+            image.show()
+        return image
 
     def print_page(self, filename=None, cnf={}, **kwargs):
         """Print the document to a PostScript file. 
@@ -607,7 +626,8 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
             self._html.update() # update the root window to ensure HTML is rendered
             file = self._html.postscript(cnf)
             # no need to save - Tkhtml handles that for us
-            self._html.post_message("Printed!")
+            if filename:
+                self._html.post_message("Printed!")
             if file: return file
         else:
             self._html.post_message("ERROR: The page could not be printed because print_page is an experimental feature")
@@ -625,7 +645,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         if filename:
             with open(filename, "w+") as handle:
                 handle.write(html)
-        self._html.post_message("Saved!")
+            self._html.post_message("Saved!")
         return html
     
     def snapshot_page(self, filename=None, allow_agent=False):
@@ -658,11 +678,9 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
 
         html = f"""<html>\n\t<head>{title}{icon}{base}{style}\n\t</head>\n\t<body>\n\t{body}\n\t</body>\n</html>"""
         if filename:
-            if not path.splitext(filename)[1]:
-                filename = f"{filename}.{self.cget('parsemode')}"
             with open(filename, "w+") as handle:
                 handle.write(html)
-        self._html.post_message("Saved!")
+            self._html.post_message("Saved!")
         return html
     
     def show_error_page(self, url, error, code):
@@ -927,7 +945,7 @@ Otherwise, use 'configure(insecure_https=True)' to ignore website certificates."
             pythonmonkey.eval(tag_contents)
         except Exception as error:
             if "src" in attributes:
-                self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running the script from {attributes["src"]}: {error}")
+                self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running the script from {attributes['src']}: {error}")
             else:
                 self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running a script: {error}")
 

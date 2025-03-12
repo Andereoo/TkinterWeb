@@ -133,7 +133,7 @@ class HTMLDocument:
         )
 
 
-    def getElementById(self, query):
+    def getElementById(self, query, _root=None):
         """Return an element that matches a given id.
         
         :param query: The element id to be searched for.
@@ -143,35 +143,35 @@ class HTMLDocument:
         node = self.html.search(f"[id='{query}']", index=0, root=_root)
         return HTMLElement(self, node)
 
-    def getElementsByClassName(self, query):
+    def getElementsByClassName(self, query, _root=None):
         """Return all elements that match a given class name.
         
         :param query: The class to be searched for.
         :type query: str
-        :rtype: tuple[:class:`HTMLElement`]
+        :rtype: list[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
         nodes = self.html.search(" ".join(f".{i}" for i in query.split()), root=_root)
-        return HTMLCollection(HTMLElement(self, node) for node in nodes)
+        return [HTMLElement(self, node) for node in nodes]
 
     def getElementsByName(self, query, _root=None):
         """Return all elements that match a given given name attribute.
         
         :param query: The name to be searched for.
         :type query: str
-        :rtype: tuple[:class:`HTMLElement`]
+        :rtype: list[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
         nodes = self.html.search(f"[name='{query}']", root=_root)
-        return HTMLCollection(HTMLElement(self, node) for node in nodes)
+        return [HTMLElement(self, node) for node in nodes]
 
     def getElementsByTagName(self, query, _root=None):
         """Return all elements that match a given tag name.
         
         :param query: The tag to be searched for.
         :type query: str
-        :rtype: tuple[:class:`HTMLElement`]
+        :rtype: list[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
         nodes = self.html.search(query, root=_root)
-        return HTMLCollection(HTMLElement(self, node) for node in nodes)
+        return [HTMLElement(self, node) for node in nodes]
 
     def querySelector(self, query, _root=None):
         """Return the first element that matches a given CSS selector.
@@ -188,10 +188,10 @@ class HTMLDocument:
         
         :param query: The CSS selector to be searched for.
         :type query: str
-        :rtype: tuple[:class:`HTMLElement`]
+        :rtype: list[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
         nodes = self.html.search(query, root=_root)
-        return HTMLCollection(HTMLElement(self, node) for node in nodes)
+        return [HTMLElement(self, node) for node in nodes]
     
     def _node_to_html(self, node, deep=True):  # From hv3_dom_core.tcl line 311 and line 329
         return self.html.tk.eval(r"""
@@ -639,7 +639,7 @@ class HTMLElement:
         
         :param query: The class to be searched for.
         :type query: str
-        :rtype: tuple[:class:`HTMLElement`]
+        :rtype: list[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
         return self.document.getElementsByClassName(query, self.node)
 
@@ -648,7 +648,7 @@ class HTMLElement:
         
         :param query: The name to be searched for.
         :type query: str
-        :rtype: tuple[:class:`HTMLElement`]
+        :rtype: list[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
         return self.document.getElementsByName(query, self.node)
 
@@ -657,7 +657,7 @@ class HTMLElement:
         
         :param query: The tag to be searched for.
         :type query: str
-        :rtype: tuple[:class:`HTMLElement`]
+        :rtype: list[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
         return self.document.getElementsByTagName(query, self.node)
 
@@ -675,7 +675,7 @@ class HTMLElement:
         
         :param query: The CSS selector to be searched for.
         :type query: str
-        :rtype: tuple[:class:`HTMLElement`]
+        :rtype: list[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
         return self.document.querySelectorAll(query, self.node)
     
@@ -700,7 +700,7 @@ class HTMLElement:
             self.html.insert_node_before(self.node, tkhtml_children_nodes, before.node)
         else:
             self.html.insert_node(self.node, tkhtml_children_nodes)
-        self.html.send_onload(nodes=children)
+        self.html.send_onload(children=[child.node for child in children])
 
         #for node in tkhtml_children_nodes:
         #    print(node)
@@ -715,6 +715,7 @@ class HTMLElement:
 
 class HTMLCollection(list):
     # For some reason this stuff doesn't work in JavaScript
+    # We'll use it I find the need and/or if the JS bugit is addressed
     @property
     def length(self):
         return len(self)

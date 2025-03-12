@@ -362,6 +362,8 @@ class TkinterWeb(tk.Widget):
     def send_onload(self, root=None, children=None):
         """Send the onload signal for nodes that aren't handled at runtime.
         We keep this a seperate command so that it can be run after inserting elements or changing the innerHTML"""
+        if not self.javascript_enabled:
+            return
         if children:
             for node in children:
                 if self.get_node_tag(node) not in {"img", "object", "link"}:

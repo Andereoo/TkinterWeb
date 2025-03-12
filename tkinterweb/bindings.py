@@ -125,6 +125,7 @@ class TkinterWeb(tk.Widget):
         self._dark_theme_enabled = False
         self._image_inversion_enabled = False
         self._crash_prevention_enabled = True
+        self._javascript_enabled = False
         
         self.messages_enabled = True
         self.events_enabled = True   
@@ -133,7 +134,6 @@ class TkinterWeb(tk.Widget):
         self.images_enabled = True
         self.forms_enabled = True
         self.objects_enabled = True
-        self.javascript_enabled = False
         self.ignore_invalid_images = True
         self.image_alternate_text_enabled = True
         self.overflow_scroll_frame = None
@@ -265,6 +265,18 @@ class TkinterWeb(tk.Widget):
         if self._caches_enabled != enabled:
             self._caches_enabled = enabled
             self.enable_imagecache(enabled)
+        
+    @property
+    def javascript_enabled(self):
+        return self._javascript_enabled
+    
+    @javascript_enabled.setter
+    def javascript_enabled(self, enabled):
+        "Warn the user when enabling JavaScript."
+        if self._javascript_enabled != enabled:
+            self._javascript_enabled = enabled
+            if enabled:
+                self.post_message("WARNING: JavaScript support was enabled. This feature is a work in progress. Only enable JavaScript support on documents you know and trust.")
 
     @property
     def crash_prevention_enabled(self):
@@ -362,7 +374,7 @@ class TkinterWeb(tk.Widget):
     def send_onload(self, root=None, children=None):
         """Send the onload signal for nodes that aren't handled at runtime.
         We keep this a seperate command so that it can be run after inserting elements or changing the innerHTML"""
-        if not self.javascript_enabled:
+        if not self._javascript_enabled:
             return
         if children:
             for node in children:
@@ -1067,7 +1079,7 @@ class TkinterWeb(tk.Widget):
             
         yview = widget.yview()
 
-        if self.javascript_enabled:
+        if self._javascript_enabled:
             for node_handle in widget.hovered_nodes:
                 widget._submit_element_js(node_handle, "onscroll")
 
@@ -1090,7 +1102,7 @@ class TkinterWeb(tk.Widget):
         "Manage scrolling on Windows/MacOS."
         yview = self.yview() 
 
-        if self.javascript_enabled:
+        if self._javascript_enabled:
             for node_handle in self.hovered_nodes:
                 self._submit_element_js(node_handle, "onscroll")     
 
@@ -1198,7 +1210,7 @@ class TkinterWeb(tk.Widget):
     def _on_script(self, attributes, tag_contents):
         """A JavaScript engine could be used here to parse the script.
         Returning any HTMl code here (should) cause it to be parsed in place of the script tag."""
-        if not self.javascript_enabled or not self.unstoppable:
+        if not self._javascript_enabled or not self.unstoppable:
             return
 
         attributes = attributes.split()
@@ -1823,7 +1835,7 @@ class TkinterWeb(tk.Widget):
             self.motion_frame.config(bg=self.motion_frame_bg)
 
     def _submit_element_js(self, node_handle, attribute):
-        if self.javascript_enabled:
+        if self._javascript_enabled:
             if attribute == "onload":
                 if node_handle in self.loaded_elements:
                     # don't run the onload script twice
@@ -1889,14 +1901,14 @@ class TkinterWeb(tk.Widget):
             self.post_message(f"WARNING: the embedded page {url} could not be shown because no embed widget was provided.")
 
     def _on_right_click(self, event):
-        if not self.javascript_enabled:
+        if not self._javascript_enabled:
             return
         for node_handle in self.hovered_nodes:
             self._submit_element_js(node_handle, "onmousedown")
             self._submit_element_js(node_handle, "oncontextmenu")
 
     def _on_middle_click(self, event):
-        if not self.javascript_enabled:
+        if not self._javascript_enabled:
             return
         for node_handle in self.hovered_nodes:
             self._submit_element_js(node_handle, "onmousedown")
@@ -1913,7 +1925,7 @@ class TkinterWeb(tk.Widget):
         self.focus_set()
         self.tag("delete", "selection")
 
-        if self.javascript_enabled:
+        if self._javascript_enabled:
             for node_handle in self.hovered_nodes:
                 self._submit_element_js(node_handle, "onmousedown")
 
@@ -2003,7 +2015,7 @@ class TkinterWeb(tk.Widget):
             self._on_mouse_motion(event)
             return
         
-        if self.javascript_enabled:
+        if self._javascript_enabled:
             for node_handle in self.hovered_nodes:
                 self._submit_element_js(node_handle, "onmouseup")
                 self._submit_element_js(node_handle, "onclick")
@@ -2069,7 +2081,7 @@ class TkinterWeb(tk.Widget):
         "Cycle between normal selection, text selection, and element selection on multi-clicks."
         self._on_click(event, True)
 
-        if self.javascript_enabled:
+        if self._javascript_enabled:
             for node_handle in self.hovered_nodes:
                 self._submit_element_js(node_handle, "ondblclick")
 

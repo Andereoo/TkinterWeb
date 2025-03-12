@@ -588,7 +588,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
             image = ImageGrab.grab(bbox=(x, y, x+width, y+height))
         else:
             self._html.post_message("ERROR: A screenshot could not be taken because screenshot_page(full=True) is an experimental feature on Windows")
-            return None
+            raise NotImplementedError("a screenshot could not be taken because screenshot_page(full=True) is an experimental feature on Windows")
         
         if filename:
             image.save(filename)
@@ -631,7 +631,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
             if file: return file
         else:
             self._html.post_message("ERROR: The page could not be printed because print_page is an experimental feature")
-            return ""
+            raise NotImplementedError("the page could not be printed because print_page is an experimental feature")
 
     def save_page(self, filename=None):
         """Save the page as an HTML file.
@@ -787,6 +787,8 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
             if not pythonmonkey:
                 self._initialize_javascript()
             pythonmonkey.eval(f"(function(pyObj) {{globalThis.{name} = pyObj}})")(obj)
+        else:
+            raise RuntimeError("JavaScript support must be enabled to register a JavaScript object")
 
     def _check_value(self, old, new):
         expected_type = type(old)

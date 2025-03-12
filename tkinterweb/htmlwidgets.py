@@ -498,6 +498,26 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         else:
             self._html.parse_css(data=css_source, override=True)
 
+    def insert_html(self, html_source, before=False, up=True):
+        """Parse HTML and add it to the end (or start) of the current document. Unlike ``add_html``, ``insert_html`` returns the root node of rendered HTML.
+        
+        :param html_source: The HTML code to render.
+        :param before: Whether to add to start.
+        :param up[data]: Whether to add update the widget.
+        :return: The root node of new HTML.
+        """
+        frag = self._html.parse_fragment(html_source)
+        body = self.html.tk.eval(f"return [lindex [[{self.html} node] children] 1]")
+        if before and self.html.get_node_children(body):
+            first = self.html.tk.eval(f"return [lindex {body} children] 0]")
+            self.html.insert_node_before(body, frag, first)
+        else:
+            self.html.insert_node(body, frag)
+        self._finish_css()
+        self._handle_resize(force=True)
+        if up: self.html.update()
+        return frag
+
     def stop(self):
         """Stop loading this page. This will abandon all pending requests."""
         if self._thread_in_progress:
@@ -540,6 +560,16 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
             if not self._html.get_node_tag(self._html.current_node):
                 node = self._html.get_node_parent(self._html.current_node)
         return HTMLElement(self._DOM_cache, node)
+
+    def get_element_text(self, node):
+        """Get text of node and all its descendants recursively
+
+        :param node: The node to get text from
+        :return: The text"""
+        text = self.html.get_node_text(node)
+        for child in self.html.get_node_children(node):
+            text += self.get_element_text(child)
+        return text
 
     def screenshot_page(self, filename=None, full=False):
         """Take a screenshot. 

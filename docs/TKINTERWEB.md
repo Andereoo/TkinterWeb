@@ -135,6 +135,12 @@ Get the HTML tag of the given node.
 #### `get_node_text(node_handle)`
 Get the text content of the given node.
 
+
+&nbsp;&nbsp;&nbsp;-tokens		Return the text as parsed tokens
+
+
+&nbsp;&nbsp;&nbsp;-pre			Return the text with any leading, and trailing whitespaces.
+
 ---
 #### `get_selection(self)`
 Return the current selection.

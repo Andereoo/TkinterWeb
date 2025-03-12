@@ -203,79 +203,18 @@ class HTMLDocument:
             return [TclNode_to_html %s]
             """ % (int(deep), extract_nested(node))
         ) # May split this into 2 methods in future
-
-
-class CSSStyleDeclaration:
-    """Access this class via the :attr:`~tkinterweb.dom.HTMLElement.style` property of the :attr:`~tkinterweb.dom.HTMLElement` class.
-    
-    :param htmlwidget: The :class:`~tkinterweb.TkinterWeb` instance this class is tied to.
-    :type htmlwidget: :class:`~tkinterweb.TkinterWeb`
-    :param node: The Tkhtml3 node this class should modify.
-    :type node: Tkhtml3 node"""
-    def __init__(self, htmlwidget, node):
-        self.html = htmlwidget
-        self.node = node
-
-    def __getitem__(self, prop):
-        return self.html.get_node_property(self.node, prop, "-inline")
-
-    def __setitem__(self, prop, value):
-        style = self.html.get_node_properties(self.node, "-inline")
-        style[prop] = value
-        sStr = " ".join(f"{p}: {v};" for p, v in style.items())
-        self.html.set_node_attribute(self.node, "style", sStr)
-
-    def __setattr__(self, prop, value):
-        if prop in ("node", "html"):
-            super().__setattr__(prop, value)
-        else:
-            self.__setitem__(camel_case_to_property(prop), value)
-
-    def __getattr__(self, prop):
-        try:
-            return self.__getitem__(camel_case_to_property(prop))
-        except TclError:
-            raise TclError(f"no such property: {prop}")
-
-    @property
-    def cssText(self):
-        """Return the text of the element's inline style declaration.
-        
-        :rtype: str"""
-        return self.html.get_node_attribute(self.node, "style")
-    
-    @property
-    def length(self):
-        """Return the number of style declarations in the element's inline style declaration.
-        
-        :rtype: int"""
-        return len(self.html.get_node_properties(self.node, "-inline"))
-    
-    @property
-    def cssProperties(self): # not a JS function, but could be useful
-        """Return all computed properties for the element.
-        
-        :rtype: dict"""
-        return self.html.get_node_properties(self.node)
-    
-    @property # not a JS function, but could be useful
-    def cssInlineProperties(self):
-        """Return all inline properties for the element. Similar to the :attr:`cssText` property, but formatted as a dictionary.
-        
-        :rtype: dict"""
-        return self.html.get_node_properties(self.node, "-inline")
     
 
 class HTMLElement:
-    """:param htmlwidget: The :class:`~tkinterweb.TkinterWeb` instance this class is tied to.
-    :type htmlwidget: :class:`~tkinterweb.TkinterWeb`
+    """:param document_manager: The :class:`~tkinterweb.dom.HTMLDocument` instance this class is tied to.
+    :type document_manager: :class:`~tkinterweb.dom.HTMLDocument`
     :param node: The Tkhtml3 node this class represents.
     :type node: Tkhtml3 node"""
-    def __init__(self, htmlFrame, node):
-        self.tkw = htmlFrame
-        self.html = htmlFrame.html
+    def __init__(self, document_manager, node):
+        self.document = document_manager
+        self.html = document_manager.html
         self.node = node
-        self.styleCache = None  # initialize style as None
+        self.style_cache = None  # initialize style as None
         self.html.bbox(node)  # check if the node is valid
 
         # we need this here or crashes happen if multiple Tkhtml instances exist (depending on the Tkhtml version)
@@ -288,9 +227,9 @@ class HTMLElement:
 
         :rtype: :class:`~tkinterweb.dom.CSSStyleDeclaration`
         """
-        if self.styleCache is None:  # lazy loading of style
-            self.styleCache = CSSStyleDeclaration(self.html, self.node)
-        return self.styleCache
+        if self.style_cache is None:  # lazy loading of style
+            self.style_cache = CSSStyleDeclaration(self, self.node)
+        return self.style_cache
 
     @property
     def innerHTML(self):  # taken from hv3_dom2.tcl line 61
@@ -372,7 +311,7 @@ class HTMLElement:
             $node insert $textnode
             
             update  ;# This must be done to see changes on-screen
-            """ % (extract_nested(self.node), self.tkw.createTextNode(contents))
+            """ % (extract_nested(self.node), self.document.createTextNode(contents))
         )
 
     @property
@@ -540,3 +479,64 @@ class HTMLElement:
         #        self.html._on_object(self.node)
         #    if tag == "iframe":
         #        self.html._on_iframe(self.node)
+
+
+class CSSStyleDeclaration:
+    """Access this class via the :attr:`~tkinterweb.dom.HTMLElement.style` property of the :attr:`~tkinterweb.dom.HTMLElement` class.
+    
+    :param element_manager: The :class:`~tkinterweb.dom.HTMLElement` instance this class is tied to.
+    :type element_manager: :class:`~tkinterweb.dom.HTMLElement`
+    :param node: The Tkhtml3 node this class should modify.
+    :type node: Tkhtml3 node"""
+    def __init__(self, element_manager, node):
+        self.html = element_manager.html
+        self.node = node
+
+    def __getitem__(self, prop):
+        return self.html.get_node_property(self.node, prop, "-inline")
+
+    def __setitem__(self, prop, value):
+        style = self.html.get_node_properties(self.node, "-inline")
+        style[prop] = value
+        sStr = " ".join(f"{p}: {v};" for p, v in style.items())
+        self.html.set_node_attribute(self.node, "style", sStr)
+
+    def __setattr__(self, prop, value):
+        if prop in ("node", "html"):
+            super().__setattr__(prop, value)
+        else:
+            self.__setitem__(camel_case_to_property(prop), value)
+
+    def __getattr__(self, prop):
+        try:
+            return self.__getitem__(camel_case_to_property(prop))
+        except TclError:
+            raise TclError(f"no such property: {prop}")
+
+    @property
+    def cssText(self):
+        """Return the text of the element's inline style declaration.
+        
+        :rtype: str"""
+        return self.html.get_node_attribute(self.node, "style")
+    
+    @property
+    def length(self):
+        """Return the number of style declarations in the element's inline style declaration.
+        
+        :rtype: int"""
+        return len(self.html.get_node_properties(self.node, "-inline"))
+    
+    @property
+    def cssProperties(self): # not a JS function, but could be useful
+        """Return all computed properties for the element.
+        
+        :rtype: dict"""
+        return self.html.get_node_properties(self.node)
+    
+    @property # not a JS function, but could be useful
+    def cssInlineProperties(self):
+        """Return all inline properties for the element. Similar to the :attr:`cssText` property, but formatted as a dictionary.
+        
+        :rtype: dict"""
+        return self.html.get_node_properties(self.node, "-inline")

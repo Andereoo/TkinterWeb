@@ -605,11 +605,14 @@ class TkinterWeb(tk.Widget):
     def load_alt_text(self, url, name):
         if (url in self.image_directory):
             node = self.image_directory[url]
-            alt = self.get_node_attribute(node, "alt")
-            if alt and self.image_alternate_text_enabled:
-                if self.experimental:
+            if not self.ignore_invalid_images:
+                image, error = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled)
+                self.loaded_images.add(image)
+            elif self.image_alternate_text_enabled:
+                alt = self.get_node_attribute(node, "alt")
+                if alt and self.experimental:
                     self.insert_node(node, self.parse_fragment(alt))
-                else:
+                elif alt:
                     image = text_to_image(
                         name, alt, self.bbox(node),
                         self.image_alternate_text_font,
@@ -617,9 +620,6 @@ class TkinterWeb(tk.Widget):
                         self.image_alternate_text_threshold,
                     )
                     self.loaded_images.add(image)
-            if not self.ignore_invalid_images:
-                image, error = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled)
-                self.loaded_images.add(image)
 
     def fetch_images(self, url, name, urltype):
         "Fetch images and display them in the document."

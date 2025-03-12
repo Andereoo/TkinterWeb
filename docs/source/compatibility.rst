@@ -11,7 +11,8 @@ Webpage Compatibility
 
 **JavaScript:**
 
-* Javascript is not supported at the moment. It is up to the user to connect a JavaScript interpreter by registering a callback for scripts and manipulating the document through Python. See :doc:`dom`.
+* Javascript only partly supported at the moment. See :doc:`javascript` for more information.
+* It is also possible for the user to connect a JavaScript interpreter and then manipulate the document through Python. See :doc:`javascript` and :doc:`dom` for more information.
 
 **Images:**
 

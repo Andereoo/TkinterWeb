@@ -114,16 +114,6 @@ Or, to select the second match found:
 
 Refer to the API reference for more information and `bug 18 <https://github.com/Andereoo/TkinterWeb/issues/18#issuecomment-881649007>`_ or the `sample web browser <https://github.com/Andereoo/TkinterWeb/blob/main/examples/TkinterWebBrowser.py>`_ for a sample find bar.
 
-
-**Embed a widget**
-
-There are many ways to embed widgets in an :class:`~tkinterweb.HtmlFrame` widget. One way is to use ``<object>`` elements:
-
->>> yourcanvas = tkinter.Canvas(yourhtmlframe)
->>> yourhtmlframe.load_html(f"<p>This is a canvas!</p><object data="{yourcanvas}"></object>")
-
-Refer to :doc:`geometry` for more information.
-
 **Done loading?**
 
 The ``<<DoneLoading>>`` event fires when the document is done loading. 
@@ -160,6 +150,19 @@ To scale only the text, use ``fontscale=2`` instead.
 **Manipulating the DOM**
 
 Refer to :doc:`dom` (new since version 3.25).
+
+**Using JavaScript**
+
+Refer to :doc:`javascript` (new since version 4.1).
+
+**Embed a widget**
+
+There are many ways to embed widgets in an :class:`~tkinterweb.HtmlFrame` widget. One way is to use ``<object>`` elements:
+
+>>> yourcanvas = tkinter.Canvas(yourhtmlframe)
+>>> yourhtmlframe.load_html(f"<p>This is a canvas!</p><object data="{yourcanvas}"></object>")
+
+Refer to :doc:`geometry` for more information.
 
 **Dark mode**
 

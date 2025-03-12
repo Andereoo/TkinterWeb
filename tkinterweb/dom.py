@@ -66,10 +66,12 @@ def flatten(data):
 class HTMLDocument:
     """Access this class via the :attr:`~tkinterweb.HtmlFrame.document` property of the :class:`~tkinterweb.HtmlFrame` and :class:`~tkinterweb.HtmlLabel` widgets.
     
-    :param htmlwidget: The :class:`~tkinterweb.TkinterWeb` instance this class is tied to.
-    :type htmlwidget: :class:`~tkinterweb.TkinterWeb`"""
-    def __init__(self, htmlwidget):
-        self.html = htmlwidget
+    :param html: The :class:`~tkinterweb.TkinterWeb` instance this class is tied to.
+    :type html: :class:`~tkinterweb.TkinterWeb`
+    
+    :ivar html: The associated :class:`~tkinterweb.TkinterWeb` instance."""
+    def __init__(self, html):
+        self.html = html
         self.html.tk.createcommand("parse_fragment", self.html.parse_fragment)
         self.html.tk.createcommand("node_to_html", self._node_to_html)
 
@@ -232,8 +234,11 @@ class HTMLDocument:
 class HTMLElement:
     """:param document_manager: The :class:`~tkinterweb.dom.HTMLDocument` instance this class is tied to.
     :type document_manager: :class:`~tkinterweb.dom.HTMLDocument`
+
     :param node: The Tkhtml3 node this class represents.
-    :type node: Tkhtml3 node"""
+    :type node: Tkhtml3 node
+    :ivar html: The element's corresponding :class:`~tkinterweb.TkinterWeb` instance.
+    :ivar node: The element's corresponding Tkhtml node."""
     def __init__(self, document_manager, node):
         self.document = document_manager
         self.html = document_manager.html
@@ -247,7 +252,7 @@ class HTMLElement:
         
     @property
     def style(self):
-        """Manage the element's styling. For instance, to make the element have a blue background, use ``yourhtmlelememt.style.backgroundColor = "blue"``.
+        """Manage the element's styling. For instance, to make the element have a blue background, use ``yourhtmlelement.style.backgroundColor = "blue"``.
 
         :rtype: :class:`~tkinterweb.dom.CSSStyleDeclaration`"""
         if self.style_cache is None:  # lazy loading of style
@@ -274,7 +279,6 @@ class HTMLElement:
 
     @innerHTML.setter
     def innerHTML(self, contents):  # taken from hv3_dom2.tcl line 88
-        "Set the inner HTML of an element"
         self.html.tk.eval("""
             set node %s
             set tag [$node tag]
@@ -322,7 +326,6 @@ class HTMLElement:
 
     @textContent.setter
     def textContent(self, contents):  # Ditto
-        "Set the text content of an element."
         self.html.tk.eval("""
             set node %s
             set textnode %s
@@ -369,220 +372,188 @@ class HTMLElement:
         return [HTMLElement(self, i) for i in self.html.get_node_children(self.node)]
     
     @property
+    def widget(self): # not a JS property, but could be useful
+        """Get and set the element's widget. Only works on ``<object>`` elements.
+
+        :rtype: :py:class:`tkinter.Widget` or None"""
+        if self.tagName == "object":
+            data = self.getAttribute("data")
+            try:
+                return self.html.nametowidget(data)
+            except KeyError:
+                return None
+        else:
+            return None
+        
+    @widget.setter
+    def widget(self, widget): # not a JS property, but could be useful
+        if self.tagName == "object":
+            # really we should do better than set the data attribute
+            # right now this also can be used to set the object's url
+            # but in practice it shouldn't really matter
+            self.setAttribute("data", widget)
+    
+    @property
     def value(self):
-        """Get the input's value. Only works on ``<input>``, ``<textarea>``, and ``<select>`` elements.
+        """Get and set the input's value. Only works on ``<input>``, ``<textarea>``, and ``<select>`` elements.
         
         :rtype: str"""
         if self.node in self.html.form_widgets:
             return self.html.form_widgets[self.node].get()
+        return None
         
     @value.setter
     def value(self, value):
-        """Set the input's value. Only works on ``<input>``, ``<textarea>``, and ``<select>`` elements.
-        
-        :param value: The input's new value.
-        :type value: str"""
         if self.node in self.html.form_widgets:
             self.html.form_widgets[self.node].set(value)
 
     @property
     def checked(self):
-        """Convenience property for the ``checked`` HTML attribute. Check if the radio button or checkbox is checked.
+        """Convenience property for the ``checked`` HTML attribute. Check/uncheck a radiobutton or checkbox or see if the element is checked.
         
-        :rtype: str"""
+        :rtype: bool"""
         if self.node in self.html.form_widgets:
             if self.html.get_node_attribute(self.node, "checked", "false") != "false":
                 return True
             else:
                 return False
+        return None
         
     @checked.setter
     def checked(self, value):
-        """Convenience property for the ``checked`` HTML attribute. Check/uncheck a radiobutton or checkbox.
-        
-        :param value: The input's new checked value.
-        :type value: str"""
         if self.node in self.html.form_widgets:
             self.html.set_node_attribute(self.node, "checked", value)
 
     @property
     def onchange(self):
-        """Convenience property for the ``onchange`` HTML attribute.
+        """Convenience property for the ``onchange`` HTML attribute. Get and set the JavaScript code to execute when the input element's value changes
         
         :rtype: str"""
         return self.getAttribute("onchange")
     
     @onchange.setter
     def onchange(self, callback):
-        """Convenience property for the ``onchange`` HTML attribute. Set the code to execute when the input element's value changes.
-        
-        :param callback: The JavaScript callback.
-        :type callback: str"""
         self.setAttribute("onchange", callback)
 
     @property
     def onload(self):
-        """Convenience property for the ``onload`` HTML attribute.
+        """Convenience property for the ``onload`` HTML attribute. Get and set the code to execute when the element loads.
         
         :rtype: str"""
         return self.getAttribute("onload")
     
     @onload.setter
     def onload(self, callback):
-        """Convenience property for the ``onload`` HTML attribute. Set the code to execute when the element loads.
-        
-        :param callback: The JavaScript callback.
-        :type callback: str"""
         self.setAttribute("onload", callback)
 
     @property
     def onclick(self):
-        """Convenience property for the ``onclick`` HTML attribute.
+        """Convenience property for the ``onclick`` HTML attribute. Get and set the code to execute when the element is clicked.
         
         :rtype: str"""
         return self.getAttribute("onclick")
     
     @onclick.setter
     def onclick(self, callback):
-        """Convenience property for the ``onclick`` HTML attribute. Set the code to execute when the element is clicked.
-        
-        :param callback: The JavaScript callback.
-        :type callback: str"""
         self.setAttribute("onclick", callback)
 
     @property
     def oncontextmenu(self):
-        """Convenience property for the ``oncontextmenu`` HTML attribute.
+        """Convenience property for the ``oncontextmenu`` HTML attribute. Get and set the code to execute when the element is right-clicked.
         
         :rtype: str"""
         return self.getAttribute("oncontextmenu")
     
     @oncontextmenu.setter
     def oncontextmenu(self, callback):
-        """Convenience property for the ``oncontextmenu`` HTML attribute. Set the code to execute when the element is right-clicked.
-        
-        :param callback: The JavaScript callback.
-        :type callback: str"""
         self.setAttribute("oncontextmenu", callback)
 
     @property
     def ondblclick(self):
-        """Convenience property for the ``ondblclick`` HTML attribute.
+        """Convenience property for the ``ondblclick`` HTML attribute. Get and set the code to execute when the element is double-clicked.
         
         :rtype: str"""
         return self.getAttribute("ondblclick")
     
     @ondblclick.setter
     def ondblclick(self, callback):
-        """Convenience property for the ``ondblclick`` HTML attribute. Set the code to execute when the element is double-clicked.
-        
-        :param callback: The JavaScript callback.
-        :type callback: str"""
         self.setAttribute("ondblclick", callback)
 
     @property
     def onmousedown(self):
-        """Convenience property for the ``onmousedown`` HTML attribute.
+        """Convenience property for the ``onmousedown`` HTML attribute. Get and set the code to execute when any mouse button is pressed over the element.
         
         :rtype: str"""
         return self.getAttribute("onmousedown")
     
     @onmousedown.setter
     def onmousedown(self, callback):
-        """Convenience property for the ``onmousedown`` HTML attribute. Set the code to execute when any mouse button is pressed over the element.
-        
-        :param callback: The JavaScript callback.
-        :type callback: str"""
         self.setAttribute("onmousedown", callback)
 
     @property
     def onmouseenter(self):
-        """Convenience property for the ``onmouseenter`` HTML attribute.
+        """Convenience property for the ``onmouseenter`` HTML attribute. Get and set the code to execute when the mouse moves onto the element.
         
         :rtype: str"""
         return self.getAttribute("onmouseenter")
     
     @onmouseenter.setter
     def onmouseenter(self, callback):
-        """Convenience property for the ``onmouseenter`` HTML attribute. Set the code to execute when the mouse moves onto the element.
-        
-        :param callback: The JavaScript callback.
-        :type callback: str"""
         self.setAttribute("onmouseenter", callback)
 
     @property
     def onmouseleave(self):
-        """Convenience property for the ``onmouseleave`` HTML attribute.
+        """Convenience property for the ``onmouseleave`` HTML attribute. Get and set the code to execute when the mouse moves out of the element.
         
         :rtype: str"""
         return self.getAttribute("onmouseleave")
     
     @onmouseleave.setter
     def onmouseleave(self, callback):
-        """Convenience property for the ``onmouseleave`` HTML attribute. Set the code to execute when the mouse moves out of the element.
-        
-        :param callback: The JavaScript callback.
-        :type callback: str"""
         self.setAttribute("onmouseleave", callback)
 
     @property
     def onmousemove(self):
-        """Convenience property for the ``onmousemove`` HTML attribute.
+        """Convenience property for the ``onmousemove`` HTML attribute. Get and set the code to execute when the mouse moves over the element.
         
         :rtype: str"""
         return self.getAttribute("onmousemove")
     
     @onmousemove.setter
     def onmousemove(self, callback):
-        """Convenience property for the ``onmousemove`` HTML attribute. Set the code to execute when the mouse moves over the element.
-        
-        :param callback: The JavaScript callback.
-        :type callback: str"""
         self.setAttribute("onmousemove", callback)
 
     @property
     def onmouseout(self):
-        """Convenience property for the ``onmouseout`` HTML attribute.
+        """Convenience property for the ``onmouseout`` HTML attribute. Get and set the code to execute when the mouse moves out of the element or its parent elements.
         
         :rtype: str"""
         return self.getAttribute("onmouseout")
     
     @onmouseout.setter
     def onmouseout(self, callback):
-        """Convenience property for the ``onmouseout`` HTML attribute. Set the code to execute when the mouse moves out of the element or its parent elements.
-        
-        :param callback: The JavaScript callback.
-        :type callback: str"""
         self.setAttribute("onmouseout", callback)
 
     @property
     def onmouseover(self):
-        """Convenience property for the ``onmouseover`` HTML attribute.
+        """Convenience property for the ``onmouseover`` HTML attribute. Get and set the code to execute when the mouse moves into the element or its children elements.
         
         :rtype: str"""
         return self.getAttribute("onmouseover")
     
     @onmouseover.setter
     def onmouseover(self, callback):
-        """Convenience property for the ``onmouseover`` HTML attribute. Set the code to execute when the mouse moves into the element or its children elements.
-        
-        :param callback: The JavaScript callback.
-        :type callback: str"""
         self.setAttribute("onmouseover", callback)
 
     @property
     def onmouseup(self):
-        """Convenience property for the ``onmouseup`` HTML attribute.
+        """Convenience property for the ``onmouseup`` HTML attribute. Get and set the code to execute when the mouse button is released over the element.
         
         :rtype: str"""
         return self.getAttribute("onmouseup")
     
     @onmouseup.setter
     def onmouseup(self, callback):
-        """Convenience property for the ``onmouseup`` HTML attribute. Set the code to execute when the mouse button is released over the element.
-        
-        :param callback: The JavaScript callback.
-        :type callback: str"""
         self.setAttribute("onmouseup", callback)
 
     def getAttribute(self, attribute):
@@ -730,11 +701,15 @@ class HTMLCollection(list):
 
 class DOMRect:
     """This class generates and stores information about the element's position and size at this point in time.
-
-    Valid properties are x, y, width, and height.
     
     :param element_manager: The :class:`~tkinterweb.dom.HTMLElement` instance this class is tied to.
-    :type element_manager: :class:`~tkinterweb.dom.HTMLElement`"""
+    :type element_manager: :class:`~tkinterweb.dom.HTMLElement`
+    :ivar x: The element's horizontal offset from the left-hand side of the page.
+    :ivar y: The element's vertical offset from the top of the page.
+    :ivar width: The element's width.
+    :ivar height: The element's height.
+    :ivar html: The element's corresponding :class:`~tkinterweb.TkinterWeb` instance.
+    :ivar node: The element's corresponding Tkhtml node."""
     def __init__(self, element_manager):
         self.html = element_manager.html
         self.node = element_manager.node
@@ -748,7 +723,9 @@ class CSSStyleDeclaration:
     """Access this class via the :attr:`~tkinterweb.dom.HTMLElement.style` property of the :attr:`~tkinterweb.dom.HTMLElement` class.
     
     :param element_manager: The :class:`~tkinterweb.dom.HTMLElement` instance this class is tied to.
-    :type element_manager: :class:`~tkinterweb.dom.HTMLElement`"""
+    :type element_manager: :class:`~tkinterweb.dom.HTMLElement`
+    :ivar html: The element's corresponding :class:`~tkinterweb.TkinterWeb` instance.
+    :ivar node: The element's corresponding Tkhtml node."""
     def __init__(self, element_manager):
         self.html = element_manager.html
         self.node = element_manager.node
@@ -889,6 +866,8 @@ class CSSStyleDeclaration:
     def getPropertyValue(self, property):
         """Return the value of the given inline CSS property.
         
+        You can also use JavaScript-style camel-cased properties to get a CSS property value. For instance, to get the element's background color, use ``yourhtmlelement.style.backgroundColor``
+
         :param property: The CSS property to get.
         :type property: str
         :rtype: str"""
@@ -905,6 +884,8 @@ class CSSStyleDeclaration:
 
     def setProperty(self, property, value):
         """Set the value of the given inline CSS property.
+
+        You can also use JavaScript-style camel-cased properties to set a CSS property value. For instance, to make the element have a blue background, use ``yourhtmlelement.style.backgroundColor = "blue"``
         
         :param property: The CSS property to set.
         :type property: str

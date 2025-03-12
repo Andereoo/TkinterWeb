@@ -35,7 +35,7 @@ class HtmlFrame(ttk.Frame):
     :type on_form_submit: function
     :param on_script: The function to be called when a ``<script>`` element is encountered. This can be used to connect a script handler, such as a JavaScript engine. The script element's attributes and contents will be passed as arguments.
     :type on_script: function
-    :param on_element_script: The function to be called when a JS event attribute on an element is encountered. This can be used to connect a script handler, such as a JavaScript engine, or even to run your own Python code. The element's corresponding Tkhtml3 node, relevant attribute, and attribute contents will be passed as arguments.
+    :param on_element_script: The function to be called when a JavaScript event attribute on an element is encountered. This can be used to connect a script handler, such as a JavaScript engine, or even to run your own Python code. The element's corresponding Tkhtml3 node, relevant attribute, and attribute contents will be passed as arguments. New in version 4.1.
     :type on_element_script: callable
     :param on_resource_setup: The function to be called when an image or stylesheet load finishes. The resource's url, type ("stylesheet" or "image"), and whether setup was successful or not (True or False) will be passed as arguments.
     :type on_resource_setup: function
@@ -79,7 +79,7 @@ class HtmlFrame(ttk.Frame):
     :type events_enabled: bool
     :param threading_enabled: Enable/disable threading. Has no effect if the Tcl/Tk build does not support threading. This is enabled by default.
     :type threading_enabled: bool
-    :param javascript_enabled: Enable/disable JavaScript support. This is disabled by default. Highly experimental. 
+    :param javascript_enabled: Enable/disable JavaScript support. This is disabled by default. Highly experimental. New in version 4.1.
     :type javascript_enabled: bool
     :param image_alternate_text_enabled: Enable/disable the display of alt text for broken images. This is enabled by default.
     :type image_alternate_text_enabled: bool
@@ -92,7 +92,7 @@ class HtmlFrame(ttk.Frame):
 
     The following flags are optional and can be used to change widget colors and styling:
 
-    :param about_page_background: The default background color of built-in pages. By default this matches the :py:func:`ttk.Frame` background color to better integrate custom documents with Tkinter.
+    :param about_page_background: The default background color of built-in pages. By default this matches the :py:class:`ttk.Frame` background color to better integrate custom documents with Tkinter.
     :type about_page_background: str
     :param about_page_foreground: The default text color of built-in pages.
     :type about_page_foreground: str
@@ -122,7 +122,7 @@ class HtmlFrame(ttk.Frame):
 
     The following flags are optional and can be used to change HTML rendering behaviour:
 
-    :param experimental: If True, experimental features will be enabled. You will need to compile the cutting-edge Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental and replace the default Tkhtml binary for your system with the experimental version. Unless you need to screenshot the page on Windows or print your page for now it is likely best to use the default Tkhtml binary and leave this setting alone.
+    :param experimental: If True, experimental features will be enabled. You will need to compile the cutting-edge Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental and replace the default Tkhtml binary for your system with the experimental version. Unless you need to screenshot the full page on Windows or print your page for now it is likely best to use the default Tkhtml binary and leave this setting alone.
     :type experimental: bool
     :param use_prebuilt_tkhtml: If True (the default), the Tkhtml binary for your system supplied by TkinterWeb will be used. If your system isn't supported and you don't want to compile the Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml yourself, you could try installing Tkhtml3 system-wide and set :attr:`use_prebuilt_tkhtml` to False. Note that some crash prevention features will no longer work.
     :type use_prebuilt_tkhtml: bool
@@ -292,27 +292,27 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         return self._current_url
     
     @property
+    def base_url(self):
+        """The documents's base url. This is automatically generated from :attr:`~tkinterweb.HtmlFrame.current_url` but will also change if explicitly specified by the document.
+        
+        :rtype: str"""
+        return self._html.base_url
+    
+    @property
     def document(self):
         """The DOM manager. Use this to access :class:`~tkinterweb.dom.HTMLDocument` methods to manupulate the DOM.
         
-        :rtype: :class:`HTMLDocument`"""
+        :rtype: :class:`~tkinterweb.dom.HTMLDocument`"""
         if self._DOM_cache is None:  # lazy loading of Document Object Model
             self._DOM_cache = HTMLDocument(self.html)
         return self._DOM_cache
     
     @property
     def html(self):
-        """The underlying html widget. Use this to access underlying :py:class:`~tkinterweb.TkinterWeb` methods.
+        """The underlying html widget. Use this to access underlying :class:`~tkinterweb.TkinterWeb` methods.
         
         :rtype: :class:`~tkinterweb.TkinterWeb`"""
         return self._html
-
-    @property
-    def base_url(self):
-        """The documents's base url. This is automatically generated from :attr:`~tkinterweb.HtmlFrame.current_url` but will also change if explicitly specified by the document.
-        
-        :rtype: str"""
-        return self._html.base_url
 
     def configure(self, **kwargs):
         """
@@ -775,7 +775,9 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         self._html.remove_widget(old_widget)
 
     def register_JS_object(self, name, obj):
-        """Register new JavaScript object. This can be used to access Python variables, functions, and classes from JavaScript (eg. to add a callback for the JavaScript alert() function).
+        """Register new JavaScript object. This can be used to access Python variables, functions, and classes from JavaScript (eg. to add a callback for the JavaScript ``alert()`` function). 
+        
+        JavaScript must be enabled. New in version 4.1.
         
         :param name: The name of the new JavaScript object.
         :type name: str

@@ -2,7 +2,7 @@ HTML Widgets Documentation
 ==========================
 
 .. warning::
-    The API changed significantly in version 4.0.0. See :doc:`upgrading` for details.
+    The API changed significantly in version 4.0.0. See :doc:`../upgrading` for details.
 
 The :class:`~tkinterweb.HtmlFrame` widget is a Tkinter frame that provides additional functionality to the :class:`~tkinterweb.TkinterWeb` widget by adding automatic scrollbars, error handling, and many convenience methods into one embeddable and easy to use widget.
 

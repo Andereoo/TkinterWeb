@@ -7,9 +7,9 @@ Geometry Management with TkinterWeb
 Overview
 --------
 
-**By default, Tkinter provides three geometry managers: pack, place, and grid. While these geometry managers are very powerful, achieving certain layouts, especially with scrolling, can be painful.**
+By default, Tkinter provides three geometry managers: pack, place, and grid. While these geometry managers are very powerful, achieving certain layouts, especially with scrolling, can be painful.
 
-**TkinterWeb provides a system for attaching Tkinter widgets onto the window, and handles layouts, images, scrolling, and much more for you.**
+**TkinterWeb provides a system for attaching Tkinter widgets onto the window, and handles layouts, images, selection, scrolling, and much more for you.**
 
 How-To
 ------
@@ -18,7 +18,7 @@ To place a Tkinter widget inside an HTML document, add the ``data=[yourwidget]``
 
 
 >>> yourframe = tkinterweb.HtmlFrame(root)
->>> yourbutton = tkinter.Button(yourframe, text="Hello, world!", messages_enabled=False)
+>>> yourbutton = tkinter.Button(yourframe, text="Hello, world!")
 >>> source_html = f"<i>This is some text</i><br><object data={yourbutton}></object>"
 >>> yourframe.load_html(source_html) # or use add_html to add onto the existing document
   
@@ -27,6 +27,15 @@ To place a Tkinter widget inside an HTML document, add the ``data=[yourwidget]``
 * Add the :attr:`allowstyling` attribute to automatically change the widget's background color, text color, and font to match the containing HTML element.
 
 Widget position and sizing can be modified using CSS styling on the widget's associated ``<object>`` element.
+
+You can also add or change the widget in an ``<object>`` element later:
+
+>>> yourbutton = tkinter.Button(yourframe, text="Hello, world!")
+>>> ...
+>>> yourobject = yourframe.document.getElementsByTagName("object")[0] # get the first object in the document
+>>> yourobject.widget = yourbutton # set the object's widget
+
+Note that once an ``<object>`` element has been assigned a widget, the widget cannot be removed from the object without specifying a new replacement widget for the object or removing the object altogether (via ``yourobject.remove()``).
 
 Widget Handling
 ---------------

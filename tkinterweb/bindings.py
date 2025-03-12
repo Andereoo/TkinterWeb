@@ -1318,12 +1318,14 @@ class TkinterWeb(tk.Widget):
             else:
                 self._create_iframe(node, value)
 
-    def _on_object(self, node):
+    def _on_object(self, node, data=None):
         "Handle <object> elements."
         if not self.objects_enabled or not self.unstoppable:
             return
 
-        data = self.get_node_attribute(node, "data")
+        if data == None:
+            # this doesn't work when in an attribute handler
+            data = self.get_node_attribute(node, "data")
 
         if data != "":
             try:
@@ -1365,7 +1367,8 @@ class TkinterWeb(tk.Widget):
                 self._thread_check(self.fetch_objects, node, data)
 
     def _on_object_value_change(self, node, attribute, value):
-        self._on_object(node)
+        if attribute == "data":
+            self._on_object(node, value)
 
     def _on_draw_cleanup_crash_cmd(self):
         if self._crash_prevention_enabled:

@@ -125,6 +125,7 @@ class TkinterWeb(tk.Widget):
         self._dark_theme_enabled = False
         self._image_inversion_enabled = False
         self._crash_prevention_enabled = True
+        self._javascript_enabled = False
         
         self.messages_enabled = True
         self.events_enabled = True   
@@ -133,7 +134,6 @@ class TkinterWeb(tk.Widget):
         self.images_enabled = True
         self.forms_enabled = True
         self.objects_enabled = True
-        self.javascript_enabled = False
         self.ignore_invalid_images = True
         self.image_alternate_text_enabled = True
         self.overflow_scroll_frame = None
@@ -242,8 +242,12 @@ class TkinterWeb(tk.Widget):
         self.register_handler("node", "iframe", self._on_iframe)
         self.register_handler("node", "table", self._on_table)
         self.register_handler("node", "img", self._on_image)
-        self.register_handler("parse", "body", self._on_body) # for some reason using "node" and "body" doesn't return anything
-        self.register_handler("parse", "html", self._on_body) # for some reason using "node" and "html" doesn't return anything
+
+        # Node handlers don't work on body and html elements. 
+        # These elements also cannot be removed without causing a segfault. 
+        # Wierd.
+        self.register_handler("parse", "body", self._on_body)
+        self.register_handler("parse", "html", self._on_body)
 
         self.register_handler("attribute", "input", self._on_input_value_change)
         self.register_handler("attribute", "select", self._on_input_value_change)
@@ -261,6 +265,18 @@ class TkinterWeb(tk.Widget):
         if self._caches_enabled != enabled:
             self._caches_enabled = enabled
             self.enable_imagecache(enabled)
+        
+    @property
+    def javascript_enabled(self):
+        return self._javascript_enabled
+    
+    @javascript_enabled.setter
+    def javascript_enabled(self, enabled):
+        "Warn the user when enabling JavaScript."
+        if self._javascript_enabled != enabled:
+            self._javascript_enabled = enabled
+            if enabled:
+                self.post_message("WARNING: JavaScript support was enabled. This feature is a work in progress. Only enable JavaScript support on documents you know and trust.")
 
     @property
     def crash_prevention_enabled(self):
@@ -358,6 +374,8 @@ class TkinterWeb(tk.Widget):
     def send_onload(self, root=None, children=None):
         """Send the onload signal for nodes that aren't handled at runtime.
         We keep this a seperate command so that it can be run after inserting elements or changing the innerHTML"""
+        if not self._javascript_enabled:
+            return
         if children:
             for node in children:
                 if self.get_node_tag(node) not in {"img", "object", "link"}:
@@ -374,23 +392,31 @@ class TkinterWeb(tk.Widget):
         elif self.default_style:
             self.config(defaultstyle=self.default_style)
 
-    def parse_css(self, sheetid=None, importcmd=None, data="", override=False):
+    def parse_css(self, sheetid=None, data="", url=None, override=False):
         "Parse CSS code."
+        if not url:
+            url = self.base_url
         data = self._crash_prevention(data)
         if self._dark_theme_enabled:
             data = sub(self.style_dark_theme_regex, lambda match, matchtype=0: self._generate_altered_colour(match, matchtype), data)
         try:
-            if sheetid and importcmd:
+            #urlcmd = self.register(self.resolve_url)
+            importcmd = self.register(
+                lambda new_url, parent_url=url: self._on_atimport(
+                    parent_url, new_url
+                )
+            )
+            if override:
+                self.style_count += 1
+                self.tk.call(
+                    self._w, "style", "-id", "author" + str(self.style_count).zfill(4), "-importcmd", importcmd, data
+                )
+            elif sheetid:
                 self.tk.call(
                     self._w, "style", "-id", sheetid, "-importcmd", importcmd, data
                 )
-            elif override:
-                self.style_count += 1
-                self.tk.call(
-                    self._w, "style", "-id", "author" + str(self.style_count).zfill(4), data
-                )
             else:
-                self.tk.call(self._w, "style", data)
+                self.tk.call(self._w, "style", "-importcmd", importcmd, data)
         except tk.TclError:
             # the widget doesn't exist anymore
             pass
@@ -667,13 +693,7 @@ class TkinterWeb(tk.Widget):
             self.style_count += 1
             sheetid = "user." + str(self.style_count).zfill(4)
 
-            handler = self.register(
-                lambda new_url, parent_url=url: self._on_atimport(
-                    parent_url, new_url
-                )
-            )
-
-            self.parse_css(f"{sheetid}.9999", handler, data)
+            self.parse_css(f"{sheetid}.9999", data, url)
             if node:
                 # thread safety
                 self.after(0, self._submit_element_js, node, "onload")
@@ -690,9 +710,7 @@ class TkinterWeb(tk.Widget):
 
             if data and filetype.startswith("image"):
                 name = self.image_name_prefix + str(len(self.loaded_images))
-                image, error = data_to_image(
-                    data, name, filetype, self._image_inversion_enabled
-                )
+                image = data_to_image(data, name, filetype, self._image_inversion_enabled, self.dark_theme_limit)
                 self.loaded_images.add(image) 
                 self.override_node_properties(node, "-tkhtml-replacement-image", f"url(replace:{image})")
             elif data and filetype == "text/html":
@@ -708,7 +726,7 @@ class TkinterWeb(tk.Widget):
         if (url in self.image_directory):
             node = self.image_directory[url]
             if not self.ignore_invalid_images:
-                image, error = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled)
+                image = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
                 self.loaded_images.add(image)
             elif self.image_alternate_text_enabled:
                 alt = self.get_node_attribute(node, "alt")
@@ -723,7 +741,7 @@ class TkinterWeb(tk.Widget):
                     )
                     self.loaded_images.add(image)
         elif not self.ignore_invalid_images:
-            image, error = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
+            image = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
             self.loaded_images.add(image)
 
     def fetch_images(self, node, url, name):
@@ -751,9 +769,7 @@ class TkinterWeb(tk.Widget):
 
     def finish_fetching_images(self, node, data, name, filetype, url):
         try:
-            image, error = data_to_image(
-                data, name, filetype, self._image_inversion_enabled, self.dark_theme_limit
-            )
+            image = data_to_image(data, name, filetype, self._image_inversion_enabled, self.dark_theme_limit)
             
             if image:
                 self.loaded_images.add(image)
@@ -768,7 +784,7 @@ class TkinterWeb(tk.Widget):
                         if self.get_node_children(node): self.delete_node(self.get_node_children(node))
             else:
                 self.load_alt_text(url, name)
-                self.post_message(f"ERROR: the image {url} could not be shown: {error} is not installed but is required to parse .svg files")
+                self.post_message(f"ERROR: the image {url} could not be shown: either PyGObject, CairoSVG, or both PyCairo and Rsvg must be installed to parse .svg files")
                 self.on_resource_setup(url, "image", False)
 
         except Exception as error:
@@ -1061,10 +1077,11 @@ class TkinterWeb(tk.Widget):
         if not widget:
             widget = event.widget
             
-        yview = widget.yview()  
+        yview = widget.yview()
 
-        for node_handle in widget.hovered_nodes:
-            widget._submit_element_js(node_handle, "onscroll")
+        if self._javascript_enabled:
+            for node_handle in widget.hovered_nodes:
+                widget._submit_element_js(node_handle, "onscroll")
 
         if event.num == 4:
             if widget.overflow_scroll_frame and (yview[0] == 0 or widget.vsb_type == 0):
@@ -1085,8 +1102,9 @@ class TkinterWeb(tk.Widget):
         "Manage scrolling on Windows/MacOS."
         yview = self.yview() 
 
-        for node_handle in self.hovered_nodes:
-            self._submit_element_js(node_handle, "onscroll")     
+        if self._javascript_enabled:
+            for node_handle in self.hovered_nodes:
+                self._submit_element_js(node_handle, "onscroll")     
 
         if self.overflow_scroll_frame and event.delta > 0 and (yview[0] == 0 or self.vsb_type == 0):
             self.overflow_scroll_frame.scroll(event)
@@ -1192,7 +1210,7 @@ class TkinterWeb(tk.Widget):
     def _on_script(self, attributes, tag_contents):
         """A JavaScript engine could be used here to parse the script.
         Returning any HTMl code here (should) cause it to be parsed in place of the script tag."""
-        if not self.javascript_enabled or not self.unstoppable:
+        if not self._javascript_enabled or not self.unstoppable:
             return
 
         attributes = attributes.split()
@@ -1253,10 +1271,9 @@ class TkinterWeb(tk.Widget):
             self.post_message(f"ERROR: could not load stylesheet {new_url}: {error}")
 
     def _on_title(self, node):
-        "Handle <title> elements."
-        for child in self.tk.call(node, "children"):
-            self.title = self.tk.call(child, "text")
-            self.post_event(TITLE_CHANGED_EVENT)
+        "Handle <title> elements. We could use a script handler but then the node is no longer visible to the DOM."
+        self.title = self.get_node_text(self.get_node_children(node), "-pre")
+        self.post_event(TITLE_CHANGED_EVENT)
 
     def _on_base(self, node):
         "Handle <base> elements."
@@ -1313,12 +1330,14 @@ class TkinterWeb(tk.Widget):
             else:
                 self._create_iframe(node, value)
 
-    def _on_object(self, node):
+    def _on_object(self, node, data=None):
         "Handle <object> elements."
         if not self.objects_enabled or not self.unstoppable:
             return
 
-        data = self.get_node_attribute(node, "data")
+        if data == None:
+            # this doesn't work when in an attribute handler
+            data = self.get_node_attribute(node, "data")
 
         if data != "":
             try:
@@ -1360,7 +1379,8 @@ class TkinterWeb(tk.Widget):
                 self._thread_check(self.fetch_objects, node, data)
 
     def _on_object_value_change(self, node, attribute, value):
-        self._on_object(node)
+        if attribute == "data":
+            self._on_object(node, value)
 
     def _on_draw_cleanup_crash_cmd(self):
         if self._crash_prevention_enabled:
@@ -1386,30 +1406,17 @@ class TkinterWeb(tk.Widget):
             name = url.replace("replace:", "")
         elif any({
                 url.startswith("linear-gradient("),
-                url.startswith("url("),
                 url.startswith("radial-gradient("),
                 url.startswith("repeating-linear-gradient("),
                 url.startswith("repeating-radial-gradient("),
             }):
-            done = False
             self.post_message(f"Fetching image: {shorten(url)}")
+            self.load_alt_text(url, name)
             for image in url.split(","):
-                if image.startswith("url("):
-                    url = url.split("'), url('", 1)[0]
-                    image = strip_css_url(image)
-                    url = self.resolve_url(image)
-                    if url in self.image_directory:
-                        node = self.image_directory[url]
-                    else:
-                        node = None
-                    self._thread_check(self.fetch_images, node, url, name)
-                    done = True
-                else:
-                    self.load_alt_text(url, name)
-                    self.post_message(f"ERROR: the image {shorten(url)} could not be shown because it is not supported yet")
-                    self.on_resource_setup(url, "image", False)
+                self.post_message(f"ERROR: the image {shorten(url)} could not be shown because it is not supported yet")
+            self.on_resource_setup(url, "image", False)
         else:
-            url = url.split("'), url('", 1)[0]
+            url = url.split("), url(", 1)[0].replace("'", "").replace('"', "")
             url = self.resolve_url(url)
             if url in self.image_directory:
                 node = self.image_directory[url]
@@ -1799,7 +1806,7 @@ class TkinterWeb(tk.Widget):
         for overflow_type in overflow_options:
             overflow = self.get_node_property(node, overflow_type) 
             overflow = self._handle_overflow_property(overflow, self.manage_vsb_func)
-            if overflow:
+            if overflow != None:
                 self.vsb_type = overflow
                 break
         
@@ -1828,7 +1835,7 @@ class TkinterWeb(tk.Widget):
             self.motion_frame.config(bg=self.motion_frame_bg)
 
     def _submit_element_js(self, node_handle, attribute):
-        if self.javascript_enabled:
+        if self._javascript_enabled:
             if attribute == "onload":
                 if node_handle in self.loaded_elements:
                     # don't run the onload script twice
@@ -1894,11 +1901,15 @@ class TkinterWeb(tk.Widget):
             self.post_message(f"WARNING: the embedded page {url} could not be shown because no embed widget was provided.")
 
     def _on_right_click(self, event):
+        if not self._javascript_enabled:
+            return
         for node_handle in self.hovered_nodes:
             self._submit_element_js(node_handle, "onmousedown")
             self._submit_element_js(node_handle, "oncontextmenu")
 
     def _on_middle_click(self, event):
+        if not self._javascript_enabled:
+            return
         for node_handle in self.hovered_nodes:
             self._submit_element_js(node_handle, "onmousedown")
     
@@ -1914,8 +1925,9 @@ class TkinterWeb(tk.Widget):
         self.focus_set()
         self.tag("delete", "selection")
 
-        for node_handle in self.hovered_nodes:
-            self._submit_element_js(node_handle, "onmousedown")
+        if self._javascript_enabled:
+            for node_handle in self.hovered_nodes:
+                self._submit_element_js(node_handle, "onmousedown")
 
         node_handle = self.get_current_node(event)
 
@@ -2003,9 +2015,10 @@ class TkinterWeb(tk.Widget):
             self._on_mouse_motion(event)
             return
         
-        for node_handle in self.hovered_nodes:
-            self._submit_element_js(node_handle, "onmouseup")
-            self._submit_element_js(node_handle, "onclick")
+        if self._javascript_enabled:
+            for node_handle in self.hovered_nodes:
+                self._submit_element_js(node_handle, "onmouseup")
+                self._submit_element_js(node_handle, "onclick")
 
         node_handle = self.get_current_node(event)
 
@@ -2068,8 +2081,9 @@ class TkinterWeb(tk.Widget):
         "Cycle between normal selection, text selection, and element selection on multi-clicks."
         self._on_click(event, True)
 
-        for node_handle in self.hovered_nodes:
-            self._submit_element_js(node_handle, "ondblclick")
+        if self._javascript_enabled:
+            for node_handle in self.hovered_nodes:
+                self._submit_element_js(node_handle, "ondblclick")
 
         if not self.selection_enabled:
             return

@@ -16,6 +16,7 @@ tkinterweb.egg-info/requires.txt
 tkinterweb.egg-info/top_level.txt
 tkinterweb/tkhtml/COPYRIGHT
 tkinterweb/tkhtml/combobox-2.3.tm
+tkinterweb/tkhtml/opensans.ttf
 tkinterweb/tkhtml/pkgIndex.tcl
 tkinterweb/tkhtml/linux_armv7l/libTkhtml3.0.so
 tkinterweb/tkhtml/linux_armv7l/pkgIndex.tcl

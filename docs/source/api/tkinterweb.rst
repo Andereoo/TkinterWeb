@@ -1,6 +1,9 @@
 TkinterWeb Documentation
 ========================
 
+.. warning::
+    The API changed significantly in version 4.0.0. See :doc:`../upgrading` for details.
+
 The :class:`~tkinterweb.TkinterWeb` class is the low-level widget that bridges the gap between the underlying Tkhtml3 widget and Tkinter. 
 
 **Do not use this widget unless absolutely nessessary.** Instead use the :class:`~tkinterweb.HtmlFrame` widget.

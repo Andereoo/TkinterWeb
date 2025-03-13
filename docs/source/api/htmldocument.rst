@@ -2,7 +2,7 @@ Document Object Model Documentation
 ===================================
 
 .. warning::
-    The API changed significantly in version 4.0.0. See Porting to TkinterWeb v4+ for details.
+    The API changed significantly in version 4.0.0. See :doc:`../upgrading` for details.
 
 .. autoclass:: tkinterweb.dom.HTMLDocument
    :members:
@@ -13,6 +13,7 @@ Document Object Model Documentation
 .. autoclass:: tkinterweb.dom.CSSStyleDeclaration
    :members:
 
-All classes listed in this page have an ``html`` property corresponding to the element's :class:`~tkinterweb.TkinterWeb` instance and a ``node`` property corresponding to the Tkhtml node associated with the element.
+.. autoclass:: tkinterweb.dom.DOMRect
+   :members:
 
 Special thanks to `Zamy846692 <https://github.com/Zamy846692>`_ for the help making this happen!

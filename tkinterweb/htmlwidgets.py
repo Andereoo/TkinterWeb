@@ -6,7 +6,6 @@ Copyright (c) 2025 Andereoo
 """
 
 from urllib.parse import urldefrag, urlparse
-from os import path
 
 from bindings import TkinterWeb
 from utilities import *
@@ -36,7 +35,7 @@ class HtmlFrame(ttk.Frame):
     :type on_form_submit: function
     :param on_script: The function to be called when a ``<script>`` element is encountered. This can be used to connect a script handler, such as a JavaScript engine. The script element's attributes and contents will be passed as arguments.
     :type on_script: function
-    :param on_element_script: The function to be called when a JS event attribute on an element is encountered. This can be used to connect a script handler, such as a JavaScript engine, or even to run your own Python code. The element's corresponding Tkhtml3 node, relevant attribute, and attribute contents will be passed as arguments.
+    :param on_element_script: The function to be called when a JavaScript event attribute on an element is encountered. This can be used to connect a script handler, such as a JavaScript engine, or even to run your own Python code. The element's corresponding Tkhtml3 node, relevant attribute, and attribute contents will be passed as arguments. New in version 4.1.
     :type on_element_script: callable
     :param on_resource_setup: The function to be called when an image or stylesheet load finishes. The resource's url, type ("stylesheet" or "image"), and whether setup was successful or not (True or False) will be passed as arguments.
     :type on_resource_setup: function
@@ -80,7 +79,7 @@ class HtmlFrame(ttk.Frame):
     :type events_enabled: bool
     :param threading_enabled: Enable/disable threading. Has no effect if the Tcl/Tk build does not support threading. This is enabled by default.
     :type threading_enabled: bool
-    :param javascript_enabled: Enable/disable JavaScript support. This is disabled by default. Highly experimental. 
+    :param javascript_enabled: Enable/disable JavaScript support. This is disabled by default. Highly experimental. New in version 4.1.
     :type javascript_enabled: bool
     :param image_alternate_text_enabled: Enable/disable the display of alt text for broken images. This is enabled by default.
     :type image_alternate_text_enabled: bool
@@ -93,7 +92,7 @@ class HtmlFrame(ttk.Frame):
 
     The following flags are optional and can be used to change widget colors and styling:
 
-    :param about_page_background: The default background color of built-in pages. By default this matches the :py:func:`ttk.Frame` background color to better integrate custom documents with Tkinter.
+    :param about_page_background: The default background color of built-in pages. By default this matches the :py:class:`ttk.Frame` background color to better integrate custom documents with Tkinter.
     :type about_page_background: str
     :param about_page_foreground: The default text color of built-in pages.
     :type about_page_foreground: str
@@ -123,7 +122,7 @@ class HtmlFrame(ttk.Frame):
 
     The following flags are optional and can be used to change HTML rendering behaviour:
 
-    :param experimental: If True, experimental features will be enabled. You will need to compile the cutting-edge Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental and replace the default Tkhtml binary for your system with the experimental version. Unless you need to screenshot the page on Windows or print your page for now it is likely best to use the default Tkhtml binary and leave this setting alone.
+    :param experimental: If True, experimental features will be enabled. You will need to compile the cutting-edge Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental and replace the default Tkhtml binary for your system with the experimental version. Unless you need to screenshot the full page on Windows or print your page for now it is likely best to use the default Tkhtml binary and leave this setting alone.
     :type experimental: bool
     :param use_prebuilt_tkhtml: If True (the default), the Tkhtml binary for your system supplied by TkinterWeb will be used. If your system isn't supported and you don't want to compile the Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml yourself, you could try installing Tkhtml3 system-wide and set :attr:`use_prebuilt_tkhtml` to False. Note that some crash prevention features will no longer work.
     :type use_prebuilt_tkhtml: bool
@@ -179,12 +178,12 @@ class HtmlFrame(ttk.Frame):
             "image_alternate_text_enabled": True,
             "ignore_invalid_images": True,
             "visited_links": [],
-            "find_match_highlight_color": "#ef0fff",
-            "find_match_text_color": "#fff",
-            "find_current_highlight_color": "#38d878",
-            "find_current_text_color": "#fff",
-            "selected_text_highlight_color": "#3584e4",
-            "selected_text_color": "#fff",
+            "find_match_highlight_color": "#f1a1f7",
+            "find_match_text_color": "#000",
+            "find_current_highlight_color": "#8bf0b3",
+            "find_current_text_color": "#000",
+            "selected_text_highlight_color": "#9bc6fa",
+            "selected_text_color": "#000",
             "default_style": DEFAULT_STYLE,
             "dark_style": DARK_STYLE,
             "insecure_https": False,
@@ -293,27 +292,27 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         return self._current_url
     
     @property
+    def base_url(self):
+        """The documents's base url. This is automatically generated from :attr:`~tkinterweb.HtmlFrame.current_url` but will also change if explicitly specified by the document.
+        
+        :rtype: str"""
+        return self._html.base_url
+    
+    @property
     def document(self):
         """The DOM manager. Use this to access :class:`~tkinterweb.dom.HTMLDocument` methods to manupulate the DOM.
         
-        :rtype: :class:`HTMLDocument`"""
+        :rtype: :class:`~tkinterweb.dom.HTMLDocument`"""
         if self._DOM_cache is None:  # lazy loading of Document Object Model
             self._DOM_cache = HTMLDocument(self.html)
         return self._DOM_cache
     
     @property
     def html(self):
-        """The underlying html widget. Use this to access underlying :py:class:`~tkinterweb.TkinterWeb` methods.
+        """The underlying html widget. Use this to access underlying :class:`~tkinterweb.TkinterWeb` methods.
         
         :rtype: :class:`~tkinterweb.TkinterWeb`"""
         return self._html
-
-    @property
-    def base_url(self):
-        """The documents's base url. This is automatically generated from :attr:`~tkinterweb.HtmlFrame.current_url` but will also change if explicitly specified by the document.
-        
-        :rtype: str"""
-        return self._html.base_url
 
     def configure(self, **kwargs):
         """
@@ -553,30 +552,51 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
                 node = self._html.get_node_parent(self._html.current_node)
         return HTMLElement(self.document, node)
 
-    def screenshot_page(self, filename=None, full=False):
+    def screenshot_page(self, filename=None, full=False, show=False):
         """Take a screenshot. 
         
-        On Windows, this method requires experimental mode to be enabled. This command should be used with care on large documents if :attr:`full` is set to True, as it may generate in very large images that take a long time to create and consume large amounts of memory.
+        This command should be used with care on large documents if :attr:`full` is set to True, as it may generate very large images that take a long time to create and consume large amounts of memory.
+
+        On Windows, if experimental mode is not enabled, ensure you run ``ctypes.windll.shcore.SetProcessDpiAwareness(1)`` before creating your Tkinter window or else the screenshot may be badly offset. On Windows it's good practice to run this anyway.
         
         :param filename: The file path to save the screenshot to. If None, the image is not saved to the disk.
         :type filename: str or None, optional
-        :param full: If True, the entire page is captured. If False, only the visible content is captured.
+        :param full: If True, the entire page is captured. On Windows, experimental mode must be enabled. If False, only the visible content is captured.
         :type full: bool, optional
+        :param show: Display the screenshot in the default system handler.
+        :type show: bool, optional
         :return: A PIL Image containing the rendered document.
-        :rtype: :py:class:`PIL.Image`"""
+        :rtype: :py:class:`PIL.Image`
+        :raises: NotImplementedError if experimental mode is not enabled, :attr:`full` is set to True, and TkinterWeb is running on Windows."""
         if self._html.experimental or PLATFORM.system != "Windows":
             self._html.post_message(f"Taking a screenshot of {self._current_url}...")
             image, data = self._html.image(full=full)
             height = len(data)
             width = len(data[0].split())
             image = create_RGB_image(data, width, height)
-            if filename:
-                image.save(filename)
-            self._html.post_message(f"Screenshot taken: {width}px by {height}px!")
-            return image
+        elif not full:
+            # Vanilla Tkhtml image does not work on Windows
+            # We use PIL's ImageGrab instead for visible content
+            # We could also use this for visible content on other systems
+            # It's faster than Tkhtml image, but it does not work on Wayland and is less foolproof
+            from PIL import ImageGrab
+
+            x = self.winfo_rootx()
+            y = self.winfo_rooty()
+            width = self.winfo_width()
+            height = self.winfo_height()
+            
+            image = ImageGrab.grab(bbox=(x, y, x+width, y+height))
         else:
-            self._html.post_message("ERROR: A screenshot could not be taken because it screenshot_page is an experimental feature on Windows")
-            return None
+            self._html.post_message("ERROR: A screenshot could not be taken because screenshot_page(full=True) is an experimental feature on Windows")
+            raise NotImplementedError("a screenshot could not be taken because screenshot_page(full=True) is an experimental feature on Windows")
+        
+        if filename:
+            image.save(filename)
+            self._html.post_message(f"Screenshot taken: {width}px by {height}px!")
+        if show:
+            image.show()
+        return image
 
     def print_page(self, filename=None, cnf={}, **kwargs):
         """Print the document to a PostScript file. 
@@ -587,7 +607,8 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         :type filename: str or None, optional
         :param kwargs: Other valid options are colormap, colormode, file, fontmap, height, pageanchor, pageheight, pagesize (can be A3, A4, A5, LEGAL, and LETTER), pagewidth, pagex, pagey, nobg, noimages, rotate, width, x, and y.
         :return: A string containing the PostScript code.
-        :rtype: str"""
+        :rtype: str
+        :raises: NotImplementedError if experimental mode is not enabled."""
         if self._html.experimental:
             cnf |= kwargs
             self._html.post_message(f"Printing {self._current_url}...")
@@ -607,11 +628,12 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
             self._html.update() # update the root window to ensure HTML is rendered
             file = self._html.postscript(cnf)
             # no need to save - Tkhtml handles that for us
-            self._html.post_message("Printed!")
+            if filename:
+                self._html.post_message("Printed!")
             if file: return file
         else:
             self._html.post_message("ERROR: The page could not be printed because print_page is an experimental feature")
-            return ""
+            raise NotImplementedError("the page could not be printed because print_page is an experimental feature")
 
     def save_page(self, filename=None):
         """Save the page as an HTML file.
@@ -625,7 +647,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         if filename:
             with open(filename, "w+") as handle:
                 handle.write(html)
-        self._html.post_message("Saved!")
+            self._html.post_message("Saved!")
         return html
     
     def snapshot_page(self, filename=None, allow_agent=False):
@@ -658,11 +680,9 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
 
         html = f"""<html>\n\t<head>{title}{icon}{base}{style}\n\t</head>\n\t<body>\n\t{body}\n\t</body>\n</html>"""
         if filename:
-            if not path.splitext(filename)[1]:
-                filename = f"{filename}.{self.cget('parsemode')}"
             with open(filename, "w+") as handle:
                 handle.write(html)
-        self._html.post_message("Saved!")
+            self._html.post_message("Saved!")
         return html
     
     def show_error_page(self, url, error, code):
@@ -757,15 +777,21 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         self._html.remove_widget(old_widget)
 
     def register_JS_object(self, name, obj):
-        """Register new JavaScript object. This can be used to access Python variables, functions, and classes from JavaScript (eg. to add a callback for the JavaScript alert() function).
+        """Register new JavaScript object. This can be used to access Python variables, functions, and classes from JavaScript (eg. to add a callback for the JavaScript ``alert()`` function). 
+        
+        JavaScript must be enabled. New in version 4.1.
         
         :param name: The name of the new JavaScript object.
         :type name: str
         :param obj: The Python object to pass.
-        :type obj: anything"""
-        if self.html.javascript_enabled and not pythonmonkey:
-            self._initialize_javascript()
-        pythonmonkey.eval(f"(function(pyObj) {{globalThis.{name} = pyObj}})")(obj)
+        :type obj: anything
+        :raises: RuntimeError if JavaScript is not enabled."""
+        if self.html.javascript_enabled:
+            if not pythonmonkey:
+                self._initialize_javascript()
+            pythonmonkey.eval(f"(function(pyObj) {{globalThis.{name} = pyObj}})")(obj)
+        else:
+            raise RuntimeError("JavaScript support must be enabled to register a JavaScript object")
 
     def _check_value(self, old, new):
         expected_type = type(old)
@@ -920,19 +946,17 @@ Otherwise, use 'configure(insecure_https=True)' to ignore website certificates."
             raise ModuleNotFoundError("PythonMonkey is required to run JavaScript files but is not installed.")
 
     def _on_script(self, attributes, tag_contents):
-        global pythonmonkey
         if self.html.javascript_enabled and not pythonmonkey:
             self._initialize_javascript()
         try:
             pythonmonkey.eval(tag_contents)
         except Exception as error:
             if "src" in attributes:
-                self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running the script from {attributes["src"]}: {error}")
+                self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running the script from {attributes['src']}: {error}")
             else:
                 self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running a script: {error}")
 
     def _on_element_script(self, node_handle, attribute, attr_contents):
-        global pythonmonkey
         if self.html.javascript_enabled and not pythonmonkey:
             self._initialize_javascript()
         try:

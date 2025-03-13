@@ -20,6 +20,12 @@ To enable JavaScript support in TkinterWeb, first install PythonMonkey using pip
 
    $ pip install pythonmonkey
 
+Or when installing TkinterWeb, use:
+
+.. code-block:: console
+
+   $ pip install tkinterweb[javascript]
+
 Then add the parameter :attr:`javascript_enabled=True` when creating your :class:`~tkinterweb.HtmlFrame` or :class:`~tkinterweb.HtmlLabel` widget.
 
 How-To

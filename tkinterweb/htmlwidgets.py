@@ -1039,12 +1039,12 @@ class HtmlParse():
         
         if parsed_url.netloc and parsed_url.scheme in frozenset({"https", "http"}):
             markup, url, file, r = cache_download(markup, headers=tuple(html.headers.items()))
-        elif os.path.isfile(markup):
-            markup = f"file:///{markup}"
+        elif os.path.isfile(markup) or parsed_url.scheme == "file":
+            if parsed_url.scheme != "file": markup = f"file:///{markup}"
             markup, url, file, r = download(markup, headers=tuple(html.headers.items()))
-            
-        html.parse(markup)  
+
         root.withdraw()
+        html.parse(markup)  
 
     def __str__(self):
         d = self.document.documentElement

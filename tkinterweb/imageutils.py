@@ -18,7 +18,7 @@ except ImportError:
     try:
         import cairosvg
         rsvgimport = "cairosvg"
-    except (ImportError, FileNotFoundError,):
+    except (ImportError, FileNotFoundError, OSError,):
         try:
             import gi
             gi.require_version('Rsvg', '2.0')

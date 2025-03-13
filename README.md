@@ -38,9 +38,9 @@ See [Getting Started](https://tkinterweb.readthedocs.io/en/latest/usage.html) fo
 To install TkinterWeb, simply type `pip install tkinterweb` in the command prompt or terminal. That's it!
 
 Or, you can also choose to install optional dependencies: 
-* Use `pip install tkinterweb[javascript]` to also install JavaScript support
-* Use `pip install tkinterweb[svg]` to also install Scalable Vector Graphics support
-* Use `pip install tkinterweb[full]` to install all optional dependencies
+* Use `pip install tkinterweb[javascript]` to also install JavaScript support.
+* Use `pip install tkinterweb[svg]` to also install Scalable Vector Graphics support. On Windows this might take some extra work.
+* Use `pip install tkinterweb[full]` to install all optional dependencies.
 
 ## Dependencies
 **In order to load webpages and show images, TkinterWeb requires the following packages:**

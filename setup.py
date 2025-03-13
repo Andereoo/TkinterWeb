@@ -4,9 +4,10 @@ from setuptools import setup, find_namespace_packages
 HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
 
-extras = {"javascript": ["pythonmonkey"]}
+extras = dict()
+extras["javascript"] = ["pythonmonkey"]
 if platform.system() == "Linux":
-    extras["svg"] = ["pygobject"]
+    extras["svg"] = ["pygobject", "pycairo"]
 else:
     extras["svg"] = ["cairosvg"]
 extras["full"] = extras["javascript"] + extras["svg"]

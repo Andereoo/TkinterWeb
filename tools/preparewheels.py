@@ -37,7 +37,7 @@ README = (HERE / "README.md").read_text()
 extras = dict()
 extras["javascript"] = ["pythonmonkey"]
 if platform.system() == "Linux":
-    extras["svg"] = ["pygobject"]
+    extras["svg"] = ["pygobject", "pycairo"]
 else:
     extras["svg"] = ["cairosvg"]
 extras["full"] = extras["javascript"] + extras["svg"]

@@ -9,6 +9,7 @@ from PIL.ImageTk import PhotoImage
 from tkinter import PhotoImage as TkinterPhotoImage
 from io import BytesIO
 
+cairo = None
 try:
     import cairo
     import rsvg
@@ -20,14 +21,14 @@ except ImportError:
     except (ImportError, FileNotFoundError,):
         try:
             import gi
-            gi.require_version('cairo', '1.0')
             gi.require_version('Rsvg', '2.0')
-            from gi.repository import cairo
             from gi.repository import Rsvg
+            if not cairo:
+                gi.require_version('cairo', '1.0')
+                from gi.repository import cairo
             rsvgimport = "girsvg"
         except (ValueError, ImportError,):
             rsvgimport = None
-
 
 def text_to_image(name, alt, nodebox, font_type, font_size, threshold):
     from PIL import ImageFont, ImageDraw

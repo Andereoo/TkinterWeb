@@ -77,7 +77,7 @@ See [Frequently Asked Questions](https://tkinterweb.readthedocs.io/en/latest/faq
 
 **Images:**
 * TkinterWeb supports nearly 50 different image types through PIL.
-    * In order to load Scalable Vector Graphic images, PyGObject, CairoSVG, or both PyCairo and Rsvg must be installed. 
+    * In order to load Scalable Vector Graphic images, CairoSVG, both PyCairo and PyGObject, or both PyCairo and Rsvg must be installed. 
 * Without these packages, TkinterWeb will still function properly, but SVG files will not be shown.
 
 ## Contributing

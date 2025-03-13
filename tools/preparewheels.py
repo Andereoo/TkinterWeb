@@ -34,7 +34,8 @@ HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
 {}
 
-extras = {"javascript": ["pythonmonkey"]}
+extras = dict()
+extras["javascript"] = ["pythonmonkey"]
 if platform.system() == "Linux":
     extras["svg"] = ["pygobject"]
 else:

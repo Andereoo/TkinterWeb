@@ -710,7 +710,7 @@ class TkinterWeb(tk.Widget):
 
             if data and filetype.startswith("image"):
                 name = self.image_name_prefix + str(len(self.loaded_images))
-                image, error = data_to_image(data, name, filetype, self._image_inversion_enabled, self.dark_theme_limit)
+                image = data_to_image(data, name, filetype, self._image_inversion_enabled, self.dark_theme_limit)
                 self.loaded_images.add(image) 
                 self.override_node_properties(node, "-tkhtml-replacement-image", f"url(replace:{image})")
             elif data and filetype == "text/html":
@@ -726,7 +726,7 @@ class TkinterWeb(tk.Widget):
         if (url in self.image_directory):
             node = self.image_directory[url]
             if not self.ignore_invalid_images:
-                image, error = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
+                image = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
                 self.loaded_images.add(image)
             elif self.image_alternate_text_enabled:
                 alt = self.get_node_attribute(node, "alt")
@@ -741,7 +741,7 @@ class TkinterWeb(tk.Widget):
                     )
                     self.loaded_images.add(image)
         elif not self.ignore_invalid_images:
-            image, error = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
+            image = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
             self.loaded_images.add(image)
 
     def fetch_images(self, node, url, name):
@@ -769,7 +769,7 @@ class TkinterWeb(tk.Widget):
 
     def finish_fetching_images(self, node, data, name, filetype, url):
         try:
-            image, error = data_to_image(data, name, filetype, self._image_inversion_enabled, self.dark_theme_limit)
+            image = data_to_image(data, name, filetype, self._image_inversion_enabled, self.dark_theme_limit)
             
             if image:
                 self.loaded_images.add(image)
@@ -784,7 +784,7 @@ class TkinterWeb(tk.Widget):
                         if self.get_node_children(node): self.delete_node(self.get_node_children(node))
             else:
                 self.load_alt_text(url, name)
-                self.post_message(f"ERROR: the image {url} could not be shown: {error} is not installed but is required to parse .svg files")
+                self.post_message(f"ERROR: the image {url} could not be shown: either PyGObject, CairoSVG, or both PyCairo and Rsvg must be installed to parse .svg files")
                 self.on_resource_setup(url, "image", False)
 
         except Exception as error:

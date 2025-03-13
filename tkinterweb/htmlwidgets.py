@@ -555,9 +555,9 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
     def screenshot_page(self, filename=None, full=False, show=False):
         """Take a screenshot. 
         
-        This command should be used with care on large documents if :attr:`full` is set to True, as it may generate in very large images that take a long time to create and consume large amounts of memory.
+        This command should be used with care on large documents if :attr:`full` is set to True, as it may generate very large images that take a long time to create and consume large amounts of memory.
 
-        On Windows, if experimental mode is not enabled, ensure your script runs ``ctypes.windll.shcore.SetProcessDpiAwareness(1)`` before creating your Tkinter window or else the screenshot may be badly offset. On Windows it's good practice to run this anyway.
+        On Windows, if experimental mode is not enabled, ensure you run ``ctypes.windll.shcore.SetProcessDpiAwareness(1)`` before creating your Tkinter window or else the screenshot may be badly offset. On Windows it's good practice to run this anyway.
         
         :param filename: The file path to save the screenshot to. If None, the image is not saved to the disk.
         :type filename: str or None, optional
@@ -566,7 +566,8 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         :param show: Display the screenshot in the default system handler.
         :type show: bool, optional
         :return: A PIL Image containing the rendered document.
-        :rtype: :py:class:`PIL.Image`"""
+        :rtype: :py:class:`PIL.Image`
+        :raises: NotImplementedError if experimental mode is not enabled, :attr:`full` is set to True, and TkinterWeb is running on Windows."""
         if self._html.experimental or PLATFORM.system != "Windows":
             self._html.post_message(f"Taking a screenshot of {self._current_url}...")
             image, data = self._html.image(full=full)
@@ -606,7 +607,8 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         :type filename: str or None, optional
         :param kwargs: Other valid options are colormap, colormode, file, fontmap, height, pageanchor, pageheight, pagesize (can be A3, A4, A5, LEGAL, and LETTER), pagewidth, pagex, pagey, nobg, noimages, rotate, width, x, and y.
         :return: A string containing the PostScript code.
-        :rtype: str"""
+        :rtype: str
+        :raises: NotImplementedError if experimental mode is not enabled."""
         if self._html.experimental:
             cnf |= kwargs
             self._html.post_message(f"Printing {self._current_url}...")
@@ -782,7 +784,8 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         :param name: The name of the new JavaScript object.
         :type name: str
         :param obj: The Python object to pass.
-        :type obj: anything"""
+        :type obj: anything
+        :raises: RuntimeError if JavaScript is not enabled."""
         if self.html.javascript_enabled:
             if not pythonmonkey:
                 self._initialize_javascript()

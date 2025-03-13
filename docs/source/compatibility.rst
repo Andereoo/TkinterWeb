@@ -21,7 +21,7 @@ Webpage Compatibility
 
 * TkinterWeb supports nearly 50 different image types through :py:mod:`PIL`.
 
-  * To load Scalable Vector Graphic images, :py:mod:`PyCairo` or :py:mod:`PyGObject` must be installed and either :py:mod:`Rsvg`, :py:mod:`PyGObject`, or :py:mod:`CairoSVG` must also be installed. 
+  * To load Scalable Vector Graphic images, :py:mod:`PyGObject`, :py:mod:`CairoSVG`, or both :py:mod:`PyCairo` and :py:mod:`Rsvg` must also be installed. 
   
 * Without these packages, TkinterWeb will still function properly, but SVG files will not be shown.
 

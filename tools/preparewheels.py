@@ -12,6 +12,8 @@ import os, shutil, sys
 import subprocess
 import re
 
+PYTHON_CMD = "python3"
+
 ROOT_PATH = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 WHEELS_ROOT_PATH = os.path.join(ROOT_PATH, "wheels")
 DIST_ROOT_PATH = os.path.join(ROOT_PATH, "dist")
@@ -36,15 +38,16 @@ README = (HERE / "README.md").read_text()
 
 extras = dict()
 extras["javascript"] = ["pythonmonkey"]
-if platform.system() == "Linux":
-    extras["svg"] = ["pygobject", "pycairo"]
-else:
-    extras["svg"] = ["cairosvg"]
+#if platform.system() == "Linux":
+#    extras["svg"] = ["pygobject", "pycairo"]
+#else:
+#    extras["svg"] = ["cairosvg"]
+extras["svg"] = ["cairosvg"]
 extras["full"] = extras["javascript"] + extras["svg"]
 
 setup(
     name="tkinterweb",
-    version="4.1.0",
+    version="4.1.1",
     description="HTML/CSS viewer for Tkinter",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -112,13 +115,13 @@ for f in os.scandir(TKHTML_ROOT_PATH):
 def run_shell(*args, cwd=ROOT_PATH, is_wheel=False):
     p = subprocess.Popen(args, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = p.communicate()
-    out = out.decode('ascii')
+    out = out.decode('utf-8')
     if is_wheel and "Successful" in out:
         print("success!\n")
     else:
         print(f"\n{out}")
     if err:
-        err = err.decode('ascii').replace("\n\n", "\n") # For some reason some errors have tons of blank space
+        err = err.decode('utf-8').replace("\n\n", "\n") # For some reason some errors have tons of blank space
         print(f"Error: {err}", file=sys.stderr)
 
 
@@ -173,7 +176,7 @@ for folder in tkhtml_folders:
     shutil.copy2(MANIFEST_PATH, folder_path)
     
     print(f"Creating wheel for {folder}...", end="")
-    run_shell("python3", "-m", "build", "--no-isolation", "--wheel", cwd=folder_path, is_wheel=True)    
+    run_shell(PYTHON_CMD, "-m", "build", "--no-isolation", "--wheel", cwd=folder_path, is_wheel=True)    
     wheel_folders_to_copy.append(os.path.join(folder_path, "dist"))
     
 # Check if setup.py exises
@@ -190,7 +193,7 @@ with open(SETUP_PATH, "w+") as handle:
     handle.write(setup_py_contents_generic.format("", ""))
 
 print(f"Creating wheel and sdist for {TKINTERWEB_ROOT_PATH}...", end="")
-run_shell("python3", "-m", "build", "--no-isolation", is_wheel=True)
+run_shell(PYTHON_CMD, "-m", "build", "--no-isolation", is_wheel=True)
 
 # Copy all wheels to the main dist folder
 print(f"Copying wheels to {DIST_ROOT_PATH}\n")
@@ -200,7 +203,6 @@ for folder in wheel_folders_to_copy:
 
         
 # Upload to pip
-#should_continue = input("Upload to pip (Y/N)?")
-#if should_continue.upper() == "Y":
-#    run_shell("twine", "upload", "dist/*", "-u", "__token__")
-#twine upload dist/* -u __token__
+should_continue = input("Upload to pip (Y/N)?")
+if should_continue.upper() == "Y":
+    run_shell("twine", "upload", "dist/*", "-u", "__token__")

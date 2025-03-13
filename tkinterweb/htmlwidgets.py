@@ -957,7 +957,7 @@ Otherwise, use 'configure(insecure_https=True)' to ignore website certificates."
             pythonmonkey.eval(tag_contents)
         except Exception as error:
             if "src" in attributes:
-                self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running the script from {attributes["src"]}: {error}")
+                self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running the script from {attributes['src']}: {error}")
             else:
                 self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running a script: {error}")
 
@@ -1029,22 +1029,22 @@ class HtmlLabel(TkinterWeb):
 
 class HtmlParse():
     def __init__(self, markup, **kwargs):
-        self.master = tk.Tk()
-        self._html = TkinterWeb(self.master, kwargs)
-        self.document = HTMLDocument(self._html)
-        self._html.images_enabled = False
-        self._html.stylesheets_enabled = False
+        self.master = root = tk.Tk()
+        self._html = html = TkinterWeb(root, kwargs)
+        self.document = HTMLDocument(html)
+        html.images_enabled = False
+        html.stylesheets_enabled = False
 
         parsed_url = urlparse(markup)
         
-        if parsed_url.netloc:
-            markup, url, file, r = cache_download(markup, headers=tuple(self._html.headers.items()))
+        if parsed_url.netloc and parsed_url.scheme in frozenset({"https", "http"}):
+            markup, url, file, r = cache_download(markup, headers=tuple(html.headers.items()))
         elif os.path.isfile(markup):
             markup = f"file:///{markup}"
-            markup, url, file, r = download(markup, headers=tuple(self._html.headers.items()))
+            markup, url, file, r = download(markup, headers=tuple(html.headers.items()))
             
-        self._html.parse(markup)  
-        self.master.withdraw()
+        html.parse(markup)  
+        root.withdraw()
 
     def __str__(self):
         d = self.document.documentElement

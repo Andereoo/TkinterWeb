@@ -41,7 +41,7 @@ __title__ = 'TkinterWeb'
 __author__ = "Andereoo"
 __copyright__ = "Copyright (c) 2025 Andereoo"
 __license__ = "MIT"
-__version__ = '4.0.4'
+__version__ = '4.0.6'
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "tkhtml")
@@ -51,8 +51,8 @@ PYTHON_VERSION = platform.python_version_tuple()
 
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha"
-    # Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 Firefox/4.0
+    "User-Agent": "Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 Firefox/4.0"
+    # The official Hv3 user agent is Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha
 }
 DEFAULT_PARSE_MODE = "xml"
 DEFAULT_ENGINE_MODE = "standards"
@@ -265,6 +265,7 @@ INPUT, TEXTAREA, SELECT, BUTTON {
 INPUT[type="image"][src] {
   -tkhtml-replacement-image: attr(src);
   cursor: pointer;
+  border-width: 0;
 }
 INPUT[type="checkbox"], INPUT[type="radio"], input[type="file"], input[type="range"], input[type="color"] {
   background-color: transparent;
@@ -345,7 +346,6 @@ body a[href]:visited { color: attr(vlink x body) }
 [height]           { height:           attr(height l) }
 basefont[size]     { font-size:        attr(size) }
 font[size]         { font-size:        tcl(::tkhtml::size_to_fontsize) }
-[bgcolor]       img   { background-color: attr(bgcolor) }
 BR[clear]          { clear: attr(clear) }
 BR[clear="all"]    { clear: both; }
 /* Standard html <img> tags - replace the node with the image at url $src */
@@ -393,6 +393,7 @@ TR[valign]>TD, TR[valign]>TH {vertical-align: attr(valign x tr)}
 TR>TD[valign], TR>TH[valign] {vertical-align: attr(valign)}
 /* Support the "text" attribute on the <body> tag */
 body[text]       {color: attr(text)}
+body[bgcolor]    { background-color: attr(bgcolor) }
 /* Allow background images to be specified using the "background" attribute.
  * According to HTML 4.01 this is only allowed for <body> elements, but
  * many websites use it arbitrarily.
@@ -402,11 +403,11 @@ body[text]       {color: attr(text)}
  * <IMG>, <OBJECT> and <APPLET> only. Note that this attribute is
  * deprecated in HTML 4.01.
  */
-IMG[vspace], OBJECT[vspace], APPLET[vspace] {
+IMG[vspace], OBJECT[vspace], IFRAME[vspace], APPLET[vspace] {
     margin-top: attr(vspace l);
     margin-bottom: attr(vspace l);
 }
-IMG[hspace], OBJECT[hspace], APPLET[hspace] {
+IMG[hspace], OBJECT[hspace], IFRAME[hspace], APPLET[hspace] {
     margin-left: attr(hspace l);
     margin-right: attr(hspace l);
 }
@@ -421,6 +422,9 @@ BODY[marginwidth] {
 }
 SPAN[spancontent]:after {
   content: attr(spancontent);
+}
+IFRAME[frameborder]{
+  border-width: attr(frameborder l);
 }
 """
 
@@ -462,6 +466,10 @@ BUILTIN_PAGES = {
         <h2 style=\"margin:0;padding:0;font-weight:normal\">Oops</h2>\
         <h3 style=\"margin-top:10px;margin-bottom:25px;font-weight:normal\">The page you've requested could not be found :(</h3>\
         <object handleremoval allowscrolling style=\"cursor:pointer\" data=\"{}\"></object>\
+        </td></tr></table></body></html>",
+    "about:loading": "<html><head><style>html,body,table,tr,td{{background-color:{};color:{};width:100%;height:100%;margin:0}}</style></head>\
+        <body><table><tr><td tkinterweb-full-page style=\"text-align:center;vertical-align:middle\">\
+        <p>Loading...</p>\
         </td></tr></table></body></html>",
     "about:image": "<html><head><style>html,body,table,tr {{background-color:{};color:{};width:100%;height:100%;margin:0}}</style></head><body>\
         <table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle;padding:4px 4px 0px 4px'><img style='max-width:100%;max-height:100%' src='replace:{}'><h3 style=\"margin:0;padding:0;font-weight:normal\"></td></tr></table></body></html>",
@@ -526,15 +534,22 @@ class AutoScrollbar(ttk.Scrollbar):
 class ScrolledTextBox(tk.Frame):
     "Text widget with a scrollbar"
 
-    def __init__(self, parent, **kwargs):
+    def __init__(self, parent, content="", onchangecommand=None, **kwargs):
+        self.parent = parent
+        self.onchangecommand = onchangecommand
 
         tk.Frame.__init__(self, parent)
-        self.parent = parent
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
-        self.tbox = tbox = tk.Text(self, **kwargs)
+        self.tbox = tbox = tk.Text(self, 
+                                    borderwidth=0,
+                                    selectborderwidth=0,
+                                    highlightthickness=0,
+                                    **kwargs)
         tbox.grid(row=0, column=0, sticky="nsew")
+
+        tbox.insert("1.0", content)
     
         self.vsb = vsb = AutoScrollbar(self, command=tbox.yview)
         vsb.grid(row=0, column=1, sticky="nsew")
@@ -543,6 +558,14 @@ class ScrolledTextBox(tk.Frame):
         tbox.bind("<MouseWheel>", self.scroll)
         tbox.bind("<Button-4>", self.scroll_x11)
         tbox.bind("<Button-5>", self.scroll_x11)
+        tbox.bind("<Control-Key-a>", self.select_all)
+        tbox.bind('<KeyRelease>', lambda event: onchangecommand(self) if onchangecommand else None)
+
+    def select_all(self, event):
+        self.tbox.tag_add("sel", "1.0", "end")
+        self.tbox.mark_set("insert", "1.0")
+        self.tbox.see("insert")
+        return "break"
 
     def scroll(self, event):
         yview = self.tbox.yview()
@@ -565,29 +588,122 @@ class ScrolledTextBox(tk.Frame):
         return self.tbox.insert(*args, **kwargs)
 
     def get(self, *args, **kwargs):
+        if not args and not kwargs:
+            args = ("1.0", "end-1c")
         return self.tbox.get(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         self.tbox.delete(*args, **kwargs)
 
+    def set(self, value):
+        self.tbox.delete("0.0", "end")
+        self.tbox.insert("1.0", value)
+        if self.onchangecommand:
+            self.onchangecommand(self)
+
+class FormEntry(tk.Entry):
+    def __init__(self, parent, value="", entry_type="", onchangecommand=None, **kwargs):
+        tk.Entry.__init__(self, parent, borderwidth=0, highlightthickness=0, **kwargs)
+        self.insert(0, value)
+
+        self.bind("<KeyRelease>", lambda event: onchangecommand(self) if onchangecommand else None)
+        if entry_type == "password":
+            self.configure(show="*")
+            
+    def set(self, value):
+        self.delete(0, "end")
+        self.insert(0, value)
+
+class FormCheckbox(ttk.Checkbutton):
+    def __init__(self, parent, value=0, onchangecommand=None, **kwargs):
+        self.variable = variable = tk.IntVar(parent, value=value)
+
+        tk.Checkbutton.__init__(
+            self,
+            parent,
+            borderwidth=0,
+            padx=0,
+            pady=0,
+            highlightthickness=0,
+            variable=variable,
+            **kwargs
+        )
+        variable.trace_add("write", lambda *args: onchangecommand(self) if onchangecommand else None)
+
+class FormRadioButton(ttk.Checkbutton):
+    def __init__(self, parent, token, value=0, checked=False, variable=None, onchangecommand=None, **kwargs):
+        if not variable: 
+            variable = tk.StringVar(parent)
+            variable.trace_add("write", lambda *args: onchangecommand(self) if onchangecommand else None)
+        self.variable = variable
+
+        tk.Radiobutton.__init__(
+            self,
+            parent,
+            value=value,
+            variable=variable,
+            tristatevalue=token,
+            borderwidth=0,
+            padx=0,
+            pady=0,
+            highlightthickness=0,
+            **kwargs
+        )
+        if checked:
+            variable.set(value)
+
+    def set(self, value):
+        self.variable.set(value)
+        
+    def get(self):
+        return self.variable.get()
+
+class FormRange(ttk.Scale):
+    def __init__(self, parent, value=50, from_=0, to=100, step=1, onchangecommand=None, **kwargs):
+        step_str = str(step)
+        self.step = self._check_value(step, 1)
+        self.from_ = from_ = self._check_value(from_, 0)
+        self.to = to = self._check_value(to, 100)
+        self.onchangecommand = onchangecommand
+        self.decimal_places = len(step_str.split('.')[-1]) if '.' in step_str else 0
+        self.variable = variable = tk.DoubleVar(parent, value=self._check_value(value, (to - from_) / 2))
+
+        ttk.Scale.__init__(self, parent, variable=variable, from_=from_, to=to)
+
+        variable.trace_add("write", self._update_value)
+
+    def _update_value(self, *args):
+        value = round(self.variable.get() / self.step) * self.step
+        self.set(round(value, self.decimal_places))
+        self.onchangecommand(self)
+
+    def _check_value(self, value, default):
+        try: 
+            return float(value)
+        except ValueError:
+            return default
+        
+    def set(self, value):
+        super().set(self._check_value(value, (self.to - self.from_) / 2))
 
 class FileSelector(tk.Frame):
     "File selector widget"
 
-    def __init__(self, parent, accept, multiple, **kwargs):
+    def __init__(self, parent, accept, multiple, onchangecommand=None, **kwargs):
+        self.multiple = multiple
+        self.onchangecommand = onchangecommand
+        self.files = []
+
         tk.Frame.__init__(self, parent)
         self.selector = selector = tk.Button(
             self, text="Browse", command=self.select_file
         )
-        self.label = label = tk.Label(self, text="No files selected.")
+        self.label = label = tk.Label(self, bg="red", text="No files selected.")
 
-        selector.pack(side="left")
-        label.pack(side="right", fill="both")
+        selector.grid(row=0, column=1)
+        label.grid(row=0, column=2, padx=5)
 
         self.generate_filetypes(accept)
-
-        self.multiple = multiple
-        self.files = []
 
     def generate_filetypes(self, accept):
         if accept:
@@ -631,15 +747,20 @@ class FileSelector(tk.Frame):
 
     def select_file(self):
         if self.multiple:
-            self.files = files = filedialog.askopenfilenames(
+            files = filedialog.askopenfilenames(
                 title="Select files", filetypes=self.filetypes
             )
+            if files:
+                self.files = []
+                for file in files:
+                    self.files.append(os.path.basename(file.replace('\\', '/')))
+                files = self.files
         else:
             files = filedialog.askopenfilename(
                 title="Select file", filetypes=self.filetypes
             )
             if files:
-                self.files = files = (files,)
+                self.files = files = (os.path.basename(files.replace('\\', '/')),)
         number = len(files)
         if number == 0:
             self.label.config(text="No files selected.")
@@ -649,10 +770,14 @@ class FileSelector(tk.Frame):
         else:
             self.label.config(text=f"{number} files selected.")
         self.event_generate("<<Modified>>")
+        if self.onchangecommand:
+            self.onchangecommand(self)
 
-    def reset(self):
+    def set(self, value):
         self.label.config(text="No files selected.")
         self.event_generate("<<Modified>>")
+        if self.onchangecommand:
+            self.onchangecommand(self)
 
     def get(self):
         return self.files
@@ -670,7 +795,8 @@ class FileSelector(tk.Frame):
 class ColourSelector(tk.Frame):
     "Colour selector widget"
 
-    def __init__(self, parent, colour, **kwargs):
+    def __init__(self, parent, colour="#000000", onchangecommand=None, **kwargs):
+        self.onchangecommand = onchangecommand
         colour = colour if colour else "#000000"
         tk.Button.__init__(self, parent,
             bg=colour,
@@ -678,18 +804,20 @@ class ColourSelector(tk.Frame):
             activebackground=colour,
             highlightthickness=0,
             borderwidth=0,
+            **kwargs
         )
-        self.default_colour = colour
 
     def select_colour(self):
         colour = colorchooser.askcolor(title="Choose color", initialcolor=self.cget("bg"))[1]
         if colour:
-            self.config(bg=colour, activebackground=colour)
-            self.event_generate("<<Modified>>")
+            self.set(colour)
 
-    def reset(self):
-        self.config(bg=self.default_colour, activebackground=self.default_colour)
+    def set(self, colour):
+        colour = colour if colour else "#000000"
+        self.config(bg=colour, activebackground=colour)
         self.event_generate("<<Modified>>")
+        if self.onchangecommand:
+            self.onchangecommand(self)
 
     def get(self):
         return self.cget("bg")

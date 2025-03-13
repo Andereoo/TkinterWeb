@@ -48,6 +48,10 @@ class Combobox(tk.Widget):
             self.default = self.values.index(selected)
         self.reset()
 
+    def set(self, value):
+        if value in self.values:
+            self.tk.call(self._w, "select", self.values.index(value))
+
     def reset(self):
         self.tk.call(self._w, "select", self.default)
 
@@ -66,9 +70,13 @@ class TkinterWeb(tk.Widget):
         self._setup_status_variables()
 
         # inherited settings
+        waiting_options = {}
         if tkinterweb_options:
             for item, value in tkinterweb_options.items():
-                setattr(self, item, value)    
+                try:
+                    setattr(self, item, value)    
+                except AttributeError:
+                    waiting_options[item] = value
 
         # provide OS information for troubleshooting
         self.post_message(f"Starting TkinterWeb for {PLATFORM.processor} {PLATFORM.system} with Python {'.'.join(PYTHON_VERSION)}")
@@ -99,6 +107,11 @@ class TkinterWeb(tk.Widget):
         self.motion_frame = tk.Frame(self, bg=self.motion_frame_bg, width=1, height=1)
         self.motion_frame.place(x=0, y=0)
 
+        # If a setting required the widget to be initialized and couldn't be changed, change it now
+        if waiting_options:
+            for item, value in waiting_options.items():
+                setattr(self, item, value)    
+
         self._setup_bindings()
         self._setup_handlers()
         self.update_default_style()
@@ -120,6 +133,7 @@ class TkinterWeb(tk.Widget):
         self.images_enabled = True
         self.forms_enabled = True
         self.objects_enabled = True
+        self.javascript_enabled = False
         self.ignore_invalid_images = True
         self.image_alternate_text_enabled = True
         self.overflow_scroll_frame = None
@@ -147,9 +161,9 @@ class TkinterWeb(tk.Widget):
         self.on_form_submit = placeholder
         self.message_func = placeholder
         self.on_script = placeholder
+        self.on_element_script = placeholder
         self.on_resource_setup = placeholder
         
-        self.recursive_hovering_count = 10
         self.maximum_thread_count = 20
         self.insecure_https = False
         self.headers = {}
@@ -176,6 +190,7 @@ class TkinterWeb(tk.Widget):
         self.image_name_prefix = f"_tkinterweb_img_{id(self)}_"
         self.is_selecting = False
         self.downloads_have_occured = False
+        self.pending_scripts = []
         self.unstoppable = True
         self.on_embedded_node = None
         self.selection_start_node = None
@@ -185,18 +200,19 @@ class TkinterWeb(tk.Widget):
         self.prev_active_node = None
         self.current_node = None
         self.hovered_nodes = []
+        self.loaded_elements = []
         self.current_cursor = ""
         self.vsb_type = 2
         self.selection_type = 0
         self.motion_frame_bg = "white"
 
-        # enable form resetting and submission
-        self.form_get_commands = {}
-        self.form_reset_commands = {}
-        self.form_elements = {}
+        self.form_widgets = {}
+        self.form_nodes = {}
         self.loaded_forms = {}
         self.radio_buttons = {}
         self.waiting_forms = 0
+
+        self.loaded_iframes = {}
 
     def _setup_bindings(self):
         "Widget bindtags and bindings."
@@ -204,6 +220,8 @@ class TkinterWeb(tk.Widget):
         self.bind("<<Copy>>", self.copy_selection, True)
         self.bind("<B1-Motion>", self._extend_selection, True)
         self.bind("<Button-1>", self._on_click, True)
+        self.bind("<Button-2>", self._on_middle_click, True)
+        self.bind("<Button-3>", self._on_right_click, True)
         self.bind("<Double-Button-1>", self._on_double_click, True)
         self.bind("<ButtonRelease-1>", self._on_click_release, True)
         self.bind_class(self.node_tag, "<Motion>", self._on_mouse_motion, True)
@@ -224,8 +242,18 @@ class TkinterWeb(tk.Widget):
         self.register_handler("node", "iframe", self._on_iframe)
         self.register_handler("node", "table", self._on_table)
         self.register_handler("node", "img", self._on_image)
-        self.register_handler("parse", "body", self._on_body) # for some reason using "node" and "body" doesn't return anything
-        self.register_handler("parse", "html", self._on_body) # for some reason using "node" and "html" doesn't return anything
+
+        # Node handlers don't work on body and html elements. 
+        # These elements also cannot be removed without causing a segfault. 
+        # Wierd.
+        self.register_handler("parse", "body", self._on_body)
+        self.register_handler("parse", "html", self._on_body)
+
+        self.register_handler("attribute", "input", self._on_input_value_change)
+        self.register_handler("attribute", "select", self._on_input_value_change)
+        self.register_handler("attribute", "a", self._on_a_value_change)
+        self.register_handler("attribute", "object", self._on_object_value_change)
+        self.register_handler("attribute", "iframe", self._on_iframe_value_change)
 
     @property
     def caches_enabled(self):
@@ -307,10 +335,12 @@ class TkinterWeb(tk.Widget):
         "Generate a virtual event."
         if self.events_enabled:
             # thread safety
-            self.after(0, lambda event=event: self.event_generate(event))
+            self.after(0, lambda event=event: self._finish_posting_event(event))
 
     def post_message(self, message):
         "Post a message."
+        if self.overflow_scroll_frame:
+            message = "[EMBEDDED DOCUMENT] " + message
         if self.messages_enabled:
             self.message_func(message)
 
@@ -321,10 +351,26 @@ class TkinterWeb(tk.Widget):
         html = self._crash_prevention(html)
         html = self._dark_mode(html)
         self.tk.call(self._w, "parse", html)
+
         # we assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
         if not self.downloads_have_occured:
             self.post_event(DONE_LOADING_EVENT)
-            
+
+        self._submit_deferred_scripts()
+        self.send_onload()
+
+    def send_onload(self, root=None, children=None):
+        """Send the onload signal for nodes that aren't handled at runtime.
+        We keep this a seperate command so that it can be run after inserting elements or changing the innerHTML"""
+        if children:
+            for node in children:
+                if self.get_node_tag(node) not in {"img", "object", "link"}:
+                    self._submit_element_js(node, "onload")
+        else:
+            for node in self.search("[onload]", root=root):
+                if self.get_node_tag(node) not in {"img", "object", "link"}:
+                    self._submit_element_js(node, "onload")
+
     def update_default_style(self):
         "Update the default stylesheet based on color theme."
         if self._dark_theme_enabled and self.dark_style:
@@ -332,22 +378,34 @@ class TkinterWeb(tk.Widget):
         elif self.default_style:
             self.config(defaultstyle=self.default_style)
 
-    def parse_css(self, sheetid=None, importcmd=None, data="", override=False):
+    def parse_css(self, sheetid=None, data="", url=None, override=False):
         "Parse CSS code."
+        if not url:
+            url = self.base_url
         data = self._crash_prevention(data)
         if self._dark_theme_enabled:
             data = sub(self.style_dark_theme_regex, lambda match, matchtype=0: self._generate_altered_colour(match, matchtype), data)
-        if sheetid and importcmd:
-            self.tk.call(
-                self._w, "style", "-id", sheetid, "-importcmd", importcmd, data
+        try:
+            #urlcmd = self.register(self.resolve_url)
+            importcmd = self.register(
+                lambda new_url, parent_url=url: self._on_atimport(
+                    parent_url, new_url
+                )
             )
-        elif override:
-            self.style_count += 1
-            self.tk.call(
-                self._w, "style", "-id", "author" + str(self.style_count).zfill(4), data
-            )
-        else:
-            self.tk.call(self._w, "style", data)
+            if override:
+                self.style_count += 1
+                self.tk.call(
+                    self._w, "style", "-id", "author" + str(self.style_count).zfill(4), "-importcmd", importcmd, data
+                )
+            elif sheetid:
+                self.tk.call(
+                    self._w, "style", "-id", sheetid, "-importcmd", importcmd, data
+                )
+            else:
+                self.tk.call(self._w, "style", "-importcmd", importcmd, data)
+        except tk.TclError:
+            # the widget doesn't exist anymore
+            pass
 
     def reset(self):
         "Reset the widget."
@@ -355,11 +413,14 @@ class TkinterWeb(tk.Widget):
         self.loaded_images = set()
         self.image_directory = {}
         self.form_get_commands = {}
-        self.form_elements = {}
+        self.form_nodes = {}
+        self.form_widgets = {}
         self.loaded_forms = {}
         self.waiting_forms = 0
         self.radio_buttons = {}
+        self.loaded_iframes = {}
         self.hovered_nodes = []
+        self.loaded_elements = []
         self.current_node = None
         self.on_embedded_node = None
         self.selection_start_node = None
@@ -443,6 +504,7 @@ class TkinterWeb(tk.Widget):
         # We assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
         if not self.downloads_have_occured:
             self.post_event(DONE_LOADING_EVENT)
+        self._submit_deferred_scripts()
         return fragment
     
     def enable_imagecache(self, enabled):
@@ -577,36 +639,82 @@ class TkinterWeb(tk.Widget):
         "Get a tuple containing the computed CSS rules for each CSS selector"
         return self.tk.call(self._w, "_styleconfig")
 
-    def fetch_styles(self, sheetid, handler, errorurl="", url=None, data=None):
+    def fetch_scripts(self, attributes, url=None, data=None):
+        "Fetch and run scripts"
+        thread = self._begin_download()
+
+        if url and self.unstoppable:
+            self.post_message(f"Fetching script from {shorten(url)}")
+            try:
+                data = self._download_url(url)[0]
+            except Exception as error:
+                self.post_message(f"ERROR: could not load script {url}: {error}")
+                self.on_resource_setup(url, "script", False)
+
+        if data and self.unstoppable:
+            if "defer" in attributes:
+                self.pending_scripts.append((attributes, data))
+            else:
+                self.after(0, self.on_script, attributes, data) # thread safety
+                
+            if url:
+                self.post_message(f"Successfully loaded {shorten(url)}")
+                self.on_resource_setup(url, "script", True)
+        self._finish_download(thread)
+
+    def fetch_styles(self, node=None, url=None, data=None):
         "Fetch stylesheets and parse the CSS code they contain"
         thread = self._begin_download()
 
         if url and self.unstoppable:
+            self.post_message(f"Fetching stylesheet from {shorten(url)}")
             try:
-                if url.startswith("file://") or (not self._caches_enabled):
-                    data = download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))[0]
-                else:
-                    data = cache_download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))[0]
-
-                matcher = lambda match, url=url: self._fix_css_urls(match, url)
-                data = sub(r"url\((.*?)\)", matcher, data)
-
+                data = sub(r"url\((.*?)\)", 
+                           lambda match, url=url: self._fix_css_urls(match, url), 
+                           self._download_url(url)[0]
+                           )
             except Exception as error:
-                self.post_message(f"Error loading stylesheet {errorurl}: {error}")
+                self.post_message(f"ERROR: could not load stylesheet {url}: {error}")
                 self.on_resource_setup(url, "stylesheet", False)
 
         if data and self.unstoppable:
-            self.parse_css(f"{sheetid}.9999", handler, data)
+            self.style_count += 1
+            sheetid = "user." + str(self.style_count).zfill(4)
+
+            self.parse_css(f"{sheetid}.9999", data, url)
+            if node:
+                # thread safety
+                self.after(0, self._submit_element_js, node, "onload")
             if url:
                 self.post_message(f"Successfully loaded {shorten(url)}")
                 self.on_resource_setup(url, "stylesheet", True)
+        self._finish_download(thread)
+
+    def fetch_objects(self, node, url):
+        thread = self._begin_download()
+
+        try:
+            data, newurl, filetype, code = self._download_url(url)
+
+            if data and filetype.startswith("image"):
+                name = self.image_name_prefix + str(len(self.loaded_images))
+                image, error = data_to_image(data, name, filetype, self._image_inversion_enabled, self.dark_theme_limit)
+                self.loaded_images.add(image) 
+                self.override_node_properties(node, "-tkhtml-replacement-image", f"url(replace:{image})")
+            elif data and filetype == "text/html":
+                self.after(0, self._create_iframe, node, newurl, data)
+
+            self.after(0, self._submit_element_js, node, "onload")
+        except Exception as error:
+            self.post_message(f"ERROR: could not load object element: {error}")
+        
         self._finish_download(thread)
 
     def load_alt_text(self, url, name):
         if (url in self.image_directory):
             node = self.image_directory[url]
             if not self.ignore_invalid_images:
-                image, error = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled)
+                image, error = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
                 self.loaded_images.add(image)
             elif self.image_alternate_text_enabled:
                 alt = self.get_node_attribute(node, "alt")
@@ -620,8 +728,11 @@ class TkinterWeb(tk.Widget):
                         self.image_alternate_text_threshold,
                     )
                     self.loaded_images.add(image)
+        elif not self.ignore_invalid_images:
+            image, error = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
+            self.loaded_images.add(image)
 
-    def fetch_images(self, url, name, urltype):
+    def fetch_images(self, node, url, name):
         "Fetch images and display them in the document."
         thread = self._begin_download()
 
@@ -629,54 +740,44 @@ class TkinterWeb(tk.Widget):
 
         if url == self.base_url:
             self.load_alt_text(url, name)
-            self.post_message(f"Error: image url not specified")
+            self.post_message(f"ERROR: image url not specified")
         else:
             try:
-                if url.startswith("file://") or (not self._caches_enabled):
-                    data, newurl, filetype, code = download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))
-                else:
-                    data, newurl, filetype, code = cache_download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))
+                data, newurl, filetype, code = self._download_url(url)
 
                 if self.unstoppable and data:
                     # thread safety
-                    self.after(0, self.finish_fetching_images, data, name, filetype, url)
+                    self.after(0, self.finish_fetching_images, node, data, name, filetype, url)
 
             except Exception as error:
                 self.load_alt_text(url, name)
-                self.post_message(f"Error loading image {url}: {error}")
+                self.post_message(f"ERROR: could not load image {url}: {error}")
                 self.on_resource_setup(url, "image", False)
-
         self._finish_download(thread)
 
-    def finish_fetching_images(self, data, name, filetype, url):
+    def finish_fetching_images(self, node, data, name, filetype, url):
         try:
-            image, error = data_to_image(
-                data, name, filetype, self._image_inversion_enabled
-            )
+            image, error = data_to_image(data, name, filetype, self._image_inversion_enabled, self.dark_theme_limit)
             
             if image:
                 self.loaded_images.add(image)
                 self.post_message(f"Successfully loaded {shorten(url)}")
                 self.on_resource_setup(url, "image", True)
+                if node:
+                    # thread safety
+                    self.after(0, self._submit_element_js, node, "onload")
                 if self.experimental:
                     node = self.search(f'img[src="{url}"]')
                     if node:
                         if self.get_node_children(node): self.delete_node(self.get_node_children(node))
-            elif error == "no_pycairo":
+            else:
                 self.load_alt_text(url, name)
-                self.post_message(f"Error loading image {url}: Pycairo is not installed but is required to parse .svg files")
+                self.post_message(f"ERROR: the image {url} could not be shown: {error} is not installed but is required to parse .svg files")
                 self.on_resource_setup(url, "image", False)
-            elif error == "no_rsvg":
-                self.load_alt_text(url, name)
-                self.post_message(f"Error loading image {url}: Rsvg is not installed but is required to parse .svg files")
-                self.on_resource_setup(url, "image", False)
-            elif error == "corrupt":
-                self.load_alt_text(url, name)
-                self.post_message(f"The image {url} could not be shown")
-                self.on_resource_setup(url, "image", False)
+
         except Exception as error:
             self.load_alt_text(url, name)
-            self.post_message(f"Error loading image {url}: {error}")
+            self.post_message(f"ERROR: could not load image {url}: {error}")
             self.on_resource_setup(url, "image", False)
 
     def handle_node_replacement(self, node, widgetid, deletecmd, stylecmd=None, allowscrolling=True, handledelete=True):
@@ -862,7 +963,7 @@ class TkinterWeb(tk.Widget):
                 self.post_message(f"No results for the search key '{searchtext}' could be found")
             return nmatches, selected, matches
         except Exception as error:
-            self.post_message(f"Error searching for {searchtext}: {error}")
+            self.post_message(f"ERROR: an error was encountered while searching for {searchtext}: {error}")
             return nmatches, selected, matches
     
     def resolve_url(self, url):
@@ -966,6 +1067,9 @@ class TkinterWeb(tk.Widget):
             
         yview = widget.yview()  
 
+        for node_handle in widget.hovered_nodes:
+            widget._submit_element_js(node_handle, "onscroll")
+
         if event.num == 4:
             if widget.overflow_scroll_frame and (yview[0] == 0 or widget.vsb_type == 0):
                 widget.overflow_scroll_frame.scroll_x11(event, widget.overflow_scroll_frame)
@@ -983,7 +1087,10 @@ class TkinterWeb(tk.Widget):
 
     def scroll(self, event):
         "Manage scrolling on Windows/MacOS."
-        yview = self.yview()      
+        yview = self.yview() 
+
+        for node_handle in self.hovered_nodes:
+            self._submit_element_js(node_handle, "onscroll")     
 
         if self.overflow_scroll_frame and event.delta > 0 and (yview[0] == 0 or self.vsb_type == 0):
             self.overflow_scroll_frame.scroll(event)
@@ -997,6 +1104,14 @@ class TkinterWeb(tk.Widget):
             if self.vsb_type == 0:
                 return
             self.yview_scroll(int(-1*event.delta/30), "units")
+
+
+    def _finish_posting_event(self, event):
+        try:
+            self.event_generate(event)
+        except tk.TclError:
+            # the widget doesn't exist anymore
+            pass
 
     def _generate_altered_colour(self, match, matchtype=1):
         "Invert document colours. Highly experimental."
@@ -1060,31 +1175,57 @@ class TkinterWeb(tk.Widget):
                 html = sub(regex, self._generate_altered_colour, html, flags=IGNORECASE)
         return html
 
-    def _on_script(self, attributes, tagcontents):
-        """Currently not doing anything with script.
-        A javascript engine could be used here to parse the script.
-        Returning any HTMl code here causes it to be parsed in place of the script tag."""
-        return self.on_script(attributes, tagcontents)
+    def _download_url(self, url):
+        if url.startswith("file://") or (not self._caches_enabled):
+            return download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))
+        else:
+            return cache_download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))
+    
+    def _thread_check(self, callback, *args, **kwargs):
+        if not self.downloads_have_occured:
+            self.downloads_have_occured = True
+            
+        if self._maximum_thread_count == 0:
+            callback(*args, **kwargs)
+        elif len(self.active_threads) >= self._maximum_thread_count:
+            self.after(500, lambda callback=callback, args=args: self._thread_check(callback, *args, **kwargs))
+        else:
+            thread = StoppableThread(target=callback, args=args, kwargs=kwargs)
+            thread.start()
 
-    def _on_style(self, attributes, tagcontents):
+    def _on_script(self, attributes, tag_contents):
+        """A JavaScript engine could be used here to parse the script.
+        Returning any HTMl code here (should) cause it to be parsed in place of the script tag."""
+        if not self.javascript_enabled or not self.unstoppable:
+            return
+
+        attributes = attributes.split()
+        attributes = dict(zip(attributes[::2], attributes[1::2])) # make attributes a dict
+
+        if "src" in attributes:
+            self._thread_check(self.fetch_scripts, attributes, self.resolve_url(attributes["src"]))
+        elif "defer" in attributes:
+            self.pending_scripts.append((attributes, tag_contents))
+        else:
+            return self.on_script(attributes, tag_contents)
+
+    def _on_style(self, attributes, tag_contents):
         "Handle <style> elements."
         if not self.stylesheets_enabled or not self.unstoppable:
             return
-        self.downloads_have_occured = True
-        self.style_count += 1
-        ids = "user." + str(self.style_count).zfill(4)
-        handler_proc = self.register(
-            lambda new_url, parent_url=self.base_url: self._on_atimport(
-                parent_url, new_url
-            )
-        )
-        self._style_thread_check(sheetid=ids, handler=handler_proc, data=tagcontents)
+
+        self._thread_check(self.fetch_styles, data=tag_contents)
 
     def _on_link(self, node):
         "Handle <link> elements."
+        if not self.unstoppable:
+            return
+        
         try:
             rel = self.get_node_attribute(node, "rel").lower()
             media = self.get_node_attribute(node, "media", default="all").lower()
+            href = self.get_node_attribute(node, "href")
+            url = self.resolve_url(href)
         except tk.TclError:
             return
 
@@ -1092,65 +1233,39 @@ class TkinterWeb(tk.Widget):
             ("stylesheet" in rel)
             and ("all" in media or "screen" in media)
             and self.stylesheets_enabled
-            and self.unstoppable
         ):
-            self.downloads_have_occured = True
-            href = self.get_node_attribute(node, "href")
-            try:
-                url = self.resolve_url(href)
-                self.post_message(f"Fetching stylesheet from {shorten(url)}")
-                self.style_count += 1
-                ids = "user." + str(self.style_count).zfill(4)
-                handler_proc = self.register(
-                    lambda new_url, parent_url=url: self._on_atimport(
-                        parent_url, new_url
-                    )
-                )
-                self._style_thread_check(
-                    sheetid=ids, handler=handler_proc, errorurl=href, url=url
-                )
-            except Exception as error:
-                self.post_message(f"Error reading stylesheet {href}: {error}")
+            self._thread_check(self.fetch_styles, node, url)
+            # onload is fired if and when the stylesheet is parsed
         elif "icon" in rel:
-            href = self.get_node_attribute(node, "href")
-            url = self.resolve_url(href)
             self.icon = url
             self.post_event(ICON_CHANGED_EVENT)
+            self._submit_element_js(node, "onload")
+        else:
+            self._submit_element_js(node, "onload")
 
     def _on_atimport(self, parent_url, new_url):
         "Load @import scripts."
         if not self.stylesheets_enabled or not self.unstoppable:
             return
-        self.downloads_have_occured = True
-        self.style_count += 1
         try:
             url = urljoin(parent_url, new_url)
             self.post_message(f"Loading stylesheet from {shorten(url)}")
-            ids = "user." + str(self.style_count).zfill(4)
-            handler_proc = self.register(
-                lambda new_url, parent_url=url: self._on_atimport(parent_url, new_url)
-            )
 
-            self._style_thread_check(
-                sheetid=ids, handler=handler_proc, errorurl=new_url, url=url
-            )
+            self._thread_check(self.fetch_styles, url=new_url)
 
         except Exception as error:
-            self.post_message(f"Error loading stylesheet {new_url}: {error}")
+            self.post_message(f"ERROR: could not load stylesheet {new_url}: {error}")
 
     def _on_title(self, node):
-        "Handle <title> elements."
-        for child in self.tk.call(node, "children"):
-            self.title = self.tk.call(child, "text")
-            self.post_event(TITLE_CHANGED_EVENT)
+        "Handle <title> elements. We could use a script handler but then the node is no longer visible to the DOM."
+        self.title = self.get_node_text(self.get_node_children(node), "-pre")
+        self.post_event(TITLE_CHANGED_EVENT)
 
     def _on_base(self, node):
         "Handle <base> elements."
-        try:
-            href = self.get_node_attribute(node, "href")
+        href = self.get_node_attribute(node, "href", "")
+        if href:
             self.base_url = self.resolve_url(href)
-        except Exception:
-            self.post_message("Error setting base url: a <base> element was found without an href attribute")
 
     def _on_a(self, node):
         "Handle <a> elements."
@@ -1163,6 +1278,14 @@ class TkinterWeb(tk.Widget):
         except tk.TclError:
             pass
 
+    def _on_a_value_change(self, node, attribute, value):
+        if attribute == "href":
+            url = self.resolve_url(value)
+            if url in self.visited_links:
+                self.set_node_flags(node, "visited")
+            else:
+                self.remove_node_flags(node, "visited")
+
     def _on_iframe(self, node):
         "Handle <iframe> elements."
         if not self.objects_enabled or not self.unstoppable:
@@ -1170,26 +1293,40 @@ class TkinterWeb(tk.Widget):
 
         src = self.get_node_attribute(node, "src")
         srcdoc = self.get_node_attribute(node, "srcdoc")
+        scrolling = "auto"
+        if self.get_node_attribute(node, "scrolling") == "no":
+            scrolling = False
 
         if srcdoc:
-            self._create_iframe(node, None, srcdoc)
+            self._create_iframe(node, None, srcdoc, scrolling)
         elif src and (src != self.base_url):
             src = self.resolve_url(src)
             self.post_message(f"Creating iframe from {shorten(src)}")
-            self._create_iframe(node, src)
+            self._create_iframe(node, src, vertical_scrollbar=scrolling)
+
+    def _on_iframe_value_change(self, node, attribute, value):
+        if attribute == "srcdoc":
+            if node in self.loaded_iframes:
+                self.loaded_iframes[node].load_html(value)
+            else:
+                self._create_iframe(node, None, value)
+        elif attribute == "src" and (value != self.base_url):
+            if node in self.loaded_iframes:
+                self.loaded_iframes[node].load_url(self.resolve_url(value))
+            else:
+                self._create_iframe(node, value)
 
     def _on_object(self, node):
         "Handle <object> elements."
         if not self.objects_enabled or not self.unstoppable:
             return
 
-        name = self.image_name_prefix + str(len(self.loaded_images))
-        url = self.get_node_attribute(node, "data")
+        data = self.get_node_attribute(node, "data")
 
-        if url != "":
+        if data != "":
             try:
                 # load widgets presented in <object> elements
-                widgetid = self.nametowidget(url)
+                widgetid = self.nametowidget(data)
                 if widgetid.winfo_ismapped():  # Don't display the same widget twice
                     return
 
@@ -1214,38 +1351,23 @@ class TkinterWeb(tk.Widget):
                     allowscrolling,
                     False,
                 )
+                self._submit_element_js(node, "onload")
             except KeyError:
-                url = self.resolve_url(url)
-                if url == self.base_url:
+                data = self.resolve_url(data)
+                if data == self.base_url:
                     # Don't load the object if it is the same as the current file
                     # Otherwise the page will load the same object indefinitely and freeze the GUI forever
                     return
 
-                self.post_message(f"Creating object from {shorten(url)}")
-                try:
-                    if url.startswith("file://") or (not self._caches_enabled):
-                        data, newurl, filetype, code = download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))
-                    elif url:
-                        data, newurl, filetype, code = cache_download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))
-                    else:
-                        return
+                self.post_message(f"Creating object from {shorten(data)}")
+                self._thread_check(self.fetch_objects, node, data)
 
-                    if data and filetype.startswith("image"):
-                        image, error = data_to_image(
-                            data, name, filetype, self._image_inversion_enabled
-                        )
-                        self.loaded_images.add(image)
-                        self.tk.call(
-                            node, "override", f"-tkhtml-replacement-image url(replace:{image})"
-                        )
-                    elif data and filetype == "text/html":
-                        self._create_iframe(node, newurl, data)
-                except Exception as error:
-                    self.post_message(f"Error loading object element: {error}")
+    def _on_object_value_change(self, node, attribute, value):
+        self._on_object(node)
 
     def _on_draw_cleanup_crash_cmd(self):
         if self._crash_prevention_enabled:
-            self.post_message("HtmlDrawCleanup has encountered a critical error. This is being ignored because crash prevention is enabled.")
+            self.post_message("ERROR: HtmlDrawCleanup has encountered a critical error. This is being ignored because crash prevention is enabled.")
         else:
             self.destroy()
 
@@ -1258,40 +1380,32 @@ class TkinterWeb(tk.Widget):
         if not self.images_enabled or not self.unstoppable:
             return
 
-        self.downloads_have_occured = True
         name = self.image_name_prefix + str(len(self.loaded_images))
 
         image = blank_image(name)
         self.loaded_images.add(image)
 
         if url.startswith("replace:"):
-            thread = self._begin_download()
             name = url.replace("replace:", "")
-            self._finish_download(thread)
         elif any({
                 url.startswith("linear-gradient("),
-                url.startswith("url("),
                 url.startswith("radial-gradient("),
                 url.startswith("repeating-linear-gradient("),
                 url.startswith("repeating-radial-gradient("),
             }):
-            done = False
             self.post_message(f"Fetching image: {shorten(url)}")
+            self.load_alt_text(url, name)
             for image in url.split(","):
-                if image.startswith("url("):
-                    url = url.split("'), url('", 1)[0]
-                    image = strip_css_url(image)
-                    url = self.resolve_url(image)
-                    self._image_thread_check(url, name)
-                    done = True
-            if not done:
-                self.load_alt_text(url, name)
-                self.post_message(f"The image {shorten(url)} could not be shown because it is not supported yet")
-                self.on_resource_setup(url, "image", False)
+                self.post_message(f"ERROR: the image {shorten(url)} could not be shown because it is not supported yet")
+            self.on_resource_setup(url, "image", False)
         else:
-            url = url.split("'), url('", 1)[0]
+            url = url.split("), url(", 1)[0].replace("'", "").replace('"', "")
             url = self.resolve_url(url)
-            self._image_thread_check(url, name)
+            if url in self.image_directory:
+                node = self.image_directory[url]
+            else:
+                node = None
+            self._thread_check(self.fetch_images, node, url, name)
         return name
 
     def _on_form(self, node):
@@ -1299,18 +1413,10 @@ class TkinterWeb(tk.Widget):
         if not self.forms_enabled:
             return
 
-        inputs = []
+        inputs = self.search("input, select, textarea, button", root=node)
+        for i in inputs:
+            self.form_nodes[i] = node
 
-        def scan(form):
-            for i in self.get_node_children(form):
-                tag = self.get_node_tag(i)
-                if tag:
-                    scan(i)
-                if tag.lower() in {"input", "select", "textarea", "button"}:
-                    inputs.append(i)
-                    self.form_elements[i] = node
-
-        scan(node)
         if len(inputs) == 0:
             self.waiting_forms += 1
         else:
@@ -1318,28 +1424,28 @@ class TkinterWeb(tk.Widget):
             self.post_message("Successfully setup form")
 
     def _on_table(self, node):
-        "Handle <form> elements in tables; workaround for bug #48."
+        """Handle <form> elements in tables; workaround for bug #48."
+        In tables, Tkhtml doesn't seem to notice that forms have children.
+        We get all children of the table and associate inputs with the previous form.
+        Not perfect, but it usually works.
+        If a <td> tag is not present, this fails, as Tkhtml seems to not even notice inputs at all"""
+
         if not self.forms_enabled:
             return
-
+        
         if self.waiting_forms > 0:
+            form = None
             inputs = {}
 
-            def scan(element, form):
-                for i in self.get_node_children(element):
-                    tag = self.get_node_tag(i).lower()
-                    if tag == "form":
-                        form = i
-                    elif tag.lower() in {"input", "select", "textarea", "button"}:
-                        if form in inputs:
-                            inputs[form].append(i)
-                        else:
-                            inputs[form] = [i]
-                        self.form_elements[i] = form
-                    if tag:
-                        scan(i, form)
-
-            scan(node, node)
+            for node in (self.search("*")):
+                tag = self.get_node_tag(node)
+                if tag == "form":
+                    form = node
+                    inputs[form] = []
+                elif tag.lower() in {"input", "select", "textarea", "button"} and form:
+                    self.form_nodes[node] = form
+                    inputs[form].append(node)
+           
             for form in inputs:
                 self.loaded_forms[form] = inputs[form]
                 self.post_message("Successfully setup table form")
@@ -1368,8 +1474,8 @@ class TkinterWeb(tk.Widget):
             selected = values[0]
         widgetid = Combobox(self)
         widgetid.insert(text, values, selected)
-        self.form_get_commands[node] = lambda: widgetid.get()
-        self.form_reset_commands[node] = lambda: widgetid.reset()
+        widgetid.configure(onchangecommand=lambda *_, widgetid=widgetid: self._on_input_change(node, widgetid))
+        self.form_widgets[node] = widgetid
         state = self.get_node_attribute(node, "disabled", False) != "0"
         if state:
             widgetid.configure(state="disabled")
@@ -1386,16 +1492,9 @@ class TkinterWeb(tk.Widget):
         "Handle <textarea> elements."
         if not self.forms_enabled:
             return
-        widgetid = ScrolledTextBox(
-            self,
-            borderwidth=0,
-            selectborderwidth=0,
-            highlightthickness=0,
-        )
+        widgetid = ScrolledTextBox(self, self.get_node_text(self.get_node_children(node), "-pre"), lambda widgetid, node=node: self._on_input_change(node, widgetid))
 
-        self.form_get_commands[node] = lambda: widgetid.get("1.0", "end-1c")
-        self.form_reset_commands[node] = lambda: widgetid.delete("0.0", "end")
-        widgetid.insert("1.0", self.get_node_text(self.get_node_children(node), "-pre"))
+        self.form_widgets[node] = widgetid
         state = self.get_node_attribute(node, "disabled", False) != "0"
         if state:
             widgetid.configure(state="disabled")
@@ -1417,158 +1516,109 @@ class TkinterWeb(tk.Widget):
             "set nodetype [string tolower [%s attr -default {} type]]" % node
         )
         nodevalue = self.get_node_attribute(node, "value")
+        state = self.get_node_attribute(node, "disabled", "false")
 
         if nodetype in {"image", "submit", "reset", "button"}:
-            widgetid = None
-            self.form_get_commands[node] = placeholder
-            self.form_reset_commands[node] = placeholder
+            return
         elif nodetype == "file":
             accept = self.get_node_attribute(node, "accept")
             multiple = (
                 self.get_node_attribute(node, "multiple", self.radiobutton_token)
                 != self.radiobutton_token
             )
-            widgetid = FileSelector(self, accept, multiple)
-            self.form_get_commands[node] = widgetid.get
-            self.form_reset_commands[node] = widgetid.reset
-            self.handle_node_replacement(
-                node,
-                widgetid,
-                lambda widgetid=widgetid: self.handle_node_removal(widgetid),
-                lambda node=node, widgetid=widgetid: self.handle_node_style(
-                    node, widgetid
-                ),
+            widgetid = FileSelector(self, accept, multiple, lambda widgetid, node=node: self._on_input_change(node, widgetid))
+            stylecmd = lambda node=node, widgetid=widgetid: self.handle_node_style(
+                node, widgetid
             )
         elif nodetype == "color":
-            widgetid = ColourSelector(self, nodevalue)
-            self.form_get_commands[node] = widgetid.get
-            self.form_reset_commands[node] = widgetid.reset
-            self.handle_node_replacement(
-                node,
-                widgetid,
-                lambda widgetid=widgetid: self.handle_node_removal(widgetid),
-                placeholder,
-            )
-        elif nodetype == "hidden":
-            widgetid = None
-            self.form_get_commands[node] = lambda node=node: self.get_node_attribute(
-                node, "value"
-            )
-            self.form_reset_commands[node] = lambda: None
+            widgetid = ColourSelector(self, nodevalue, lambda widgetid, node=node: self._on_input_change(node, widgetid))
+            stylecmd = placeholder
         elif nodetype == "checkbox":
-            variable = tk.IntVar(self)
-            widgetid = tk.Checkbutton(
-                self,
-                borderwidth=0,
-                padx=0,
-                pady=0,
-                highlightthickness=0,
-                variable=variable,
-            )
-            variable.trace(
-                "w", lambda *_, widgetid=widgetid: self._on_input_change(widgetid)
-            )
-            self.form_get_commands[node] = lambda: variable.get()
-            self.form_reset_commands[node] = lambda: variable.set(0)
-            self.handle_node_replacement(
-                node,
-                widgetid,
-                lambda widgetid=widgetid: self.handle_node_removal(widgetid),
-                lambda node=node, widgetid=widgetid: self.handle_node_style(
-                    node, widgetid
-                ),
+            if self.get_node_attribute(node, "checked", "false") != "false": 
+                checked = 1
+            else:
+                checked = 0
+
+            widgetid = FormCheckbox(self, checked, lambda widgetid, node=node: self._on_input_change(node, widgetid))
+            widgetid.set = lambda nodevalue, node=node: self.set_node_attribute(node, "value", nodevalue)
+            widgetid.get = lambda node=node: self.get_node_attribute(node, "value")
+            stylecmd = lambda node=node, widgetid=widgetid: self.handle_node_style(
+                node, widgetid
             )
         elif nodetype == "range":
-            variable = tk.IntVar(self, value=nodevalue)
-            from_ = self.get_node_attribute(node, "min", 0)
-            to = self.get_node_attribute(node, "max", 100)
-            widgetid = ttk.Scale(self, variable=variable, from_=from_, to=to)
-            variable.trace(
-                "w", lambda *_, widgetid=widgetid: self._on_input_change(widgetid)
+            widgetid = FormRange(self, 
+                nodevalue,
+                self.get_node_attribute(node, "min", 0),
+                self.get_node_attribute(node, "max", 100),
+                self.get_node_attribute(node, "step", 1),
+                lambda widgetid, node=node: self._on_input_change(node, widgetid)
             )
-            self.form_get_commands[node] = widgetid.get
-            self.form_reset_commands[node] = lambda: variable.set(0)
-            self.handle_node_replacement(
-                node,
-                widgetid,
-                lambda widgetid=widgetid: self.handle_node_removal(widgetid),
-                lambda node=node, widgetid=widgetid, widgettype="range": self.handle_node_style(
-                    node, widgetid, widgettype
-                ),
+            stylecmd = lambda node=node, widgetid=widgetid, widgettype="range": self.handle_node_style(
+                node, widgetid, widgettype
             )
         elif nodetype == "radio":
-            name = self.tk.call(node, "attr", "-default", "", "name")
+            name = self.get_node_attribute(node, "name", "")
+            if self.get_node_attribute(node, "checked", "false") != "false": 
+                checked = True
+            else:
+                checked = False
+            
             if name in self.radio_buttons:
                 variable = self.radio_buttons[name]
-                widgetid = tk.Radiobutton(
-                    self,
-                    value=nodevalue,
-                    variable=variable,
-                    tristatevalue=self.radiobutton_token,
-                    borderwidth=0,
-                    padx=0,
-                    pady=0,
-                    highlightthickness=0,
-                )
             else:
-                variable = tk.StringVar(self)
-                widgetid = tk.Radiobutton(
-                    self,
-                    value=nodevalue,
-                    variable=variable,
-                    tristatevalue=self.radiobutton_token,
-                    borderwidth=0,
-                    padx=0,
-                    pady=0,
-                    highlightthickness=0,
-                )
-                variable.trace(
-                    "w", lambda *_, widgetid=widgetid: self._on_input_change(widgetid)
-                )
-                self.radio_buttons[name] = variable
-            self.form_get_commands[node] = variable.get
-            self.form_reset_commands[node] = lambda: variable.set("")
-            self.handle_node_replacement(
-                node,
-                widgetid,
-                lambda widgetid=widgetid: self.handle_node_removal(widgetid),
-                lambda node=node, widgetid=widgetid: self.handle_node_style(
-                    node, widgetid
-                ),
+                variable = None
+
+            widgetid = FormRadioButton(
+                self,
+                self.radiobutton_token,
+                nodevalue,
+                checked,
+                variable,
+                lambda widgetid, node=node: self._on_input_change(node, widgetid)
+            )
+            widgetid.set = lambda nodevalue, node=node: self.set_node_attribute(node, "value", nodevalue)
+            self.radio_buttons[name] = widgetid.variable
+            stylecmd = lambda node=node, widgetid=widgetid: self.handle_node_style(
+                node, widgetid
             )
         else:
-            widgetid = tk.Entry(
-                self, borderwidth=0, highlightthickness=0
-            )
-            widgetid.insert(0, nodevalue) 
-            widgetid.bind("<KeyRelease>", lambda *_, widgetid=widgetid: self._on_input_change(widgetid))
-            if nodetype == "password":
-                widgetid.configure(show="*")
+            widgetid = FormEntry(self, nodevalue, nodetype, lambda widgetid, node=node: self._on_input_change(node, widgetid))
             widgetid.bind(
                 "<Return>",
                 lambda event, node=node: self._handle_form_submission(
                     node=node, event=event
                 ),
             )
-            self.form_get_commands[node] = widgetid.get
-            self.form_reset_commands[node] = (
-                lambda widgetid=widgetid, content=nodevalue: self._handle_entry_reset(
-                    widgetid, content
-                )
-            )
-            self.handle_node_replacement(
-                node,
-                widgetid,
-                lambda widgetid=widgetid: self.handle_node_removal(widgetid),
-                lambda node=node, widgetid=widgetid, widgettype="text": self.handle_node_style(
-                    node, widgetid, widgettype
-                ),
+            stylecmd = lambda node=node, widgetid=widgetid, widgettype="text": self.handle_node_style(
+                node, widgetid, widgettype
             )
 
-        if widgetid:
-            state = self.get_node_attribute(node, "disabled", self.radiobutton_token)
-            if state != self.radiobutton_token:
-                widgetid.configure(state="disabled")
+        self.form_widgets[node] = widgetid
+        self.handle_node_replacement(
+            node,
+            widgetid,
+            lambda widgetid=widgetid: self.handle_node_removal(widgetid),
+            stylecmd
+        )
+
+        if state != "false": 
+            widgetid.configure(state="disabled")
+
+    def _on_input_value_change(self, node, attribute, value):
+        if node not in self.form_widgets:
+            return
+        
+        nodetype = self.get_node_attribute(node, "type")
+        if attribute == "value" and nodetype not in {"checkbox", "radio"}:
+            self.form_widgets[node].set(value)
+        elif attribute == "checked":
+            if nodetype == "checkbox":
+                if value != "false": self.form_widgets[node].variable.set(1)
+                else: self.form_widgets[node].variable.set(0)
+            elif nodetype == "radio":
+                nodevalue = self.get_node_attribute(node, "value")
+                if value != "false": 
+                    self.form_widgets[node].variable.set(nodevalue)
 
     def _on_body(self, node, index):
         "Wait for style changes on the root node."
@@ -1578,8 +1628,9 @@ class TkinterWeb(tk.Widget):
                     "-stylecmd",
                     self.register(lambda node=node: self._set_overflow(node)))
 
-    def _on_input_change(self, widgetid):
+    def _on_input_change(self, node, widgetid):
         widgetid.event_generate("<<Modified>>")
+        self._submit_element_js(node, "onchange")
         return True
 
     def _crash_prevention(self, data):
@@ -1605,6 +1656,13 @@ class TkinterWeb(tk.Widget):
         if len(self.active_threads) == 0:
             self.post_event(DONE_LOADING_EVENT)
 
+    def _submit_deferred_scripts(self):
+        if self.pending_scripts:
+            for index, script in enumerate(self.pending_scripts):
+                # thread safety
+                self.after(0, self.on_script, *script)
+            self.pending_scripts = []
+           
     def _fix_css_urls(self, match, url):
         "Make relative uris in CSS files absolute."
         newurl = match.group()
@@ -1619,33 +1677,6 @@ class TkinterWeb(tk.Widget):
         match = match.replace("noto color emoji", "arial")
         return match
 
-    def _style_thread_check(self, **kwargs):
-        if self._maximum_thread_count == 0:
-            self.fetch_styles(**kwargs)
-        elif len(self.active_threads) >= self._maximum_thread_count:
-            self.after(500, lambda kwargs=kwargs: self._style_thread_check(**kwargs))
-        else:
-            thread = StoppableThread(target=self.fetch_styles, kwargs=kwargs)
-            thread.start()
-
-    def _image_thread_check(self, url, name):
-        if self._maximum_thread_count == 0:
-            self.fetch_images(url, name, url)
-        elif len(self.active_threads) >= self._maximum_thread_count:
-            self.after(
-                500, lambda url=url, name=name: self._image_thread_check(url, name)
-            )
-        else:
-            thread = StoppableThread(
-                target=self.fetch_images,
-                args=(
-                    url,
-                    name,
-                    url,
-                ),
-            )
-            thread.start()
-
     def _handle_link_click(self, node_handle):
         "Handle link clicks."
         href = self.get_node_attribute(node_handle, "href")
@@ -1654,36 +1685,49 @@ class TkinterWeb(tk.Widget):
         self.visited_links.append(url)
         self.on_link_click(url)
 
-    def _handle_entry_reset(self, widgetid, content):
-        "Reset tk.Entry widgets in HTML forms."
-        widgetid.delete(0, "end")
-        widgetid.insert(0, content)
-
     def _handle_form_reset(self, node):
         "Reset HTML forms."
-        if (node not in self.form_elements) or (not self.forms_enabled):
+        if (node not in self.form_nodes) or (not self.forms_enabled):
             return
 
-        form = self.form_elements[node]
-        #action = self.get_node_attribute(form, "action")
+        form = self.form_nodes[node]
 
         for formelement in self.loaded_forms[form]:
-            self.form_reset_commands[formelement]()
+            if formelement in self.form_widgets:
+                nodetype = self.get_node_attribute(formelement, "type")
+                nodetag = self.get_node_tag(formelement)
+                widget = self.form_widgets[formelement]
+                if nodetag == "textarea":
+                    nodevalue = self.get_node_text(self.get_node_children(formelement), "-pre")
+                    widget.set(nodevalue)
+                elif nodetype == "checkbox":
+                    if self.get_node_attribute(formelement, "checked", "false") != "false": widget.variable.set(1)
+                    else: widget.variable.set(0)
+                elif nodetype == "radio":
+                    nodevalue = self.get_node_attribute(formelement, "value")
+                    if self.get_node_attribute(formelement, "checked", "false") != "false": 
+                        widget.variable.set(nodevalue)
+                else:
+                    nodevalue = self.get_node_attribute(formelement, "value")
+                    widget.set(nodevalue)
 
     def _handle_form_submission(self, node, event=None):
         "Submit HTML forms."
-        if (node not in self.form_elements) or (not self.forms_enabled):
+        if (node not in self.form_nodes) or (not self.forms_enabled):
             return
 
         data = []
-        form = self.form_elements[node]
+        form = self.form_nodes[node]
         action = self.get_node_attribute(form, "action")
         method = self.get_node_attribute(form, "method", "GET").upper()
 
         for formelement in self.loaded_forms[form]:
             nodeattrname = self.get_node_attribute(formelement, "name")
             if nodeattrname:
-                nodevalue = self.form_get_commands[formelement]()
+                if formelement in self.form_widgets:
+                    nodevalue = self.form_widgets[formelement].get()
+                elif self.get_node_tag(formelement) == "hidden":
+                    nodevalue = self.get_node_attribute(formelement, "value")
                 nodetype = self.get_node_attribute(formelement, "type")
                 if nodetype == "submit" or nodetype == "reset":
                     continue
@@ -1761,7 +1805,10 @@ class TkinterWeb(tk.Widget):
         "Set the document cursor."
         if self.current_cursor != cursor:
             cursor = CURSOR_MAP[cursor]
-            self.master.config(cursor=cursor)
+            try:
+                self.master.config(cursor=cursor, _override=True)
+            except tk.TclError:
+                self.master.config(cursor=cursor)
             self.current_cursor = cursor
             # I've noticed that the cursor won't always update when the binding is tied to a different widget than the one we are changing the cursor of
             # however, the html widget doesn't support the cursor property so there's not much we can do about this
@@ -1770,53 +1817,80 @@ class TkinterWeb(tk.Widget):
             # it's wierd but hey, it works
             self.motion_frame.config(bg=self.motion_frame_bg)
 
-    def _handle_recursive_hovering(self, node_handle, count):
+    def _submit_element_js(self, node_handle, attribute):
+        if self.javascript_enabled:
+            if attribute == "onload":
+                if node_handle in self.loaded_elements:
+                    # don't run the onload script twice
+                    return
+                else:
+                    self.loaded_elements.append(node_handle)
+            mouse = self.get_node_attribute(node_handle, attribute)
+            if mouse:
+                self.on_element_script(node_handle, attribute, mouse)
+
+    def _handle_recursive_hovering(self, node_handle, prev_hovered_nodes):
         "Set hover flags on the parents of the hovered element."
-        self.set_node_flags(node_handle, "hover")
         self.hovered_nodes.append(node_handle)
 
-        if count >= 1:
-            parent = self.get_current_node_parent(node_handle)
-            if parent:
-                self._handle_recursive_hovering(parent, count - 1)            
+        if node_handle not in prev_hovered_nodes:
+            self.set_node_flags(node_handle, "hover")
 
-    def _create_iframe(self, node, url, html=None):
+            self._submit_element_js(node_handle, "onmouseover")
+        
+        self._submit_element_js(node_handle, "onmousemove")
+
+        parent = self.get_current_node_parent(node_handle)
+        if parent:
+            self._handle_recursive_hovering(parent, prev_hovered_nodes)            
+
+    def _create_iframe(self, node, url, html=None, vertical_scrollbar="auto"):
         if self.embed_obj:
             widgetid = self.embed_obj(self,
-                                        messages_enabled=self.messages_enabled,
-                                        overflow_scroll_frame=self,
-                                        stylesheets_enabled = self.stylesheets_enabled,
-                                        images_enabled = self.images_enabled,
-                                        forms_enabled = self.forms_enabled,
-                                        objects_enabled = self.objects_enabled,
-                                        ignore_invalid_images = self.ignore_invalid_images,
-                                        crash_prevention_enabled = self.crash_prevention_enabled,
-                                        dark_theme_enabled = self._dark_theme_enabled,
-                                        image_inversion_enabled = self._image_inversion_enabled,
-                                        caches_enabled = self._caches_enabled,
-                                        image_alternate_text_enabled = self.image_alternate_text_enabled,
-                                        selection_enabled = self.selection_enabled,
-                                        find_match_highlight_color = self.find_match_highlight_color,
-                                        find_match_text_color = self.find_match_text_color,
-                                        find_current_highlight_color = self.find_current_highlight_color,
-                                        find_current_text_color = self.find_current_text_color,
-                                        selected_text_highlight_color = self.selected_text_highlight_color,
-                                        selected_text_color = self.selected_text_color,
-                                        visited_links = self.visited_links,
-                                        insecure_https = self.insecure_https,
+                messages_enabled=self.messages_enabled,
+                overflow_scroll_frame=self,
+                stylesheets_enabled = self.stylesheets_enabled,
+                images_enabled = self.images_enabled,
+                forms_enabled = self.forms_enabled,
+                objects_enabled = self.objects_enabled,
+                ignore_invalid_images = self.ignore_invalid_images,
+                crash_prevention_enabled = self.crash_prevention_enabled,
+                dark_theme_enabled = self._dark_theme_enabled,
+                image_inversion_enabled = self._image_inversion_enabled,
+                caches_enabled = self._caches_enabled,
+                image_alternate_text_enabled = self.image_alternate_text_enabled,
+                selection_enabled = self.selection_enabled,
+                find_match_highlight_color = self.find_match_highlight_color,
+                find_match_text_color = self.find_match_text_color,
+                find_current_highlight_color = self.find_current_highlight_color,
+                find_current_text_color = self.find_current_text_color,
+                selected_text_highlight_color = self.selected_text_highlight_color,
+                selected_text_color = self.selected_text_color,
+                visited_links = self.visited_links,
+                insecure_https = self.insecure_https,
             )
 
             if html:
                 widgetid.load_html(html, url)
             elif url:
-                widgetid.load_html("<p>Loading...</p>")
                 widgetid.load_url(url)
+
+            self.loaded_iframes[node] = widgetid
 
             self.handle_node_replacement(
                 node, widgetid, lambda widgetid=widgetid: self.handle_node_removal(widgetid)
             )
         else:
             self.post_message(f"WARNING: the embedded page {url} could not be shown because no embed widget was provided.")
+
+    def _on_right_click(self, event):
+        for node_handle in self.hovered_nodes:
+            self._submit_element_js(node_handle, "onmousedown")
+            self._submit_element_js(node_handle, "oncontextmenu")
+
+    def _on_middle_click(self, event):
+        for node_handle in self.hovered_nodes:
+            self._submit_element_js(node_handle, "onmousedown")
     
     def _on_click(self, event, redirected=False):
         "Set active element flags."
@@ -1829,6 +1903,10 @@ class TkinterWeb(tk.Widget):
 
         self.focus_set()
         self.tag("delete", "selection")
+
+        for node_handle in self.hovered_nodes:
+            self._submit_element_js(node_handle, "onmousedown")
+
         node_handle = self.get_current_node(event)
 
         if node_handle:
@@ -1886,14 +1964,23 @@ class TkinterWeb(tk.Widget):
                         self._set_cursor("text")
                     else:
                         self._set_cursor("default")
-                    
-                    for node in self.hovered_nodes:
+
+                    prev_hovered_nodes = set(self.hovered_nodes)
+                    self.hovered_nodes = []
+
+                    self._submit_element_js(node_handle, "onmouseenter")
+
+                    self._handle_recursive_hovering(
+                        node_handle, prev_hovered_nodes
+                    )
+
+                    for node in prev_hovered_nodes - set(self.hovered_nodes):
                         self.remove_node_flags(node, "hover")
 
-                    self.hovered_nodes = []
-                    self._handle_recursive_hovering(
-                        node_handle, self.recursive_hovering_count
-                    )
+                        self._submit_element_js(node_handle, "onmouseout")
+                        if node == old_handle:
+                            self._submit_element_js(node_handle, "onmouseleave")
+
         except tk.TclError:
             # sometimes errors are thrown if the mouse is moving while the page is loading
             pass
@@ -1905,6 +1992,10 @@ class TkinterWeb(tk.Widget):
             self.current_node = None
             self._on_mouse_motion(event)
             return
+        
+        for node_handle in self.hovered_nodes:
+            self._submit_element_js(node_handle, "onmouseup")
+            self._submit_element_js(node_handle, "onclick")
 
         node_handle = self.get_current_node(event)
 
@@ -1920,26 +2011,22 @@ class TkinterWeb(tk.Widget):
 
                 if self.prev_active_node and self.stylesheets_enabled:
                     self.remove_node_flags(self.prev_active_node, "active")
-                if node_tag == "a":
-                    self.set_node_flags(node_handle, "visited")
-                    self._handle_link_click(node_handle)
-                elif node_tag == "input" and node_type == "reset":
+                if node_tag == "input" and node_type == "reset":
                     self._handle_form_reset(node_handle)
-                elif node_tag == "input" and node_type == "submit":
-                    self._handle_form_submission(node_handle)
-                elif node_tag == "input" and node_type == "image":
-                    self._handle_form_submission(node_handle)
-                elif node_tag == "button" and node_type == "submit":
+                elif node_tag == "input" and node_type in {"submit", "image"}:
                     self._handle_form_submission(node_handle)
                 else:
                     for node in self.hovered_nodes:
-                        node_tag = self.get_node_tag(node).lower()
+                        if node != node_handle:
+                            node_tag = self.get_node_tag(node).lower()
                         if node_tag == "a":
                             self.set_node_flags(node, "visited")
                             self._handle_link_click(node)
                             break
                         elif node_tag == "button":
-                            if (self.get_node_attribute(node, "type").lower() == "submit"):
+                            if node != node_handle:
+                                node_type = self.get_node_attribute(node, "type").lower()
+                            if node_type == "submit":
                                 self._handle_form_submission(node)
                                 break
         except tk.TclError:
@@ -1970,6 +2057,9 @@ class TkinterWeb(tk.Widget):
     def _on_double_click(self, event):
         "Cycle between normal selection, text selection, and element selection on multi-clicks."
         self._on_click(event, True)
+
+        for node_handle in self.hovered_nodes:
+            self._submit_element_js(node_handle, "ondblclick")
 
         if not self.selection_enabled:
             return

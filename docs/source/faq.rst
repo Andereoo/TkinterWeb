@@ -3,17 +3,17 @@ Frequently Asked Questions
 
 **How do I load websites or files?**
 
-* Use the :meth:`~tkinterweb.HtmlFrame.load_website` or :meth:`~tkinterweb.HtmlFrame.load_file` commands. Alternatively, use the :meth:`~tkinterweb.HtmlFrame.load_url` command to load any generic url, but keep in mind that the url must be properly formatted, because the url scheme will not be automatically applied. As always, check out the :doc:`api/htmlframe` for more information
+* Use the :meth:`~tkinterweb.HtmlFrame.load_website` or :meth:`~tkinterweb.HtmlFrame.load_file` commands. Alternatively, use the :meth:`~tkinterweb.HtmlFrame.load_url` command to load any generic url, but keep in mind that the url must be properly formatted, because the url scheme will not be automatically applied. As always, check out the :doc:`api/htmlframe` for more information.
 
 **How do I manage clicks and use custom bindings?**
 
-* The :attr:`on_link_click` configuration option can be used to assign a custom function to link clicks. Likewise :attr:`on_form_submit` can be used to handle form submissions. See the :doc:`api/htmlframe` for more information
-* Like any other Tkinter widget, mouse and keyboard events can be bound to the HtmlFrame widget. See the :doc:`usage` page for examples of binding navigation keys and opening menus on right-clicks.
+* The :attr:`on_link_click` configuration option can be used to assign a custom function to link clicks. Likewise :attr:`on_form_submit` can be used to handle form submissions. See the :doc:`api/htmlframe` for more information.
+* Like any other Tkinter widget, mouse and keyboard events can be bound to the :class:`~tkinterweb.HtmlFrame` widget. See the :doc:`usage` page for examples of binding navigation keys and opening menus on right-clicks.
  
 **TkinterWeb is crashing. Help?**
 
 * That is defenitely not normal. Make sure your are using the most up-to-date TkinterWeb version and have crash protection enabled.
-* If you are using a ttk.Notebook in your app, see the question below.
+* If you are using a :py:class:`ttk.Notebook` in your app, see the question below.
 * If all else fails, `file a bug report <https://github.com/Andereoo/TkinterWeb/issues/new>`_. Post your operating system, Python version, and TkinterWeb version, as well as any error codes or instructions for reproducing the crash.
 
 **My app crashes when I open a tab with an HtmlFrame in it.**
@@ -29,16 +29,4 @@ Frequently Asked Questions
 * Newer versions should present a popup saying ``ModuleNotFoundError: The files required to run TkinterWeb could not be found``
 * This occurs when your Python script bundler isn't finding all the files nessessary for running TkinterWeb. You need to force it to get all the TkinterWeb files.
 * On PyInstaller: add the flag ``--collect-all tkinterweb`` when bundling your app.
-* On py2app / py2exe: Add ``'packages': ['tkinterweb']`` to the OPTIONS variable in your setup file.
-
-A Note on Tkhtml Binaries
--------------------------
-
-TkinterWeb supports all platforms but only ships with precompiled Tkhtml binaries for the most common platforms:
-
-* x86_64 Windows, Linux, and macOS
-* i686 Windows and Linux
-* ARM64 Macos and Linux
-* ARMv71 Linux
-
-If you are encountering issues on your system or are are using an unsupported system, feel free to submit a bug report or feature request. You may need to compile Tkhtml on your system. See https://github.com/Andereoo/TkinterWeb-Tkhtml/.
+* On py2app / py2exe: Add ``'packages': ['tkinterweb']`` to the ``OPTIONS`` variable in your setup file.

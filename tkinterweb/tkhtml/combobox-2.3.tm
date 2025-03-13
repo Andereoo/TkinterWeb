@@ -136,6 +136,7 @@ proc ::combobox::Init {} {
 	    -listvar             {listVariable        Variable} \
 	    -maxheight           {maxHeight           Height} \
 	    -opencommand         {opencommand         Command} \
+	    -onchangecommand     {onchangecommand     Command} \
 	    -relief              {relief              Relief} \
 	    -selectbackground    {selectBackground    Foreground} \
 	    -selectborderwidth   {selectBorderWidth   BorderWidth} \
@@ -251,6 +252,7 @@ proc ::combobox::Init {} {
 	option add *Combobox.buttonBackground    $bbg	widgetDefault
 	option add *Combobox.dropdownWidth       {}     widgetDefault
 	option add *Combobox.openCommand         {}     widgetDefault
+	option add *Combobox.onChangeCommand     {}     widgetDefault
 	option add *Combobox.cursor              {}     widgetDefault
 	option add *Combobox.commandState        normal widgetDefault
 	option add *Combobox.editable            1      widgetDefault
@@ -939,8 +941,14 @@ proc ::combobox::Select {w index} {
     }
     $widgets(entry) selection range 0 end
     $widgets(entry) icursor end
-
-    event generate $widgets(this) <<Modified>>
+    
+    # if there is a -onchangecommand, execute it now
+    if {[string length $options(-onchangecommand)] > 0} {
+    	# hmmm... should I do a catch, or just let the normal
+	# error handling handle any errors? For now, the latter...
+	uplevel \#0 $options(-onchangecommand)
+	}
+	    
     $widgets(this) close
 
     return ""
@@ -1677,6 +1685,11 @@ proc ::combobox::Configure {w args} {
 	    }
 
 	    -opencommand {
+		# nothing else to do...
+		set options($option) $newValue
+	    }
+	    
+	    -onchangecommand {
 		# nothing else to do...
 		set options($option) $newValue
 	    }

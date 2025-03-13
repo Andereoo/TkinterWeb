@@ -13,11 +13,14 @@ To use TkinterWeb, first install it using pip:
 
    $ pip install tkinterweb
 
-
-You can run the TkinterWeb Demo to see if it worked!
+You can run the TkinterWeb demo to see if it worked!
 
 >>> from tkinterweb import Demo
 >>> Demo()
+
+.. image:: ../../images/tkinterweb-demo.png
+
+TkinterWeb requires :py:mod:`Tkinter`, :py:mod:`PIL`, and :py:class:`PIL.ImageTk`. All dependencies should be installed when installing TkinterWeb, but on some systems :py:class:`PIL.ImageTk` may need to be installed seperately.
 
 Getting Started
 ----------------
@@ -43,18 +46,16 @@ Getting Started
     
     To load any generic url, call ``yourhtmlframe.load_url(yourwebsiteorfile)``. Keep in mind that the url must be properly formatted and include the url scheme.
 
-The HtmlFrame widget behaves like any other Tkinter widget and supports bindings. It also supports link clicks, form submittions, website title changes, and much, much more! Refer below for more tips and tricks!
-
-See the :doc:`api/htmlframe` for a complete list of commands.
+The :class:`~tkinterweb.HtmlFrame` widget behaves like any other Tkinter widget and supports bindings. It also supports link clicks, form submittions, website title changes, and much, much more! Refer below for more tips and tricks!
 
 Tips and Tricks
 ---------------
 
 **Bindings**
 
-Like any other Tkinter widget, mouse and keyboard events can be bound to the HtmlFrame widget.
+Like any other Tkinter widget, mouse and keyboard events can be bound to the :class:`~tkinterweb.HtmlFrame` widget.
 
-The following is an example of the usage of bingings with the HtmlFrame widget to show a menu:
+The following is an example of the usage of bingings to show a menu:
 
 >>> def on_right_click(event):
 >>>     element = yourhtmlframe.get_currently_hovered_element() # get the element under the mouse
@@ -66,7 +67,7 @@ The following is an example of the usage of bingings with the HtmlFrame widget t
 >>>         menu.tk_popup(event.x_root, event.y_root, 0) # show the menu
 >>> yourhtmlframe.bind("<Button-3>", on_right_click)
 
-This will make a popup show if the user right-clicked on a link. Clicking link shown in the popup would load the website.
+This will make a popup open when the user right-clicks on a link. Clicking the link shown in the popup would load the website.
 
 Similarly, bindings can also be applied to navigation keys:  
 
@@ -86,33 +87,37 @@ To change the title of the window every time the title of a website changes, use
 >>>     
 >>> yourhtmlframe.bind("<<TitleChanged>>", change_title)
 
-Similarily, ``<<IconChanged>>`` fires when the website's icon changes.
+Similarily, the ``<<IconChanged>>`` event fires when the website's icon changes.
 
 **Url changes**
 
-Normally, a website's url may change when it is loaded. For example, https://github.com will redirect to https://www.github.com. This can be handled with a binding to ``<<UrlChanged>>``:
+Normally, a website's url may change when it is loaded. For example, "https://github.com" will redirect to "https://www.github.com". This can be handled with a binding to ``<<UrlChanged>>``:
 
 >>> def url_changed(event):
 >>>     updated_url = yourhtmlframe.current_url
->>>     ## Do stuff, such as change the content of a url-bar
+>>>     ## Do stuff, such as change the content of an address bar
 >>>     
 >>> yourhtmlframe.bind("<<UrlChanged>>", url_changed)
 
-This is highly recomended if your app includes an address bar. This event will fire on all page redirects and url changes when stopping page loading.
+This is highly recomended if your app includes an address bar. This event will fire on page redirects and url changes when a page stops loading.
 
 
 **Search the page**
 
-Use `find_text` to search the page for specific text. To search the document for the word 'python', for example, the following may be used:
+Use :meth:`~tkinterweb.HtmlFrame.find_text` to search the page for specific text. To search the document for the word 'python', for example, the following can be used:
 
 >>> number_of_matches = yourhtmlframe.find_text("python")
+
+Or, to select the second match found:
+
+>>> number_of_matches = yourhtmlframe.find_text("python", 2)
 
 Refer to the API reference for more information and `bug 18 <https://github.com/Andereoo/TkinterWeb/issues/18#issuecomment-881649007>`_ or the `sample web browser <https://github.com/Andereoo/TkinterWeb/blob/main/examples/TkinterWebBrowser.py>`_ for a sample find bar.
 
 
 **Embed a widget**
 
-There are many ways to embed widgets in your HtmlFrame. One way is to use ``<object>`` elements:
+There are many ways to embed widgets in an :class:`~tkinterweb.HtmlFrame` widget. One way is to use ``<object>`` elements:
 
 >>> yourcanvas = tkinter.Canvas(yourhtmlframe)
 >>> yourhtmlframe.load_html(f"<p>This is a canvas!</p><object data="{yourcanvas}"></object>")
@@ -123,7 +128,7 @@ Refer to :doc:`geometry` for more information.
 
 The ``<<DoneLoading>>`` event fires when the document is done loading. 
 
-When binding to ``<<DoneLoading>>`` to, for example, change a 'stop' button to a 'refresh' button, it is generally a good idea to bind to `<<DownloadingResource>>` to do the opposite. Otherwise, the document may show that is is done loading while it is still loading.
+When binding to ``<<DoneLoading>>`` to, for example, change a 'stop' button to a 'refresh' button, it is generally a good idea to bind to ``<<DownloadingResource>>`` to do the opposite. Otherwise, the document may show that is is done loading while it is still loading.
 
 **Stop loading**
 
@@ -144,13 +149,25 @@ Similarily, :attr:`on_form_submit` can be used to override the default form subm
 
 **Zooming**
 
-Setting the zoom of the HtmlFrame widget is very easy. This can be used to improve accessibility in your application. To set the zoom to 2x magnification the following can be used: 
+Setting the zoom of the :class:`~tkinterweb.HtmlFrame` widget is very easy. This can be used to improve accessibility in your application. To set the zoom to 2x magnification the following can be used: 
 
->>> yourhtmlframe.configure(zoom=2)
+>>> yourhtmlframe = HtmlFrame(master, zoom=2)
+>>> # or yourhtmlframe.configure(zoom=2)
 >>> # or yourhtmlframe["zoom"] = 2
 
 To scale only the text, use ``fontscale=2`` instead.
 
 **Manipulating the DOM**
 
-Refer to :doc:`dom`.
+Refer to :doc:`dom` (new since version 3.25).
+
+**Dark mode**
+
+You can set ``dark_theme_enabled=True`` when creating your :class:`~tkinterweb.HtmlFrame` or calling :meth:`~tkinterweb.HtmlFrame.configure` to turn on dark mode and automatically modify page colours.
+
+If you set ``image_inversion_enabled=True``, an algorithm will attempt to detect and invert images with a predominantly light-coloured background. This helps make light-coloured images or pictures with a white background darker.
+
+Refresh the page for these features to take full effect. This features are a work-in-progress and may cause hangs or crashes on more complex websites.
+
+
+See the :doc:`api/htmlframe` for a complete list of available commands.

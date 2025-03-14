@@ -632,7 +632,7 @@ class HTMLElement:
         :type query: str
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
-        return self.document.getElementById(query, self.node)
+        return self.document.getElementById(query)
 
     def getElementsByClassName(self, query):
         """Return all elements that are children of the current element and match the given class name.
@@ -641,7 +641,7 @@ class HTMLElement:
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        return self.document.getElementsByClassName(query, self.node)
+        return self.document.getElementsByClassName(query)
 
     def getElementsByName(self, query):
         """Return all elements that are children of the current element and match the given name attribute.
@@ -650,7 +650,7 @@ class HTMLElement:
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        return self.document.getElementsByName(query, self.node)
+        return self.document.getElementsByName(query)
 
     def getElementsByTagName(self, query):
         """Return all elements that are children of the current element and match the given tag name.
@@ -659,7 +659,7 @@ class HTMLElement:
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        return self.document.getElementsByTagName(query, self.node)
+        return self.document.getElementsByTagName(query)
 
     def querySelector(self, query):
         """Return the first element that is a child of the current element and matches the given CSS selector.
@@ -668,7 +668,7 @@ class HTMLElement:
         :type query: strvalue
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
-        return self.document.querySelector(query, self.node)
+        return self.document.querySelector(query)
 
     def querySelectorAll(self, query):
         """Return all elements that are children of the current element and match the given CSS selector.
@@ -677,7 +677,7 @@ class HTMLElement:
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        return self.document.querySelectorAll(query, self.node)
+        return self.document.querySelectorAll(query)
     
     def scrollIntoView(self):
         "Scroll the viewport so that this element is visible."

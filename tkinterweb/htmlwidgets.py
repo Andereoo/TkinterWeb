@@ -1028,13 +1028,33 @@ class HtmlLabel(TkinterWeb):
         self.configure(**kwargs)
 
 class HtmlParse():
-    def __init__(self, markup, **kwargs):
-        self.master = root = tk.Tk()
-        self._html = html = TkinterWeb(root, kwargs)
-        self.document = HTMLDocument(html)
-        html.images_enabled = False
-        html.stylesheets_enabled = False
+    """TkinterWeb parsing only class, parses HTML using TkinterWeb class and allows access to the document but does not spawn a widget
+    """
 
+    def __init__(self, markup, **kwargs):
+        
+        self.tkinterweb_options = {
+            "message_func": notifier, "messages_enabled": False,
+            "caches_enabled": True, "crash_prevention_enabled": True,
+            "javascript_enabled": False, "insecure_https": False,
+            "headers": HEADERS, "experimental": False,
+            "use_prebuilt_tkhtml": True  # no impact after loading
+        }
+        self.tkhtml_options = {"parsemode": DEFAULT_PARSE_MODE, "mode": DEFAULT_ENGINE_MODE}
+
+        for key in list(kwargs.keys()):
+            if key in self.tkinterweb_options:
+                value = self._check_value(self.tkinterweb_options[key], kwargs.pop(key))
+                self.tkinterweb_options[key] = value
+            elif key in self.tkhtml_options:
+                self.tkhtml_options[key] = kwargs.pop(key)
+        
+        self.master = root = tk.Tk()
+        self._html = html = TkinterWeb(root, self.tkinterweb_options, **self.tkhtml_options)
+        self.document = HTMLDocument(html)
+        html.images_enabled = html.stylesheets_enabled = html.forms_enabled = False
+
+        root.withdraw()
         parsed_url = urlparse(markup)
         
         if parsed_url.netloc and parsed_url.scheme in frozenset({"https", "http"}):
@@ -1043,7 +1063,6 @@ class HtmlParse():
             if parsed_url.scheme != "file": markup = f"file:///{markup}"
             markup, url, file, r = download(markup, headers=tuple(html.headers.items()))
 
-        root.withdraw()
         html.parse(markup)  
 
     def __str__(self):

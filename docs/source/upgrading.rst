@@ -54,7 +54,10 @@ Removed
 * ``HtmlFrame.replace_widget()`` (deprecated in version 4.2) - use :meth:`.HtmlFrame.widget_to_element` and :attr:`.HTMLElement.widget`
 * ``HtmlFrame.replace_element()`` (deprecated in version 4.2) - use :attr:`.HTMLElement.widget`
 * ``HtmlFrame.remove_widget()`` (deprecated in version 4.2) - use :meth:`.HTMLElement.remove`
-    
+* ``TkinterWeb.replace_widget()`` (removed in version 4.2)
+* ``TkinterWeb.replace_element()`` (removed in version 4.2)
+* ``TkinterWeb.remove_widget()`` (removed in version 4.2)
+
 * The ``widgetid`` attribute no longer embeds widgets. Use ``<object data=name_of_your_widget></object>`` or :attr:`.HTMLElement.widget` instead. This improves load speeds and allows for widget style handling.
 
 Renamed
@@ -132,6 +135,10 @@ Added
 * :meth:`.TkinterWeb.override_node_properties`
 * :meth:`.TkinterWeb.update_tags`
 * :meth:`.TkinterWeb.send_onload` (new in version 4.1)
+* :meth:`.TkinterWeb.replace_node_contents` (new in version 4.2)
+* :meth:`.TkinterWeb.map_node` (new in version 4.2)
+* :meth:`.TkinterWeb.replace_node_with_widget` (new in version 4.2)
+
 
 * ``utilities.DOWNLOADING_RESOURCE_EVENT`` (equivalent to ``<<DownloadingResource>>``)
 * ``utilities.DONE_LOADING_EVENT`` (equivalent to ``<<DoneLoading>>``)

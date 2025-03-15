@@ -50,8 +50,11 @@ Removed
 * ``HtmlFrame.get_currently_hovered_node_tag()`` - :meth:`.HtmlFrame.get_currently_hovered_element`
 * ``HtmlFrame.get_currently_hovered_node_attribute()`` - :meth:`.HtmlFrame.get_currently_hovered_element`
 * ``HtmlFrame.get_current_link()`` - use :meth:`.HtmlFrame.get_currently_hovered_element`
+* ``HtmlFrame.replace_widget()`` - use :meth:`.HtmlFrame.widget_to_element` and :attr:`.HTMLElement.widget` (deprecated in version 4.2)
+* ``HtmlFrame.replace_element()`` - use :attr:`.HTMLElement.widget` (deprecated in version 4.2)
+* ``HtmlFrame.remove_widget()`` - use :meth:`.HTMLElement.remove` (deprecated in version 4.2)
     
-* The ``widgetid`` attribute no longer embeds widgets. Use ``<object data=name_of_your_widget></object>`` instead. This improves load speeds and allows for widget style handling.
+* The ``widgetid`` attribute no longer embeds widgets. Use ``<object data=name_of_your_widget></object>`` or :attr:`.HTMLElement.widget` instead. This improves load speeds and allows for widget style handling.
 
 Renamed
 -------
@@ -77,6 +80,7 @@ Added
 
 * :meth:`.HtmlFrame.clear_selection`
 * :meth:`.HtmlFrame.get_currently_hovered_element`
+* :meth:`.HtmlFrame.widget_to_element` (new in version 4.2)
 * :meth:`.HtmlFrame.save_page`
 * :meth:`.HtmlFrame.snapshot_page`
 * :meth:`.HtmlFrame.show_error_page`
@@ -94,7 +98,7 @@ Added
 * :meth:`.HTMLElement.querySelector`
 * :meth:`.HTMLElement.querySelectorAll`
 * :meth:`.HTMLElement.scrollIntoView`
-* :attr:`.HTMLElement.widget` (new in version 4.1)
+* :attr:`.HTMLElement.widget` (new in version 4.1, updated in version 4.2)
 * :attr:`.HTMLElement.value` (new in version 4.1)
 * :attr:`.HTMLElement.checked` (new in version 4.1)
 * :attr:`.HTMLElement.onchange` (new in version 4.1)
@@ -160,5 +164,7 @@ Changed
 
 * As of version 4.1, :meth:`.HtmlFrame.screenshot_page` is now partially supported on Windows and now accepts the additional parameter ``show``. 
 * As of version 4.1, the default selection and find text colors are less abrupt.
+
+* As of version 4.2, widgets embedded in the document can now be removed without removing the containing element. 
 
 * The TkinterWeb demo and some of the built-in pages have been updated. Many internal methods and variables have been renamed, removed, or modified.

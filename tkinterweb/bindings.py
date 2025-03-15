@@ -175,6 +175,7 @@ class TkinterWeb(tk.Widget):
 
         self.node_tag = f"tkinterweb.{id(self)}.nodes"
         self.scrollable_node_tag = f"tkinterweb.{id(self)}.scrollablenodes"
+        self.widget_container_attr = "-tkinterweb-widget-container"
 
     def _setup_status_variables(self):
         "Widget status variables."
@@ -184,7 +185,6 @@ class TkinterWeb(tk.Widget):
 
         self.style_count = 0
         self.active_threads = []
-        self.stored_widgets = {}
         self.loaded_images = set()
         self.image_directory = {}
         self.image_name_prefix = f"_tkinterweb_img_{id(self)}_"
@@ -254,6 +254,7 @@ class TkinterWeb(tk.Widget):
         self.register_handler("attribute", "a", self._on_a_value_change)
         self.register_handler("attribute", "object", self._on_object_value_change)
         self.register_handler("attribute", "iframe", self._on_iframe_value_change)
+        self.register_handler("attribute", "img", self._on_image_value_change)
 
     @property
     def caches_enabled(self):
@@ -584,15 +585,23 @@ class TkinterWeb(tk.Widget):
     def insert_node_before(self, node_handle, child_nodes, before):
         "Experimental, place the specified nodes is before another node."
         return self.tk.call(node_handle, "insert", "-before", before, child_nodes)
+    
+    def replace_node_contents(self, node_handle, contents, *args):
+        "Fill a node with either a Tk widget or with Tkhtml nodes."
+        if not contents:
+            # calling replace on an empty node causes Tkhtml to segfault
+            contents = self.tk.call(self._w, "fragment", " ")
+        return self.tk.call(node_handle, "replace", contents, *args)
 
     def delete_node(self, node_handle):
         "Delete the given node."
         node_parent = self.get_node_parent(node_handle)
-        if node_parent and self.get_node_tag(node_handle) != "body":
-            # removing the body element causes a segfault
+        node_tag = self.get_node_tag(node_handle)
+        # removing the body element causes a segfault
+        if node_parent and node_tag != "body":
             self.tk.call(node_parent, "remove", node_handle)
         else:
-            raise tk.TclError(f"the requested element cannot be removed")
+            raise tk.TclError(f"{node_tag} elements cannot be removed")
 
     def destroy_node(self, node_handle):
         "Destroy a node. May cause crashes so avoid it whenever possible."
@@ -643,7 +652,7 @@ class TkinterWeb(tk.Widget):
         return self.tk.call((self._w, "postscript")+self._options(cnf, kwargs))
 
     def preload_image(self, url):
-        """Preload an image. 
+        """Preload an image for use later. 
         Only useful if caches are enabled and reset() is not called after preloading."""
         return self.tk.call(self._w, "preload", url)
     
@@ -796,22 +805,22 @@ class TkinterWeb(tk.Widget):
         "Replace a Tkhtml3 node with a Tkinter widget."
         if stylecmd:
             if handledelete:
-                self.tk.call(
-                    node, "replace", widgetid,
+                self.replace_node_contents(
+                    node, widgetid,
                     "-deletecmd", self.register(deletecmd),
                     "-stylecmd", self.register(stylecmd),
                 )
             else:
-                self.tk.call(
-                    node, "replace", widgetid, "-stylecmd", self.register(stylecmd)
+                self.replace_node_contents(
+                    node, widgetid, "-stylecmd", self.register(stylecmd)
                 )
         else:
             if handledelete:
-                self.tk.call(
-                    node, "replace", widgetid, "-deletecmd", self.register(deletecmd)
+                self.replace_node_contents(
+                    node, widgetid, "-deletecmd", self.register(deletecmd)
                 )
             else:
-                self.tk.call(node, "replace", widgetid)
+                self.replace_node_contents(node, widgetid)
 
         self._add_bindtags(widgetid, allowscrolling)
 
@@ -866,29 +875,59 @@ class TkinterWeb(tk.Widget):
                 fg = "white"
             widgetid.configure(background=bg, foreground=fg, font=font)
 
-    
-    def remove_widget(self, widgetid):
-        "Remove the specified widget from the document."
-        self.delete_node(self.stored_widgets[widgetid])
-        del self.stored_widgets[widgetid]
+    def map_node(self, node, force=False):
+        "Redraw a node if it currently containing a Tk widget."
+        if force or (self.get_node_attribute(node, self.widget_container_attr) != ""):
+            self.set_node_attribute(node, self.widget_container_attr, "")
+            self.replace_node_contents(node, node)
 
-    def replace_widget(self, widgetid, newwidgetid):
-        "Remove the old widget from the document and replace it with the new widget."
-        node = self.stored_widgets[widgetid]
-        self.tk.call(node, "replace", newwidgetid)
+    def replace_node_with_widget(self, node, widgetid):
+        "Replace a node with a Tk widget."
+        if not widgetid:
+            # reset the node if a widget is not supplied
+            self.map_node(node)
+            return
+            
+        manager = widgetid.winfo_manager()
+        if manager == "Tkhtml":  # Don't display the same widget twice
+            for old_node in self.search(f"[{self.widget_container_attr}]"):
+                if self.get_node_attribute(old_node, self.widget_container_attr) == str(widgetid):
+                    # If we know where the widget is, 
+                    # Replace the old node with its original contents so we can redraw the widget here
+                    self.map_node(old_node)
+                    break
+            else:
+                raise tk.TclError(f"cannot embed widget already managed by {manager}")
+        # Tkhtml seems to remove the widget from the previous geometry manager if it is not Tkhtml so I think we are fine
 
-        if newwidgetid in self.stored_widgets:
-            self.tk.call(self.stored_widgets[newwidgetid], "replace", widgetid)
-            self.stored_widgets[widgetid] = self.stored_widgets[newwidgetid]
+        allowscrolling = self.get_node_attribute(node, "allowscrolling", "false") != "false"
+        allowstyling = self.get_node_attribute(node, "allowstyling", "false") != "false"
+        handleremoval = self.get_node_attribute(node, "handleremoval", "false") != "false"
+        if allowstyling:
+            allowstyling = lambda node=node, widgetid=widgetid, widgettype="text": self.handle_node_style(node, widgetid, widgettype)
         else:
-            del self.stored_widgets[widgetid]
-        self.stored_widgets[newwidgetid] = node
+            allowstyling = None
 
-    def replace_element(self, selector, widgetid):
-        "Replace the content of the element matching the specified CSS selector with the given widget."
-        node = self.search(selector)[0]
-        self.tk.call(node, "replace", widgetid)
-        self.stored_widgets[widgetid] = node
+        if handleremoval:
+            # Tkhtml's -deletecmd handler is fairly broken
+            # I would instead give the widget an extra class and bind to <Unmap>
+            # But apparently that doesn't fire at all. Oh well.
+            handleremoval = lambda widgetid=widgetid: self.handle_node_removal(widgetid)
+        else:
+            handleremoval = None
+        
+        # We used to add the node to a dict but we need to be able to delete it when destroy is called o any of its parents
+        # By setting an attribute we can use Tkhtml's search function
+        self.set_node_attribute(node, self.widget_container_attr, widgetid)
+        self.handle_node_replacement(
+            node,
+            widgetid,
+            handleremoval,
+            allowstyling,
+            allowscrolling,
+            False,
+        )
+        self._submit_element_js(node, "onload")
 
     def find_text(self, searchtext, select, ignore_case, highlight_all):
         "Search for and highlight specific text in the document."
@@ -1343,31 +1382,7 @@ class TkinterWeb(tk.Widget):
             try:
                 # load widgets presented in <object> elements
                 widgetid = self.nametowidget(data)
-                if widgetid.winfo_ismapped():  # Don't display the same widget twice
-                    return
-
-                allowscrolling = self.get_node_attribute(node, "allowscrolling", "false") != "false"
-                allowstyling = self.get_node_attribute(node, "allowstyling", "false") != "false"
-                handleremoval = self.get_node_attribute(node, "handleremoval", "false") != "false"
-                if allowstyling:
-                    allowstyling = lambda node=node, widgetid=widgetid, widgettype="text": self.handle_node_style(node, widgetid, widgettype)
-                else:
-                    allowstyling = None
-                if handleremoval:
-                    handleremoval = lambda widgetid=widgetid: self.handle_node_removal(widgetid)
-                else:
-                    handleremoval = None
-
-                self.stored_widgets[widgetid] = node
-                self.handle_node_replacement(
-                    node,
-                    widgetid,
-                    handleremoval,
-                    allowstyling,
-                    allowscrolling,
-                    False,
-                )
-                self._submit_element_js(node, "onload")
+                self.replace_node_with_widget(node, widgetid)
             except KeyError:
                 data = self.resolve_url(data)
                 if data == self.base_url:
@@ -1380,8 +1395,13 @@ class TkinterWeb(tk.Widget):
 
     def _on_object_value_change(self, node, attribute, value):
         if attribute == "data":
-            self._on_object(node, value)
-
+            if value:
+                self._on_object(node, value)
+            else:
+                # reset the element if data is not supplied
+                # force reset because it might contain widgets that are added internally
+                self.map_node(node, True)
+                
     def _on_draw_cleanup_crash_cmd(self):
         if self._crash_prevention_enabled:
             self.post_message("ERROR: HtmlDrawCleanup has encountered a critical error. This is being ignored because crash prevention is enabled.")
@@ -1391,6 +1411,11 @@ class TkinterWeb(tk.Widget):
     def _on_image(self, node):
         url = self.resolve_url(self.get_node_attribute(node, "src"))
         self.image_directory[url] = node
+    
+    def _on_image_value_change(self, node, attribute, value):
+        if attribute == "src":
+            url = self.resolve_url(value)
+            self.image_directory[url] = node
 
     def _on_image_cmd(self, url):
         "Handle images."
@@ -1639,8 +1664,7 @@ class TkinterWeb(tk.Widget):
 
     def _on_body(self, node, index):
         "Wait for style changes on the root node."
-        self.tk.call(node,
-                    "replace",
+        self.replace_node_contents(node,
                     node,
                     "-stylecmd",
                     self.register(lambda node=node: self._set_overflow(node)))

@@ -551,6 +551,19 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
             if not self._html.get_node_tag(self._html.current_node):
                 node = self._html.get_node_parent(self._html.current_node)
         return HTMLElement(self.document, node)
+    
+    def widget_to_element(self, widget):
+        """Get the HTML element containing the given widget. New in version 4.2.
+        
+        :param widget: The widget to search for.
+        :type widget: :py:class:`tkinter.Widget`
+        :return: The element containing the given widget.
+        :rtype: :class:`~tkinterweb.dom.HTMLElement`
+        :raises: :py:class:`tkinter.TclError` if the given widget is not in the document."""
+        for node in self._html.search(f"[{self._html.widget_container_attr}]"):
+            if self._html.get_node_attribute(node, self._html.widget_container_attr) == str(widget):
+                return HTMLElement(self.document, node)
+        raise tk.TclError("the specified widget is not in the document")
 
     def screenshot_page(self, filename=None, full=False, show=False):
         """Take a screenshot. 
@@ -627,7 +640,8 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
 
             self._html.update() # update the root window to ensure HTML is rendered
             file = self._html.postscript(cnf)
-            # no need to save - Tkhtml handles that for us
+            
+            # No need to save - Tkhtml handles that for us
             if filename:
                 self._html.post_message("Printed!")
             if file: return file
@@ -751,30 +765,45 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         """Removes the old widget from the document, and replaces it with the new widget. 
         
         If both widgets are already shown in the document, their locations will be swapped.
+
+        DEPRECATED: Please use ``widget_to_element(old_widget).widget = new_widget`` instead.
         
         :param old_widget: The Tkinter widget to replace. This widget must be currently managed by TkinterWeb.
         :type old_widget: :py:class:`tkinter.Widget`
         :param new_widget: The new Tkinter widget to show. This may be any Tkinter widget.
         :type new_widget: :py:class:`tkinter.Widget`"""
-        self._html.replace_widget(old_widget, new_widget)
+        self._html.post_message("DEPRECATION WARNING: replace_widget is deprecated and may be removed at any time. Please use document.querySelector(selector).widget instead.")
+        try: 
+            elm = self.widget_to_element(new_widget)
+            elm2 = self.widget_to_element(old_widget)
+            elm2.widget = new_widget
+            elm.widget = old_widget
+        except tk.TclError:
+            self.widget_to_element(old_widget).widget = new_widget
 
     def replace_element(self, selector, new_widget):
         """Replaces the content of the element matching the specified CSS selector with the specified widget. 
         
         This command will scan the document for any elements that match the specified CSS selector. If multiple elements match the specified selector, only the first element will be replaced.
+
+        DEPRECATED: Please use ``document.querySelector(selector).widget = new_widget`` instead.
         
         :param selector: Specifies the CSS selector to search for.
         :type selector: str
         :param new_widget: The new Tkinter widget to show. This may be any Tkinter widget.
         :type new_widget: :py:class:`tkinter.Widget`"""
-        self._html.replace_element(selector, new_widget)
+        self._html.post_message("DEPRECATION WARNING: replace_element is deprecated and may be removed at any time. Please use document.querySelector(selector).widget instead.")
+        self.document.querySelector(selector).widget = new_widget
         
     def remove_widget(self, old_widget):
         """Removes the specified widget from the document.
+
+        DEPRECATED: Please use ``widget_to_element(old_widget).remove()`` instead.
         
         :param old_widget: The Tkinter widget to remove. This widget must be currently managed by TkinterWeb.
         :type old_widget: :py:class:`tkinter.Widget`"""
-        self._html.remove_widget(old_widget)
+        self._html.post_message("DEPRECATION WARNING: remove_widget is deprecated and may be removed at any time. Please use document.querySelector(selector).remove() instead.")
+        self.widget_to_element(old_widget).remove()
 
     def register_JS_object(self, name, obj):
         """Register new JavaScript object. This can be used to access Python variables, functions, and classes from JavaScript (eg. to add a callback for the JavaScript ``alert()`` function). 

@@ -15,7 +15,7 @@ All [major operating systems](https://tkinterweb.readthedocs.io/en/latest/faq.ht
 ## Usage
 
 **TkinterWeb provides:**
-* A [frame](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html) widget to display simple websites, help files, RSS feeds, and any other styled HTML in Tkinter.
+* A [frame](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html) widget to display websites, help files, RSS feeds, and any other styled HTML in Tkinter.
 * A [label](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html#tkinterweb.HtmlLabel) widget that can display styled HTML.
 * A [geometry manager](https://tkinterweb.readthedocs.io/en/latest/geometry.html) to display Tkinter widgets *and HTML elements* together in a Tkinter application.
 
@@ -38,8 +38,8 @@ See [Getting Started](https://tkinterweb.readthedocs.io/en/latest/usage.html) fo
 To install TkinterWeb, simply type `pip install tkinterweb` in the command prompt or terminal. That's it!
 
 Or, you can also choose to install optional dependencies: 
-* Use `pip install tkinterweb[javascript]` to also install JavaScript support.
-* Use `pip install tkinterweb[svg]` to also install Scalable Vector Graphics support. On Windows this might take some extra work.
+* Use `pip install tkinterweb[javascript]` to also install JavaScript dependencies.
+* Use `pip install tkinterweb[svg]` to also install Scalable Vector Graphics dependencies. Keep in mind these packages may not work on Windows out of the box.
 * Use `pip install tkinterweb[full]` to install all optional dependencies.
 
 ## Dependencies

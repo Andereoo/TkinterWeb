@@ -78,7 +78,6 @@ Renamed
 
 * The ``scroll-x`` attribute was changed to the ``tkinterweb-scroll-x`` attribute. Like the ``overflow`` CSS property, valid options are now "auto", "visible", "clip", "scroll", and "hidden".
 
-
 Added
 -----
 
@@ -147,7 +146,7 @@ Added
 * ``utilities.TITLE_CHANGED_EVENT`` (equivalent to ``<<TitleChanged>>``)
 
 * Many new configuration options were added. See the :doc:`api/htmlframe` for a complete list.
-* Support for many JavaScript events were added in version 4.1.
+* Support for many JavaScript events was added in version 4.1.
 
 * The ``tkinterweb-full-page`` attribute can now be added to elements to make them the same height as the viewport. This can be used for vertical alignment of page content. See the TkinterWeb Demo class in `__init__.py <https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/__init__.py>`_ for example usage.
 

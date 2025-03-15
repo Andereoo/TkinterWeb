@@ -578,6 +578,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
 
         :param node: The node to get text from
         :return: The text"""
+        print(self.html.get_node_text(node, "-tokens"))
         text = self.html.get_node_text(node, "-pre")
         for child in self.html.get_node_children(node):
             text += self.get_element_text(child)
@@ -1032,7 +1033,6 @@ class HtmlParse():
     """
 
     def __init__(self, markup, **kwargs):
-        
         self.tkinterweb_options = {
             "message_func": notifier, "messages_enabled": False,
             "caches_enabled": True, "crash_prevention_enabled": True,
@@ -1050,9 +1050,9 @@ class HtmlParse():
                 self.tkhtml_options[key] = kwargs.pop(key)
         
         self.master = root = tk.Tk()
-        self._html = html = TkinterWeb(root, self.tkinterweb_options, **self.tkhtml_options)
+        self.html = html = TkinterWeb(root, self.tkinterweb_options, **self.tkhtml_options)
         self.document = HTMLDocument(html)
-        html.images_enabled = html.stylesheets_enabled = html.forms_enabled = False
+        html.images_enabled = html.stylesheets_enabled = html.forms_enabled = False
 
         root.withdraw()
         parsed_url = urlparse(markup)

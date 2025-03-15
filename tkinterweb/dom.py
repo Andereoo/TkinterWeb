@@ -195,37 +195,37 @@ class HTMLDocument:
     
     def _node_to_html(self, node, deep=True):  # From hv3_dom_core.tcl line 311 and line 329
         return self.html.tk.eval(r"""
-            proc TclNode_to_html {node} {
-                set tag [$node tag]
-                if {$tag eq ""} {
-                    append ret [$node text -pre]
-                } else {
-                    append ret <$tag
-                    foreach {zKey zVal} [$node attribute] {
-                        set zEscaped [string map [list "\x22" "\x5C\x22"] $zVal]
-                        append ret " $zKey=\"$zEscaped\""
-                    }
-                    append ret >
-                    set void {
-                        area base br col embed hr img input keygen link meta param source track wbr
-                    }  ;# Don't add closing tags if is self-closing (void-elements)
-                    if {[lsearch -exact $void $tag] != -1} {
-                        return $ret
-                    } elseif {%d} {
-                        append ret [node_to_childrenHtml $node]
-                    }
-                    append ret </$tag>
+        proc WidgetNode_ToHtml {node} {
+            set tag [$node tag]
+            if {$tag eq ""} {
+                append ret [$node text -pre]
+            } else {
+                append ret <$tag
+                foreach {zKey zVal} [$node attribute] {
+                    set zEscaped [string map [list "\x22" "\x5C\x22"] $zVal]
+                    append ret " $zKey=\"$zEscaped\""
                 }
-            }
-            proc node_to_childrenHtml {node} {
-                set ret ""
-                foreach child [$node children] {
-                    append ret [TclNode_to_html $child]
+                append ret >
+                set void {
+                    area base br col embed hr img input keygen link meta param source track wbr
+                }  ;# Don't add closing tags if is self-closing (void-elements)
+                if {[lsearch -exact $void $tag] != -1} {
+                    return $ret
+                } elseif {%d} {
+                    append ret [WidgetNode_ChildrenToHtml $node]
                 }
-                return $ret
+                append ret </$tag>
             }
-            return [TclNode_to_html %s]
-            """ % (int(deep), extract_nested(node))
+        }
+        proc WidgetNode_ChildrenToHtml {node} {
+            set ret ""
+            foreach child [$node children] {
+                append ret [WidgetNode_ToHtml $child]
+            }
+            return $ret
+        }
+        return [WidgetNode_ToHtml %s]
+        """ % (int(deep), extract_nested(node))
         ) # May split this into 2 methods in future
 
 

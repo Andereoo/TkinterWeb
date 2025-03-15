@@ -574,11 +574,7 @@ class TkinterWeb(tk.Widget):
     def delete_node(self, node_handle):
         "Delete the given node."
         node_parent = self.get_node_parent(node_handle)
-        if node_parent and self.get_node_tag(node_handle) != "body":
-            # removing the body element causes a segfault
-            self.tk.call(node_parent, "remove", node_handle)
-        else:
-            raise tk.TclError(f"the requested element cannot be removed")
+        self.tk.call(node_parent, "remove", node_handle)
 
     def destroy_node(self, node_handle):
         "Destroy a node. May cause crashes so avoid it whenever possible."

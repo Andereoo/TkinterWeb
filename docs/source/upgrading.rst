@@ -50,9 +50,9 @@ Removed
 * ``HtmlFrame.get_currently_hovered_node_tag()`` - :meth:`.HtmlFrame.get_currently_hovered_element`
 * ``HtmlFrame.get_currently_hovered_node_attribute()`` - :meth:`.HtmlFrame.get_currently_hovered_element`
 * ``HtmlFrame.get_current_link()`` - use :meth:`.HtmlFrame.get_currently_hovered_element`
-* ``HtmlFrame.replace_widget()`` - use :meth:`.HtmlFrame.widget_to_element` and :attr:`.HTMLElement.widget` (deprecated in version 4.2)
-* ``HtmlFrame.replace_element()`` - use :attr:`.HTMLElement.widget` (deprecated in version 4.2)
-* ``HtmlFrame.remove_widget()`` - use :meth:`.HTMLElement.remove` (deprecated in version 4.2)
+* ``HtmlFrame.replace_widget()`` (deprecated in version 4.2) - use :meth:`.HtmlFrame.widget_to_element` and :attr:`.HTMLElement.widget`
+* ``HtmlFrame.replace_element()`` (deprecated in version 4.2) - use :attr:`.HTMLElement.widget`
+* ``HtmlFrame.remove_widget()`` (deprecated in version 4.2) - use :meth:`.HTMLElement.remove`
     
 * The ``widgetid`` attribute no longer embeds widgets. Use ``<object data=name_of_your_widget></object>`` or :attr:`.HTMLElement.widget` instead. This improves load speeds and allows for widget style handling.
 

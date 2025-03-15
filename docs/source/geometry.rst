@@ -34,7 +34,7 @@ To get the element containing your widget, either use :meth:`.HtmlFrame.widget_t
 Widget Handling
 ---------------
 
-You can also set, remove, or change the widget in any element later (new since version 4.1.4):
+You can also set, remove, or change the widget in any element later (new in version 4.2):
 
 .. code-block:: python
 
@@ -45,6 +45,6 @@ You can also set, remove, or change the widget in any element later (new since v
 
 The widget can be removed from the element via ``yourelement.widget = None``.
 
-See :doc:`dom` (new since version 3.25) for more details.
+See :doc:`dom` (new in version 3.25) for more details.
 
 Please report bugs or request new features on the `issues page <https://github.com/Andereoo/TkinterWeb/issues>`_.

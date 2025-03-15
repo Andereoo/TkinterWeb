@@ -14,6 +14,7 @@ Summary of changes
 * The DOM API now more closely mirrors its JavaScript counterparts
 * Dozens of new configuration options, including access to more settings and the ability to link a JavaScript interpreter
 * Basic JavaScript support (new in version 4.1)
+* Improved embedded widget handling (new in version 4.2)
 * More DOM improvements
 
 Removed

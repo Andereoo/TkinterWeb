@@ -573,17 +573,6 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
                 node = self._html.get_node_parent(self._html.current_node)
         return HTMLElement(self.document, node)
 
-    def get_element_text(self, node):
-        """Get text of node and all its descendants recursively
-
-        :param node: The node to get text from
-        :return: The text"""
-        print(self.html.get_node_text(node, "-tokens"))
-        text = self.html.get_node_text(node, "-pre")
-        for child in self.html.get_node_children(node):
-            text += self.get_element_text(child)
-        return text
-
     def screenshot_page(self, filename=None, full=False):
         """Take a screenshot. 
         
@@ -1037,7 +1026,7 @@ class HtmlParse():
             "message_func": notifier, "messages_enabled": False,
             "caches_enabled": True, "crash_prevention_enabled": True,
             "javascript_enabled": False, "insecure_https": False,
-            "headers": HEADERS, "experimental": False,
+            "headers": HEADERS, "experimental": True,
             "use_prebuilt_tkhtml": True  # no impact after loading
         }
         self.tkhtml_options = {"parsemode": DEFAULT_PARSE_MODE, "mode": DEFAULT_ENGINE_MODE}
@@ -1063,7 +1052,7 @@ class HtmlParse():
             if parsed_url.scheme != "file": markup = f"file:///{markup}"
             markup, url, file, r = download(markup, headers=tuple(html.headers.items()))
 
-        html.parse(markup)  
+        html.parse(markup)
 
     def __str__(self):
         d = self.document.documentElement

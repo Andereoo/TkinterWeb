@@ -961,6 +961,13 @@ class TkinterWeb(tk.Widget):
         except Exception as error:
             self.post_message(f"ERROR: an error was encountered while searching for {searchtext}: {error}")
             return nmatches, selected, matches
+
+    def get_element_text(self, node):
+        """Get text of node and all its descendants recursively"""
+        text = self.get_node_text(node, "-pre")
+        for child in self.get_node_children(node):
+            text += self.get_element_text(child)
+        return text
     
     def resolve_url(self, url):
         "Generate a full url from the specified url."

@@ -81,7 +81,6 @@ class HTMLDocument:
         return HTMLElement(
             self, self.html.tk.eval(f"""set body [lindex [[{self.html} node] children] 1]"""),
         )
-        #return self.querySelector("body")
 
     @property
     def documentElement(self):
@@ -306,13 +305,9 @@ class HTMLElement:
         :raises: :py:class:`tkinter.TclError`"""
         return self.html.tk.eval("""
             proc get_child_text {node} {
-                set txt ""
+                set txt [$node text -pre]
                 foreach child [$node children] {
-                    if {[$child tag] eq ""} {
-                        append txt [$child text -pre]
-                    } else {
-                        append txt [get_child_text $child]
-                    }
+                    append txt [get_child_text $child]
                 }
                 return $txt
             }

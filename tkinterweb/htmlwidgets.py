@@ -789,6 +789,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
 
     def _check_value(self, old, new):
         expected_type = type(old)
+        if isinstance(new, tk.Widget): return new  # This lets it be used in Tkinter canvas, canvas.create_window won't let objects be callable
         if callable(old) or old == None:
             if not callable(new):
                 raise TypeError(f"expected callable object, got \"{expected_type.__name__}\"")
@@ -969,7 +970,7 @@ class HtmlLabel(TkinterWeb):
     :param text: Set the HTML content of the widget
     :type text: str
     """
-    def __init__(self, master, text="", **kwargs):
+    def __init__(self, master, text="", style="", **kwargs):
         TkinterWeb.__init__(self, master, shrink=True, **kwargs)
 
         tags = list(self.bindtags())
@@ -977,17 +978,20 @@ class HtmlLabel(TkinterWeb):
         self.bindtags(tags)
 
         self.parse(text)
+        if style: self.parse_css(data=style)
         self.tk.createcommand("serialize_node", self._serializeNode)
 
     def configure(self, **kwargs):
         if "text" in kwargs:
             self.reset()
             self.parse(kwargs.pop("text"))
+        if "style" in kwargs:
+            self.parse_css(data=kwargs.pop("style"))
         if kwargs: super().configure(**kwargs)
 
     def cget(self, key):
-        if "text" == key:
-            return self._serializeNode(self.node()).split()
+        if "text" == key: return self._serializeNode(self.node()).split()
+        if "style" == key: return {i[0]:i[1] for i in self.get_computed_styles() if "agent"!=i[2]}
         return super().cget(key)
 
     def _serializeNode(self, node):  # From hv3_bookmarks.tcl lines 340; 355
@@ -1032,11 +1036,8 @@ class HtmlParse():
         self.tkhtml_options = {"parsemode": DEFAULT_PARSE_MODE, "mode": DEFAULT_ENGINE_MODE}
 
         for key in list(kwargs.keys()):
-            if key in self.tkinterweb_options:
-                value = self._check_value(self.tkinterweb_options[key], kwargs.pop(key))
-                self.tkinterweb_options[key] = value
-            elif key in self.tkhtml_options:
-                self.tkhtml_options[key] = kwargs.pop(key)
+            if key in self.tkinterweb_options: self.tkinterweb_options[key] = kwargs.pop(key)
+            elif key in self.tkhtml_options: self.tkhtml_options[key] = kwargs.pop(key)
         
         self.master = root = tk.Tk()
         self.html = html = TkinterWeb(root, self.tkinterweb_options, **self.tkhtml_options)

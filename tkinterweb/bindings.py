@@ -7,6 +7,7 @@ Copyright (c) 2025 Andereoo
 from re import IGNORECASE, MULTILINE, split, sub, finditer
 
 from urllib.parse import urlencode, urljoin, urlparse
+from io import BytesIO
 
 import tkinter as tk
 from tkinter import ttk
@@ -2219,6 +2220,3 @@ class TkinterWeb(tk.Widget):
         else:
             tags = (self.node_tag,)
         widgetid.bindtags(widgetid.bindtags() + tags)
-
-    #def __call__(self):
-        "Mark this class as callable so it is accepted as a overflow_scroll_frame by HtmlFrame."

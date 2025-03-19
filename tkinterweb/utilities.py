@@ -968,7 +968,7 @@ def download(url, data=None, method="GET", decode=None, insecure=False, headers=
     except AttributeError:
         maintype = info.maintype
         filetype = info.type
-    if (maintype != "image") or ("svg" in filetype):
+    if (maintype != "image") or ("svg" in filetype) or ("image" not in url):
         if decode:
             data = data.decode(decode, errors="ignore")
         else:

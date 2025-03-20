@@ -2220,3 +2220,42 @@ class TkinterWeb(tk.Widget):
         else:
             tags = (self.node_tag,)
         widgetid.bindtags(widgetid.bindtags() + tags)
+
+    def get_default_style(self):
+        return self.tk.call("::tkhtml::htmlstyle")
+
+    def uri_decode(self, uri):
+        return self.tk.call("::tkhtml::decode", uri)
+
+    def uri_encode(self, uri):
+        return self.tk.call("::tkhtml::encode", uri)
+
+    def uri_escape(self, uri):
+        return self.tk.call("::tkhtml::escape_uri", uri)
+
+    def uri(self, uri):
+        return self.tk.call("::tkhtml::uri", uri)
+
+    def uri_resolve(self, parsed, uri):
+        return self.tk.call(parsed, "resolve", uri)
+
+    def uri_load(self, parsed, uri):
+        return self.tk.call(parsed, "load", uri)
+
+    def uri_scheme(self, parsed):
+        return self.tk.call(parsed, "scheme")
+
+    def uri_authority(self, parsed):
+        return self.tk.call(parsed, "authority")
+
+    def uri_path(self, parsed):
+        return self.tk.call(parsed, "path")
+
+    def uri_query(self, parsed):
+        return self.tk.call(parsed, "query")
+
+    def uri_fragment(self, parsed):
+        return self.tk.call(parsed, "fragment")
+
+    def uri_destroy(self, parsed):
+        self.tk.call(parsed, "destroy")

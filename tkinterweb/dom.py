@@ -695,7 +695,7 @@ class HTMLElement:
             self.html.insert_node_before(self.node, tkhtml_children_nodes, before.node)
         else:
             self.html.insert_node(self.node, tkhtml_children_nodes)
-        self.html.send_onload(nodes=children)
+        self.html.send_onload(children)
 
         #for node in tkhtml_children_nodes:
         #    print(node)

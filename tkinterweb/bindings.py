@@ -2221,16 +2221,17 @@ class TkinterWeb(tk.Widget):
             tags = (self.node_tag,)
         widgetid.bindtags(widgetid.bindtags() + tags)
 
-    def get_default_style(self):
+    @property
+    def tkhtml_default_style(self):
         return self.tk.call("::tkhtml::htmlstyle")
 
-    def uri_decode(self, uri):
+    def tkhtml_uri_decode(self, uri):
         return self.tk.call("::tkhtml::decode", uri)
 
-    def uri_encode(self, uri):
+    def tkhtml_uri_encode(self, uri):
         return self.tk.call("::tkhtml::encode", uri)
 
-    def uri_escape(self, uri):
+    def tkhtml_uri_escape(self, uri):
         return self.tk.call("::tkhtml::escape_uri", uri)
 
     def uri(self, uri):

@@ -132,7 +132,7 @@ class HTMLDocument:
         )
 
 
-    def getElementById(self, query):
+    def getElementById(self, query, _root=None):
         """Return an element that matches a given id.
         
         :param query: The element id to be searched for.
@@ -142,7 +142,7 @@ class HTMLDocument:
         node = self.html.search(f"[id='{query}']", index=0, root=_root)
         return HTMLElement(self, node)
 
-    def getElementsByClassName(self, query):
+    def getElementsByClassName(self, query, _root=None):
         """Return all elements that match a given class name.
         
         :param query: The class to be searched for.

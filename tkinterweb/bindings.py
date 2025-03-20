@@ -6,9 +6,6 @@ Copyright (c) 2025 Andereoo
 
 from re import IGNORECASE, MULTILINE, split, sub, finditer
 
-from urllib.parse import urlencode, urljoin, urlparse
-from io import BytesIO
-
 import tkinter as tk
 from tkinter import ttk
 
@@ -972,7 +969,7 @@ class TkinterWeb(tk.Widget):
     
     def resolve_url(self, url):
         "Generate a full url from the specified url."
-        return urljoin(self.base_url, url)
+        return self.uri_resolve(self.uri(self.base_url), url)
     
     def update_tags(self):
         "Update selection and find tag colors"
@@ -1252,7 +1249,7 @@ class TkinterWeb(tk.Widget):
         if not self.stylesheets_enabled or not self.unstoppable:
             return
         try:
-            url = urljoin(parent_url, new_url)
+            url = self.uri_resolve(self.uri(parent_url), new_url)
             self.post_message(f"Loading stylesheet from {shorten(url)}")
 
             self._thread_check(self.fetch_styles, url=new_url)
@@ -1671,7 +1668,7 @@ class TkinterWeb(tk.Widget):
         "Make relative uris in CSS files absolute."
         newurl = match.group()
         newurl = strip_css_url(newurl)
-        newurl = urljoin(url, newurl)
+        newurl = self.uri_resolve(self.uri(url), newurl)
         newurl = f"url('{newurl}')"
         return newurl
 
@@ -1752,11 +1749,11 @@ class TkinterWeb(tk.Widget):
                     (nodeattrname, nodevalue),
                 )
 
-        data = urlencode(data)
+        data = self.url_encode(data)
 
         if action == "":
-            url = urlparse(self.base_url)
-            url = f"{url.scheme}://{url.netloc}{url.path}"
+            url = self.uri(self.base_url)
+            url = f"{self.uri_scheme(url)}://{self.uri_authority(url)}{self.uri_path(url)}"
         else:
             url = self.resolve_url(action)
 
@@ -2244,8 +2241,11 @@ class TkinterWeb(tk.Widget):
     def uri_load(self, parsed, uri):
         return self.tk.call(parsed, "load", uri)
 
-    def uri_get(self, parsed):
+    def uri_str(self, parsed):
         return self.tk.call(parsed, "get")
+
+    def uri_defrag(self, parsed):
+        return self.tk.call(parsed, "get_no_fragment")
 
     def uri_scheme(self, parsed):
         return self.tk.call(parsed, "scheme")

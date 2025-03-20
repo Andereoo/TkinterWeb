@@ -5,7 +5,6 @@ by adding scrolling, file loading, and many other convenience functions
 Copyright (c) 2025 Andereoo
 """
 
-from urllib.parse import urldefrag, urlparse
 from os import path
 
 from bindings import TkinterWeb
@@ -841,28 +840,28 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         
         try:
             method = method.upper()
-            parsed = urlparse(url)
+            parsed = self.html.uri(url)
 
             if method == "GET":
                 url = str(url) + str(data)
 
             # if url is different than the current one, load the new site
-            if force or (method == "POST") or ((urldefrag(url)[0]).replace("/", "") != (urldefrag(self._previous_url)[0]).replace("/", "")):
+            if force or (method == "POST") or ((self.html.uri_defrag(parsed)).replace("/", "") != (self.html.uri_defrag(self.html.uri(self._previous_url))).replace("/", "")):
                 view_source = False
                 if url.startswith("view-source:"):
                     view_source = True
                     url = url.replace("view-source:", "")
-                    parsed = urlparse(url)
-                self._html.post_message(f"Connecting to {parsed.netloc}")
+                    parsed = self.html.uri(url)
+                self._html.post_message(f"Connecting to {self.html.uri_authority(parsed)}")
                 if self._html.insecure_https:
                     self._html.post_message("WARNING: Using insecure HTTPS session")
-                if (parsed.scheme == "file") or (not self._html.caches_enabled):
+                if (self.html.uri_scheme(parsed) == "file") or (not self._html.caches_enabled):
                     data, newurl, filetype, code = download(
                         url, data, method, decode, self._html.insecure_https, tuple(self._html.headers.items()))
                 else:
                     data, newurl, filetype, code = cache_download(
                         url, data, method, decode, self._html.insecure_https, tuple(self._html.headers.items()))
-                self._html.post_message(f"Successfully connected to {parsed.netloc}")
+                self._html.post_message(f"Successfully connected to {self.html.uri_authority(parsed)}")
                 if get_current_thread().isrunning():
                     if view_source:
                         newurl = "view-source:"+newurl
@@ -897,7 +896,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
                 self._finish_css()
 
             # handle URI fragments
-            frag = parsed.fragment
+            frag = self.html.uri_fragment(parsed)
             if frag:
                 #self._html.tk.call(self._html._w, "_force")
                 self._html.update()
@@ -1045,11 +1044,11 @@ class HtmlParse():
         html.images_enabled = html.stylesheets_enabled = html.forms_enabled = False
 
         root.withdraw()
-        parsed_url = urlparse(markup)
+        parsed = html.uri(markup)
         
-        if parsed_url.netloc and parsed_url.scheme in frozenset({"https", "http"}):
+        if html.uri_authority(parsed) and html.uri_scheme(parsed) in frozenset({"https", "http"}):
             markup, url, file, r = cache_download(markup, headers=tuple(html.headers.items()))
-        elif os.path.isfile(markup) or parsed_url.scheme == "file":
+        elif os.path.isfile(markup) or html.uri_scheme(parsed) == "file":
             if parsed_url.scheme != "file": markup = f"file:///{markup}"
             markup, url, file, r = download(markup, headers=tuple(html.headers.items()))
 

@@ -2243,6 +2243,9 @@ class TkinterWeb(tk.Widget):
     def uri_load(self, parsed, uri):
         return self.tk.call(parsed, "load", uri)
 
+    def uri_get(self, parsed):
+        return self.tk.call(parsed, "get")
+
     def uri_scheme(self, parsed):
         return self.tk.call(parsed, "scheme")
 

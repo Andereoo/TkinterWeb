@@ -2234,6 +2234,7 @@ class TkinterWeb(tk.Widget):
         return self.tk.call("::tkhtml::escape_uri", uri)
 
     def uri(self, uri):
+        "Returns name of parsed uri to be used in methods below"
         return self.tk.call("::tkhtml::uri", uri)
 
     def uri_resolve(self, parsed, uri):

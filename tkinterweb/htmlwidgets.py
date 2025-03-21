@@ -1020,6 +1020,7 @@ class HtmlLabel(TkinterWeb):
     def config(self, **kwargs):
         self.configure(**kwargs)
 
+#NOTE: should probably add a method to HtmlFrame to allow parsing more efficiently and proficiently using the fragment CMD
 class HtmlParse():
     """TkinterWeb parsing only class, parses HTML using TkinterWeb class and allows access to the document but does not spawn a widget
     """

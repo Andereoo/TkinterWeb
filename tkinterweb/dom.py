@@ -238,7 +238,7 @@ class HTMLElement:
         self.html = document_manager.html
         self.node = flatten(node)
         self.style_cache = None  # initialize style as None
-        self.html.bbox(node)  # check if the node is valid
+        self.html.get_node_tkhtml(node)  # check if the node is valid, rises invalid command error if not.
 
         # we need this here or crashes happen if multiple Tkhtml instances exist (depending on the Tkhtml version)
         # no idea why, but hey, it works

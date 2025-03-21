@@ -590,6 +590,11 @@ class TkinterWeb(tk.Widget):
         "Get pathName of node (I think)."
         return self.tk.call(node_handle, "html")
 
+    def get_node_stacking(self, node_handle):
+        "Return the node-handle that forms the stacking context"
+        "this node is located in. Return "" for the root-element or any element that is part of an orphan subtree."
+        return self.tk.call(node_handle, "stacking")
+
     def get_current_node(self, event):
         "Get current node."
         return self.tk.eval(

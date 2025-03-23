@@ -452,9 +452,9 @@ class TkinterWeb(tk.Widget):
         "Return the name of the Html tag that generated this document node, or an empty string if the node is a text node."
         return self.tk.call(self._w, "tag", subcommand, tag_name, *args)
 
-    def search(self, selector, cnf={}, **kw):
+    def search(self, selector, *a, cnf={}, **kw):
         """Search the document for the specified CSS selector; return a Tkhtml3 node if found."""
-        return self.tk.call((self._w, "search", selector)+self._options(cnf, kw))
+        return self.tk.call((self._w, "search", selector)+a+self._options(cnf, kw))
 
     def xview(self, *args):
         "Used to control horizontal scrolling."

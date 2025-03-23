@@ -438,7 +438,7 @@ class TkinterWeb(tk.Widget):
 
     def node(self, *args):
         "Retrieve one or more document node handles from the current document."
-        nodes = self.tk.call(self._w, "node", *args)
+        nodes = self.tk.call(self._w, "node", *TclOpt(args))
         if nodes:
             return nodes
         else:
@@ -454,7 +454,7 @@ class TkinterWeb(tk.Widget):
 
     def search(self, selector, *a, cnf={}, **kw):
         """Search the document for the specified CSS selector; return a Tkhtml3 node if found."""
-        return self.tk.call((self._w, "search", selector)+a+self._options(cnf, kw))
+        return self.tk.call((self._w, "search", selector)+TclOpt(a)+self._options(cnf, kw))
 
     def xview(self, *args):
         "Used to control horizontal scrolling."
@@ -511,7 +511,7 @@ class TkinterWeb(tk.Widget):
 
     def get_node_text(self, node_handle, *args):
         "Get the text content of the given node."
-        return self.tk.call(node_handle, "text", *args)
+        return self.tk.call(node_handle, "text", *TclOpt(args))
 
     def set_node_text(self, node_handle, new):
         "Set the text content of the given node."
@@ -549,11 +549,11 @@ class TkinterWeb(tk.Widget):
 
     def get_node_property(self, node_handle, node_property, *args):
         "Get the specified CSS property of the given node."
-        return self.tk.call(node_handle, "property", *args, node_property)
+        return self.tk.call(node_handle, "property", *TclOpt(args), node_property)
 
     def get_node_properties(self, node_handle, *args):
         "Get the CSS properties of the given node."
-        prop = self.tk.call(node_handle, "property", *args)
+        prop = self.tk.call(node_handle, "property", *TclOpt(args))
         return dict(zip(prop[0::2], prop[1::2]))
 
     def override_node_properties(self, node_handle, *props):

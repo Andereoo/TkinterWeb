@@ -1087,6 +1087,11 @@ def tkhtml_notifier(name, text, *args):
         "sys.stdout.write doesn't work in .pyw files."
         "Since .pyw files have no console, we won't bother printing messages."
 
+def TclOpt(options):
+    "Format string into Tcl option command-line names"
+    return tuple(o if o.startswith("-") else "-"+o for o in options)
+
+
 def placeholder(*args, **kwargs):
     """Blank placeholder function. The only purpose of this is to
     improve readability by avoiding `lambda a, b, c, d: None` statements."""

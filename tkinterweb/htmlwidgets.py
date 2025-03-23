@@ -1047,7 +1047,7 @@ class HtmlParse():
         root.withdraw()
         parsed = html.uri(markup)
         
-        if html.uri_authority(parsed) and html.uri_scheme(parsed) in frozenset({"https", "http"}):
+        if html.uri_scheme(parsed) in frozenset({"https", "http"}):
             markup, url, file, r = cache_download(markup, headers=tuple(html.headers.items()))
         elif os.path.isfile(markup) or html.uri_scheme(parsed) == "file":
             if parsed_url.scheme != "file": markup = f"file:///{markup}"

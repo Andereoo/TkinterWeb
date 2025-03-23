@@ -98,8 +98,7 @@ class HTMLDocument:
         :type tagname: str
         :rtype: :class:`HTMLElement`"""
         return HTMLElement(
-            self,
-            self.html.tk.eval("""
+            self, self.html.tk.eval("""
             set node [%s fragment "<%s>"]
             if {$node eq ""} {error "DOMException NOT_SUPPORTED_ERR"}
             return $node
@@ -113,8 +112,7 @@ class HTMLDocument:
         :type text: str
         :rtype: :class:`HTMLElement`"""
         return HTMLElement(
-            self, 
-            self.html.tk.eval("""
+            self, self.html.tk.eval("""
             set tkw %s
             set text "%s"
             if {$text eq ""} {
@@ -132,64 +130,62 @@ class HTMLDocument:
         )
 
 
-    def getElementById(self, query, _root=None):
+    def getElementById(self, query):
         """Return an element that matches a given id.
         
         :param query: The element id to be searched for.
         :type query: str
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
-        node = self.html.search(f"[id='{query}']", index=0, root=_root)
-        return HTMLElement(self, node)
+        return HTMLElement(self, self.html.search(f"[id='{query}']", index=0))
 
-    def getElementsByClassName(self, query, _root=None):
+    def getElementsByClassName(self, query):
         """Return all elements that match a given class name.
         
         :param query: The class to be searched for.
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        nodes = self.html.search(" ".join(f".{i}" for i in query.split()), root=_root)
+        nodes = self.html.search(" ".join(f".{i}" for i in query.split()))
         return HTMLCollection(HTMLElement(self, node) for node in nodes)
 
-    def getElementsByName(self, query, _root=None):
+    def getElementsByName(self, query):
         """Return all elements that match a given given name attribute.
         
         :param query: The name to be searched for.
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        nodes = self.html.search(f"[name='{query}']", root=_root)
+        nodes = self.html.search(f"[name='{query}']")
         return HTMLCollection(HTMLElement(self, node) for node in nodes)
 
-    def getElementsByTagName(self, query, _root=None):
+    def getElementsByTagName(self, query):
         """Return all elements that match a given tag name.
         
         :param query: The tag to be searched for.
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        nodes = self.html.search(query, root=_root)
+        nodes = self.html.search(query)
         return HTMLCollection(HTMLElement(self, node) for node in nodes)
 
-    def querySelector(self, query, _root=None):
+    def querySelector(self, query):
         """Return the first element that matches a given CSS selector.
         
         :param query: The CSS selector to be searched for.
         :type query: str
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
-        node = self.html.search(query, index=0, root=_root)
-        return HTMLElement(self, node)
+        return HTMLElement(self, self.html.search(query, index=0))
 
-    def querySelectorAll(self, query, _root=None):
+    def querySelectorAll(self, query):
         """Return all elements that match a given CSS selector.
         
         :param query: The CSS selector to be searched for.
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        nodes = self.html.search(query, root=_root)
+        nodes = self.html.search(query)
         return HTMLCollection(HTMLElement(self, node) for node in nodes)
     
     def _node_to_html(self, node, deep=True):  # From hv3_dom_core.tcl line 311 and line 329
@@ -621,58 +617,31 @@ class HTMLElement:
         self._insert_children(children, before)
 
     def getElementById(self, query):
-        """Return an element that is a child of the current element and matches the given id.
-        
-        :param query: The element id to be searched for.
-        :type query: str
-        :rtype: :class:`HTMLElement`
-        :raises: :py:class:`tkinter.TclError`"""
-        return self.document.getElementById(query)
+        "Return an element that is a child of the current element and matches the given id."
+        return HTMLElement(self, self.html.search(f"[id='{query}']", index=0, root=self.node))
 
     def getElementsByClassName(self, query):
-        """Return all elements that are children of the current element and match the given class name.
-        
-        :param query: The class to be searched for.
-        :type query: str
-        :rtype: tuple[:class:`HTMLElement`]
-        :raises: :py:class:`tkinter.TclError`"""
-        return self.document.getElementsByClassName(query)
+        "Return all elements that are children of the current element and match the given class name."
+        nodes = self.html.search(" ".join(f".{i}" for i in query.split()), root=self.node)
+        return HTMLCollection(HTMLElement(self, node) for node in nodes)
 
     def getElementsByName(self, query):
-        """Return all elements that are children of the current element and match the given name attribute.
-        
-        :param query: The name to be searched for.
-        :type query: str
-        :rtype: tuple[:class:`HTMLElement`]
-        :raises: :py:class:`tkinter.TclError`"""
-        return self.document.getElementsByName(query)
+        "Return all elements that are children of the current element and match the given name attribute."
+        nodes = self.html.search(f"[name='{query}']", root=self.node)
+        return HTMLCollection(HTMLElement(self, node) for node in nodes)
 
     def getElementsByTagName(self, query):
-        """Return all elements that are children of the current element and match the given tag name.
-        
-        :param query: The tag to be searched for.
-        :type query: str
-        :rtype: tuple[:class:`HTMLElement`]
-        :raises: :py:class:`tkinter.TclError`"""
-        return self.document.getElementsByTagName(query)
+        "Return all elements that are children of the current element and match the given tag name."
+        nodes = self.html.search(query, root=self.node)
+        return HTMLCollection(HTMLElement(self, node) for node in nodes)
 
     def querySelector(self, query):
-        """Return the first element that is a child of the current element and matches the given CSS selector.
-        
-        :param query: The CSS selector to be searched for.
-        :type query: strvalue
-        :rtype: :class:`HTMLElement`
-        :raises: :py:class:`tkinter.TclError`"""
-        return self.document.querySelector(query)
+        "Return the first element that is a child of the current element and matches the given CSS selector."
+        return HTMLElement(self, self.html.search(query, index=0, root=self.node))
 
     def querySelectorAll(self, query):
-        """Return all elements that are children of the current element and match the given CSS selector.
-        
-        :param query: The CSS selector to be searched for.
-        :type query: str
-        :rtype: tuple[:class:`HTMLElement`]
-        :raises: :py:class:`tkinter.TclError`"""
-        return self.document.querySelectorAll(query)
+        "Return all elements that are children of the current element and match the given CSS selector."
+        return HTMLElement(self, self.html.search(query, root=self.node))
     
     def scrollIntoView(self):
         "Scroll the viewport so that this element is visible."
@@ -747,7 +716,7 @@ class CSSStyleDeclaration:
         self.html = element_manager.html
         self.node = element_manager.node
 
-    def __getitem__(self, property):
+    def __getitem__(self, prop):
         # Get value from Tkhtml if it is a real and existing property
         try:
             value = self.html.get_node_property(self.node, property, "-inline")
@@ -757,9 +726,9 @@ class CSSStyleDeclaration:
 
         if not value:
             # Get value from sub-properties if it is a composite property
-            if property in COMPOSITE_PROPERTIES:
+            if prop in COMPOSITE_PROPERTIES:
                 values = []
-                for key in COMPOSITE_PROPERTIES[property]:
+                for key in COMPOSITE_PROPERTIES[prop]:
                     computed = self.__getitem__(key)
                     if len(computed.split()) > 1:
                         # If the sub-properties have multiple values (eg. have their own sub-properties),
@@ -767,7 +736,7 @@ class CSSStyleDeclaration:
                         return ""
                     if computed: values.append(computed)
             
-                if len(values) == len(COMPOSITE_PROPERTIES[property]):
+                if len(values) == len(COMPOSITE_PROPERTIES[prop]):
                     if all(x == values[0] for x in values): 
                         # Simplify the return value if the values of the sub-properties are all the same
                         value = values[0]
@@ -777,35 +746,35 @@ class CSSStyleDeclaration:
             if not value:
                 # Otherwise attempt to get value from 'style' attribute
                 style = self.cssInlineStyles
-                if property in style: 
-                    value = style[property]
+                if prop in style: 
+                    value = style[prop]
                     
         return value
 
     def __setitem__(self, property, value):
         style = self.html.get_node_properties(self.node, "-inline")
-        style[property] = value
+        style[prop] = value
         sStr = " ".join(f"{p}: {v};" for p, v in style.items())
         self.html.set_node_attribute(self.node, "style", sStr)
 
-    def __delitem__(self, property):
-        value = self.__getitem__(property)
+    def __delitem__(self, prop):
+        value = self.__getitem__(prop)
 
         # Delete the property from the Tkhtml properties list if it exists 
         style = self.html.get_node_properties(self.node, "-inline")
-        if property in style: 
-            del style[property]
+        if prop in style: 
+            del style[prop]
         else:
             # Delete the property from the 'style' attribute if it exists 
             style = self.cssInlineStyles
-            if property in style: 
-                del style[property]
+            if prop in style: 
+                del style[prop]
 
         # Delete the property's sub-properties properties if applicable
         # Do this regardless of what happens above in case the property exists as a composite while its sub-properties were also set seperately
-        if property in COMPOSITE_PROPERTIES:
-            def clean(property):
-                for key in COMPOSITE_PROPERTIES[property]:
+        if prop in COMPOSITE_PROPERTIES:
+            def clean(prop):
+                for key in COMPOSITE_PROPERTIES[prop]:
                     if key in COMPOSITE_PROPERTIES:
                         clean(key)
                     elif key in style:
@@ -817,14 +786,14 @@ class CSSStyleDeclaration:
 
         return value
 
-    def __setattr__(self, property, value):
-        if property in ("node", "html"):
-            super().__setattr__(property, value)
+    def __setattr__(self, prop, value):
+        if prop in ("node", "html"):
+            super().__setattr__(prop, value)
         else:
-            self.__setitem__(camel_case_to_property(property), value)
+            self.__setitem__(camel_case_to_property(prop), value)
 
     def __getattr__(self, property):
-        return self.__getitem__(camel_case_to_property(property))
+        return self.__getitem__(camel_case_to_property(prop))
 
     @property
     def cssText(self):

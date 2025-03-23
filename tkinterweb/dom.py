@@ -673,19 +673,21 @@ class HTMLCollection:
         nodes = self.html.search(self.searchCmd, root=self.node)
         return iter(HTMLElement(self.docu, node) for node in nodes)
 
-    def __getitem__(self, index):
-        return self.item(index)
+    def __getitem__(self, index): return self.item(index)
+
+    def __len__(self): return self.length
 
     @property
     def length(self):
-        return self.html.search(self.searchCmd, "-length", root=self.node)
+        return self.html.search(self.searchCmd, "length", root=self.node)
     
     def item(self, index):
         return HTMLElement(self.docu, self.html.search(self.searchCmd, index=index, root=self.node))
     
-    def namedItem(self, qry):
-        for i in self:
-            if i.getAttribute("id") == qry or i.getAttribute("name") == qry: return i
+    def namedItem(self, key):
+        for i in self.html.search(self.searchCmd, root=self.node):
+            if key in {self.html.get_node_attribute(i, "id"), self.html.get_node_attribute(i, "name")}:
+                return HTMLElement(self.docu, i)
         return None
 
 class DOMRect:

@@ -438,7 +438,7 @@ class TkinterWeb(tk.Widget):
 
     def node(self, *args):
         "Retrieve one or more document node handles from the current document."
-        nodes = self.tk.call(self._w, "node", *TclOpt(args))
+        nodes = self.tk.call(self._w, "node", *args)
         if nodes:
             return nodes
         else:
@@ -534,9 +534,7 @@ class TkinterWeb(tk.Widget):
         if value:  # backwards compatability
             return self.tk.call(node_handle, "attribute", attribute, value)
         else:
-            return self.tk.call(
-                node_handle, "attribute", "-default", default, attribute
-            )
+            return self.tk.call(node_handle, "attribute", "-default", default, attribute)
 
     def set_node_attribute(self, node_handle, attribute, value):
         "Set the specified attribute of the given node."

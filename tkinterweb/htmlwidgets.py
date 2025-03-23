@@ -662,7 +662,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         title = ""
         icon = ""
         base = ""
-        style = "\n"
+        style = ""
         
         for rule in self._html.get_computed_styles():
             selector, prop, origin = rule
@@ -672,10 +672,10 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         if self._html.title: title = f"\n\t\t<title>{self._html.title}</title>"
         if self._html.icon: icon = f"\n\t\t<link rel=\"icon\" type=\"image/x-icon\" href=\"/{self._html.icon}\">"
         if self._html.base_url: base = f"\n\t\t<base href=\"{self._html.base_url}\"></base>"
-        if style.strip(): style = f"\n\t\t<style>{style}\t\t</style>"
+        if style: style = f"\n\t\t<style>{style}\n\t\t</style>"
         body = self.document.body.innerHTML
 
-        html = f"""<!DOCTYPE html>\n<html>\n\t<head>{title}{icon}{base}{style}\n\t</head>\n\t<body>\n\t{body}\n\t</body>\n</html>"""
+        html = f"""<!DOCTYPE html>\n<html>\n\t<head>{title}{icon}{base}{style}\n\t</head>\n\t<body>\n\t\t{body}\n\t</body>\n</html>"""
         if filename:
             if not path.splitext(filename)[1]:
                 filename = f"{filename}.{self.cget('parsemode')}"

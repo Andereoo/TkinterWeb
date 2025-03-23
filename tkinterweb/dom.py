@@ -675,8 +675,6 @@ class HTMLCollection:
 
     def __getitem__(self, index): return self.item(index)
 
-    def __len__(self): return self.length
-
     @property
     def length(self):
         return self.html.search(self.searchCmd, "length", root=self.node)
@@ -718,7 +716,7 @@ class CSSStyleDeclaration:
     def __getitem__(self, prop):
         # Get value from Tkhtml if it is a real and existing property
         try:
-            value = self.html.get_node_property(self.node, property, "-inline")
+            value = self.html.get_node_property(self.node, property, "inline")
         except TclError:
             # Ignore invalid properties
             value = ""
@@ -751,23 +749,22 @@ class CSSStyleDeclaration:
         return value
 
     def __setitem__(self, property, value):
-        style = self.html.get_node_properties(self.node, "-inline")
-        style[property] = value
-        sStr = " ".join(f"{p}: {v};" for p, v in style.items())
-        self.html.set_node_attribute(self.node, "style", sStr)
+        current = self.html.get_node_properties(self.node, "inline")
+        current[property] = value
+        style = " ".join(f"{p}: {v};" for p, v in current.items())
+        self.html.set_node_attribute(self.node, "style", style)
 
     def __delitem__(self, prop):
         value = self.__getitem__(prop)
 
         # Delete the property from the Tkhtml properties list if it exists 
-        style = self.html.get_node_properties(self.node, "-inline")
-        if prop in style: 
-            del style[prop]
+        current = self.html.get_node_properties(self.node, "inline")
+        if prop in current: del current[prop]
         else:
             # Delete the property from the 'style' attribute if it exists 
-            style = self.cssInlineStyles
-            if prop in style: 
-                del style[prop]
+            current = self.cssInlineStyles
+            if prop in current: 
+                del current[prop]
 
         # Delete the property's sub-properties properties if applicable
         # Do this regardless of what happens above in case the property exists as a composite while its sub-properties were also set seperately
@@ -776,12 +773,12 @@ class CSSStyleDeclaration:
                 for key in COMPOSITE_PROPERTIES[prop]:
                     if key in COMPOSITE_PROPERTIES:
                         clean(key)
-                    elif key in style:
-                        del style[key]
-            clean(property)
+                    elif key in current:
+                        del current[key]
+            clean(prop)
 
-        sStr = " ".join(f"{p}: {v};" for p, v in style.items())
-        self.html.set_node_attribute(self.node, "style", sStr)
+        style = " ".join(f"{p}: {v};" for p, v in current.items())
+        self.html.set_node_attribute(self.node, "style", style)
 
         return value
 
@@ -791,7 +788,7 @@ class CSSStyleDeclaration:
         else:
             self.__setitem__(camel_case_to_property(prop), value)
 
-    def __getattr__(self, property):
+    def __getattr__(self, prop):
         return self.__getitem__(camel_case_to_property(prop))
 
     @property
@@ -806,7 +803,7 @@ class CSSStyleDeclaration:
         """Return the number of style declarations in the element's inline style declaration.
         
         :rtype: int"""
-        return len(self.html.get_node_properties(self.node, "-inline"))
+        return len(self.html.get_node_properties(self.node, "inline"))
     
     @property
     def cssProperties(self): # not a JS function, but could be useful
@@ -820,19 +817,14 @@ class CSSStyleDeclaration:
         """Return all inline properties for the element. Similar to the :attr:`cssText` property, but formatted as a dictionary.
         
         :rtype: dict"""
-        return self.html.get_node_properties(self.node, "-inline")
+        return self.html.get_node_properties(self.node, "inline")
     
     @property 
     def cssInlineStyles(self):
         """Return the content of the element's ``style`` attribute, formatted as a dictionary.
         
         :rtype: dict"""
-        inline = (self.html.get_node_attribute(self.node, "style"))
-        style = {}
-        for item in inline.split(";"):
-            if item:
-                key, old = item.split(":", 1)
-                style[key.strip()] = old.strip()
+        style = {k.strip(): o.strip() for i in self.cssText.split(";") if i for k, o in [i.split(":", 1)]}
         return style
     
     def getPropertyPriority(self, property):
@@ -842,10 +834,7 @@ class CSSStyleDeclaration:
         :type property: str
         :return: "important" or "".
         :rtype: str"""
-        style = self.cssInlineStyles
-        if property in style:
-            value = style[property]
-            if value.endswith("!important"): return "important"
+        if self.__getitem__(property).endswith("!important"): return "important"
         return ""
 
     def getPropertyValue(self, property):

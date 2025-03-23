@@ -146,8 +146,7 @@ class HTMLDocument:
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        nodes = self.html.search(" ".join(f".{i}" for i in query.split()))
-        return HTMLCollection(HTMLElement(self, node) for node in nodes)
+        return HTMLCollection(self, " ".join(f".{i}" for i in query.split()))
 
     def getElementsByName(self, query):
         """Return all elements that match a given given name attribute.
@@ -156,8 +155,7 @@ class HTMLDocument:
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        nodes = self.html.search(f"[name='{query}']")
-        return HTMLCollection(HTMLElement(self, node) for node in nodes)
+        return HTMLCollection(self, f"[name='{query}']")
 
     def getElementsByTagName(self, query):
         """Return all elements that match a given tag name.
@@ -166,8 +164,7 @@ class HTMLDocument:
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        nodes = self.html.search(query)
-        return HTMLCollection(HTMLElement(self, node) for node in nodes)
+        return HTMLCollection(self, query)
 
     def querySelector(self, query):
         """Return the first element that matches a given CSS selector.
@@ -185,8 +182,7 @@ class HTMLDocument:
         :type query: str
         :rtype: tuple[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        nodes = self.html.search(query)
-        return HTMLCollection(HTMLElement(self, node) for node in nodes)
+        return [HTMLElement(self, i) for i in self.html.search(query)]
     
     def _node_to_html(self, node, deep=True):  # From hv3_dom_core.tcl line 311 and line 329
         return self.html.tk.eval(r"""
@@ -641,7 +637,7 @@ class HTMLElement:
 
     def querySelectorAll(self, query):
         "Return all elements that are children of the current element and match the given CSS selector."
-        return HTMLElement(self, self.html.search(query, root=self.node))
+        return [HTMLElement(self, i) for i in self.html.search(query, root=self.node)]
     
     def scrollIntoView(self):
         "Scroll the viewport so that this element is visible."
@@ -666,30 +662,31 @@ class HTMLElement:
             self.html.insert_node(self.node, tkhtml_children_nodes)
         self.html.send_onload(children)
 
-        #for node in tkhtml_children_nodes:
-        #    print(node)
-        #    tag = self.html.get_node_tag(node)
-        #    print(tag)
-        #    if tag == "a":
-        #        self.html._on_a(self.node)
-        #    if tag == "object":
-        #        self.html._on_object(self.node)
-        #    if tag == "iframe":
-        #        self.html._on_iframe(self.node)
+class HTMLCollection:
+    def __init__(self, document_manager, searchCmd, root=None):
+        self.docu = document_manager
+        self.html = document_manager.html
+        self.searchCmd = searchCmd
+        self.node = root
 
-class HTMLCollection(list):
-    # For some reason this stuff doesn't work in JavaScript
+    def __iter__(self):
+        nodes = self.html.search(self.searchCmd, root=self.node)
+        return iter(HTMLElement(self.docu, node) for node in nodes)
+
+    def __getitem__(self, index):
+        return self.item(index)
+
     @property
     def length(self):
-        return len(self)
+        return self.html.search(self.searchCmd, "-length", root=self.node)
     
     def item(self, index):
-        return self[int(index)]
+        return HTMLElement(self.docu, self.html.search(self.searchCmd, index=index, root=self.node))
     
-    def namedItem(self, name):
+    def namedItem(self, qry):
         for i in self:
-            if i.getAttribute("id") == name or i.getAttribute("name") == name:
-                return i
+            if i.getAttribute("id") == qry or i.getAttribute("name") == qry: return i
+        return None
 
 class DOMRect:
     """This class generates and stores information about the element's position and size at this point in time.
@@ -753,7 +750,7 @@ class CSSStyleDeclaration:
 
     def __setitem__(self, property, value):
         style = self.html.get_node_properties(self.node, "-inline")
-        style[prop] = value
+        style[property] = value
         sStr = " ".join(f"{p}: {v};" for p, v in style.items())
         self.html.set_node_attribute(self.node, "style", sStr)
 

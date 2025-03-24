@@ -13,6 +13,7 @@ Contents
    :maxdepth: 1
 
    usage
+   javascript
    geometry
    dom
    faq

@@ -27,16 +27,24 @@ MANIFEST_PATH = os.path.join(ROOT_PATH, "MANIFEST.in")
 TKHTML_SUBFOLDER_NAME = "binaries"
 
 manifest_in_contents = "recursive-include tkinterweb/tkhtml *"
-setup_py_contents_generic = """import pathlib
+setup_py_contents_generic = """import pathlib, platform
 from setuptools import setup, find_namespace_packages
 
 HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
 {}
 
+extras = dict()
+extras["javascript"] = ["pythonmonkey"]
+if platform.system() == "Linux":
+    extras["svg"] = ["pygobject"]
+else:
+    extras["svg"] = ["cairosvg"]
+extras["full"] = extras["javascript"] + extras["svg"]
+
 setup(
     name="tkinterweb",
-    version="4.0.6",
+    version="4.1.0",
     description="HTML/CSS viewer for Tkinter",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -54,7 +62,9 @@ setup(
     keywords="tkinter, Tkinter, tkhtml, Tkhtml, Tk, HTML, CSS, webbrowser",
     packages=find_namespace_packages(include=["tkinterweb", "tkinterweb.*"]),
     include_package_data=True,
-    install_requires=["pillow"],{}
+    install_requires=["pillow"],
+    extras_require = extras,
+{}
 )
 print("The API changed in version 4. See https://github.com/Andereoo/TkinterWeb for details.")
 """

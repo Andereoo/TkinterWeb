@@ -11,36 +11,23 @@ from io import BytesIO
 
 try:
     import cairo
-    cairoimport = True
+    import rsvg
+    rsvgimport = "rsvg"
 except ImportError:
     try:
-        import gi
-        gi.require_version('cairo', '1.0')
-        from gi.repository import cairo
-        cairoimport = True
-    except (ValueError, ImportError,):
-        cairoimport = False
-        rsvgimport = None
-
-if cairoimport:
-    try:
-        import rsvg
-        rsvgimport = "rsvg"
-    except ImportError:
+        import cairosvg
+        rsvgimport = "cairosvg"
+    except (ImportError, FileNotFoundError,):
         try:
-            import cairosvg
-            rsvgimport = "cairosvg"
-        except (ImportError, FileNotFoundError):
-            try:
-                import gi
-                try:
-                    gi.require_version('Rsvg', '1.0')
-                except:
-                    gi.require_version('Rsvg', '2.0')
-                from gi.repository import Rsvg
-                rsvgimport = "girsvg"
-            except (ValueError, ImportError,):
-                rsvgimport = None
+            import gi
+            gi.require_version('cairo', '1.0')
+            gi.require_version('Rsvg', '2.0')
+            from gi.repository import cairo
+            from gi.repository import Rsvg
+            rsvgimport = "girsvg"
+        except (ValueError, ImportError,):
+            rsvgimport = None
+
 
 def text_to_image(name, alt, nodebox, font_type, font_size, threshold):
     from PIL import ImageFont, ImageDraw
@@ -107,15 +94,8 @@ def invert_image(image, limit):
 
 def data_to_image(data, name, imagetype, invert, limit):
     image = None
-    error = None
     if "svg" in imagetype:
-        if not cairoimport:
-            photoimage = None
-            error = "Pycairo"
-        elif not rsvgimport:
-            photoimage = None
-            error = "Rsvg"
-        elif rsvgimport == 'girsvg':
+        if rsvgimport == 'girsvg':
             handle = Rsvg.Handle()
             svg = handle.new_from_data(data.encode("utf-8"))
             dim = svg.get_dimensions()
@@ -143,6 +123,8 @@ def data_to_image(data, name, imagetype, invert, limit):
             image_data = cairosvg.svg2png(bytestring=data)
             image = Image.open(BytesIO(image_data))
             photoimage = PhotoImage(image, name=name)
+        else:
+            photoimage = None
     elif invert:
         image = invert_image(Image.open(BytesIO(data)), limit)
         photoimage = PhotoImage(image=image, name=name)
@@ -152,7 +134,7 @@ def data_to_image(data, name, imagetype, invert, limit):
     else:
         photoimage = PhotoImage(data=data, name=name)
 
-    return photoimage, error
+    return photoimage
 
 def blank_image(name):
     image = Image.new("RGBA", (1, 1))

@@ -37,6 +37,11 @@ See [Getting Started](https://tkinterweb.readthedocs.io/en/latest/usage.html) fo
 ## Installation
 To install TkinterWeb, simply type `pip install tkinterweb` in the command prompt or terminal. That's it!
 
+Or, you can also choose to install optional dependencies: 
+* Use `pip install tkinterweb[javascript]` to also install JavaScript support
+* Use `pip install tkinterweb[svg]` to also install Scalable Vector Graphics support
+* Use `pip install tkinterweb[full]` to install all optional dependencies
+
 ## Dependencies
 **In order to load webpages and show images, TkinterWeb requires the following packages:**
 * Tkinter (which is automatically packaged with most Python installations)
@@ -66,12 +71,13 @@ See [Frequently Asked Questions](https://tkinterweb.readthedocs.io/en/latest/faq
 * Most CSS pseudo-elements, such as `:hover` and `:active` are also supported. 
 
 **JavaScript:**
-* Javascript is not supported at the moment. It is up to the user to connect a JavaScript interpreter by registering a callback for scripts and manipulating the document through Python. See [DOM Manipulation with TkinterWeb](https://tkinterweb.readthedocs.io/en/latest/dom.html).
+* Javascript only partly supported at the moment.
+   * To use JavaScript, PythonMonkey must be installed.
+* See [Using JavaScript](https://tkinterweb.readthedocs.io/en/latest/javascript.html) for more information and [DOM Manipulation with TkinterWeb](https://tkinterweb.readthedocs.io/en/latest/dom.html) for information on manipulating the document through Python.
 
 **Images:**
-* TkinterWeb supports nearly 50 different image types through PIL. However, in order to load Scalable Vector Graphic images:
-    * PyCairo or PyGObject must be installed. 
-    * Either Rsvg, PyGObject, or CairoSVG must also be installed. 
+* TkinterWeb supports nearly 50 different image types through PIL.
+    * In order to load Scalable Vector Graphic images, PyGObject, CairoSVG, or both PyCairo and Rsvg must be installed. 
 * Without these packages, TkinterWeb will still function properly, but SVG files will not be shown.
 
 ## Contributing

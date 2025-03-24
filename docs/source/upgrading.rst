@@ -13,6 +13,7 @@ Summary of changes
 * Widget behaviour and API is now more closely aligned with standard Tkinter widgets
 * The DOM API now more closely mirrors its JavaScript counterparts
 * Dozens of new configuration options, including access to more settings and the ability to link a JavaScript interpreter
+* Basic JavaScript support (new in version 4.1)
 * More DOM improvements
 
 Removed
@@ -81,6 +82,7 @@ Added
 * :meth:`.HtmlFrame.show_error_page`
 * :meth:`.HtmlFrame.print_page`
 * :meth:`.HtmlFrame.screenshot_page`
+* :meth:`.HtmlFrame.register_JS_object`` (new in version 4.1)
 * :attr:`.HtmlFrame.base_url`
 * :attr:`.HtmlFrame.icon`
 * :attr:`.HtmlFrame.title`
@@ -92,6 +94,22 @@ Added
 * :meth:`.HTMLElement.querySelector`
 * :meth:`.HTMLElement.querySelectorAll`
 * :meth:`.HTMLElement.scrollIntoView`
+* :attr:`.HTMLElement.widget` (new in version 4.1)
+* :attr:`.HTMLElement.value` (new in version 4.1)
+* :attr:`.HTMLElement.checked` (new in version 4.1)
+* :attr:`.HTMLElement.onchange` (new in version 4.1)
+* :attr:`.HTMLElement.onload` (new in version 4.1)
+* :attr:`.HTMLElement.onclick` (new in version 4.1)
+* :attr:`.HTMLElement.oncontextmenu` (new in version 4.1)
+* :attr:`.HTMLElement.ondblclick` (new in version 4.1)
+* :attr:`.HTMLElement.onmousedown` (new in version 4.1)
+* :attr:`.HTMLElement.onmouseenter` (new in version 4.1)
+* :attr:`.HTMLElement.onmouseleave` (new in version 4.1)
+* :attr:`.HTMLElement.onmousemove` (new in version 4.1)
+* :attr:`.HTMLElement.onmouseout` (new in version 4.1)
+* :attr:`.HTMLElement.onmouseover` (new in version 4.1)
+* :attr:`.HTMLElement.onmouseup` (new in version 4.1)
+
 
 * :class:`.CSSStyleDeclaration`
 * :attr:`.CSSStyleDeclaration.*` (any camel-case CSS property)
@@ -99,12 +117,16 @@ Added
 * :attr:`.CSSStyleDeclaration.length`
 * :attr:`.CSSStyleDeclaration.cssProperties`
 * :attr:`.CSSStyleDeclaration.cssInlineProperties`
+* :attr:`.CSSStyleDeclaration.setProperty` (new in version 4.1)
+* :attr:`.CSSStyleDeclaration.getPropertyValue` (new in version 4.1)
+* :attr:`.CSSStyleDeclaration.removeProperty` (new in version 4.1)
 
 * :meth:`.TkinterWeb.enable_imagecache`
 * :meth:`.TkinterWeb.destroy_node`
 * :meth:`.TkinterWeb.get_node_properties`
 * :meth:`.TkinterWeb.override_node_properties`
 * :meth:`.TkinterWeb.update_tags`
+* :meth:`.TkinterWeb.send_onload` (new in version 4.1)
 
 * ``utilities.DOWNLOADING_RESOURCE_EVENT`` (equivalent to ``<<DownloadingResource>>``)
 * ``utilities.DONE_LOADING_EVENT`` (equivalent to ``<<DoneLoading>>``)
@@ -113,6 +135,7 @@ Added
 * ``utilities.TITLE_CHANGED_EVENT`` (equivalent to ``<<TitleChanged>>``)
 
 * Many new configuration options were added. See the :doc:`api/htmlframe` for a complete list.
+* Support for many JavaScript events were added in version 4.1.
 
 * The ``tkinterweb-full-page`` attribute can now be added to elements to make them the same height as the viewport. This can be used for vertical alignment of page content. See the TkinterWeb Demo class in `__init__.py <https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/__init__.py>`_ for example usage.
 
@@ -128,9 +151,14 @@ Changed
 * :meth:`.HTMLElement.remove` now raises a TclError when invoked on ``<html>`` or ``<body>`` elements, which previously caused segmentation faults.
 * :attr:`.HTMLElement.innerHTML` and :attr:`.HTMLElement.textContent` now raise a TclError when invoked on ``<html>`` elements, which previously caused segmentation faults.
 
+* Shorthand CSS properties can now be set and returned after the document is loaded.
+
   
 * The ability to style color selector inputs was improved.
+* The ability to access form elements has improved.
 * Text elements now emit the ``<<Modified>>`` event *after* the content updates.
-  
 
-* The TkinterWeb demo and some of the built-in pages have been updated. Many internal methods and variable
+* As of version 4.1, :meth:`.HtmlFrame.screenshot_page` is now partially supported on Windows and now accepts the additional parameter ``show``. 
+* As of version 4.1, the default selection and find text colors are less abrupt.
+
+* The TkinterWeb demo and some of the built-in pages have been updated. Many internal methods and variables have been renamed, removed, or modified.

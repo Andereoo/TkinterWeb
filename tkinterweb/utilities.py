@@ -14,6 +14,7 @@ import threading
 
 import ssl
 from urllib.request import Request, urlopen
+from collections import namedtuple
 
 import tkinter as tk
 from tkinter import colorchooser, filedialog, ttk

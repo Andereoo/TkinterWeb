@@ -5,7 +5,6 @@ Copyright (c) 2025 Andereoo
 """
 
 from re import IGNORECASE, MULTILINE, split, sub, finditer
-from collections import namedtuple
 
 import tkinter as tk
 from tkinter import ttk

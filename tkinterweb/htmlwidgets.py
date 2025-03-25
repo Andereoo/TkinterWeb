@@ -1014,32 +1014,32 @@ class HtmlLabel(TkinterWeb):
         if kwargs: super().configure(**kwargs)
 
     def cget(self, key):
-        if "text" == key: return self._serializeNode(self.node()).split()
+        if "text" == key: return self._serializeNode(self.node()).splitlines()[1::2]
         if "style" == key: return {i[0]:i[1] for i in self.get_computed_styles() if "agent"!=i[2]}
         return super().cget(key)
 
     def _serializeNode(self, node):  # From hv3_bookmarks.tcl lines 340; 355
         return self.tk.eval(r"""
-            proc serialize {node} {
-                set tag [$node tag]
-                if {$tag eq ""} {
-                    return [string map {< &lt; > &gt;} [$node text -pre]]
-                }
-                set attr ""
-                foreach {k v} [$node attribute] {
-                    set v [string map {\" \\\"} $v]  ; # Escape quotes
-                    append attr " $k=\"$v\""
-                }
-                set void {area base br col embed hr img input keygen link meta param source track wbr}
-                if {[lsearch -exact $void $tag] != -1} {
-                    return <$tag$attr>
-                }
-                set content {}
-                foreach child [$node children] {
-                    append content [serialize_node $child]
-                }
-                return " <$tag$attr> $content </$tag> "
+        proc serialize {node} {
+            set tag [$node tag]
+            if {$tag eq ""} {
+                return \n[string map {< &lt; > &gt;} [$node text -pre]]\n
             }
+            set attr ""
+            foreach {k v} [$node attribute] {
+                set v [string map {\" \\\"} $v]  ; # Escape quotes
+                append attr " $k=\"$v\""
+            }
+            set void {area base br col embed hr img input keygen link meta param source track wbr}
+            if {[lsearch -exact $void $tag] != -1} {
+                return <$tag$attr>
+            }
+            set content {}
+            foreach child [$node children] {
+                append content [serialize_node $child]
+            }
+            return \n<$tag$attr>\n$content\n</$tag>\n
+        }
             serialize %s """ % node)
 
     def config(self, **kwargs):
@@ -1051,35 +1051,26 @@ class HtmlParse():
     """
 
     def __init__(self, markup, **kwargs):
-        self.tkinterweb_options = {
-            "message_func": notifier, "messages_enabled": False,
-            "caches_enabled": True, "crash_prevention_enabled": True,
-            "javascript_enabled": False, "insecure_https": False,
-            "headers": HEADERS, "experimental": True,
-            "use_prebuilt_tkhtml": True  # no impact after loading
-        }
-        self.tkhtml_options = {"parsemode": DEFAULT_PARSE_MODE, "mode": DEFAULT_ENGINE_MODE}
-
-        for key in list(kwargs.keys()):
-            if key in self.tkinterweb_options: self.tkinterweb_options[key] = kwargs.pop(key)
-            elif key in self.tkhtml_options: self.tkhtml_options[key] = kwargs.pop(key)
+        if "headers" not in kwargs: kwargs["headers"] = HEADERS
         
         self.master = root = tk.Tk()
-        self.html = html = TkinterWeb(root, self.tkinterweb_options, **self.tkhtml_options)
+        self.html = html = TkinterWeb(root, kwargs)
         self.document = HTMLDocument(html)
-        html.images_enabled = html.stylesheets_enabled = html.forms_enabled = False
+        
+        html.forms_enabled = False
+        html.events_enabled = False
+        html.images_enabled = False
+        html.stylesheets_enabled = False
 
         root.withdraw()
+
+        if os.path.isfile(markup): markup = "file:///" + markup
         parsed = html.uri(markup)
         
-        if html.uri_scheme(parsed) in frozenset({"https", "http"}):
-            markup, url, file, r = cache_download(markup, headers=tuple(html.headers.items()))
-        elif os.path.isfile(markup) or html.uri_scheme(parsed) == "file":
-            if parsed_url.scheme != "file": markup = f"file:///{markup}"
-            markup, url, file, r = download(markup, headers=tuple(html.headers.items()))
+        if html.uri_scheme(parsed) in frozenset({"file", "https", "http"}):
+            markup, url, file, r = html._download_url(markup)
 
         html.parse(markup)
 
     def __str__(self):
-        d = self.document.documentElement
-        return f"<{d.tagName}>{d.innerHTML}</{d.tagName}>"
+        return f"<html>{self.document.documentElement.innerHTML}</html>"

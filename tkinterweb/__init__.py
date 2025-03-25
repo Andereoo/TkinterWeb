@@ -13,7 +13,7 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
 try:
     from htmlwidgets import HtmlFrame, HtmlLabel, HtmlParse
-    from bindings import TkinterWeb
+    from bindings import TkinterWeb, ParsedURI
     from utilities import Notebook, __title__, __author__, __copyright__, __license__, __version__
 except (ImportError, ModuleNotFoundError):
     import traceback
@@ -33,7 +33,7 @@ See https://github.com/Andereoo/TkinterWeb/blob/main/docs/FAQ.md for more inform
     sys.exit()
 
 
-__all__ = ['HtmlFrame', 'HtmlLabel', 'TkinterWeb', 'Notebook', 'Demo']
+__all__ = ['HtmlFrame', 'HtmlLabel', 'TkinterWeb', 'Notebook', 'Demo' 'HtmlParse', 'ParsedURI']
 
 
 class Demo():

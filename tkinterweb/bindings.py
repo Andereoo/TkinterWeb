@@ -2297,3 +2297,43 @@ class TkinterWeb(tk.Widget):
 
     def uri_destroy(self, parsed):
         self.tk.call(parsed, "destroy")
+
+class ParsedURI(tk.Widget):  # Not sure if this one is really necessary
+    def __init__(self, uri, master=None):
+        folder = get_tkhtml_folder()
+        if master is None:
+            master = tk.Tk()
+            master.withdraw()
+        try:
+            load_tkhtml(master, folder)
+            tk.Widget.__init__(self, master, "html")
+        except tk.TclError:
+            load_tkhtml(master, folder, True)
+            tk.Widget.__init__(self, master, "html")
+        self.parsed = self.tk.call("::tkhtml::uri", uri)
+
+    def resolve(self, uri): return self.tk.call(self.parsed, "resolve", uri)
+
+    def load(self, uri): return self.tk.call(self.parsed, "load", uri)
+
+    @property
+    def defrag(self): return self.tk.call(self.parsed, "get_no_fragment")
+
+    @property
+    def scheme(self): return self.tk.call(self.parsed, "scheme")
+
+    @property
+    def authority(self): return self.tk.call(self.parsed, "authority")
+
+    @property
+    def path(self): return self.tk.call(self.parsed, "path")
+
+    @property
+    def query(self): return self.tk.call(self.parsed, "query")
+
+    @property
+    def fragment(self): return self.tk.call(self.parsed, "fragment")
+
+    def __str__(self): return self.tk.call(self.parsed, "get")
+
+    def __del__(self): self.tk.call(self.parsed, "destroy")

@@ -988,7 +988,7 @@ class TkinterWeb(tk.Widget):
         "Generate a full url from the specified url."
         parsed = self.uri(self.base_url)
         res = self.uri_resolve(parsed, url)
-        self.uri_resolve(parsed, url)
+        self.uri_destroy(parsed)
         return res
     
     def update_tags(self):
@@ -1779,7 +1779,7 @@ class TkinterWeb(tk.Widget):
         if action == "":
             url = self.uri(self.base_url)
             url = f"{self.uri_scheme(url)}://{self.uri_authority(url)}{self.uri_path(url)}"
-            self.uri_destory(url)
+            self.uri_destroy(url)
         else:
             url = self.resolve_url(action)
 

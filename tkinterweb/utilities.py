@@ -494,6 +494,8 @@ TITLE_CHANGED_EVENT = "<<TitleChanged>>"
 tkhtml_loaded = False
 combobox_loaded = False
 
+SplitFrag = namedtuple("SplitFrag", ("uri", "fragment"))
+
 
 class AutoScrollbar(ttk.Scrollbar):
     "Scrollbar that hides itself when not needed"

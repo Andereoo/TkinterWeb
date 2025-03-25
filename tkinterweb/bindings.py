@@ -5,6 +5,7 @@ Copyright (c) 2025 Andereoo
 """
 
 from re import IGNORECASE, MULTILINE, split, sub, finditer
+from collections import namedtuple
 
 import tkinter as tk
 from tkinter import ttk
@@ -2298,7 +2299,7 @@ class TkinterWeb(tk.Widget):
     def uri_destroy(self, parsed):
         self.tk.call(parsed, "destroy")
 
-class ParsedURI(tk.Widget):  # Not sure if this one is really necessary
+class ParsedURI(tk.Widget):  # Not sure if this one is really necessary. Could be merged with methods above, I could do that
     def __init__(self, uri, master=None):
         folder = get_tkhtml_folder()
         if master is None:
@@ -2333,6 +2334,9 @@ class ParsedURI(tk.Widget):  # Not sure if this one is really necessary
 
     @property
     def fragment(self): return self.tk.call(self.parsed, "fragment")
+
+    @property
+    def splitfrag(self): return SplitFrag(self.defrag, self.fragment)
 
     def __str__(self): return self.tk.call(self.parsed, "get")
 

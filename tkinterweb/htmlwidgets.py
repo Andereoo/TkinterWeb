@@ -1014,8 +1014,14 @@ class HtmlLabel(TkinterWeb):
         if kwargs: super().configure(**kwargs)
 
     def cget(self, key):
-        if "text" == key: return self._serializeNode(self.node()).splitlines()[1::2]
-        if "style" == key: return {i[0]:i[1] for i in self.get_computed_styles() if "agent"!=i[2]}
+        if "text" == key:
+            return self._serializeNode(self.node()).splitlines()[1::2]
+        if "style" == key:
+            return {
+                i[0]: {p: v for p, v in (j.split(":") for j in [i[1]])}
+                for i in self.get_computed_styles()
+                if "agent" != i[2]
+            }
         return super().cget(key)
 
     def _serializeNode(self, node):  # From hv3_bookmarks.tcl lines 340; 355

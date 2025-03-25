@@ -986,7 +986,10 @@ class TkinterWeb(tk.Widget):
     
     def resolve_url(self, url):
         "Generate a full url from the specified url."
-        return self.uri_resolve(self.uri(self.base_url), url)
+        parsed = self.uri(self.base_url)
+        res = self.uri_resolve(parsed, url)
+        self.uri_resolve(parsed, url)
+        return res
     
     def update_tags(self):
         "Update selection and find tag colors"
@@ -1268,7 +1271,7 @@ class TkinterWeb(tk.Widget):
         if not self.stylesheets_enabled or not self.unstoppable:
             return
         try:
-            url = self.uri_resolve(self.uri(parent_url), new_url)
+            url = self.resolve_url(parent_url, new_url)
             self.post_message(f"Loading stylesheet from {shorten(url)}")
 
             self._thread_check(self.fetch_styles, url=new_url)
@@ -1690,7 +1693,7 @@ class TkinterWeb(tk.Widget):
         "Make relative uris in CSS files absolute."
         newurl = match.group()
         newurl = strip_css_url(newurl)
-        newurl = self.uri_resolve(self.uri(url), newurl)
+        newurl = self.resolve_url(url, newurl)
         newurl = f"url('{newurl}')"
         return newurl
 
@@ -1776,6 +1779,7 @@ class TkinterWeb(tk.Widget):
         if action == "":
             url = self.uri(self.base_url)
             url = f"{self.uri_scheme(url)}://{self.uri_authority(url)}{self.uri_path(url)}"
+            self.uri_destory(url)
         else:
             url = self.resolve_url(action)
 

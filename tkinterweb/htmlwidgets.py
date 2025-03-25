@@ -862,18 +862,16 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         "Finish loading urls and handle URI fragments."
         code = 404
         self._current_url = url
-
         self._html.post_event(DOWNLOADING_RESOURCE_EVENT)
-        
         try:
             method = method.upper()
             parsed = self.html.uri(url)
-
-            if method == "GET":
-                url = str(url) + str(data)
-
+            if method == "GET": url = str(url) + str(data)
+            prevParse = self.html.uri(self._previous_url)
             # if url is different than the current one, load the new site
-            if force or (method == "POST") or ((self.html.uri_defrag(parsed)).replace("/", "") != (self.html.uri_defrag(self.html.uri(self._previous_url))).replace("/", "")):
+            if (force or method == "POST" or
+                self.html.uri_defrag(parsed).replace("/", "") != self.html.uri_defrag(prevParse).replace("/", "")
+            ):
                 view_source = False
                 if url.startswith("view-source:"):
                     view_source = True
@@ -884,18 +882,20 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
                     self._html.post_message("WARNING: Using insecure HTTPS session")
                 if (self.html.uri_scheme(parsed) == "file") or (not self._html.caches_enabled):
                     data, newurl, filetype, code = download(
-                        url, data, method, decode, self._html.insecure_https, tuple(self._html.headers.items()))
+                        url, data, method, decode, self._html.insecure_https, tuple(self._html.headers.items())
+                    )
                 else:
-                    data, newurl, filetype, code = cache_download(
-                        url, data, method, decode, self._html.insecure_https, tuple(self._html.headers.items()))
+                    data, newurl, filetype, code = download(
+                        url, data, method, decode, self._html.insecure_https, tuple(self._html.headers.items())
+                    )
                 self._html.post_message(f"Successfully connected to {self.html.uri_authority(parsed)}")
                 if get_current_thread().isrunning():
                     if view_source:
-                        newurl = "view-source:"+newurl
+                        newurl = "view-source:" + newurl
                         if self._current_url != newurl:
                             self._current_url = newurl
                             self._html.post_event(URL_CHANGED_EVENT)
-                        data = str(data).replace("<","&lt;").replace(">", "&gt;")
+                        data = str(data).replace("<", "&lt;").replace(">", "&gt;")
                         data = data.splitlines()
                         length = int(len(str(len(data))))
                         if len(data) > 1:
@@ -904,14 +904,22 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
                             data = data.split("</code><br>", 1)[1]
                         else:
                             data = "".join(data)
-                        self.load_html(BUILTIN_PAGES["about:view-source"].format(self.about_page_background, self.about_page_foreground, length*9, data), newurl)
+                        self.load_html(
+                            BUILTIN_PAGES["about:view-source"].format(
+                                self.about_page_background, self.about_page_foreground, length * 9, data
+                            ),
+                            newurl
+                        )
                     elif "image" in filetype:
                         self.load_html("", newurl)
-                        if self._current_url != newurl:
-                            self._html.post_event(URL_CHANGED_EVENT)
+                        if self._current_url != newurl: self._html.post_event(URL_CHANGED_EVENT)
                         name = self._html.image_name_prefix + str(len(self._html.loaded_images))
                         self._html.finish_fetching_images(None, data, name, filetype, newurl)
-                        self.add_html(BUILTIN_PAGES["about:image"].format(self.about_page_background, self.about_page_foreground, name))
+                        self.add_html(
+                            BUILTIN_PAGES["about:image"].format(
+                                self.about_page_background, self.about_page_foreground, name
+                            )
+                        )
                     else:
                         if self._current_url != newurl:
                             self._current_url = newurl
@@ -925,29 +933,29 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
             # handle URI fragments
             frag = self.html.uri_fragment(parsed)
             if frag:
-                #self._html.tk.call(self._html._w, "_force")
+                # self._html.tk.call(self._html._w, "_force")
                 self._html.update()
                 try:
-                    frag = ''.join(char for char in frag if char.isalnum() or char in ("-", "_"))
+                    frag = "".join(char for char in frag if char.isalnum() or char in ("-", "_"))
                     node = self._html.search(f"[id={frag}]")
-                    if node:
-                        self._html.yview(node)
+                    if node: self._html.yview(node)
                     else:
                         node = self._html.search(f"[name={frag}]")
-                        if node:
-                            self._html.yview(node)
-                except Exception:
-                    pass
+                        if node: self._html.yview(node)
+                except Exception: pass
+            self.html.uri_destroy(parsed)
+            self.html.uri_destroy(prevParse)
         except Exception as error:
             self._html.post_message(f"ERROR: could not load {url}: {error}")
             if "CERTIFICATE_VERIFY_FAILED" in str(error):
-                self._html.post_message(f"Check that you are using the right url scheme. Some websites only support http.\n\
-This might also happen if your Python distribution does not come installed with website certificates.\n\
-This is a known Python bug on older MacOS systems. \
-Running something along the lines of \"/Applications/Python {'.'.join(PYTHON_VERSION[:2])}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
-Otherwise, use 'configure(insecure_https=True)' to ignore website certificates.")
+                self._html.post_message(
+                    f"Check that you are using the right url scheme. Some websites only support http.\n\
+    This might also happen if your Python distribution does not come installed with website certificates.\n\
+    This is a known Python bug on older MacOS systems. \
+    Running something along the lines of \"/Applications/Python {'.'.join(PYTHON_VERSION[:2])}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
+    Otherwise, use 'configure(insecure_https=True)' to ignore website certificates."
+                )
             self.on_navigate_fail(url, error, code)
-
         self._thread_in_progress = None
 
     def _finish_css(self):        

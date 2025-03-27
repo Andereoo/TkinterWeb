@@ -63,6 +63,27 @@ def flatten(data):
     else:
         return data
 
+
+def DOM_events_element(cls):  # class
+    events = frozenset({
+        "onblur", "onchange", "onclick", "ondblclick", "onfocus", "onkeydown",
+        "onkeypress", "onkeyup", "onmousedown", "onmousemove", "onmouseout",
+        "onmouseover", "onmouseup", "onreset", "onselect", "onsubmit"
+    })
+    for event in events:
+        # Create the getter function
+        def getter(cls, event=event):  # Default argument to capture current event
+            return cls.getAttribute(event)
+
+        # Create the setter function
+        def setter(cls, value, event=event):  # Default argument to capture current event
+            cls.setAttribute(event, value)
+
+        # Use property to create a new property with the getter and setter
+        prop = property(lambda cls: getter(cls), lambda cls, value: setter(cls, value))
+        setattr(cls.__class__, event, prop)  # Set the property on the class
+
+
 class HTMLDocument:
     """Access this class via the :attr:`~tkinterweb.HtmlFrame.document` property of the :class:`~tkinterweb.HtmlFrame` and :class:`~tkinterweb.HtmlLabel` widgets.
     
@@ -236,7 +257,7 @@ class HTMLElement:
         self.node = flatten(node)
         self.style_cache = None  # initialize style as None
         self.html.get_node_tkhtml(node)  # check if the node is valid, rises invalid command error if not.
-        self.DOM_events_element()
+        DOM_events_element(self)
 
         # we need this here or crashes happen if multiple Tkhtml instances exist (depending on the Tkhtml version)
         # no idea why, but hey, it works
@@ -411,25 +432,6 @@ class HTMLElement:
     def checked(self, value):
         if self.node in self.html.form_widgets:
             self.html.set_node_attribute(self.node, "checked", value)
-
-    def DOM_events_element(self):
-        events = [
-            "onclick", "ondblclick", "onmousedown", "onmouseup", "onmouseover",
-            "onmousemove", "onmouseout", "onkeypress", "onkeydown", "onkeyup",
-            "onfocus", "onblur", "onsubmit", "onreset", "onselect", "onchange"
-        ]
-        for event in events:
-            # Create the getter function
-            def getter(self, event=event):  # Default argument to capture current event
-                return self.getAttribute(event)
-
-            # Create the setter function
-            def setter(self, value, event=event):  # Default argument to capture current event
-                self.setAttribute(event, value)
-
-            # Use property to create a new property with the getter and setter
-            prop = property(lambda self: getter(self), lambda self, value: setter(self, value))
-            setattr(self.__class__, event, prop)  # Set the property on the class
 
     @property
     def onmouseup(self):

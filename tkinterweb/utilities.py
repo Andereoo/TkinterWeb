@@ -1090,9 +1090,36 @@ def tkhtml_notifier(name, text, *args):
         "sys.stdout.write doesn't work in .pyw files."
         "Since .pyw files have no console, we won't bother printing messages."
 
+
 def TclOpt(options):
     "Format string into Tcl option command-line names"
     return tuple(o if o.startswith("-") else "-"+o for o in options)
+
+
+def serialize_node(widget, start, ib):
+    return widget.tk.eval(r"""
+        proc prettify {node {num -1}} {
+            set depth [expr {[incr num] * %d}]
+            set tag [$node tag]
+            if {$tag eq ""} {
+		if {[string trim [$node text]] eq ""} return
+		return [string repeat " " $depth][string map {< &lt; > &gt;} [$node text -pre]]\n
+            }
+            set ret [string repeat " " $depth]<$tag
+            foreach {zKey zVal} [$node attribute] {
+                append ret " $zKey=\"[string map [list \x22 \x5C\x22] $zVal]\""
+            }
+            append ret >\n
+            set void {area base br col embed hr img input keygen link meta param source track wbr}
+            if {[lsearch -exact $void $tag] != -1} {
+                return $ret
+            }
+            foreach child [$node children] {
+		append ret [prettify $child $num]
+            }
+            return $ret[string repeat " " $depth]</$tag>\n
+        }
+            prettify [%s node] """ % (ib, widget))
 
 
 def placeholder(*args, **kwargs):

@@ -1011,7 +1011,6 @@ class HtmlLabel(TkinterWeb):
 
         self.parse(text)
         if style: self.parse_css(data=style)
-        self.tk.createcommand("serialize_node", self._serializeNode)
 
     def configure(self, **kwargs):
         if "text" in kwargs:
@@ -1023,7 +1022,7 @@ class HtmlLabel(TkinterWeb):
 
     def cget(self, key):
         if "text" == key:
-            return self._serializeNode(self.node()).splitlines()[1::2]
+            return serialize_node(self, self.node(), 0).splitlines()
         if "style" == key:
             return {
                 i[0]: {p: v for p, v in (j.split(":") for j in [i[1]])}
@@ -1031,30 +1030,6 @@ class HtmlLabel(TkinterWeb):
                 if "agent" != i[2]
             }
         return super().cget(key)
-
-    def _serializeNode(self, node):  # From hv3_bookmarks.tcl lines 340; 355
-        return self.tk.eval(r"""
-        proc serialize {node} {
-            set tag [$node tag]
-            if {$tag eq ""} {
-                return \n[string map {< &lt; > &gt;} [$node text -pre]]\n
-            }
-            set attr ""
-            foreach {k v} [$node attribute] {
-                set v [string map {\" \\\"} $v]  ; # Escape quotes
-                append attr " $k=\"$v\""
-            }
-            set void {area base br col embed hr img input keygen link meta param source track wbr}
-            if {[lsearch -exact $void $tag] != -1} {
-                return <$tag$attr>
-            }
-            set content {}
-            foreach child [$node children] {
-                append content [serialize_node $child]
-            }
-            return \n<$tag$attr>\n$content\n</$tag>\n
-        }
-            serialize %s """ % node)
 
     def config(self, **kwargs):
         self.configure(**kwargs)
@@ -1086,5 +1061,8 @@ class HtmlParse():
 
         html.parse(markup)
 
+    def prettify(self, indentation=4):
+        return serialize_node(self.html, f"[{self.html} node]", indentation)
+
     def __str__(self):
-        return f"<html>{self.document.documentElement.innerHTML}</html>"
+        return self.document._node_to_html(self.html.node())

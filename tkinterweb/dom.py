@@ -617,6 +617,22 @@ class HTMLElement:
 
         :rtype: :class:`~tkinterweb.dom.DOMRect`"""
         return DOMRect(self)
+
+    @property
+    def id(self):
+        return self.html.get_node_attribute(self.node, "id")
+
+    @id.setter
+    def id(self, new):
+        return self.html.set_node_attribute(self.node, "id", new)
+
+    @property
+    def className(self):
+        return self.html.get_node_attribute(self.node, "class")
+
+    @className.setter
+    def className(self, new):
+        return self.html.set_node_attribute(self.node, "class", new)
     
     def _insert_children(self, children, before=None):
         "Helper method to insert children at a specified position"

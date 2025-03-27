@@ -1043,13 +1043,11 @@ class HtmlParse():
         if "headers" not in kwargs: kwargs["headers"] = HEADERS
         
         self.master = root = tk.Tk()
-        self.html = html = TkinterWeb(root, kwargs)
         self.document = HTMLDocument(html)
-        
-        html.forms_enabled = False
-        html.events_enabled = False
-        html.images_enabled = False
-        html.stylesheets_enabled = False
+        self.html = html = TkinterWeb(root, kwargs)
+
+        html.events_enabled = html.images_enabled = False
+        html.forms_enabled = html.stylesheets_enabled = False
 
         root.withdraw()
 

@@ -132,7 +132,7 @@ class HTMLDocument:
         )
 
 
-    def getElementById(self, query, _root=None):
+    def getElementById(self, query):
         """Return an element that matches a given id.
         
         :param query: The element id to be searched for.
@@ -141,7 +141,7 @@ class HTMLDocument:
         :raises: :py:class:`tkinter.TclError`"""
         return HTMLElement(self, self.html.search(f"[id='{query}']", index=0))
 
-    def getElementsByClassName(self, query, _root=None):
+    def getElementsByClassName(self, query):
         """Return all elements that match a given class name.
         
         :param query: The class to be searched for.
@@ -645,6 +645,8 @@ class HTMLCollection:
 
     def __getitem__(self, index): return self.item(index)
 
+    def __len__(self): return self.length
+
     @property
     def length(self):
         return self.html.search(self.searchCmd, "length", root=self.node)
@@ -654,7 +656,7 @@ class HTMLCollection:
     
     def namedItem(self, key):
         for i in self.html.search(self.searchCmd, root=self.node):
-            if key in {self.html.get_node_attribute(i, "id"), self.html.get_node_attribute(i, "name")}:
+            if key in {self.html.get_node_attribute(i, j) for j in {"id", "name"}}:
                 return HTMLElement(self.docu, i)
         return None
 

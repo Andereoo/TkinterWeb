@@ -65,12 +65,11 @@ def flatten(data):
 
 
 def DOM_events_element(cls):  # class
-    events = frozenset({
-        "onblur", "onchange", "onclick", "ondblclick", "onfocus", "onkeydown",
-        "onkeypress", "onkeyup", "onmousedown", "onmousemove", "onmouseout",
-        "onmouseover", "onmouseup", "onreset", "onselect", "onsubmit"
-    })
-    for event in events:
+    for event in frozenset({
+        "onchange", "onclick", "oncontextmenu", "ondblclick", "onload",
+        "onmousedown", "onmouseenter", "onmouseleave", "onmousemove", "onmouseout",
+        "onmouseover"
+    }):
         # Create the getter function
         def getter(cls, event=event):  # Default argument to capture current event
             return cls.getAttribute(event)

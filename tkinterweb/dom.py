@@ -520,6 +520,9 @@ class HTMLElement:
 
     @property
     def id(self):
+        """Get and set the element's id attrabute.
+
+        :rtype: str"""
         return self.html.get_node_attribute(self.node, "id")
 
     @id.setter
@@ -528,23 +531,25 @@ class HTMLElement:
 
     @property
     def className(self):
+        """Get and set the element's class attrabute.
+
+        :rtype: str"""
         return self.html.get_node_attribute(self.node, "class")
 
     @className.setter
     def className(self, new):
         return self.html.set_node_attribute(self.node, "class", new)
     
-    def _insert_children(self, children, before=None):
-        "Helper method to insert children at a specified position"
+    def _insert_children(self, children, before=None):  # Helper method to insert children at a specified position
         # ensure children is a list
-        children = children if isinstance(children, list) else [children]
+        children = {children} if isinstance(children, HTMLElement) else children
         # extract node commands
-        tkhtml_children_nodes = [i.node for i in children]
+        tkhtml_child_nodes = tuple(i.node for i in children)
         # insert the nodes based on the position
         if before:
-            self.html.insert_node_before(self.node, tkhtml_children_nodes, before.node)
+            self.html.insert_node_before(self.node, tkhtml_child_nodes, before.node)
         else:
-            self.html.insert_node(self.node, tkhtml_children_nodes)
+            self.html.insert_node(self.node, tkhtml_child_nodes)
 
         self.html.send_onload(children=[child.node for child in children])
 

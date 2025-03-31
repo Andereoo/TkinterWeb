@@ -128,7 +128,7 @@ def data_to_image(data, name, imagetype, invert, limit):
     elif invert:
         image = invert_image(Image.open(BytesIO(data)), limit)
         photoimage = PhotoImage(image=image, name=name)
-    elif imagetype in frozenset(("image/png", "image/gif", "image/ppm", "image/pgm")):
+    elif imagetype in frozenset({"image/png", "image/gif", "image/ppm", "image/pgm"}):
         # tkinter.PhotoImage has less overhead, so use it when possible
         photoimage = TkinterPhotoImage(name=name, data=data)
     else:

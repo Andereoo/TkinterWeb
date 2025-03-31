@@ -64,7 +64,7 @@ def flatten(data):
         return data
 
 
-def DOM_events_element(cls):  # class
+def DOM_element_events(cls):  # class
     for event in frozenset({
         "onchange", "onclick", "oncontextmenu", "ondblclick", "onload",
         "onmousedown", "onmouseenter", "onmouseleave", "onmousemove", "onmouseout",
@@ -256,7 +256,7 @@ class HTMLElement:
         self.node = flatten(node)
         self.style_cache = None  # initialize style as None
         self.html.get_node_tkhtml(node)  # check if the node is valid, rises invalid command error if not.
-        DOM_events_element(self)
+        DOM_element_events(self)
 
         # we need this here or crashes happen if multiple Tkhtml instances exist (depending on the Tkhtml version)
         # no idea why, but hey, it works
@@ -577,7 +577,7 @@ class HTMLCollection:
     
     def namedItem(self, key):
         for i in self.html.search(self.searchCmd, root=self.node):
-            if key in {self.html.get_node_attribute(i, j) for j in {"id", "name"}}:
+            if key in (self.html.get_node_attribute(i, j) for j in ("id", "name")):
                 return HTMLElement(self.docu, i)
         return None
 

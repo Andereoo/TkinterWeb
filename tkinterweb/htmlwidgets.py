@@ -885,7 +885,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
                         url, data, method, decode, self._html.insecure_https, tuple(self._html.headers.items())
                     )
                 else:
-                    data, newurl, filetype, code = download(
+                    data, newurl, filetype, code = cache_download(
                         url, data, method, decode, self._html.insecure_https, tuple(self._html.headers.items())
                     )
                 self._html.post_message(f"Successfully connected to {self.html.uri_authority(parsed)}")
@@ -943,8 +943,7 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
                         node = self._html.search(f"[name={frag}]")
                         if node: self._html.yview(node)
                 except Exception: pass
-            self.html.uri_destroy(parsed)
-            self.html.uri_destroy(prevParse)
+            for i in frozenset({parsed, prevParse}): self.html.uri_destroy(i)
         except Exception as error:
             self._html.post_message(f"ERROR: could not load {url}: {error}")
             if "CERTIFICATE_VERIFY_FAILED" in str(error):
@@ -1043,8 +1042,8 @@ class HtmlParse():
         if "headers" not in kwargs: kwargs["headers"] = HEADERS
         
         self.master = root = tk.Tk()
-        self.document = HTMLDocument(html)
         self.html = html = TkinterWeb(root, kwargs)
+        self.document = HTMLDocument(html)
 
         html.events_enabled = html.images_enabled = False
         html.forms_enabled = html.stylesheets_enabled = False

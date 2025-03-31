@@ -603,8 +603,8 @@ class TkinterWeb(tk.Widget):
         return self.tk.call(node_handle, "html")
 
     def get_node_stacking(self, node_handle):
-        "Return the node-handle that forms the stacking context"
-        "this node is located in. Return "" for the root-element or any element that is part of an orphan subtree."
+        "Return the node-handle that forms the stacking context this node is located in."
+        "Return "" for the root-element or any element that is part of an orphan subtree."
         return self.tk.call(node_handle, "stacking")
 
     def get_current_node(self, event):
@@ -977,7 +977,7 @@ class TkinterWeb(tk.Widget):
             self.post_message(f"ERROR: an error was encountered while searching for {searchtext}: {error}")
             return nmatches, selected, matches
 
-    def get_element_text(self, node):
+    def get_child_text(self, node):  # Might be better off in htmlwidgets.py
         """Get text of node and all its descendants recursively"""
         text = self.get_node_text(node, "-pre")
         for child in self.get_node_children(node):

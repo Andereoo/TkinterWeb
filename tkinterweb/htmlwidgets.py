@@ -5,8 +5,6 @@ by adding scrolling, file loading, and many other convenience functions
 Copyright (c) 2025 Andereoo
 """
 
-from os import path
-
 from bindings import TkinterWeb
 from utilities import *
 from utilities import __version__

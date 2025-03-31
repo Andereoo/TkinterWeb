@@ -698,7 +698,9 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
         if style: style = f"\n\t\t<style>{style}\n\t\t</style>"
         body = self.document.body.innerHTML
 
-        html = f"""<!DOCTYPE html>\n<html>\n\t<head>{title}{icon}{base}{style}\n\t</head>\n\t<body>\n\t\t{body}\n\t</body>\n</html>"""
+        if title or icon or base or style: style += "\n\t"
+
+        html = f"""<!DOCTYPE html>\n<html>\n\t<head>{title}{icon}{base}{style}</head>\n\t<body>\n\t\t{body}\n\t</body>\n</html>"""
         if filename:
             with open(filename, "w+") as handle:
                 handle.write(html)

@@ -1106,7 +1106,7 @@ def serialize_node(widget, ib):
 	    if {[string trim [$node text]] eq ""} return
 	    set z [string map {< &lt; > &gt;} [$node text -pre]]
 	    if {[[$node parent] tag] ne "pre"} {
-                return [indent $depth][regexp -all -inline {\S+} $z]\n
+                return [indent $depth][regsub -all {\s+} $z " "]\n
 	    } else {
                 return [indent $depth]$z\n
 	    }

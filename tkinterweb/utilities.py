@@ -1098,34 +1098,34 @@ def TclOpt(options):
 
 def serialize_node(widget, ib):
     return widget.tk.eval(r"""
-        proc indent {d} {return [string repeat { } $d]}
-        proc prettify {node {num -1}} {
-            set depth [expr {[incr num] * %d}]
-            set tag [$node tag]
-            if {$tag eq ""} {
-		if {[string trim [$node text]] eq ""} return
-		set z [string map {< &lt; > &gt;} [$node text -pre]]
-		if {[[$node parent] tag] ne "pre"} {
-                    return [indent $depth][regsub {\s+} $z " "]\n
-		} else {
-                    return [indent $depth]$z\n
-		}
-            }
-            set ret [indent $depth]<$tag
-            foreach {zKey zVal} [$node attribute] {
-                append ret " $zKey=\"[string map [list \x22 \x5C\x22] $zVal]\""
-            }
-            append ret >\n
-            set void {area base br col embed hr img input keygen link meta param source track wbr}
-            if {[lsearch -exact $void $tag] != -1} {
-                return $ret
-            }
-            foreach child [$node children] {
-		append ret [prettify $child $num]
-            }
-            return $ret[indent $depth]</$tag>\n
+    proc indent {d} {return [string repeat { } $d]}
+    proc prettify {node {num -1}} {
+        set depth [expr {[incr num] * %d}]
+        set tag [$node tag]
+        if {$tag eq ""} {
+	    if {[string trim [$node text]] eq ""} return
+	    set z [string map {< &lt; > &gt;} [$node text -pre]]
+	    if {[[$node parent] tag] ne "pre"} {
+                return [indent $depth][regsub {\s+} $z " "]\n
+	    } else {
+                return [indent $depth]$z\n
+	    }
         }
-            prettify [%s node] """ % (ib, widget))
+        set ret [indent $depth]<$tag
+        foreach {zKey zVal} [$node attribute] {
+            append ret " $zKey=\"[string map [list \x22 \x5C\x22] $zVal]\""
+        }
+        append ret >\n
+        set void {area base br col embed hr img input keygen link meta param source track wbr}
+        if {[lsearch -exact $void $tag] != -1} {
+            return $ret
+        }
+        foreach child [$node children] {
+	    append ret [prettify $child $num]
+        }
+        return $ret[indent $depth]</$tag>\n
+    }
+        prettify [%s node] """ % (ib, widget))
 
 
 def placeholder(*args, **kwargs):

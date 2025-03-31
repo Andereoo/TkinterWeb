@@ -21,7 +21,7 @@ from tkinterweb import HtmlLabel #import the HtmlLabel widget
 root = tk.Tk() #create the Tkinter window
 
 ### The important part: create the html widget and attach it to the window
-myhtmllabel = HtmlLabel(root, text='<b style="color:blue">Wow! Tkinter Labels can actually show HTML!</b>') # create the label
+myhtmllabel = HtmlLabel(root, text='<b>Wow! Tkinter Labels can actually show HTML!</b>', style='b {color: blue}'") # create the label
 
 myhtmllabel.pack() # attach the HtmlLabel widget to the window
 
@@ -35,6 +35,7 @@ HTML can also be loaded using the `load_html` command to change the content of t
 ### HtmlLabel constructors:
 * `master` Parent (Tkinter widget)
 * `text` Set the content of the widget (string) **Default: ""**
-* `**kwargs` Any other optional `HtmlFrame` arguments
+* `style` Set the style of the widget (string) **Default: ""**
+* `**kwargs` Any other optional `TkinterWeb` arguments
 
-The HtmlLabel class inherits from the HtmlFrame. For a complete list of avaliable methods, configuration options, generated events, and state variables, see the [HtmlFrame docs](HTMLFRAME.md#useful-methods).
+The HtmlLabel class inherits from the TkinterWeb. For a complete list of avaliable methods, configuration options, generated events, and state variables, see the [TkinterWeb docs](TKINTERWEB.md).

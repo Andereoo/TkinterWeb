@@ -509,25 +509,25 @@ class HTMLElement:
 
     @property
     def id(self):
-        """Get and set the element's id attrabute.
+        """Get and set the element's id attribute.
 
         :rtype: str"""
-        return self.html.get_node_attribute(self.node, "id")
+        return self.getAttribute("id")
 
     @id.setter
     def id(self, new):
-        return self.html.set_node_attribute(self.node, "id", new)
+        return self.setAttribute("id", new)
 
     @property
     def className(self):
-        """Get and set the element's class attrabute.
+        """Get and set the element's class attribute.
 
         :rtype: str"""
-        return self.html.get_node_attribute(self.node, "class")
+        return self.getAttribute("class")
 
     @className.setter
     def className(self, new):
-        return self.html.set_node_attribute(self.node, "class", new)
+        return self.setAttribute("class", new)
     
     def _insert_children(self, children, before=None):  # Helper method to insert children at a specified position
         # ensure children is a list

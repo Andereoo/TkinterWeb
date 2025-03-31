@@ -1096,16 +1096,22 @@ def TclOpt(options):
     return tuple(o if o.startswith("-") else "-"+o for o in options)
 
 
-def serialize_node(widget, start, ib):
+def serialize_node(widget, ib):
     return widget.tk.eval(r"""
+        proc indent {d} {return [string repeat { } $d]}
         proc prettify {node {num -1}} {
             set depth [expr {[incr num] * %d}]
             set tag [$node tag]
             if {$tag eq ""} {
 		if {[string trim [$node text]] eq ""} return
-		return [string repeat " " $depth][string map {< &lt; > &gt;} [$node text -pre]]\n
+		set z [string map {< &lt; > &gt;} [$node text -pre]]
+		if {[[$node parent] tag] ne "pre"} {
+                    return [indent $depth][regsub {\s+} $z " "]\n
+		} else {
+                    return [indent $depth]$z\n
+		}
             }
-            set ret [string repeat " " $depth]<$tag
+            set ret [indent $depth]<$tag
             foreach {zKey zVal} [$node attribute] {
                 append ret " $zKey=\"[string map [list \x22 \x5C\x22] $zVal]\""
             }
@@ -1117,7 +1123,7 @@ def serialize_node(widget, start, ib):
             foreach child [$node children] {
 		append ret [prettify $child $num]
             }
-            return $ret[string repeat " " $depth]</$tag>\n
+            return $ret[indent $depth]</$tag>\n
         }
             prettify [%s node] """ % (ib, widget))
 

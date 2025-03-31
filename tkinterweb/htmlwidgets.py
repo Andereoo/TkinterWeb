@@ -1021,7 +1021,7 @@ class HtmlLabel(TkinterWeb):
 
     def cget(self, key):
         if "text" == key:
-            return serialize_node(self, self.node(), 0).splitlines()
+            return serialize_node(self, 0).splitlines()
         if "style" == key:
             return {
                 i[0]: {p: v for p, v in (j.split(":") for j in [i[1]])}
@@ -1059,7 +1059,7 @@ class HtmlParse():
         html.parse(markup)
 
     def prettify(self, indentation=4):
-        return serialize_node(self.html, f"[{self.html} node]", indentation)
+        return serialize_node(self.html, indentation)
 
     def __str__(self):
         return self.document._node_to_html(self.html.node())

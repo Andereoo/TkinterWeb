@@ -68,7 +68,7 @@ def DOM_element_events(cls):  # class
     for event in frozenset({
         "onchange", "onclick", "oncontextmenu", "ondblclick", "onload",
         "onmousedown", "onmouseenter", "onmouseleave", "onmousemove", "onmouseout",
-        "onmouseover"
+        "onmouseover", "onmouseup"
     }):
         # Create the getter function
         def getter(cls, event=event):  # Default argument to capture current event
@@ -431,17 +431,6 @@ class HTMLElement:
     def checked(self, value):
         if self.node in self.html.form_widgets:
             self.html.set_node_attribute(self.node, "checked", value)
-
-    @property
-    def onmouseup(self):
-        """Convenience property for the ``onmouseup`` HTML attribute. Get and set the code to execute when the mouse button is released over the element.
-        
-        :rtype: str"""
-        return self.getAttribute("onmouseup")
-    
-    @onmouseup.setter
-    def onmouseup(self, callback):
-        self.setAttribute("onmouseup", callback)
 
     def getAttribute(self, attribute):
         """Return the value of the given attribute..

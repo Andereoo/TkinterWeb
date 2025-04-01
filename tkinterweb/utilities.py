@@ -1099,8 +1099,8 @@ def TclOpt(options):
 def serialize_node(widget, ib):
     return widget.tk.eval(r"""
     proc indent {d} {return [string repeat { } $d]}
-    proc prettify {node {num -1}} {
-        set depth [expr {[incr num] * %d}]
+    proc prettify {node} {
+        set depth [expr {([info level] - 1) * %d}]
         set tag [$node tag]
         if {$tag eq ""} {
 	    if {[string trim [$node text]] eq ""} return
@@ -1121,7 +1121,7 @@ def serialize_node(widget, ib):
             return $ret
         }
         foreach child [$node children] {
-	    append ret [prettify $child $num]
+	    append ret [prettify $child]
         }
         return $ret[indent $depth]</$tag>\n
     }

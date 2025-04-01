@@ -21,7 +21,7 @@ from tkinterweb import HtmlLabel #import the HtmlLabel widget
 root = tk.Tk() #create the Tkinter window
 
 ### The important part: create the html widget and attach it to the window
-myhtmllabel = HtmlLabel(root, text='<b>Wow! Tkinter Labels can actually show HTML!</b>', style='b {color: blue}'") # create the label
+myhtmllabel = HtmlLabel(root, text='<b>Wow! Tkinter Labels can actually show HTML!</b>', style='b {color: blue}') # create the label
 
 myhtmllabel.pack() # attach the HtmlLabel widget to the window
 

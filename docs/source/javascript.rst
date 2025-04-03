@@ -53,7 +53,7 @@ The following JavaScript event attributes are supported: ``onchange`` (``<input>
 Registering new JavaScript objects
 ----------------------------------
 
-To register new JavaScript object, use :meth:`.HtmlFrame.register_JS_object`. This can be used to access Python variables, functions, and classes from JavaScript. For instance, to add a callback for the JavaScript ``alert()`` function:
+To register new JavaScript object, use :meth:`.HtmlFrame.register_JS_object`. This can be used to access Python variables, functions, and classes from JavaScript. This, for instance, can be used to implement a ``window`` API or to add a callback for the JavaScript ``alert()`` function:
 
 .. code-block:: python
 

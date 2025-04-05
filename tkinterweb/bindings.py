@@ -1271,7 +1271,9 @@ class TkinterWeb(tk.Widget):
         if not self.stylesheets_enabled or not self.unstoppable:
             return
         try:
-            url = self.resolve_url(parent_url, new_url)
+            parent_url = self.uri(parent_url)
+            url = self.uri_resolve(parent_url, new_url)
+            self.uri_destroy(parent_url)
             self.post_message(f"Loading stylesheet from {shorten(url)}")
 
             self._thread_check(self.fetch_styles, url=new_url)
@@ -1693,7 +1695,9 @@ class TkinterWeb(tk.Widget):
         "Make relative uris in CSS files absolute."
         newurl = match.group()
         newurl = strip_css_url(newurl)
-        newurl = self.resolve_url(url, newurl)
+        uri = self.uri(url)
+        newurl = self.uri_resolve(uri, newurl)
+        self.uri_destroy(uri)
         newurl = f"url('{newurl}')"
         return newurl
 

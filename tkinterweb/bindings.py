@@ -1774,19 +1774,17 @@ class TkinterWeb(tk.Widget):
                     (nodeattrname, nodevalue),
                 )
 
-        data = self.url_encode(data)
+        data = self.tkhtml_uri_decode(data)
 
         if action == "":
-            url = self.uri(self.base_url)
-            url = f"{self.uri_scheme(url)}://{self.uri_authority(url)}{self.uri_path(url)}"
-            self.uri_destroy(url)
+            p = self.uri(self.base_url)
+            url = f"{self.uri_scheme(p)}://{self.uri_authority(p)}{self.uri_path(p)}"
+            self.uri_destroy(p)
         else:
             url = self.resolve_url(action)
 
         if method == "GET":
-            data = "?" + data
-        else:
-            data = data.encode()
+            data = "?" + data.decode()
 
         self.post_message(f"A form was submitted to {shorten(url)}")
         self.on_form_submit(url, data, method)
@@ -2256,7 +2254,7 @@ class TkinterWeb(tk.Widget):
         return self.tk.call("::tkhtml::htmlstyle")
 
     def tkhtml_uri_decode(self, uri):
-        return self.tk.call("::tkhtml::decode", uri)
+        return self.tk.call("::tkhtml::decode", uri).strip(b"{}")
 
     def tkhtml_uri_encode(self, uri):
         return self.tk.call("::tkhtml::encode", uri)

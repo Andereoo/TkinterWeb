@@ -175,3 +175,5 @@ Changed
 * As of version 4.2, widgets embedded in the document can now be removed without removing the containing element. 
 
 * The TkinterWeb demo and some of the built-in pages have been updated. Many internal methods and variables have been renamed, removed, or modified.
+
+* As of version 4.3, prebuilt Tkhtml binaries have been split off into a new package, TkinterWeb-Tkhtml. This has been done to work towards `bug #52 <https://github.com/Andereoo/TkinterWeb/issues/52>`_ and reduce the download size of the TkinterWeb package when updating.

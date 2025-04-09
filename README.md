@@ -45,10 +45,11 @@ Or, you can also choose to install optional dependencies:
 ## Dependencies
 **In order to load webpages and show images, TkinterWeb requires the following packages:**
 * Tkinter (which is automatically packaged with most Python installations)
+* TkinterWeb-Tkhtml (can be installed via `pip install tkinterweb-tkhtml`)
 * PIL (can be installed via `pip install pillow`)
-* PIL.ImageTk (may be automatically installed with PIL on some systems, otherwise needs to be installed)
+* PIL.ImageTk (may be automatically installed with PIL on some systems, otherwise needs to be installed to load most image types)
 
-Pip will automatically install PIL when installing TkinterWeb.
+Pip will automatically install PIL and TkinterWeb-Tkhtml when installing TkinterWeb.
 
 ## API Documentation
 

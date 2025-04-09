@@ -1,4 +1,5 @@
-import pathlib, platform
+import pathlib
+#import platform
 from setuptools import setup, find_namespace_packages
 
 HERE = pathlib.Path(__file__).parent
@@ -6,15 +7,16 @@ README = (HERE / "README.md").read_text()
 
 extras = dict()
 extras["javascript"] = ["pythonmonkey"]
-if platform.system() == "Linux":
-    extras["svg"] = ["pygobject", "pycairo"]
-else:
-    extras["svg"] = ["cairosvg"]
+#if platform.system() == "Linux":
+#    extras["svg"] = ["pygobject", "pycairo"]
+#else:
+#    extras["svg"] = ["cairosvg"]
+extras["svg"] = ["cairosvg"]
 extras["full"] = extras["javascript"] + extras["svg"]
 
 setup(
     name="tkinterweb",
-    version="4.2.0",
+    version="4.3.0",
     description="HTML/CSS viewer for Tkinter",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -32,6 +34,6 @@ setup(
     keywords="tkinter, Tkinter, tkhtml, Tkhtml, Tk, HTML, CSS, webbrowser",
     packages=find_namespace_packages(include=["tkinterweb", "tkinterweb.*"]),
     include_package_data=True,
-    install_requires=["pillow"],
+    install_requires=["tkinterweb-tkhtml", "pillow"],
     extras_require = extras,
 )

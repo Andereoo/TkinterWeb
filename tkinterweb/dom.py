@@ -2,9 +2,9 @@
 A thin wrapper on top of bindings.py that offers some JavaScript-like functions 
 and converts Tkhtml nodes into Python objects
 
-Some of the Tcl code in this file is borrowed from the Tkhtml/Hv3 project. See tkhtml/COPYRIGHT.
+Copyright (c) 2021-2025 Andereoo
 
-Copyright (c) 2025 Andereoo
+Some of the Tcl code in this file is borrowed from the Tkhtml/Hv3 project. Tkhtml is copyright (c) 2005 Dan Kennedy.
 """
 
 from tkinter import TclError

@@ -1,66 +1,23 @@
 """
 The core Python bindings to Tkhtml3
 
-Copyright (c) 2025 Andereoo
+Copyright (c) 2021-2025 Andereoo
 """
 
 from re import IGNORECASE, MULTILINE, split, sub, finditer
 
 from urllib.parse import urlencode, urljoin, urlparse
 
-import tkinter as tk
-from tkinter import ttk
+from tkinter import Widget, Frame, TclError
 
-from imageutils import text_to_image, data_to_image, blank_image
-from utilities import *
+from .imageutils import *
+from .utilities import *
+from .subwidgets import *
 
-
-class Combobox(tk.Widget):
-    "Bindings for Bryan Oakley's combobox widget."
-
-    def __init__(self, master):
-        try:
-            load_combobox(master)
-            tk.Widget.__init__(self, master, "::combobox::combobox")
-        except tk.TclError:
-            load_combobox(master, force=True)
-            tk.Widget.__init__(self, master, "::combobox::combobox")
-        self.configure(
-            highlightthickness=0,
-            borderwidth=0,
-            editable=False,
-            takefocus=0,
-            selectbackground="#6eb9ff",
-            relief="flat",
-            elementborderwidth=0,
-            buttonbackground="white",
-        )
-        self.data = [""]
-        self.values = [""]
-        self.default = 0
-
-    def insert(self, data, values, selected):
-        for elem in reversed(data):
-            self.tk.call(self._w, "list", "insert", 0, elem)
-        self.data = data
-        self.values = values
-        if selected:
-            self.default = self.values.index(selected)
-        self.reset()
-
-    def set(self, value):
-        if value in self.values:
-            self.tk.call(self._w, "select", self.values.index(value))
-
-    def reset(self):
-        self.tk.call(self._w, "select", self.default)
-
-    def get(self):
-        val = self.tk.call(self._w, "curselection")[0]
-        return self.values[val]
+from tkinterweb_tkhtml import get_tkhtml_folder, load_tkhtml
 
 
-class TkinterWeb(tk.Widget):
+class TkinterWeb(Widget):
     "Bindings for the Tkhtml3 HTML widget."
 
     def __init__(self, master, tkinterweb_options=None, **kwargs):
@@ -98,13 +55,13 @@ class TkinterWeb(tk.Widget):
         # load the Tkhtml3 widget
         try:
             load_tkhtml(master, folder, )
-            tk.Widget.__init__(self, master, "html", kwargs)
-        except tk.TclError:
+            Widget.__init__(self, master, "html", kwargs)
+        except TclError:
             load_tkhtml(master, folder, True)
-            tk.Widget.__init__(self, master, "html", kwargs)
+            Widget.__init__(self, master, "html", kwargs)
 
         # create a tiny, blank frame for cursor updating
-        self.motion_frame = tk.Frame(self, bg=self.motion_frame_bg, width=1, height=1)
+        self.motion_frame = Frame(self, bg=self.motion_frame_bg, width=1, height=1)
         self.motion_frame.place(x=0, y=0)
 
         # If a setting required the widget to be initialized and couldn't be changed, change it now
@@ -418,7 +375,7 @@ class TkinterWeb(tk.Widget):
                 )
             else:
                 self.tk.call(self._w, "style", "-importcmd", importcmd, data)
-        except tk.TclError:
+        except TclError:
             # the widget doesn't exist anymore
             pass
 
@@ -601,7 +558,7 @@ class TkinterWeb(tk.Widget):
         if node_parent and node_tag != "body":
             self.tk.call(node_parent, "remove", node_handle)
         else:
-            raise tk.TclError(f"{node_tag} elements cannot be removed")
+            raise TclError(f"{node_tag} elements cannot be removed")
 
     def destroy_node(self, node_handle):
         "Destroy a node. May cause crashes so avoid it whenever possible."
@@ -861,10 +818,7 @@ class TkinterWeb(tk.Widget):
                 node = self.get_node_parent(node)
             if bg == "transparent":
                 bg = "white"
-            style = ttk.Style()
-            stylename = f"Scale{widgetid}.Horizontal.TScale"
-            style.configure(stylename, background=bg)
-            widgetid.configure(style=stylename)
+            widgetid.configure(background=bg)
         elif widgettype == "text":
             bg = self.get_node_property(node, "background-color")
             fg = self.get_node_property(node, "color")
@@ -897,7 +851,7 @@ class TkinterWeb(tk.Widget):
                     self.map_node(old_node)
                     break
             else:
-                raise tk.TclError(f"cannot embed widget already managed by {manager}")
+                raise TclError(f"cannot embed widget already managed by {manager}")
         # Tkhtml seems to remove the widget from the previous geometry manager if it is not Tkhtml so I think we are fine
 
         allowscrolling = self.get_node_attribute(node, "allowscrolling", "false") != "false"
@@ -1162,7 +1116,7 @@ class TkinterWeb(tk.Widget):
     def _finish_posting_event(self, event):
         try:
             self.event_generate(event)
-        except tk.TclError:
+        except TclError:
             # the widget doesn't exist anymore
             pass
 
@@ -1208,7 +1162,7 @@ class TkinterWeb(tk.Widget):
                         color = list(self.winfo_rgb(color))
                         colors[count] = invert_color(color, match.group(1), self.dark_theme_limit)
                         changed = True
-                    except tk.TclError:
+                    except TclError:
                         pass
             except ValueError as error:
                 pass
@@ -1279,7 +1233,7 @@ class TkinterWeb(tk.Widget):
             media = self.get_node_attribute(node, "media", default="all").lower()
             href = self.get_node_attribute(node, "href")
             url = self.resolve_url(href)
-        except tk.TclError:
+        except TclError:
             return
 
         if (
@@ -1328,7 +1282,7 @@ class TkinterWeb(tk.Widget):
             url = self.resolve_url(href)
             if url in self.visited_links:
                 self.set_node_flags(node, "visited")
-        except tk.TclError:
+        except TclError:
             pass
 
     def _on_a_value_change(self, node, attribute, value):
@@ -1404,7 +1358,7 @@ class TkinterWeb(tk.Widget):
                 
     def _on_draw_cleanup_crash_cmd(self):
         if self._crash_prevention_enabled:
-            self.post_message("ERROR: HtmlDrawCleanup has encountered a critical error. This is being ignored because crash prevention is enabled.")
+            self.post_message("WARNING: HtmlDrawCleanup has encountered a critical error. This is being ignored because crash prevention is enabled.")
         else:
             self.destroy()
 
@@ -1848,7 +1802,7 @@ class TkinterWeb(tk.Widget):
             cursor = CURSOR_MAP[cursor]
             try:
                 self.master.config(cursor=cursor, _override=True)
-            except tk.TclError:
+            except TclError:
                 self.master.config(cursor=cursor)
             self.current_cursor = cursor
             # I've noticed that the cursor won't always update when the binding is tied to a different widget than the one we are changing the cursor of
@@ -1976,7 +1930,7 @@ class TkinterWeb(tk.Widget):
                 try:
                     self.remove_node_flags(node, "hover")
                     self.remove_node_flags(node, "active")
-                except tk.TclError:
+                except TclError:
                     pass
         self.hovered_nodes = []
         self.current_node = None
@@ -2027,7 +1981,7 @@ class TkinterWeb(tk.Widget):
                         if node == old_handle:
                             self._submit_element_js(node_handle, "onmouseleave")
 
-        except tk.TclError:
+        except TclError:
             # sometimes errors are thrown if the mouse is moving while the page is loading
             pass
 
@@ -2076,7 +2030,7 @@ class TkinterWeb(tk.Widget):
                             if node_type == "submit":
                                 self._handle_form_submission(node)
                                 break
-        except tk.TclError:
+        except TclError:
             pass
 
         self.prev_active_node = None
@@ -2155,7 +2109,7 @@ class TkinterWeb(tk.Widget):
                 "-fg",
                 self.selected_text_color,
             )
-        except tk.TclError:
+        except TclError:
             self._set_cursor("default")
 
     def _extend_selection(self, event):
@@ -2247,7 +2201,7 @@ class TkinterWeb(tk.Widget):
                             self.remove_node_flags(node, "hover")
                     self.prev_active_node = None
                     self.hovered_nodes = []
-        except tk.TclError:
+        except TclError:
             self._set_cursor("default")
 
     def _on_embedded_mouse_motion(self, event, node_handle):
@@ -2264,6 +2218,3 @@ class TkinterWeb(tk.Widget):
         else:
             tags = (self.node_tag,)
         widgetid.bindtags(widgetid.bindtags() + tags)
-
-    def __call__(self):
-        "Mark this class as callable so it is accepted as a overflow_scroll_frame by HtmlFrame."

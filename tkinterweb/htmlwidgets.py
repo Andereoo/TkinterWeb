@@ -2,24 +2,22 @@
 Widgets that expand on the functionality of the basic bindings
 by adding scrolling, file loading, and many other convenience functions
 
-Copyright (c) 2025 Andereoo
+Copyright (c) 2021-2025 Andereoo
 """
 
 from urllib.parse import urldefrag, urlparse
 
-from bindings import TkinterWeb
-from utilities import *
-from utilities import __version__
-from imageutils import create_RGB_image
-from dom import HTMLDocument, HTMLElement
+from .bindings import *
+from .dom import HTMLDocument, HTMLElement
 
-from tkinter import ttk
+from tkinter.ttk import Frame, Style
 
-
+# JavaScript is experimental and not used by everyone
+# We only import PythonMonkey if/when needed
 pythonmonkey = None
 
 
-class HtmlFrame(ttk.Frame):
+class HtmlFrame(Frame):
     """TkinterWeb's flagship HTML widget.
 
     :param master: The parent widget.
@@ -137,7 +135,7 @@ class HtmlFrame(ttk.Frame):
 
     def __init__(self, master, **kwargs):
         # state and settings variables
-        style = ttk.Style()
+        style = Style()
 
         self._current_url = ""
         self._previous_url = ""
@@ -262,13 +260,13 @@ class HtmlFrame(ttk.Frame):
         
         self.bind = html.bind
 
-        self._html.post_message(f"""Welcome to TkinterWeb {__version__}!
+        self._html.post_message(f"""Welcome to TkinterWeb!
+                                
+The API changed in version 4. See https://tkinterweb.readthedocs.io/ for details.
 
-The API changed in version 4.
-See https://github.com/Andereoo/TkinterWeb for details.
-
-Debugging messages are enabled
-Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLabel() to disable these messages""")
+Debugging messages are enabled. Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLabel() to disable these messages.
+                                
+Load about:tkinterweb for debugging information""")
 
     @property
     def title(self):
@@ -824,9 +822,11 @@ Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLab
 
     def _check_value(self, old, new):
         expected_type = type(old)
-        if callable(old) or old == None:
+        if old == None and isinstance(new, tk.Widget):
+            return new
+        elif callable(old) or old == None:
             if not callable(new):
-                raise TypeError(f"expected callable object, got \"{expected_type.__name__}\"")
+                raise TypeError(f"expected callable object, got \"{new}\"")
         elif not isinstance(new, expected_type) and old != "auto" and new != "auto":
             try:
                 new = expected_type(new)

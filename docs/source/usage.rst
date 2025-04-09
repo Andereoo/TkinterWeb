@@ -28,7 +28,7 @@ You can run the TkinterWeb demo to see if it worked!
 
 .. image:: ../../images/tkinterweb-demo.png
 
-TkinterWeb requires :py:mod:`Tkinter`, :py:mod:`PIL`, and :py:class:`PIL.ImageTk`. All dependencies should be installed when installing TkinterWeb, but on some systems :py:class:`PIL.ImageTk` may need to be installed seperately.
+TkinterWeb requires :py:mod:`Tkinter`, :py:mod:`TkinterWeb-Tkhtml`, :py:mod:`PIL`, and :py:class:`PIL.ImageTk`. All dependencies should be installed when installing TkinterWeb, but on some systems :py:class:`PIL.ImageTk` may need to be installed seperately in order to load most image types.
 
 Getting Started
 ----------------

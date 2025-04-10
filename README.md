@@ -1,6 +1,7 @@
 ![Python 3](https://img.shields.io/pypi/pyversions/tkinterweb)
 ![PyPi Downloads](https://static.pepy.tech/badge/tkinterweb/month)
 ![MIT Licence](https://img.shields.io/pypi/l/tkinterweb) 
+![Made in Canada](https://img.shields.io/badge/%F0%9F%87%A8%F0%9F%87%A6%20made%20in%20Canada-grey)
 
 <a href="https://www.buymeacoffee.com/andereoo" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-violet.png" alt="Buy Me A Coffee" style="height: 35px !important;width: 140px !important;" ></a>
 

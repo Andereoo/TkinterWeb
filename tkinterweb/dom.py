@@ -2,9 +2,9 @@
 A thin wrapper on top of bindings.py that offers some JavaScript-like functions 
 and converts Tkhtml nodes into Python objects
 
-Some of the Tcl code in this file is borrowed from the Tkhtml/Hv3 project. See tkhtml/COPYRIGHT.
+Copyright (c) 2021-2025 Andereoo
 
-Copyright (c) 2025 Andereoo
+Some of the Tcl code in this file is borrowed from the Tkhtml/Hv3 project. Tkhtml is copyright (c) 2005 Dan Kennedy.
 """
 
 from tkinter import TclError
@@ -56,12 +56,6 @@ def camel_case_to_property(string):
     # matches = finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)', string)
     # return "-".join([m.group(0).lower() for m in matches])
 
-def flatten(data):
-    """Recursively flattens nested tuples and lists into a single list."""
-    if isinstance(data, tuple):
-        return flatten(data[0])
-    else:
-        return data
 
 class HTMLDocument:
     """Access this class via the :attr:`~tkinterweb.HtmlFrame.document` property of the :class:`~tkinterweb.HtmlFrame` and :class:`~tkinterweb.HtmlLabel` widgets.
@@ -234,16 +228,18 @@ class HTMLDocument:
 class HTMLElement:
     """:param document_manager: The :class:`~tkinterweb.dom.HTMLDocument` instance this class is tied to.
     :type document_manager: :class:`~tkinterweb.dom.HTMLDocument`
-
     :param node: The Tkhtml3 node this class represents.
     :type node: Tkhtml3 node
+
+    :ivar document: The element's corresponding :class:`~tkinterweb.dom.HTMLDocument` instance.
     :ivar html: The element's corresponding :class:`~tkinterweb.TkinterWeb` instance.
     :ivar node: The element's corresponding Tkhtml node."""
     def __init__(self, document_manager, node):
         self.document = document_manager
         self.html = document_manager.html
-        self.node = flatten(node)
-        self.style_cache = None  # initialize style as None
+        self.node = extract_nested(node)
+        self._style_cache = None  # initialize style as None
+        
         self.html.bbox(node)  # check if the node is valid
 
         # we need this here or crashes happen if multiple Tkhtml instances exist (depending on the Tkhtml version)
@@ -255,9 +251,9 @@ class HTMLElement:
         """Manage the element's styling. For instance, to make the element have a blue background, use ``yourhtmlelement.style.backgroundColor = "blue"``.
 
         :rtype: :class:`~tkinterweb.dom.CSSStyleDeclaration`"""
-        if self.style_cache is None:  # lazy loading of style
-            self.style_cache = CSSStyleDeclaration(self)
-        return self.style_cache
+        if self._style_cache is None:  # lazy loading of style
+            self._style_cache = CSSStyleDeclaration(self)
+        return self._style_cache
 
     @property
     def innerHTML(self):  # taken from hv3_dom2.tcl line 61
@@ -279,14 +275,22 @@ class HTMLElement:
 
     @innerHTML.setter
     def innerHTML(self, contents):  # taken from hv3_dom2.tcl line 88
+        # Tkhtml crashes if a node containing a widget is destroyed
+        self.widget = None
+        for node in self.html.search(f"[{self.html.widget_container_attr}]", root=self.node):
+            self.html.replace_node_contents(node, None)
+        self.html.update()
+
         self.html.tk.eval("""
+            set html %s
             set node %s
             set tag [$node tag]
-            if {$tag eq ""} {error "$node is not an HTMLElement"}
+            if {$tag eq ""} {error "$node is a text element"}
             if {$tag eq "html"} {error "innerHTML cannot be set on <$tag> elements"}
 
             # Destroy the existing children (and their descendants) of $node.
             set children [$node children]
+
             $node remove $children
             foreach child $children {
                 $child destroy
@@ -298,7 +302,7 @@ class HTMLElement:
             $node insert $children
 
             update  ;# This must be done to see changes on-screen
-            """ % (extract_nested(self.node), escape_Tcl(contents))
+            """ % (self.html, extract_nested(self.node), escape_Tcl(contents))
         )
         self.html.send_onload(root=self.node)
 
@@ -326,6 +330,12 @@ class HTMLElement:
 
     @textContent.setter
     def textContent(self, contents):  # Ditto
+        # Tkhtml crashes if a node containing a widget is destroyed
+        self.widget = None
+        for node in self.html.search(f"[{self.html.widget_container_attr}]", root=self.node):
+            self.html.replace_node_contents(node, None)
+        self.html.update()
+
         self.html.tk.eval("""
             set node %s
             set textnode %s
@@ -373,15 +383,16 @@ class HTMLElement:
     
     @property
     def widget(self): # not a JS property, but could be useful
-        """Get and set the element's widget. Only works on ``<object>`` elements.
+        """Get and set the element's widget. 
+        
+        Prior to version 4.2 this only applies to ``<object>`` elements and a widget must be specified.
+        
+        If the widget already exists in the document, it will first be removed from its previous element.
 
         :rtype: :py:class:`tkinter.Widget` or None"""
-        if self.tagName == "object":
-            data = self.getAttribute("data")
-            try:
-                return self.html.nametowidget(data)
-            except KeyError:
-                return None
+        attr = self.getAttribute(self.html.widget_container_attr)
+        if attr != "":
+            return self.html.nametowidget(attr)
         else:
             return None
         
@@ -391,7 +402,13 @@ class HTMLElement:
             # really we should do better than set the data attribute
             # right now this also can be used to set the object's url
             # but in practice it shouldn't really matter
-            self.setAttribute("data", widget)
+            if not widget:
+                # Tkhtml doesn't know what do do with 'None' and will refuse to fire the attribute handler
+                self.setAttribute("data", "")
+            else:
+                self.setAttribute("data", widget)
+        else:
+            self.html.replace_node_with_widget(self.node, widget)
     
     @property
     def value(self):
@@ -562,7 +579,10 @@ class HTMLElement:
         :param attribute: The attribute to return.
         :type attribute: str
         :rtype: str"""
-        return self.html.get_node_attribute(self.node, attribute)
+        try:
+            return self.html.get_node_attribute(self.node, attribute)
+        except TclError:
+            raise TclError(f"the assoiciated element has been destroyed")
 
     def setAttribute(self, attribute, value):
         """Set the value of the given attribute..
@@ -571,13 +591,20 @@ class HTMLElement:
         :type attribute: str
         :param value: The new value of the given attribute.
         :type value: str"""
-        self.html.set_node_attribute(self.node, attribute, value)
+        try:
+            self.html.set_node_attribute(self.node, attribute, value)
+        except TclError:
+            raise TclError(f"the assoiciated element has been destroyed")
         
     def remove(self):
         """Delete the element. Cannot be used on ``<html>`` or ``<body>`` elements.
+        The element can be reinserted into the document later if needed.
 
         :raises: :py:class:`tkinter.TclError`"""
-        self.html.delete_node(self.node)
+        try:
+            self.html.delete_node(self.node)
+        except TclError:
+            raise TclError(f"the assoiciated element has been destroyed")
 
     def appendChild(self, children):
         """Insert the specified children into the element.
@@ -662,27 +689,19 @@ class HTMLElement:
     
     def _insert_children(self, children, before=None):
         "Helper method to insert children at a specified position"
-        # ensure children is a list
+        self.widget = None
+        
+        # Ensure children is a list
         children = children if isinstance(children, list) else [children]
-        # extract node commands
+        # Extract nodes
         tkhtml_children_nodes = [i.node for i in children]
-        # insert the nodes based on the position
+        # Insert the nodes based on the position
         if before:
             self.html.insert_node_before(self.node, tkhtml_children_nodes, before.node)
         else:
             self.html.insert_node(self.node, tkhtml_children_nodes)
         self.html.send_onload(children=[child.node for child in children])
 
-        #for node in tkhtml_children_nodes:
-        #    print(node)
-        #    tag = self.html.get_node_tag(node)
-        #    print(tag)
-        #    if tag == "a":
-        #        self.html._on_a(self.node)
-        #    if tag == "object":
-        #        self.html._on_object(self.node)
-        #    if tag == "iframe":
-        #        self.html._on_iframe(self.node)
 
 class HTMLCollection(list):
     # For some reason this stuff doesn't work in JavaScript
@@ -718,6 +737,7 @@ class DOMRect:
 
         self.width = x2 - self.x
         self.height = y2 - self.y
+
 
 class CSSStyleDeclaration:
     """Access this class via the :attr:`~tkinterweb.dom.HTMLElement.style` property of the :attr:`~tkinterweb.dom.HTMLElement` class.

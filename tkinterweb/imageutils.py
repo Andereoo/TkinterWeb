@@ -1,14 +1,20 @@
 """
 Generate Tk images and alt text
 
-Copyright (c) 2025 Andereoo
+Copyright (c) 2021-2025 Andereoo
 """
 
-from PIL import Image
-from PIL.ImageTk import PhotoImage
-from tkinter import PhotoImage as TkinterPhotoImage
+from tkinter import PhotoImage as TkPhotoImage
 from io import BytesIO
 
+# Some folks only use TkinterWeb as a fancy label widget and don't need to load images
+# Or, if they do load images, they don't need support for images not supported by Tk
+# We only import PIL if/when needed
+# On my machine this reduces initial load time by up to a third
+# The same applies to alt-text and image inversion imports
+Image = PhotoImage = ImageFont = ImageDraw = ImageOps = Counter = None
+
+cairo = None
 try:
     import cairo
     import rsvg
@@ -17,20 +23,30 @@ except ImportError:
     try:
         import cairosvg
         rsvgimport = "cairosvg"
-    except (ImportError, FileNotFoundError,):
+    except (ImportError, FileNotFoundError, OSError,):
         try:
             import gi
-            gi.require_version('cairo', '1.0')
             gi.require_version('Rsvg', '2.0')
-            from gi.repository import cairo
             from gi.repository import Rsvg
+            if not cairo:
+                gi.require_version('cairo', '1.0')
+                from gi.repository import cairo
             rsvgimport = "girsvg"
         except (ValueError, ImportError,):
             rsvgimport = None
 
+def check_PIL():
+    global Image, PhotoImage
+    if not Image:
+        from PIL import Image
+        from PIL.ImageTk import PhotoImage
 
 def text_to_image(name, alt, nodebox, font_type, font_size, threshold):
-    from PIL import ImageFont, ImageDraw
+    check_PIL()
+    global ImageFont, ImageDraw
+    if not ImageFont:
+        from PIL import ImageFont, ImageDraw
+
     font = ImageFont.truetype(font_type, font_size)
     if len(nodebox) == 4:
         width = nodebox[2]-nodebox[0]
@@ -57,7 +73,10 @@ def text_to_image(name, alt, nodebox, font_type, font_size, threshold):
     return image
 
 def is_mostly_one_color(image, tolerance=30):
-    from collections import Counter
+    check_PIL()
+    global Counter
+    if not Counter:
+        from collections import Counter
 
     pixels = list(image.resize((100, 100), Image.Resampling.NEAREST).getdata())
     counter = Counter(pixels)
@@ -70,7 +89,10 @@ def is_mostly_one_color(image, tolerance=30):
     return ratio, dominant_color
 
 def invert_image(image, limit):
-    from PIL import ImageOps
+    check_PIL()
+    global ImageOps
+    if not ImageOps:
+        from PIL import ImageOps
 
     if image.mode in {'RGBA', 'LA', 'P'}:
         image = image.convert("RGBA")
@@ -95,6 +117,7 @@ def invert_image(image, limit):
 def data_to_image(data, name, imagetype, invert, limit):
     image = None
     if "svg" in imagetype:
+        check_PIL()
         if rsvgimport == 'girsvg':
             handle = Rsvg.Handle()
             svg = handle.new_from_data(data.encode("utf-8"))
@@ -126,22 +149,23 @@ def data_to_image(data, name, imagetype, invert, limit):
         else:
             photoimage = None
     elif invert:
+        check_PIL()
         image = invert_image(Image.open(BytesIO(data)), limit)
         photoimage = PhotoImage(image=image, name=name)
     elif imagetype in ("image/png", "image/gif", "image/ppm", "image/pgm",):
         # tkinter.PhotoImage has less overhead, so use it when possible
-        photoimage = TkinterPhotoImage(name=name, data=data)
+        photoimage = TkPhotoImage(name=name, data=data)
     else:
+        check_PIL()
         photoimage = PhotoImage(data=data, name=name)
 
     return photoimage
 
 def blank_image(name):
-    image = Image.new("RGBA", (1, 1))
-    image = PhotoImage(image, name=name)
-    return image
+    return TkPhotoImage(name=name)
 
 def create_RGB_image(data, w, h):
+    check_PIL()
     image = Image.new("RGB", (w, h))
     for y, row in enumerate(data):
         for x, hexc in enumerate(row.split()):

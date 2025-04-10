@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname((os.path.real
 from tkinterweb import __title__, __author__, __version__
 
 project = __title__
-copyright = '2025, Andereoo'
+copyright = '2021-2025, Andereoo'
 author = __author__
 
 release = ".".join(__version__.split(".")[:2])

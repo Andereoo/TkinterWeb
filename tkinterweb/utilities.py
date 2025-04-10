@@ -1,12 +1,12 @@
 """
 Various constants and utilities used by TkinterWeb
 
-Some of the CSS code in this file is modified from the Tkhtml/Hv3 project. See tkhtml/COPYRIGHT.
+Copyright (c) 2021-2025 Andereoo
 
-Copyright (c) 2025 Andereoo
+Some of the CSS code in this file is modified from the Tkhtml/Hv3 project. Tkhtml is copyright (c) 2005 Dan Kennedy.
+The lru_cache function in this file is modified from functools. Functools is copyright (c) Python Software Foundation.
 """
 
-import mimetypes
 import os
 import platform
 import sys
@@ -15,36 +15,22 @@ import threading
 import ssl
 from urllib.request import Request, urlopen
 
-import tkinter as tk
-from tkinter import colorchooser, filedialog, ttk
+from _thread import RLock
+from functools import update_wrapper, _make_key
 
-try:
-    from lrucache import lru_cache
-except (ImportError, SyntaxError, ):
-    # On Python 2 and Python 3.0 - 3.1, functools' lru_cache does not work
-    # We simply replace functools' lru_cache with a fake lru_cache function that does nothing
-    # We also write some extremely annoying messages to persuade users to not use a version of Python that is no longer supported
-    sys.stderr.write(
-        "Warning: Caching has been disabled because you are using an outdated Python installation.\n"
-    )
-    sys.stderr.write("Consider installing Python 3.2+ for improved performance.\n\n")
+from tkinter import TclVersion, TkVersion
+from tkinterweb_tkhtml import TKHTML_ROOT_DIR, TKHTML_RELEASE
 
-    def lru_cache():
-        def decorator(func):
-            def wrapper(*args, **kwargs):
-                return func(*args, **kwargs)
-            return wrapper
-        return decorator
     
 # we need this information here so the builtin pages can access it
 __title__ = 'TkinterWeb'
 __author__ = "Andereoo"
-__copyright__ = "Copyright (c) 2025 Andereoo"
+__copyright__ = "Copyright (c) 2021-2025 Andereoo"
 __license__ = "MIT"
-__version__ = '4.1.0'
+__version__ = '4.3.0'
 
 
-ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "tkhtml")
+ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
 WORKING_DIR = os.getcwd()
 PLATFORM = platform.uname()
 PYTHON_VERSION = platform.python_version_tuple()
@@ -94,7 +80,7 @@ CURSOR_MAP = {
     "zoom-in": "",
     "zoom-out": "",
     "none": "none",
-    "gobbler": "gobbler" # purely for humor :)
+    "gobbler": "gobbler" # why not?
 }
 DEFAULT_STYLE = r"""
 /* Default stylesheet to be loaded whenever HTML is parsed. */
@@ -450,6 +436,7 @@ INPUT[type="submit"],INPUT[type="button"], INPUT[type="reset"], BUTTON {
   color: tcl(::tkhtml::if_disabled #666666 #ffffff);
 }
 """
+
 BUILTIN_PAGES = {
     "about:blank": "<html><head><style>html,body{{background-color:{};color:{};cursor:gobbler;width:100%;height:100%;margin:0}}</style><title>about:blank</title></head><body></body></html>",
     "about:tkinterweb": "<html tkinterweb-overflow-x=auto><head><style>html,body{{background-color:{};color:{};}}</style><title>about:tkinterweb</title><style>code{{display:block}}</style></head><body>\
@@ -457,9 +444,10 @@ BUILTIN_PAGES = {
         <code style=\"display:block;text-decoration:underline;margin-top:35px\">Debugging information</code>\
         <code>Version: "+__version__+"</code><code>Default headers: "+HEADERS["User-Agent"]+"</code><code>Default parse mode: "+DEFAULT_PARSE_MODE+"</code>\
         <code>Default rendering engine mode: "+DEFAULT_ENGINE_MODE+"</code>\
-        <code style=\"display:block\">Root directory: "+ROOT_DIR+"</code><code style=\"display:block\">Working directory: "+WORKING_DIR+"</code>\
+        <code>Prebuilt Tkhtml version: "+TKHTML_RELEASE+"</code> \
+        <code style=\"display:block\">Root directory: "+ROOT_DIR+"</code><code style=\"display:block\">Tkhtml root directory: "+TKHTML_ROOT_DIR+"</code><code style=\"display:block\">Working directory: "+WORKING_DIR+"</code>\
         <code style=\"display:block;text-decoration:underline;margin-top:35px\">System specs</code>\
-        <code>Python version: "+".".join(PYTHON_VERSION)+"</code><code>Tcl version: "+str(tk.TclVersion)+"</code><code>Tk version: "+str(tk.TkVersion)+"</code>\
+        <code>Python version: "+".".join(PYTHON_VERSION)+"</code><code>Tcl version: "+str(TclVersion)+"</code><code>Tk version: "+str(TkVersion)+"</code>\
         <code>Platform: "+str(PLATFORM.system)+"</code><code>Machine: "+str(PLATFORM.machine)+"</code><code>Processor: "+str(PLATFORM.processor)+"</code></body></html>",
     "about:error": "<html><head><style>html,body,table,tr,td{{background-color:{};color:{};width:100%;height:100%;margin:0}}</style><title>Error {}</title></head>\
         <body><table><tr><td tkinterweb-full-page style=\"text-align:center;vertical-align:middle\">\
@@ -485,6 +473,7 @@ BUILTIN_ATTRIBUTES = {
     "vertical-align": "tkinterweb-full-page"
 }
 
+
 DOWNLOADING_RESOURCE_EVENT = "<<DownloadingResource>>"
 DONE_LOADING_EVENT = "<<DoneLoading>>"
 URL_CHANGED_EVENT = "<<UrlChanged>>"
@@ -493,426 +482,6 @@ TITLE_CHANGED_EVENT = "<<TitleChanged>>"
 
 tkhtml_loaded = False
 combobox_loaded = False
-
-
-class AutoScrollbar(ttk.Scrollbar):
-    "Scrollbar that hides itself when not needed"
-    def __init__(self, *args, scroll=2, **kwargs):
-        ttk.Scrollbar.__init__(self, *args, **kwargs)
-        self.scroll = scroll
-        self.visible = True
-
-    def set(self, lo, hi):
-        if self.visible and (self.scroll == 0):
-            self.tk.call("grid", "remove", self)
-            self.visible = False
-        elif (self.visible == False) and (self.scroll == 1):
-            self.grid()
-            self.visible = True
-        elif self.scroll == 2:
-            if float(lo) <= 0.0 and float(hi) >= 1.0:
-                self.tk.call("grid", "remove", self)
-                self.visible = False
-            else:
-                self.grid()
-                self.visible = True
-        ttk.Scrollbar.set(self, lo, hi)
-    
-    def set_type(self, scroll):
-        if self.scroll != scroll:
-            self.scroll = scroll
-            lo, hi = self.get()
-            self.set(lo, hi)
-
-    def pack(self, **kwargs):
-        raise tk.TclError("cannot use pack with this widget")
-
-    def place(self, **kwargs):
-        raise tk.TclError("cannot use place with this widget")
-
-
-class ScrolledTextBox(tk.Frame):
-    "Text widget with a scrollbar"
-
-    def __init__(self, parent, content="", onchangecommand=None, **kwargs):
-        self.parent = parent
-        self.onchangecommand = onchangecommand
-
-        tk.Frame.__init__(self, parent)
-
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-        self.tbox = tbox = tk.Text(self, 
-                                    borderwidth=0,
-                                    selectborderwidth=0,
-                                    highlightthickness=0,
-                                    **kwargs)
-        tbox.grid(row=0, column=0, sticky="nsew")
-
-        tbox.insert("1.0", content)
-    
-        self.vsb = vsb = AutoScrollbar(self, command=tbox.yview)
-        vsb.grid(row=0, column=1, sticky="nsew")
-        tbox.configure(yscrollcommand=vsb.set)
-
-        tbox.bind("<MouseWheel>", self.scroll)
-        tbox.bind("<Button-4>", self.scroll_x11)
-        tbox.bind("<Button-5>", self.scroll_x11)
-        tbox.bind("<Control-Key-a>", self.select_all)
-        tbox.bind('<KeyRelease>', lambda event: onchangecommand(self) if onchangecommand else None)
-
-    def select_all(self, event):
-        self.tbox.tag_add("sel", "1.0", "end")
-        self.tbox.mark_set("insert", "1.0")
-        self.tbox.see("insert")
-        return "break"
-
-    def scroll(self, event):
-        yview = self.tbox.yview()
-        if yview[0] == 0 and event.delta > 0:
-            self.parent.scroll(event)
-        elif yview[1] == 1 and event.delta < 0:
-            self.parent.scroll(event)
-
-    def scroll_x11(self, event):
-        yview = self.tbox.yview()
-        if event.num == 4 and yview[0] == 0:
-            self.parent.scroll_x11(event, self.parent)
-        elif event.num == 5 and yview[1] == 1:
-            self.parent.scroll_x11(event, self.parent)
-
-    def configure(self, *args, **kwargs):
-        self.tbox.configure(*args, **kwargs)
-
-    def insert(self, *args, **kwargs):
-        return self.tbox.insert(*args, **kwargs)
-
-    def get(self, *args, **kwargs):
-        if not args and not kwargs:
-            args = ("1.0", "end-1c")
-        return self.tbox.get(*args, **kwargs)
-
-    def delete(self, *args, **kwargs):
-        self.tbox.delete(*args, **kwargs)
-
-    def set(self, value):
-        self.tbox.delete("0.0", "end")
-        self.tbox.insert("1.0", value)
-        if self.onchangecommand:
-            self.onchangecommand(self)
-
-class FormEntry(tk.Entry):
-    def __init__(self, parent, value="", entry_type="", onchangecommand=None, **kwargs):
-        tk.Entry.__init__(self, parent, borderwidth=0, highlightthickness=0, **kwargs)
-        self.insert(0, value)
-
-        self.bind("<KeyRelease>", lambda event: onchangecommand(self) if onchangecommand else None)
-        if entry_type == "password":
-            self.configure(show="*")
-            
-    def set(self, value):
-        self.delete(0, "end")
-        self.insert(0, value)
-
-class FormCheckbox(ttk.Checkbutton):
-    def __init__(self, parent, value=0, onchangecommand=None, **kwargs):
-        self.variable = variable = tk.IntVar(parent, value=value)
-
-        tk.Checkbutton.__init__(
-            self,
-            parent,
-            borderwidth=0,
-            padx=0,
-            pady=0,
-            highlightthickness=0,
-            variable=variable,
-            **kwargs
-        )
-        variable.trace_add("write", lambda *args: onchangecommand(self) if onchangecommand else None)
-
-class FormRadioButton(ttk.Checkbutton):
-    def __init__(self, parent, token, value=0, checked=False, variable=None, onchangecommand=None, **kwargs):
-        if not variable: 
-            variable = tk.StringVar(parent)
-            variable.trace_add("write", lambda *args: onchangecommand(self) if onchangecommand else None)
-        self.variable = variable
-
-        tk.Radiobutton.__init__(
-            self,
-            parent,
-            value=value,
-            variable=variable,
-            tristatevalue=token,
-            borderwidth=0,
-            padx=0,
-            pady=0,
-            highlightthickness=0,
-            **kwargs
-        )
-        if checked:
-            variable.set(value)
-
-    def set(self, value):
-        self.variable.set(value)
-        
-    def get(self):
-        return self.variable.get()
-
-class FormRange(ttk.Scale):
-    def __init__(self, parent, value=50, from_=0, to=100, step=1, onchangecommand=None, **kwargs):
-        step_str = str(step)
-        self.step = self._check_value(step, 1)
-        self.from_ = from_ = self._check_value(from_, 0)
-        self.to = to = self._check_value(to, 100)
-        self.onchangecommand = onchangecommand
-        self.decimal_places = len(step_str.split('.')[-1]) if '.' in step_str else 0
-        self.variable = variable = tk.DoubleVar(parent, value=self._check_value(value, (to - from_) / 2))
-
-        ttk.Scale.__init__(self, parent, variable=variable, from_=from_, to=to)
-
-        variable.trace_add("write", self._update_value)
-
-    def _update_value(self, *args):
-        value = round(self.variable.get() / self.step) * self.step
-        self.set(round(value, self.decimal_places))
-        self.onchangecommand(self)
-
-    def _check_value(self, value, default):
-        try: 
-            return float(value)
-        except ValueError:
-            return default
-        
-    def set(self, value):
-        super().set(self._check_value(value, (self.to - self.from_) / 2))
-
-class FileSelector(tk.Frame):
-    "File selector widget"
-
-    def __init__(self, parent, accept, multiple, onchangecommand=None, **kwargs):
-        self.multiple = multiple
-        self.onchangecommand = onchangecommand
-        self.files = []
-
-        tk.Frame.__init__(self, parent)
-        self.selector = selector = tk.Button(
-            self, text="Browse", command=self.select_file
-        )
-        self.label = label = tk.Label(self, bg="red", text="No files selected.")
-
-        selector.grid(row=0, column=1)
-        label.grid(row=0, column=2, padx=5)
-
-        self.generate_filetypes(accept)
-
-    def generate_filetypes(self, accept):
-        if accept:
-            accept_list = [a.strip() for a in accept.split(",")]
-            all_extensions = set()
-            filetypes = []
-
-            # First find all the MIME types
-            for mimetype in [a for a in accept_list if not a.startswith(".")]:
-                # the HTML spec specifies these three wildcard cases only:
-                if mimetype in ("audio/*", "video/*", "image/*"):
-                    extensions = [
-                        k
-                        for k, v in mimetypes.types_map.items()
-                        if v.startswith(mimetype[:-1])
-                    ]
-                else:
-                    extensions = mimetypes.guess_all_extensions(mimetype)
-                filetypes.append((mimetype, " ".join(extensions)))
-                all_extensions.update(extensions)
-
-            # Now add any non-MIME types not already included as part of a MIME type.
-            for suffix in [a for a in accept_list if a.startswith(".")]:
-                if suffix not in all_extensions:
-                    mimetype = mimetypes.guess_type(f" {suffix}", suffix)[0]
-                    if mimetype:
-                        extensions = mimetypes.guess_all_extensions(mimetype)
-                        filetypes.append((mimetype, " ".join(extensions)))
-                        all_extensions.update(extensions)
-                    else:
-                        filetypes.append((f"{suffix} files", suffix))
-
-            if len(filetypes) > 1:
-                filetypes.insert(
-                    0, ("All Supported Types", " ".join(sorted(all_extensions)))
-                )
-
-            self.filetypes = filetypes
-        else:
-            self.filetypes = []
-
-    def select_file(self):
-        if self.multiple:
-            files = filedialog.askopenfilenames(
-                title="Select files", filetypes=self.filetypes
-            )
-            if files:
-                self.files = []
-                for file in files:
-                    self.files.append(os.path.basename(file.replace('\\', '/')))
-                files = self.files
-        else:
-            files = filedialog.askopenfilename(
-                title="Select file", filetypes=self.filetypes
-            )
-            if files:
-                self.files = files = (os.path.basename(files.replace('\\', '/')),)
-        number = len(files)
-        if number == 0:
-            self.label.config(text="No files selected.")
-        elif number == 1:
-            files = files[0].replace("\\", "/").split("/")[-1]
-            self.label.config(text=files)
-        else:
-            self.label.config(text=f"{number} files selected.")
-        self.event_generate("<<Modified>>")
-        if self.onchangecommand:
-            self.onchangecommand(self)
-
-    def set(self, value):
-        self.label.config(text="No files selected.")
-        self.event_generate("<<Modified>>")
-        if self.onchangecommand:
-            self.onchangecommand(self)
-
-    def get(self):
-        return self.files
-
-    def configure(self, *args, **kwargs):
-        self.selector.config(*args, **kwargs)
-        if "activebackground" in kwargs:
-            del kwargs["activebackground"]
-        self.label.config(*args, **kwargs)
-        if "state" in kwargs:
-            del kwargs["state"]
-        self.config(*args, **kwargs)
-
-
-class ColourSelector(tk.Frame):
-    "Colour selector widget"
-
-    def __init__(self, parent, colour="#000000", onchangecommand=None, **kwargs):
-        self.onchangecommand = onchangecommand
-        colour = colour if colour else "#000000"
-        tk.Button.__init__(self, parent,
-            bg=colour,
-            command=self.select_colour,
-            activebackground=colour,
-            highlightthickness=0,
-            borderwidth=0,
-            **kwargs
-        )
-
-    def select_colour(self):
-        colour = colorchooser.askcolor(title="Choose color", initialcolor=self.cget("bg"))[1]
-        if colour:
-            self.set(colour)
-
-    def set(self, colour):
-        colour = colour if colour else "#000000"
-        self.config(bg=colour, activebackground=colour)
-        self.event_generate("<<Modified>>")
-        if self.onchangecommand:
-            self.onchangecommand(self)
-
-    def get(self):
-        return self.cget("bg")
-
-
-class Notebook(ttk.Frame):
-    "Drop-in replacement for the :py:class:`ttk.Notebook` widget."
-
-    def __init__(self, master, takefocus=True, **kwargs):
-        ttk.Frame.__init__(self, master, **kwargs)
-        self.notebook = notebook = ttk.Notebook(self, takefocus=takefocus)
-        self.blankframe = lambda: tk.Frame(
-            notebook, height=0, bd=0, highlightthickness=0
-        )
-
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
-
-        notebook.grid(row=0, column=0, sticky="ew")
-
-        notebook.bind("<<NotebookTabChanged>>", self.on_tab_change)
-
-        self.pages = []
-        self.previous_page = None
-
-    def on_tab_change(self, event):
-        self.event_generate("<<NotebookTabChanged>>")
-        try:
-            tabId = self.notebook.index(self.notebook.select())
-            newpage = self.pages[tabId]
-            if self.previous_page:
-                self.previous_page.grid_forget()
-            newpage.grid(row=1, column=0, sticky="nsew")
-            self.previous_page = newpage
-        except tk.TclError:
-            pass
-
-    def add(self, child, **kwargs):
-        "Adds a new tab to the notebook."
-        if child in self.pages:
-            raise ValueError(f"{child} is already managed by {self}.")
-        frame = self.blankframe()
-        self.notebook.add(frame, **kwargs)
-        self.pages.append(child)
-
-    def insert(self, where, child, **kwargs):
-        "Adds a new tab at the specified position."
-        if child in self.pages:
-            raise ValueError(f"{child} is already managed by {self}.")
-        frame = self.blankframe()
-        self.notebook.insert(where, frame, **kwargs)
-        self.pages.insert(where, child)
-
-    def enable_traversal(self):
-        "Enable keyboard traversal for a toplevel window containing this notebook."
-        self.notebook.enable_traversal()
-
-    def select(self, tabId=None):
-        "Select the given tabId."
-        if tabId in self.pages:
-            tabId = self.pages.index(tabId)
-            return self.notebook.select(tabId)
-        else:
-            self.notebook.select(tabId)
-            return self.transcribe(self.notebook.select())
-
-    def transcribe(self, item, reverse=False):
-        return self.pages[self.notebook.index(item)]
-
-    def tab(self, tabId, option=None, **kwargs):
-        "Query or modify the options of the given tabId."
-        if not isinstance(tabId, int) and tabId in self.pages:
-            tabId = self.pages.index(tabId)
-        return self.notebook.tab(tabId, option, **kwargs)
-
-    def forget(self, tabId):
-        "Removes the tab specified by tabId and unmaps the associated window."
-        if isinstance(tabId, int):
-            del self.pages[tabId]
-            self.notebook.forget(tabId)
-        else:
-            index = self.pages.index(tabId)
-            self.pages.remove(tabId)
-            self.notebook.forget(index)
-
-    def index(self, child):
-        "Returns the numeric index of the tab specified by child, or the total number of tabs if child is the string “end”."
-        try:
-            return self.pages.index(child)
-        except (IndexError, ValueError):
-            return self.transcribe(self.notebook.index(child))
-
-    def tabs(self):
-        "Returns a list of widgets managed by the notebook."
-        return self.pages
 
 
 class StoppableThread(threading.Thread):
@@ -939,6 +508,72 @@ class PlaceholderThread:
 
     def isrunning(self):
         return True
+
+
+def _lru_cache_wrapper(user_function):
+    """This function is a modified version of the one that comes built-in with functools.
+    It only adds to the cache if the data is not None.
+    This means that if a page load is stopped, re-loading the page will not cause the page to be blank."""
+    sentinel = object()
+    make_key = _make_key
+    PREV, NEXT, KEY, RESULT = 0, 1, 2, 3
+
+    cache = {}
+    hits = misses = 0
+    maxsize = 128
+    typed = False
+    full = False
+    cache_get = cache.get
+    cache_len = cache.__len__
+    lock = RLock()
+    root = []
+    root[:] = [root, root, None, None]
+
+    def wrapper(*args, **kwds):
+        nonlocal root, hits, misses, full
+        key = make_key(args, kwds, typed)
+        with lock:
+            link = cache_get(key)
+            if link is not None:
+                link_prev, link_next, _key, result = link
+                link_prev[NEXT] = link_next
+                link_next[PREV] = link_prev
+                last = root[PREV]
+                last[NEXT] = root[PREV] = link
+                link[PREV] = last
+                link[NEXT] = root
+                hits += 1
+                return result
+            misses += 1
+        result = user_function(*args, **kwds)
+        if result[0]:
+            with lock:
+                if key in cache:
+                    pass
+                elif full:
+                    oldroot = root
+                    oldroot[KEY] = key
+                    oldroot[RESULT] = result
+                    root = oldroot[NEXT]
+                    oldkey = root[KEY]
+                    oldresult = root[RESULT]
+                    root[KEY] = root[RESULT] = None
+                    del cache[oldkey]
+                    cache[key] = oldroot
+                else:
+                    last = root[PREV]
+                    link = [last, root, key, result]
+                    last[NEXT] = root[PREV] = cache[key] = link
+                    full = (cache_len() >= maxsize)
+        return result
+    return wrapper
+
+
+def lru_cache():
+    def decorator(func):
+        wrapper = _lru_cache_wrapper(func)
+        return update_wrapper(wrapper, func)
+    return decorator
 
 
 def download(url, data=None, method="GET", decode=None, insecure=False, headers=()):
@@ -1024,51 +659,6 @@ def invert_color(rgb, match, limit):
 def get_alt_font():
     "Get the location of the truetype file to be used for image alternate text"
     return os.path.join(ROOT_DIR, "opensans.ttf")
-
-def get_tkhtml_folder():
-    "Get the location of the platform's tkhtml binary"
-    # Universal sdist
-    if platform.system() == "Linux":
-       if "arm" in PLATFORM.machine:  # 32 bit arm Linux - Raspberry Pi and others
-           return os.path.join(ROOT_DIR, "linux_armv71")
-       elif "aarch64" in PLATFORM.machine:  # 64 bit arm Linux - Raspberry Pi and others
-           return os.path.join(ROOT_DIR, "manylinux2014_aarch64")
-       elif sys.maxsize > 2**32:  # 64 bit Linux
-           return os.path.join(ROOT_DIR, "manylinux1_x86_64")
-       else:  # 32 bit Linux
-           return os.path.join(ROOT_DIR, "manylinux1_i686")
-    elif platform.system() == "Darwin":
-       if "arm" in PLATFORM.machine:  # M1 Mac
-           return os.path.join(ROOT_DIR, "macosx_11_0_arm64")
-       else:  # other Macs
-           return os.path.join(ROOT_DIR, "macosx_10_6_x86_64")
-    else:
-       if sys.maxsize > 2**32:  # 64 bit Windows
-           return os.path.join(ROOT_DIR, "win_amd64")
-       else:  # 32 bit Windows
-           return os.path.join(ROOT_DIR, "win32")
-    # Platform-specific wheel
-    return os.path.join(ROOT_DIR, "binaries")
-
-
-def load_tkhtml(master, location=None, force=False):
-    "Load nessessary Tkhtml files"
-    global tkhtml_loaded
-    if (not tkhtml_loaded) or force:
-        if location:
-            master.tk.eval("set auto_path [linsert $auto_path 0 {" + location + "}]")
-        master.tk.eval("package require Tkhtml")
-        tkhtml_loaded = True
-
-
-def load_combobox(master, force=False):
-    "Load combobox.tcl"
-    global combobox_loaded
-    if not (combobox_loaded) or force:
-        master.tk.call("lappend", "auto_path", ROOT_DIR)
-        master.tk.call("package", "require", "combobox")
-        combobox_loaded = True
-
 
 def notifier(text):
     "Notifications printer"

@@ -25,8 +25,8 @@ Frequently Asked Questions
 
 **I get a ModuleNotFoundError after compiling my code.**
 
-* On older TkinterWeb versions, when compiling your code, you might get an error such as ``ModuleNotFoundError: No module named 'bindings'``
-* Newer versions should present a popup saying ``ModuleNotFoundError: The files required to run TkinterWeb could not be found``
-* This occurs when your Python script bundler isn't finding all the files nessessary for running TkinterWeb. You need to force it to get all the TkinterWeb files.
-* On PyInstaller: add the flag ``--collect-all tkinterweb`` when bundling your app.
-* On py2app / py2exe: Add ``'packages': ['tkinterweb']`` to the ``OPTIONS`` variable in your setup file.
+* When compiling your code, you might get an error popup saying ``ModuleNotFoundError: The files required to run TkinterWeb could not be found``
+* Your app might also fail quietly if TkinterWeb's dependencies are not installed
+* This occurs when your Python script bundler isn't finding all the files nessessary for running TkinterWeb. You need to force it to get all of TkinterWeb's files and dependencies.
+* On PyInstaller: add the flag ``--collect-all tkinterweb --collect-all tkinterweb-tkhtml`` when bundling your app.
+* On py2app / py2exe: Add ``'packages': ['tkinterweb', 'tkinterweb-tkhtml']`` to the ``OPTIONS`` variable in your setup file.

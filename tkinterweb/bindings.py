@@ -1265,8 +1265,10 @@ class TkinterWeb(Widget):
 
     def _on_title(self, node):
         "Handle <title> elements. We could use a script handler but then the node is no longer visible to the DOM."
-        self.title = self.get_node_text(self.get_node_children(node), "-pre")
-        self.post_event(TITLE_CHANGED_EVENT)
+        children = self.get_node_children(node)
+        if children: # Fix for Bug #136, where an empty title tag raises an exception
+            self.title = self.get_node_text(self.get_node_children(node), "-pre")
+            self.post_event(TITLE_CHANGED_EVENT)
 
     def _on_base(self, node):
         "Handle <base> elements."

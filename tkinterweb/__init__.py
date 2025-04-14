@@ -8,7 +8,7 @@ Copyright (c) 2021-2025 Andereoo
 
 
 try:
-    from .htmlwidgets import HtmlFrame, HtmlLabel, TkinterWeb, Notebook
+    from .htmlwidgets import HtmlFrame, HtmlLabel, TkinterWeb, Notebook, ParsedURI
     # We keep this stuff in utilities.py so that about:tkinterweb can access it
     from .utilities import __title__, __author__, __copyright__, __license__, __version__
 except (ImportError, ModuleNotFoundError):
@@ -29,7 +29,7 @@ See https://tkinterweb.readthedocs.io/en/latest/faq.html for more information. \
     sys.exit()
 
 
-__all__ = ['HtmlFrame', 'HtmlLabel', 'TkinterWeb', 'Notebook', 'Demo']
+__all__ = ['HtmlFrame', 'HtmlLabel', 'TkinterWeb', 'Notebook', 'Demo' 'HtmlParse', 'ParsedURI']
 
 
 class Demo():

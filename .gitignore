@@ -1,4 +1,5 @@
 build/
+tkinterweb.egg-info
 tkinterweb/__pycache__/
 tkinterweb/resources/
-tkinterweb.egg-info
+tkinterweb/tkhtml/

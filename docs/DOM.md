@@ -285,6 +285,20 @@ Return type
 Scroll the viewport so that this element is visible.
 
 ---
+#### `id` property
+Get and set the element's id attrabute.
+
+Return type
+* *string*
+
+---
+#### `class` property
+Get and set the element's class attrabute.
+
+Return type
+* *string*
+
+---
 ## CSSStyleDeclaration API 
 
 ### Key Variables:

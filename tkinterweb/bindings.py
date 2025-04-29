@@ -51,11 +51,12 @@ class TkinterWeb(Widget):
 
         # load the Tkhtml3 widget
         try:
-            load_tkhtml(master, folder, )
+            auto_path = load_tkhtml(master, folder, )
             Widget.__init__(self, master, "html", kwargs)
         except TclError:
-            load_tkhtml(master, folder, True)
+            auto_path = load_tkhtml(master, folder, True)
             Widget.__init__(self, master, "html", kwargs)
+        self.post_message(f"auto_path {auto_path}")
 
         # create a tiny, blank frame for cursor updating
         self.motion_frame = Frame(self, bg=self.motion_frame_bg, width=1, height=1)

@@ -1,35 +1,31 @@
 """
-TkinterWeb v3.25
+TkinterWeb v4.3
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
 
-Copyright (c) 2025 Andereoo
+Copyright (c) 2021-2025 Andereoo
 """
 
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
 try:
     from htmlwidgets import HtmlFrame, HtmlLabel, HtmlParse
     from bindings import TkinterWeb, ParsedURI
     from utilities import Notebook, __title__, __author__, __copyright__, __license__, __version__
 except (ImportError, ModuleNotFoundError):
-    import traceback
+    import traceback, sys
     import tkinter as tk
     from tkinter import messagebox
     # Give useful troubleshooting information as a popup, as most bundled applications don't have a visible console
     # Also print the message in case something is also wrong with the Tkinter installation
     error_message = "Error: The files required to run TkinterWeb could not be found. \
-This typically occurs when bundling TkinterWeb into an app without forcing the application maker to include all nessessary files or when some of TkinterWeb's dependencies are not installed. \
-See https://github.com/Andereoo/TkinterWeb/blob/main/docs/FAQ.md for more information. \n\n\
+This typically occurs when bundling TkinterWeb into an app without forcing the application maker to include all nessessary files or when some of TkinterWeb's dependencies are not installed or bundled. \
+See https://tkinterweb.readthedocs.io/en/latest/faq.html for more information. \n\n\
 {}".format(traceback.format_exc())
     sys.stdout.write(error_message)
 
     root = tk.Tk()
     root.withdraw()
-    message = messagebox.showerror("Fatal Error Encountered", error_message) #for older versions of pyinstaller, windowed app may crash without any message of any kind
+    message = messagebox.showerror("Fatal Error Encountered", error_message) # for older versions of pyinstaller, windowed app may crash without any message of any kind
     sys.exit()
 
 

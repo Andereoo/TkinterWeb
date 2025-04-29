@@ -14,6 +14,7 @@ Summary of changes
 * The DOM API now more closely mirrors its JavaScript counterparts
 * Dozens of new configuration options, including access to more settings and the ability to link a JavaScript interpreter
 * Basic JavaScript support (new in version 4.1)
+* Improved embedded widget handling (new in version 4.2)
 * More DOM improvements
 
 Removed
@@ -50,8 +51,14 @@ Removed
 * ``HtmlFrame.get_currently_hovered_node_tag()`` - :meth:`.HtmlFrame.get_currently_hovered_element`
 * ``HtmlFrame.get_currently_hovered_node_attribute()`` - :meth:`.HtmlFrame.get_currently_hovered_element`
 * ``HtmlFrame.get_current_link()`` - use :meth:`.HtmlFrame.get_currently_hovered_element`
-    
-* The ``widgetid`` attribute no longer embeds widgets. Use ``<object data=name_of_your_widget></object>`` instead. This improves load speeds and allows for widget style handling.
+* ``HtmlFrame.replace_widget()`` (deprecated in version 4.2) - use :meth:`.HtmlFrame.widget_to_element` and :attr:`.HTMLElement.widget`
+* ``HtmlFrame.replace_element()`` (deprecated in version 4.2) - use :attr:`.HTMLElement.widget`
+* ``HtmlFrame.remove_widget()`` (deprecated in version 4.2) - use :meth:`.HTMLElement.remove`
+* ``TkinterWeb.replace_widget()`` (removed in version 4.2)
+* ``TkinterWeb.replace_element()`` (removed in version 4.2)
+* ``TkinterWeb.remove_widget()`` (removed in version 4.2)
+
+* The ``widgetid`` attribute no longer embeds widgets. Use ``<object data=name_of_your_widget></object>`` or :attr:`.HTMLElement.widget` instead. This improves load speeds and allows for widget style handling.
 
 Renamed
 -------
@@ -71,12 +78,12 @@ Renamed
 
 * The ``scroll-x`` attribute was changed to the ``tkinterweb-scroll-x`` attribute. Like the ``overflow`` CSS property, valid options are now "auto", "visible", "clip", "scroll", and "hidden".
 
-
 Added
 -----
 
 * :meth:`.HtmlFrame.clear_selection`
 * :meth:`.HtmlFrame.get_currently_hovered_element`
+* :meth:`.HtmlFrame.widget_to_element` (new in version 4.2)
 * :meth:`.HtmlFrame.save_page`
 * :meth:`.HtmlFrame.snapshot_page`
 * :meth:`.HtmlFrame.show_error_page`
@@ -94,7 +101,7 @@ Added
 * :meth:`.HTMLElement.querySelector`
 * :meth:`.HTMLElement.querySelectorAll`
 * :meth:`.HTMLElement.scrollIntoView`
-* :attr:`.HTMLElement.widget` (new in version 4.1)
+* :attr:`.HTMLElement.widget` (new in version 4.1, updated in version 4.2)
 * :attr:`.HTMLElement.value` (new in version 4.1)
 * :attr:`.HTMLElement.checked` (new in version 4.1)
 * :attr:`.HTMLElement.onchange` (new in version 4.1)
@@ -127,6 +134,10 @@ Added
 * :meth:`.TkinterWeb.override_node_properties`
 * :meth:`.TkinterWeb.update_tags`
 * :meth:`.TkinterWeb.send_onload` (new in version 4.1)
+* :meth:`.TkinterWeb.replace_node_contents` (new in version 4.2)
+* :meth:`.TkinterWeb.map_node` (new in version 4.2)
+* :meth:`.TkinterWeb.replace_node_with_widget` (new in version 4.2)
+
 
 * ``utilities.DOWNLOADING_RESOURCE_EVENT`` (equivalent to ``<<DownloadingResource>>``)
 * ``utilities.DONE_LOADING_EVENT`` (equivalent to ``<<DoneLoading>>``)
@@ -135,7 +146,7 @@ Added
 * ``utilities.TITLE_CHANGED_EVENT`` (equivalent to ``<<TitleChanged>>``)
 
 * Many new configuration options were added. See the :doc:`api/htmlframe` for a complete list.
-* Support for many JavaScript events were added in version 4.1.
+* Support for many JavaScript events was added in version 4.1.
 
 * The ``tkinterweb-full-page`` attribute can now be added to elements to make them the same height as the viewport. This can be used for vertical alignment of page content. See the TkinterWeb Demo class in `__init__.py <https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/__init__.py>`_ for example usage.
 
@@ -161,4 +172,8 @@ Changed
 * As of version 4.1, :meth:`.HtmlFrame.screenshot_page` is now partially supported on Windows and now accepts the additional parameter ``show``. 
 * As of version 4.1, the default selection and find text colors are less abrupt.
 
+* As of version 4.2, widgets embedded in the document can now be removed without removing the containing element. 
+
 * The TkinterWeb demo and some of the built-in pages have been updated. Many internal methods and variables have been renamed, removed, or modified.
+
+* As of version 4.3, prebuilt Tkhtml binaries have been split off into a new package, TkinterWeb-Tkhtml. This has been done to work towards `bug #52 <https://github.com/Andereoo/TkinterWeb/issues/52>`_ and reduce the download size of the TkinterWeb package when updating.

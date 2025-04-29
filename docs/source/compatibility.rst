@@ -21,7 +21,7 @@ Webpage Compatibility
 
 * TkinterWeb supports nearly 50 different image types through :py:mod:`PIL`.
 
-  * To load Scalable Vector Graphic images, :py:mod:`PyGObject`, :py:mod:`CairoSVG`, or both :py:mod:`PyCairo` and :py:mod:`Rsvg` must also be installed. 
+  * To load Scalable Vector Graphic images, :py:mod:`CairoSVG`, both :py:mod:`PyCairo` and :py:mod:`PyGObject`, or both :py:mod:`PyCairo` and :py:mod:`Rsvg` must also be installed. 
   
 * Without these packages, TkinterWeb will still function properly, but SVG files will not be shown.
 
@@ -36,4 +36,8 @@ A Note on Tkhtml Binaries
 * ARM64 Macos and Linux
 * ARMv71 Linux
 
+Alternatively, you can install Tkhtml system-wide (i.e. through your system package manager) and then add the parameter :attr:`use_prebuilt_tkhtml=False` when creating your :class:`~tkinterweb.HtmlFrame` or :class:`~tkinterweb.HtmlLabel` widget to use the system's Tkhtml. Keep in mind that some crash protection features will no longer work.
+
 If you are encountering issues on your system or are are using an unsupported system, feel free to submit a bug report or feature request. You may need to compile Tkhtml on your system. See https://github.com/Andereoo/TkinterWeb-Tkhtml/.
+
+Our experimental Tkhtml version is not provided as a pre-built binary but can be compiled from the source code at  https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental. This version has better cross-platform compatibility, is printable, and introduces support for some new CSS3 properties, including border-radius!

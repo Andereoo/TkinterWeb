@@ -904,7 +904,8 @@ Load about:tkinterweb for debugging information""")
                     view_source = True
                     url = url.replace("view-source:", "")
                     parsed = self.html.uri(url)
-                self._html.post_message(f"Connecting to {self.html.uri_authority(parsed)}")
+                if self.html.uri_authority(parsed):
+                    self._html.post_message(f"Connecting to {self.html.uri_authority(parsed)}")
                 if self._html.insecure_https:
                     self._html.post_message("WARNING: Using insecure HTTPS session")
                 if (self.html.uri_scheme(parsed) == "file") or (not self._html.caches_enabled):
@@ -915,7 +916,8 @@ Load about:tkinterweb for debugging information""")
                     data, newurl, filetype, code = cache_download(
                         url, data, method, decode, self._html.insecure_https, tuple(self._html.headers.items())
                     )
-                self._html.post_message(f"Successfully connected to {self.html.uri_authority(parsed)}")
+                if self.html.uri_authority(parsed):
+                    self._html.post_message(f"Successfully connected to {self.html.uri_authority(parsed)}")
                 if get_current_thread().isrunning():
                     if view_source:
                         newurl = "view-source:" + newurl

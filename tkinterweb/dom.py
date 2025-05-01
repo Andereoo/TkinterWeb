@@ -248,8 +248,8 @@ class HTMLElement:
     def __init__(self, document_manager, node):
         self.document = document_manager
         self.html = document_manager.html
-        self.node = flatten(node)
-        self.style_cache = None  # initialize style as None
+        self.node = extract_nested(node)
+        self._style_cache = None  # initialize style as None
         self.html.get_node_tkhtml(node)  # check if the node is valid, rises invalid command error if not.
         DOM_element_events(self)
 

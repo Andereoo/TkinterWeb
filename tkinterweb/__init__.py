@@ -89,8 +89,4 @@ class Demo():
 
 
 if __name__ == "__main__":
-    if os.name == "nt":
-        from ctypes import windll
-        windll.shcore.SetProcessDpiAwareness(1)
-
-    Demo()
+        Demo()

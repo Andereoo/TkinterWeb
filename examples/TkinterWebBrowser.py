@@ -132,16 +132,16 @@ class Page(tk.Frame):
         frame.grid(column=0, row=1, sticky="nsew")
         bottombar.grid(column=0, row=4, sticky="ew")
 
-        self.sidebar.register_JS_object("zoom", lambda scale: self.frame.configure(zoom=scale))
-        self.sidebar.register_JS_object("fontscale", lambda scale: self.frame.configure(fontscale=scale))
-        self.sidebar.register_JS_object("parsemode", lambda parsemode: self.frame.configure(parsemode=parsemode))
+        #self.sidebar.register_JS_object("zoom", lambda scale: self.frame.configure(zoom=scale))
+        #self.sidebar.register_JS_object("fontscale", lambda scale: self.frame.configure(fontscale=scale))
+        #self.sidebar.register_JS_object("parsemode", lambda parsemode: self.frame.configure(parsemode=parsemode))
         def update_header(value):
             self.frame["headers"]["User-Agent"] = value
-        self.sidebar.register_JS_object("headers", update_header)
+        #self.sidebar.register_JS_object("headers", update_header)
         def update_color(color, value):
             self.frame[color] = value
             self.frame.html.update_tags()
-        self.sidebar.register_JS_object("color", update_color)
+        #self.sidebar.register_JS_object("color", update_color)
 
         self.sidebar.load_html(f"""<html>
   <body>

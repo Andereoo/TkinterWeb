@@ -250,7 +250,11 @@ class HTMLElement:
         self.html = document_manager.html
         self.node = extract_nested(node)
         self._style_cache = None  # initialize style as None
-        self.html.get_node_tkhtml(node)  # check if the node is valid, rises invalid command error if not.
+        try:
+            self.html.get_node_tkhtml(node)  # check if the node is valid, rises invalid command error if not.
+        except TclError as e:
+            if "invalid command name" in str(e):
+                raise TclError(f"Node {str(e).split()[-1]} is invalid")
         DOM_element_events(self)
 
         # we need this here or crashes happen if multiple Tkhtml instances exist (depending on the Tkhtml version)

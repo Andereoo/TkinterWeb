@@ -566,6 +566,7 @@ Load about:tkinterweb for debugging information""")
         if ignore_text_nodes:
             if not self._html.get_node_tag(self._html.current_node):
                 node = self._html.get_node_parent(self._html.current_node)
+        print(">", node)
         return HTMLElement(self.document, node)
     
     def widget_to_element(self, widget):
@@ -695,17 +696,18 @@ Load about:tkinterweb for debugging information""")
         title = ""
         icon = ""
         base = ""
-        style = ""
+        style = []
         
         for rule in self._html.get_computed_styles():
             selector, prop, origin = rule
             if origin == "agent" and not allow_agent: continue
-            style += f"\t\t\t{selector} {{{prop.replace('-tkhtml-no-color', 'transparent')}}}\n"
+            style.append(f"\t\t\t{selector} {{{prop.replace('-tkhtml-no-color', 'transparent')}}}")
+        style = "\n".join(style)
 
         if self._html.title: title = f"\n\t\t<title>{self._html.title}</title>"
         if self._html.icon: icon = f"\n\t\t<link rel=\"icon\" type=\"image/x-icon\" href=\"/{self._html.icon}\">"
         if self._html.base_url: base = f"\n\t\t<base href=\"{self._html.base_url}\"></base>"
-        if style: style = f"\n\t\t<style>{style}\n\t\t</style>"
+        if style: style = f"\n\t\t<style>\n\t{style}\n\t\t</style>"
         body = self.document.body.innerHTML
 
         if title or icon or base or style: style += "\n\t"
@@ -1022,8 +1024,27 @@ Load about:tkinterweb for debugging information""")
         except Exception as error:
             self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running an {attribute} script: {error}")
 
-class HtmlWYSIWYG
+class HtmlWYSIWYG(HtmlFrame):
+    def __init__(self, master, **kwargs):
+        HtmlFrame.__init__(self, master, **kwargs)
+        tags = list(self._html.bindtags())
+        tags.remove("Html")
+        self._html.bindtags(tags)
+        self._text = ""
+        self.bind("<<TitleChanged>>", lambda event: master.title(self.title))
+        self.outlineWidth = "1px"
+        self.outlineColor = "Red"
+        self.load_html("<h1>HEADING.</h1>")
+        self.text = self.save_page()
 
+    @property
+    def text(self): return self._text
+
+    @text.setter
+    def text(self, new):
+        self._text = new
+        self.load_html(self._text)
+        self.add_css(":hover {outline: solid %s %s;}" % (self.outlineWidth, self.outlineColor))
 
 class HtmlLabel(TkinterWeb):
     """The :class:`~tkinterweb.HtmlLabel` widget inherits from the :class:`TkinterWeb`. For a complete list of avaliable methods, configuration options, generated events, and state variables, see the :class:`TkinterWeb` docs.

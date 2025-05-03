@@ -696,18 +696,17 @@ Load about:tkinterweb for debugging information""")
         title = ""
         icon = ""
         base = ""
-        style = []
+        style = ""
         
         for rule in self._html.get_computed_styles():
             selector, prop, origin = rule
             if origin == "agent" and not allow_agent: continue
-            style.append(f"\t\t\t{selector} {{{prop.replace('-tkhtml-no-color', 'transparent')}}}")
-        style = "\n".join(style)
+            style += f"\t\t\t{selector} {{{prop.replace('-tkhtml-no-color', 'transparent')}}}\n"
 
         if self._html.title: title = f"\n\t\t<title>{self._html.title}</title>"
         if self._html.icon: icon = f"\n\t\t<link rel=\"icon\" type=\"image/x-icon\" href=\"/{self._html.icon}\">"
         if self._html.base_url: base = f"\n\t\t<base href=\"{self._html.base_url}\"></base>"
-        if style: style = f"\n\t\t<style>\n\t{style}\n\t\t</style>"
+        if style: style = f"\n\t\t<style>\n{style[:-1]}\n\t\t</style>"
         body = self.document.body.innerHTML
 
         if title or icon or base or style: style += "\n\t"

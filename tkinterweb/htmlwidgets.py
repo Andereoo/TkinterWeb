@@ -1037,7 +1037,8 @@ class HtmlWYSIWYG(HtmlFrame):
 
     def config_style(self, color="Red", width="1px"):
         self._html.config(
-            defaultstyle=self._html.tkhtml_default_style
+            defaultstyle=self._html.dark_style
+            if self._html._dark_theme_enabled else self._html.default_style
             + "\n:hover { outline: solid %s %s; } " % (width, color)
         )
 

@@ -615,6 +615,11 @@ class TkinterWeb(Widget):
         "Get a tuple containing the computed CSS rules for each CSS selector"
         return self.tk.call(self._w, "_styleconfig")
 
+    def override_node_CSS(self, node, *props):
+        "Overrides the node's properties; if it is a text node, it overrides the parent's properties."
+        if not self.get_node_tag(node): node = self.get_node_parent(node)
+        return self.override_node_properties(node, *props)
+
     def fetch_scripts(self, attributes, url=None, data=None):
         "Fetch and run scripts"
         thread = self._begin_download()

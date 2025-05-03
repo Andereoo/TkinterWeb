@@ -1025,16 +1025,21 @@ Load about:tkinterweb for debugging information""")
 
 class HtmlWYSIWYG(HtmlFrame):
     def __init__(self, master, **kwargs):
-        HtmlFrame.__init__(self, master, **kwargs)
+        HtmlFrame.__init__(self, master, **kwargs, horizontal_scrollbar="auto")
         tags = list(self._html.bindtags())
         tags.remove("Html")
         self._html.bindtags(tags)
         self._text = ""
         self.bind("<<TitleChanged>>", lambda event: master.title(self.title))
-        self.outlineWidth = "1px"
-        self.outlineColor = "Red"
         self.load_html("<h1>HEADING.</h1>")
         self.text = self.save_page()
+        self.config_style()
+
+    def config_style(self, color="Red", width="1px"):
+        self._html.config(
+            defaultstyle=self._html.tkhtml_default_style
+            + "\n:hover { outline: solid %s %s; } " % (width, color)
+        )
 
     @property
     def text(self): return self._text
@@ -1043,7 +1048,6 @@ class HtmlWYSIWYG(HtmlFrame):
     def text(self, new):
         self._text = new
         self.load_html(self._text)
-        self.add_css(":hover {outline: solid %s %s;}" % (self.outlineWidth, self.outlineColor))
 
 class HtmlLabel(TkinterWeb):
     """The :class:`~tkinterweb.HtmlLabel` widget inherits from the :class:`TkinterWeb`. For a complete list of avaliable methods, configuration options, generated events, and state variables, see the :class:`TkinterWeb` docs.
@@ -1054,11 +1058,9 @@ class HtmlLabel(TkinterWeb):
     """
     def __init__(self, master, text="", style="", **kwargs):
         TkinterWeb.__init__(self, master, shrink=True, **kwargs)
-
         tags = list(self.bindtags())
         tags.remove("Html")
         self.bindtags(tags)
-
         self.parse(text)
         if style: self.parse_css(data=style)
 
@@ -1081,8 +1083,7 @@ class HtmlLabel(TkinterWeb):
             }
         return super().cget(key)
 
-    def config(self, **kwargs):
-        self.configure(**kwargs)
+    def config(self, **kwargs): self.configure(**kwargs)
 
 #NOTE: should probably add a method to HtmlFrame to allow parsing more efficiently and proficiently using the fragment CMD
 class HtmlParse():

@@ -2242,9 +2242,11 @@ class TkinterWeb(Widget):
         return self.tk.call("::tkhtml::htmlstyle")
 
     def tkhtml_uri_decode(self, uri):
+        "This command is designed to help scripts process data: URIs. It is completely separate from the html widget"
         return self.tk.call("::tkhtml::decode", uri).strip(b"{}")
 
     def tkhtml_uri_encode(self, uri):
+        "Encodes - _ . ! ~ * ' ( )"
         return self.tk.call("::tkhtml::encode", uri)
 
     def tkhtml_uri_escape(self, uri):

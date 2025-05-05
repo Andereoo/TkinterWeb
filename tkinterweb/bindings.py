@@ -1391,8 +1391,7 @@ class TkinterWeb(Widget):
 
     def _on_image_cmd(self, url):
         "Handle images."
-        if not self.images_enabled or not self.unstoppable:
-            return
+        if not self.images_enabled or not self.unstoppable: return
 
         name = self.image_name_prefix + str(len(self.loaded_images))
 

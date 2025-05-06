@@ -698,7 +698,8 @@ class TkinterWeb(Widget):
                 image = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
                 self.loaded_images.add(image)
             elif self.image_alternate_text_enabled:
-                alt = self.get_node_attribute(node, "alt")
+                try: alt = self.get_node_attribute(node, "alt")
+                except TclError: return  # Widget no longer exists
                 if alt and self.experimental:
                     self.insert_node(node, self.parse_fragment(alt))
                 elif alt:

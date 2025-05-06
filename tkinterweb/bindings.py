@@ -2286,7 +2286,7 @@ class TkinterWeb(Widget):
     def uri_destroy(self, parsed):
         self.tk.call(parsed, "destroy")
 
-class ParsedURI(tk.Widget):  # Not sure if this one is really necessary. Could be merged with methods above, I could do that
+class ParsedURI(Widget):  # Not sure if this one is really necessary. Could be merged with methods above, I could do that.
     def __init__(self, uri, master=None):
         folder = get_tkhtml_folder()
         if master is None:
@@ -2298,33 +2298,45 @@ class ParsedURI(tk.Widget):  # Not sure if this one is really necessary. Could b
         except tk.TclError:
             load_tkhtml(master, folder, True)
             tk.Widget.__init__(self, master, "html")
+
         self.parsed = self.tk.call("::tkhtml::uri", uri)
 
-    def resolve(self, uri): return self.tk.call(self.parsed, "resolve", uri)
+    def resolve(self, uri):
+        return self.tk.call(self.parsed, "resolve", uri)
 
-    def load(self, uri): return self.tk.call(self.parsed, "load", uri)
-
-    @property
-    def defrag(self): return self.tk.call(self.parsed, "get_no_fragment")
-
-    @property
-    def scheme(self): return self.tk.call(self.parsed, "scheme")
+    def load(self, uri):
+        return self.tk.call(self.parsed, "load", uri)
 
     @property
-    def authority(self): return self.tk.call(self.parsed, "authority")
+    def defrag(self):
+        return self.tk.call(self.parsed, "get_no_fragment")
 
     @property
-    def path(self): return self.tk.call(self.parsed, "path")
+    def scheme(self):
+        return self.tk.call(self.parsed, "scheme")
 
     @property
-    def query(self): return self.tk.call(self.parsed, "query")
+    def authority(self):
+        return self.tk.call(self.parsed, "authority")
 
     @property
-    def fragment(self): return self.tk.call(self.parsed, "fragment")
+    def path(self):
+        return self.tk.call(self.parsed, "path")
 
     @property
-    def splitfrag(self): return SplitFrag(self.defrag, self.fragment)
+    def query(self):
+        return self.tk.call(self.parsed, "query")
 
-    def __str__(self): return self.tk.call(self.parsed, "get")
+    @property
+    def fragment(self):
+        return self.tk.call(self.parsed, "fragment")
 
-    def __del__(self): self.tk.call(self.parsed, "destroy")
+    @property
+    def splitfrag(self):
+        return SplitFrag(self.defrag, self.fragment)
+
+    def __str__(self):
+        return self.tk.call(self.parsed, "get")
+
+    def __del__(self):
+        self.tk.call(self.parsed, "destroy")

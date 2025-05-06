@@ -23,6 +23,8 @@ class TkinterWeb(Widget):
         self._setup_settings()
         self._setup_status_variables()
 
+        master.winfo_toplevel().protocol("WM_DELETE_WINDOW", self._close)
+
         # inherited settings
         waiting_options = {}
         if tkinterweb_options:
@@ -301,7 +303,7 @@ class TkinterWeb(Widget):
 
     def post_event(self, event):
         "Generate a virtual event."
-        if self.events_enabled:
+        if self.events_enabled and self.unstoppable:
             # thread safety
             self.after(0, lambda event=event: self._finish_posting_event(event))
 
@@ -698,18 +700,20 @@ class TkinterWeb(Widget):
                 image = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
                 self.loaded_images.add(image)
             elif self.image_alternate_text_enabled:
-                try: alt = self.get_node_attribute(node, "alt")
+                try:  # Thread safety when closing
+                    alt = self.get_node_attribute(node, "alt")
+                    if alt:
+                        self.insert_node(node, self.parse_fragment(alt))
+                    elif alt:
+                        image = text_to_image(
+                            name, alt, self.bbox(node),
+                            self.image_alternate_text_font,
+                            self.image_alternate_text_size,
+                            self.image_alternate_text_threshold,
+                        )
+                        self.loaded_images.add(image)
                 except TclError: return  # Widget no longer exists
-                if alt and self.experimental:
-                    self.insert_node(node, self.parse_fragment(alt))
-                elif alt:
-                    image = text_to_image(
-                        name, alt, self.bbox(node),
-                        self.image_alternate_text_font,
-                        self.image_alternate_text_size,
-                        self.image_alternate_text_threshold,
-                    )
-                    self.loaded_images.add(image)
+                except RuntimeError: return
         elif not self.ignore_invalid_images:
             image = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
             self.loaded_images.add(image)
@@ -726,15 +730,16 @@ class TkinterWeb(Widget):
         else:
             try:
                 data, newurl, filetype, code = self._download_url(url)
-
-                if self.unstoppable and data:
+                if data and self.unstoppable:
                     # thread safety
                     self.after(0, self.finish_fetching_images, node, data, name, filetype, url)
 
             except Exception as error:
-                self.load_alt_text(url, name)
-                self.post_message(f"ERROR: could not load image {url}: {error}")
-                self.on_resource_setup(url, "image", False)
+                if self.unstoppable:
+                    self.load_alt_text(url, name)
+                    self.post_message(f"ERROR: could not load image {url}: {error}")
+                    try: self.on_resource_setup(url, "image", False)  # Thread safety when closing
+                    except (RuntimeError, TclError): pass
         self._finish_download(thread)
 
     def finish_fetching_images(self, node, data, name, filetype, url):
@@ -1126,6 +1131,9 @@ class TkinterWeb(Widget):
                 return
             self.yview_scroll(int(-1*event.delta/30), "units")
 
+    def _close(self):
+        self.stop()
+        self.winfo_toplevel().destroy()
 
     def _finish_posting_event(self, event):
         try:

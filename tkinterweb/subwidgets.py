@@ -505,39 +505,50 @@ class Notebook(ttk.Frame):
         "Returns a list of widgets managed by the notebook."
         return self.pages
 
-class TkHtmlParseURL():
+class TkHtmlParseURL:
     def __init__(self, uri, html=None):
         if html is None:
             master = tk.Tk()
             master.withdraw()
             self._html = TkinterWeb(master)
-        self.parsed = self._html.tk.call("::tkhtml::uri", uri)
+        self.parsed = self.uri("::tkhtml::uri", uri)
 
-    def resolve(self, uri): return self._html.uri_resolve(self.parsed, uri)
+    def resolve(self, uri):
+        return self._html.uri_resolve(self.parsed, uri)
 
-    def load(self, uri): return self._html.uri_load(self.parsed, uri)
-
-    @property
-    def defrag(self): return self._html.uri_defrag(self.parsed)
-
-    @property
-    def scheme(self): return self._html.uri_scheme(self.parsed)
+    def load(self, uri):
+        return self._html.uri_load(self.parsed, uri)
 
     @property
-    def authority(self): return self._html.uri_authority(self.parsed)
+    def defrag(self):
+        return self._html.uri_defrag(self.parsed)
 
     @property
-    def path(self): return self._html.uri_path(self.parsed)
+    def scheme(self):
+        return self._html.uri_scheme(self.parsed)
 
     @property
-    def query(self): return self._html.uri_query(self.parsed)
+    def authority(self):
+        return self._html.uri_authority(self.parsed)
 
     @property
-    def fragment(self): return self._html.uri_fragment(self.parsed)
+    def path(self):
+        return self._html.uri_path(self.parsed)
 
     @property
-    def splitfrag(self): return SplitFrag(self.defrag, self.fragment)
+    def query(self):
+        return self._html.uri_query(self.parsed)
 
-    def __str__(self): return self._html.uri_get(self.parsed)
+    @property
+    def fragment(self):
+        return self._html.uri_fragment(self.parsed)
 
-    def __del__(self): self._html.uri_destroy(self.parsed)
+    @property
+    def splitfrag(self):
+        return SplitFrag(self.defrag, self.fragment)
+
+    def __str__(self):
+        return self._html.uri_get(self.parsed)
+
+    def __del__(self):
+        self._html.uri_destroy(self.parsed)

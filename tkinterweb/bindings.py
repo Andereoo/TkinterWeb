@@ -5,9 +5,6 @@ Copyright (c) 2021-2025 Andereoo
 """
 
 from re import IGNORECASE, MULTILINE, split, sub, finditer
-
-from urllib.parse import urlencode, urljoin, urlparse
-
 from tkinter import Widget, Frame, TclError
 
 from .imageutils import *
@@ -25,6 +22,8 @@ class TkinterWeb(Widget):
 
         self._setup_settings()
         self._setup_status_variables()
+
+        master.winfo_toplevel().protocol("WM_DELETE_WINDOW", self._close)
 
         # inherited settings
         waiting_options = {}
@@ -54,11 +53,12 @@ class TkinterWeb(Widget):
 
         # load the Tkhtml3 widget
         try:
-            load_tkhtml(master, folder, )
+            auto_path = load_tkhtml(master, folder, )
             Widget.__init__(self, master, "html", kwargs)
         except TclError:
-            load_tkhtml(master, folder, True)
+            auto_path = load_tkhtml(master, folder, True)
             Widget.__init__(self, master, "html", kwargs)
+        self.post_message(f"auto_path {auto_path}")
 
         # create a tiny, blank frame for cursor updating
         self.motion_frame = Frame(self, bg=self.motion_frame_bg, width=1, height=1)
@@ -303,7 +303,7 @@ class TkinterWeb(Widget):
 
     def post_event(self, event):
         "Generate a virtual event."
-        if self.events_enabled:
+        if self.events_enabled and self.unstoppable:
             # thread safety
             self.after(0, lambda event=event: self._finish_posting_event(event))
 
@@ -426,9 +426,9 @@ class TkinterWeb(Widget):
         "Return the name of the Html tag that generated this document node, or an empty string if the node is a text node."
         return self.tk.call(self._w, "tag", subcommand, tag_name, *args)
 
-    def search(self, selector, cnf={}, **kwargs):
+    def search(self, selector, *a, cnf={}, **kw):
         """Search the document for the specified CSS selector; return a Tkhtml3 node if found."""
-        return self.tk.call((self._w, "search", selector)+self._options(cnf, kwargs))
+        return self.tk.call((self._w, "search", selector)+TclOpt(a)+self._options(cnf, kw))
 
     def xview(self, *args):
         "Used to control horizontal scrolling."
@@ -485,7 +485,7 @@ class TkinterWeb(Widget):
 
     def get_node_text(self, node_handle, *args):
         "Get the text content of the given node."
-        return self.tk.call(node_handle, "text", *args)
+        return self.tk.call(node_handle, "text", *TclOpt(args))
 
     def set_node_text(self, node_handle, new):
         "Set the text content of the given node."
@@ -508,9 +508,7 @@ class TkinterWeb(Widget):
         if value:  # backwards compatability
             return self.tk.call(node_handle, "attribute", attribute, value)
         else:
-            return self.tk.call(
-                node_handle, "attribute", "-default", default, attribute
-            )
+            return self.tk.call(node_handle, "attribute", "-default", default, attribute)
 
     def set_node_attribute(self, node_handle, attribute, value):
         "Set the specified attribute of the given node."
@@ -523,11 +521,11 @@ class TkinterWeb(Widget):
 
     def get_node_property(self, node_handle, node_property, *args):
         "Get the specified CSS property of the given node."
-        return self.tk.call(node_handle, "property", *args, node_property)
+        return self.tk.call(node_handle, "property", *TclOpt(args), node_property)
 
     def get_node_properties(self, node_handle, *args):
         "Get the CSS properties of the given node."
-        prop = self.tk.call(node_handle, "property", *args)
+        prop = self.tk.call(node_handle, "property", *TclOpt(args))
         return dict(zip(prop[0::2], prop[1::2]))
 
     def override_node_properties(self, node_handle, *props):
@@ -553,12 +551,7 @@ class TkinterWeb(Widget):
     def delete_node(self, node_handle):
         "Delete the given node."
         node_parent = self.get_node_parent(node_handle)
-        node_tag = self.get_node_tag(node_handle)
-        # removing the body element causes a segfault
-        if node_parent and node_tag != "body":
-            self.tk.call(node_parent, "remove", node_handle)
-        else:
-            raise TclError(f"{node_tag} elements cannot be removed")
+        self.tk.call(node_parent, "remove", node_handle)
 
     def destroy_node(self, node_handle):
         "Destroy a node. May cause crashes so avoid it whenever possible."
@@ -575,6 +568,11 @@ class TkinterWeb(Widget):
     def get_node_tkhtml(self, node_handle):
         "Get pathName of node (I think)."
         return self.tk.call(node_handle, "html")
+
+    def get_node_stacking(self, node_handle):
+        "Return the node-handle that forms the stacking context this node is located in."
+        "Return "" for the root-element or any element that is part of an orphan subtree."
+        return self.tk.call(node_handle, "stacking")
 
     def get_current_node(self, event):
         "Get current node."
@@ -598,15 +596,17 @@ class TkinterWeb(Widget):
         Does not work on Windows unless experimental Tkhtml is used."""
         full = "-full" if full else ""
         name = self.tk.call(self._w, "image", full)
-        return name, self.tk.call(name, "data")
+        data = self.tk.call(name, "data")
+        self.tk.eval(f"image delete {name}")
+        return name, data
 
-    def postscript(self, cnf={}, **kwargs):
+    def postscript(self, cnf={}, **kw):
         """Print the contents of the canvas to a postscript file.
         Valid options: colormap, colormode, file, fontmap, height, 
         pageanchor, pageheight, pagesize, pagewidth, pagex, pagey, 
         nobg, noimages, rotate, width, x, and y.
         Does not work unless experimental Tkhtml is used."""
-        return self.tk.call((self._w, "postscript")+self._options(cnf, kwargs))
+        return self.tk.call((self._w, "postscript")+self._options(cnf, kw))
 
     def preload_image(self, url):
         """Preload an image for use later. 
@@ -616,6 +616,11 @@ class TkinterWeb(Widget):
     def get_computed_styles(self):
         "Get a tuple containing the computed CSS rules for each CSS selector"
         return self.tk.call(self._w, "_styleconfig")
+
+    def override_node_CSS(self, node, *props):
+        "Overrides the node's properties; if it is a text node, it overrides the parent's properties."
+        if not self.get_node_tag(node): node = self.get_node_parent(node)
+        return self.override_node_properties(node, *props)
 
     def fetch_scripts(self, attributes, url=None, data=None):
         "Fetch and run scripts"
@@ -695,17 +700,22 @@ class TkinterWeb(Widget):
                 image = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
                 self.loaded_images.add(image)
             elif self.image_alternate_text_enabled:
-                alt = self.get_node_attribute(node, "alt")
-                if alt and self.experimental:
-                    self.insert_node(node, self.parse_fragment(alt))
-                elif alt:
-                    image = text_to_image(
-                        name, alt, self.bbox(node),
-                        self.image_alternate_text_font,
-                        self.image_alternate_text_size,
-                        self.image_alternate_text_threshold,
-                    )
-                    self.loaded_images.add(image)
+                try:  # Ensure thread safety when closing
+                    alt = self.get_node_attribute(node, "alt")
+                    if alt:
+                        if self.experimental:
+                            # Insert the parsed fragment directly if in experimental mode
+                            self.insert_node(node, self.parse_fragment(alt))
+                        else:
+                            # Generate an image with alternate text if not in experimental mode
+                            image = text_to_image(
+                                name, alt, self.bbox(node),
+                                self.image_alternate_text_font,
+                                self.image_alternate_text_size,
+                                self.image_alternate_text_threshold,
+                            )
+                            self.loaded_images.add(image)
+                except (RuntimeError, TclError): pass  # Widget no longer exists
         elif not self.ignore_invalid_images:
             image = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
             self.loaded_images.add(image)
@@ -722,15 +732,15 @@ class TkinterWeb(Widget):
         else:
             try:
                 data, newurl, filetype, code = self._download_url(url)
-
-                if self.unstoppable and data:
+                if data and self.unstoppable:
                     # thread safety
                     self.after(0, self.finish_fetching_images, node, data, name, filetype, url)
 
             except Exception as error:
                 self.load_alt_text(url, name)
                 self.post_message(f"ERROR: could not load image {url}: {error}")
-                self.on_resource_setup(url, "image", False)
+                try: self.on_resource_setup(url, "image", False)  # Thread safety when closing
+                except (RuntimeError, TclError): pass
         self._finish_download(thread)
 
     def finish_fetching_images(self, node, data, name, filetype, url):
@@ -970,10 +980,20 @@ class TkinterWeb(Widget):
         except Exception as error:
             self.post_message(f"ERROR: an error was encountered while searching for {searchtext}: {error}")
             return nmatches, selected, matches
+
+    def get_child_text(self, node):  # Might be better off in htmlwidgets.py
+        """Get text of node and all its descendants recursively"""
+        text = self.get_node_text(node, "-pre")
+        for child in self.get_node_children(node):
+            text += self.get_element_text(child)
+        return text
     
     def resolve_url(self, url):
         "Generate a full url from the specified url."
-        return urljoin(self.base_url, url)
+        parsed = self.uri(self.base_url)
+        res = self.uri_resolve(parsed, url)
+        self.uri_destroy(parsed)
+        return res
     
     def update_tags(self):
         "Update selection and find tag colors"
@@ -1112,6 +1132,9 @@ class TkinterWeb(Widget):
                 return
             self.yview_scroll(int(-1*event.delta/30), "units")
 
+    def _close(self):
+        self.stop()
+        self.winfo_toplevel().destroy()
 
     def _finish_posting_event(self, event):
         try:
@@ -1255,7 +1278,9 @@ class TkinterWeb(Widget):
         if not self.stylesheets_enabled or not self.unstoppable:
             return
         try:
-            url = urljoin(parent_url, new_url)
+            parent_url = self.uri(parent_url)
+            url = self.uri_resolve(parent_url, new_url)
+            self.uri_destroy(parent_url)
             self.post_message(f"Loading stylesheet from {shorten(url)}")
 
             self._thread_check(self.fetch_styles, url=new_url)
@@ -1370,11 +1395,13 @@ class TkinterWeb(Widget):
         if attribute == "src":
             url = self.resolve_url(value)
             self.image_directory[url] = node
+            if self.experimental:
+                c = self.get_node_children(node)
+                if c: self.destroy_node(c)
 
     def _on_image_cmd(self, url):
         "Handle images."
-        if not self.images_enabled or not self.unstoppable:
-            return
+        if not self.images_enabled or not self.unstoppable: return
 
         name = self.image_name_prefix + str(len(self.loaded_images))
 
@@ -1662,7 +1689,9 @@ class TkinterWeb(Widget):
         "Make relative uris in CSS files absolute."
         newurl = match.group()
         newurl = strip_css_url(newurl)
-        newurl = urljoin(url, newurl)
+        uri = self.uri(url)
+        newurl = self.uri_resolve(uri, newurl)
+        self.uri_destroy(uri)
         newurl = f"url('{newurl}')"
         return newurl
 
@@ -1743,18 +1772,17 @@ class TkinterWeb(Widget):
                     (nodeattrname, nodevalue),
                 )
 
-        data = urlencode(data)
+        data = self.tkhtml_uri_decode(data)
 
         if action == "":
-            url = urlparse(self.base_url)
-            url = f"{url.scheme}://{url.netloc}{url.path}"
+            p = self.uri(self.base_url)
+            url = f"{self.uri_scheme(p)}://{self.uri_authority(p)}{self.uri_path(p)}"
+            self.uri_destroy(p)
         else:
             url = self.resolve_url(action)
 
         if method == "GET":
-            data = "?" + data
-        else:
-            data = data.encode()
+            data = "?" + data.decode()
 
         self.post_message(f"A form was submitted to {shorten(url)}")
         self.on_form_submit(url, data, method)
@@ -2218,3 +2246,107 @@ class TkinterWeb(Widget):
         else:
             tags = (self.node_tag,)
         widgetid.bindtags(widgetid.bindtags() + tags)
+
+    @property
+    def tkhtml_default_style(self):
+        return self.tk.call("::tkhtml::htmlstyle")
+
+    def tkhtml_uri_decode(self, uri):
+        "This command is designed to help scripts process data: URIs. It is completely separate from the html widget"
+        return self.tk.call("::tkhtml::decode", uri).strip(b"{}")
+
+    def tkhtml_uri_encode(self, uri):
+        "Encodes - _ . ! ~ * ' ( )"
+        return self.tk.call("::tkhtml::encode", uri)
+
+    def tkhtml_uri_escape(self, uri):
+        return self.tk.call("::tkhtml::escape_uri", uri)
+
+    def uri(self, uri):
+        "Returns name of parsed uri to be used in methods below"
+        return self.tk.call("::tkhtml::uri", uri)
+
+    def uri_resolve(self, parsed, uri):
+        return self.tk.call(parsed, "resolve", uri)
+
+    def uri_load(self, parsed, uri):
+        return self.tk.call(parsed, "load", uri)
+
+    def uri_str(self, parsed):
+        return self.tk.call(parsed, "get")
+
+    def uri_defrag(self, parsed):
+        return self.tk.call(parsed, "get_no_fragment")
+
+    def uri_scheme(self, parsed):
+        return self.tk.call(parsed, "scheme")
+
+    def uri_authority(self, parsed):
+        return self.tk.call(parsed, "authority")
+
+    def uri_path(self, parsed):
+        return self.tk.call(parsed, "path")
+
+    def uri_query(self, parsed):
+        return self.tk.call(parsed, "query")
+
+    def uri_fragment(self, parsed):
+        return self.tk.call(parsed, "fragment")
+
+    def uri_destroy(self, parsed):
+        self.tk.call(parsed, "destroy")
+
+class ParsedURI(Widget):  # Not sure if this one is really necessary. Could be merged with methods above, I could do that.
+    def __init__(self, uri, master=None):
+        folder = get_tkhtml_folder()
+        if master is None:
+            master = tk.Tk()
+            master.withdraw()
+        try:
+            load_tkhtml(master, folder)
+            Widget.__init__(self, master, "html")
+        except TclError:
+            load_tkhtml(master, folder, True)
+            Widget.__init__(self, master, "html")
+
+        self.parsed = self.tk.call("::tkhtml::uri", uri)
+
+    def resolve(self, uri):
+        return self.tk.call(self.parsed, "resolve", uri)
+
+    def load(self, uri):
+        return self.tk.call(self.parsed, "load", uri)
+
+    @property
+    def defrag(self):
+        return self.tk.call(self.parsed, "get_no_fragment")
+
+    @property
+    def scheme(self):
+        return self.tk.call(self.parsed, "scheme")
+
+    @property
+    def authority(self):
+        return self.tk.call(self.parsed, "authority")
+
+    @property
+    def path(self):
+        return self.tk.call(self.parsed, "path")
+
+    @property
+    def query(self):
+        return self.tk.call(self.parsed, "query")
+
+    @property
+    def fragment(self):
+        return self.tk.call(self.parsed, "fragment")
+
+    @property
+    def splitfrag(self):
+        return SplitFrag(self.defrag, self.fragment)
+
+    def __str__(self):
+        return self.tk.call(self.parsed, "get")
+
+    def __del__(self):
+        self.tk.call(self.parsed, "destroy")

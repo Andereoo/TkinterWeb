@@ -8,12 +8,14 @@ The lru_cache function in this file is modified from functools. Functools is cop
 """
 
 import os
+import re
 import platform
 import sys
 import threading
 
 import ssl
 from urllib.request import Request, urlopen
+from collections import namedtuple
 
 from _thread import RLock
 from functools import update_wrapper, _make_key
@@ -473,15 +475,17 @@ BUILTIN_ATTRIBUTES = {
     "vertical-align": "tkinterweb-full-page"
 }
 
-
-DOWNLOADING_RESOURCE_EVENT = "<<DownloadingResource>>"
-DONE_LOADING_EVENT = "<<DoneLoading>>"
-URL_CHANGED_EVENT = "<<UrlChanged>>"
-ICON_CHANGED_EVENT = "<<IconChanged>>"
-TITLE_CHANGED_EVENT = "<<TitleChanged>>"
+for event in frozenset({
+    "AfterPrint", "BeforePrint", "DoneLoading",
+    "DownloadingResource", "IconChanged", "TitleChanged",
+    "UrlChanged"}):
+    const = re.sub(r"(?<!^)(?=[A-Z])", "_", event).upper() + "_EVENT"
+    globals()[const] = f"<<{event}>>"
 
 tkhtml_loaded = False
 combobox_loaded = False
+
+SplitFrag = namedtuple("SplitFrag", ("uri", "fragment"))
 
 
 class StoppableThread(threading.Thread):
@@ -676,6 +680,44 @@ def tkhtml_notifier(name, text, *args):
     except Exception:
         "sys.stdout.write doesn't work in .pyw files."
         "Since .pyw files have no console, we won't bother printing messages."
+
+
+def TclOpt(options):
+    "Format string into Tcl option command-line names"
+    return tuple(o if o.startswith("-") else "-"+o for o in options)
+
+
+def serialize_node(widget, ib):
+    return widget.tk.eval(r"""
+    proc indent {d} {return [string repeat { } $d]}
+    proc prettify {node} {
+        set depth [expr {([info level] - 1) * %d}]
+        set tag [$node tag]
+        if {$tag eq ""} {
+	    if {[string trim [$node text]] eq ""} return
+	    set z [string map {< &lt; > &gt;} [$node text -pre]]
+	    if {[[$node parent] tag] ne "pre"} {
+                return [indent $depth][regsub -all {\s+} $z " "]\n
+	    } else {
+                return [indent $depth]$z\n
+	    }
+        }
+        set ret [indent $depth]<$tag
+        foreach {zKey zVal} [$node attribute] {
+            append ret " $zKey=\"[string map [list \x22 \x5C\x22] $zVal]\""
+        }
+        append ret >\n
+        set void {area base br col embed hr img input keygen link meta param source track wbr}
+        if {[lsearch -exact $void $tag] != -1} {
+            return $ret
+        }
+        foreach child [$node children] {
+	    append ret [prettify $child]
+        }
+        return $ret[indent $depth]</$tag>\n
+    }
+        prettify [%s node] """ % (ib, widget))
+
 
 def placeholder(*args, **kwargs):
     """Blank placeholder function. The only purpose of this is to

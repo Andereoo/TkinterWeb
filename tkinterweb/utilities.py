@@ -480,6 +480,8 @@ DONE_LOADING_EVENT = "<<DoneLoading>>"
 URL_CHANGED_EVENT = "<<UrlChanged>>"
 ICON_CHANGED_EVENT = "<<IconChanged>>"
 TITLE_CHANGED_EVENT = "<<TitleChanged>>"
+BEFORE_PRINT_EVENT = "<<BeforePrint>>"
+AFTER_PRINT_EVENT = "<<AfterPrint>>"
 
 tkhtml_loaded = False
 combobox_loaded = False

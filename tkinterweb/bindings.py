@@ -2304,10 +2304,10 @@ class ParsedURI(Widget):  # Not sure if this one is really necessary. Could be m
             master.withdraw()
         try:
             load_tkhtml(master, folder)
-            tk.Widget.__init__(self, master, "html")
-        except tk.TclError:
+            Widget.__init__(self, master, "html")
+        except TclError:
             load_tkhtml(master, folder, True)
-            tk.Widget.__init__(self, master, "html")
+            Widget.__init__(self, master, "html")
 
         self.parsed = self.tk.call("::tkhtml::uri", uri)
 

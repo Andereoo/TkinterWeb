@@ -641,6 +641,7 @@ Load about:tkinterweb for debugging information""")
         :raises: NotImplementedError if experimental mode is not enabled."""
         if self._html.experimental:
             cnf |= kwargs
+            self._html.post_event(BEFORE_PRINT_EVENT)
             self._html.post_message(f"Printing {self._current_url}...")
             if filename:
                 cnf["file"] = filename
@@ -659,6 +660,7 @@ Load about:tkinterweb for debugging information""")
             file = self._html.postscript(cnf)
             
             # No need to save - Tkhtml handles that for us
+            self._html.post_event(AFTER_PRINT_EVENT)
             if filename:
                 self._html.post_message("Printed!")
             if file: return file

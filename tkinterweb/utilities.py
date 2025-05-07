@@ -8,6 +8,7 @@ The lru_cache function in this file is modified from functools. Functools is cop
 """
 
 import os
+import re
 import platform
 import sys
 import threading
@@ -474,14 +475,12 @@ BUILTIN_ATTRIBUTES = {
     "vertical-align": "tkinterweb-full-page"
 }
 
-
-DOWNLOADING_RESOURCE_EVENT = "<<DownloadingResource>>"
-DONE_LOADING_EVENT = "<<DoneLoading>>"
-URL_CHANGED_EVENT = "<<UrlChanged>>"
-ICON_CHANGED_EVENT = "<<IconChanged>>"
-TITLE_CHANGED_EVENT = "<<TitleChanged>>"
-BEFORE_PRINT_EVENT = "<<BeforePrint>>"
-AFTER_PRINT_EVENT = "<<AfterPrint>>"
+for event in frozenset({
+    "AfterPrint", "BeforePrint", "DoneLoading",
+    "DownloadingResource", "IconChanged", "TitleChanged",
+    "UrlChanged"}):
+    const = re.sub(r"(?<!^)(?=[A-Z])", "_", event).upper() + "_EVENT"
+    globals()[const] = f"<<{event}>>"
 
 tkhtml_loaded = False
 combobox_loaded = False

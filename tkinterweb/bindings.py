@@ -700,20 +700,22 @@ class TkinterWeb(Widget):
                 image = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
                 self.loaded_images.add(image)
             elif self.image_alternate_text_enabled:
-                try:  # Thread safety when closing
+                try:  # Ensure thread safety when closing
                     alt = self.get_node_attribute(node, "alt")
                     if alt:
-                        self.insert_node(node, self.parse_fragment(alt))
-                    elif alt:
-                        image = text_to_image(
-                            name, alt, self.bbox(node),
-                            self.image_alternate_text_font,
-                            self.image_alternate_text_size,
-                            self.image_alternate_text_threshold,
-                        )
-                        self.loaded_images.add(image)
-                except TclError: return  # Widget no longer exists
-                except RuntimeError: return
+                        if self.experimental:
+                            # Insert the parsed fragment directly if in experimental mode
+                            self.insert_node(node, self.parse_fragment(alt))
+                        else:
+                            # Generate an image with alternate text if not in experimental mode
+                            image = text_to_image(
+                                name, alt, self.bbox(node),
+                                self.image_alternate_text_font,
+                                self.image_alternate_text_size,
+                                self.image_alternate_text_threshold,
+                            )
+                            self.loaded_images.add(image)
+                except (RuntimeError, TclError): pass  # Widget no longer exists
         elif not self.ignore_invalid_images:
             image = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
             self.loaded_images.add(image)
@@ -735,11 +737,10 @@ class TkinterWeb(Widget):
                     self.after(0, self.finish_fetching_images, node, data, name, filetype, url)
 
             except Exception as error:
-                if self.unstoppable:
-                    self.load_alt_text(url, name)
-                    self.post_message(f"ERROR: could not load image {url}: {error}")
-                    try: self.on_resource_setup(url, "image", False)  # Thread safety when closing
-                    except (RuntimeError, TclError): pass
+                self.load_alt_text(url, name)
+                self.post_message(f"ERROR: could not load image {url}: {error}")
+                try: self.on_resource_setup(url, "image", False)  # Thread safety when closing
+                except (RuntimeError, TclError): pass
         self._finish_download(thread)
 
     def finish_fetching_images(self, node, data, name, filetype, url):

@@ -304,7 +304,7 @@ class FileSelector(tk.Frame):
 
             # First find all the MIME types
             for mimetype in [a for a in accept_list if not a.startswith(".")]:
-                # the HTML spec specifies these three wildcard cases only:
+                # The HTML spec specifies these three wildcard cases only:
                 if mimetype in ("audio/*", "video/*", "image/*"):
                     extensions = [
                         k

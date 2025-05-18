@@ -51,7 +51,7 @@ def camel_case_to_property(string):
             new_string += i
     return new_string
 
-    # this also works:
+    # This also works:
     # from re import finditer
     # matches = finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)', string)
     # return "-".join([m.group(0).lower() for m in matches])
@@ -70,7 +70,7 @@ class HTMLDocument:
         self.html.tk.createcommand("node_to_html", self._node_to_html)
 
     @property
-    def body(self):  # taken from hv3_dom_html.tcl line 161
+    def body(self):  # Taken from hv3_dom_html.tcl line 161
         """The document body element.
 
         :rtype: :class:`HTMLElement`"""
@@ -88,7 +88,7 @@ class HTMLDocument:
             self, self.html.tk.eval(f"""set root [lindex [{self.html} node] 0]"""),
         )
     
-    def createElement(self, tagname):  # taken from hv3_dom_core.tcl line 214
+    def createElement(self, tagname):  # Taken from hv3_dom_core.tcl line 214
         """Create and return a new HTML element with the given tag name.
 
         :param tagname: The new element's HTML tag.
@@ -238,12 +238,12 @@ class HTMLElement:
         self.document = document_manager
         self.html = document_manager.html
         self.node = extract_nested(node)
-        self._style_cache = None  # initialize style as None
+        self._style_cache = None  # Initialize style as None
         
-        self.html.bbox(node)  # check if the node is valid
+        self.html.bbox(node)  # Check if the node is valid
 
-        # we need this here or crashes happen if multiple Tkhtml instances exist (depending on the Tkhtml version)
-        # no idea why, but hey, it works
+        # We need this here or crashes happen if multiple Tkhtml instances exist (depending on the Tkhtml version)
+        # No idea why, but hey, it works
         self.html.tk.createcommand("parse_fragment", self.html.parse_fragment)
         
     @property
@@ -251,12 +251,12 @@ class HTMLElement:
         """Manage the element's styling. For instance, to make the element have a blue background, use ``yourhtmlelement.style.backgroundColor = "blue"``.
 
         :rtype: :class:`~tkinterweb.dom.CSSStyleDeclaration`"""
-        if self._style_cache is None:  # lazy loading of style
+        if self._style_cache is None:  # Lazy loading of style
             self._style_cache = CSSStyleDeclaration(self)
         return self._style_cache
 
     @property
-    def innerHTML(self):  # taken from hv3_dom2.tcl line 61
+    def innerHTML(self):  # Taken from hv3_dom2.tcl line 61
         """Get and set the inner HTML of the element. Cannot be used on ``<html>`` elements.
         
         :rtype: str
@@ -274,7 +274,7 @@ class HTMLElement:
         )
 
     @innerHTML.setter
-    def innerHTML(self, contents):  # taken from hv3_dom2.tcl line 88
+    def innerHTML(self, contents):  # Taken from hv3_dom2.tcl line 88
         # Tkhtml crashes if a node containing a widget is destroyed
         self.widget = None
         for node in self.html.search(f"[{self.html.widget_container_attr}]", root=self.node):
@@ -382,7 +382,7 @@ class HTMLElement:
         return [HTMLElement(self, i) for i in self.html.get_node_children(self.node)]
     
     @property
-    def widget(self): # not a JS property, but could be useful
+    def widget(self): # Not a real JS property, but still useful
         """Get and set the element's widget. 
         
         Prior to version 4.2 this only applies to ``<object>`` elements and a widget must be specified.
@@ -397,11 +397,11 @@ class HTMLElement:
             return None
         
     @widget.setter
-    def widget(self, widget): # not a JS property, but could be useful
+    def widget(self, widget): # Not a real JS property, but still useful
         if self.tagName == "object":
-            # really we should do better than set the data attribute
-            # right now this also can be used to set the object's url
-            # but in practice it shouldn't really matter
+            # Really we should do better than set the data attribute
+            # Right now this also can be used to set the object's url
+            # But in practice it shouldn't really matter
             if not widget:
                 # Tkhtml doesn't know what do do with 'None' and will refuse to fire the attribute handler
                 self.setAttribute("data", "")
@@ -844,13 +844,13 @@ class CSSStyleDeclaration:
         return len(self.html.get_node_properties(self.node, "-inline"))
     
     @property
-    def cssProperties(self): # not a JS function, but could be useful
+    def cssProperties(self): # Not a JS function, but still useful
         """Return all computed properties for the element.
         
         :rtype: dict"""
         return self.html.get_node_properties(self.node)
     
-    @property # not a JS function, but could be useful
+    @property # Not a JS function, but still useful
     def cssInlineProperties(self):
         """Return all inline properties for the element. Similar to the :attr:`cssText` property, but formatted as a dictionary.
         

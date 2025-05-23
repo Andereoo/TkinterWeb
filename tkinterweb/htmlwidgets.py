@@ -1111,6 +1111,7 @@ class HtmlParse():
         if html.uri_scheme(parsed) in frozenset({"file", "https", "http"}):
             markup, url, file, r = html._download_url(markup)
 
+        html.uri_destroy(parsed)
         html.parse(markup)
 
     def prettify(self, indentation=4):

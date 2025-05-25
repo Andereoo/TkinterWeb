@@ -1116,6 +1116,9 @@ class TkinterWeb(Widget):
 
     def _load_tkhtml(self, force=False):
         "Load Tkhtml"
+        if self.tkhtml_version == "auto":
+            self.tkhtml_version = None
+
         if self.use_prebuilt_tkhtml:
             try:
                 file, self.tkhtml_version = tkinterweb_tkhtml.get_tkhtml_file(self.tkhtml_version)
@@ -1128,9 +1131,9 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                 self.post_message(f"Defaulting to Tkhtml {self.tkhtml_version}")
         else:
             self.tkhtml_version = tkinterweb_tkhtml.load_tkhtml(self.master, force=force)
-
-        if isinstance(self.experimental, float):
-            if float(self.tkhtml_version) >= self.experimental:
+        
+        if self.experimental == "auto":
+            if float(self.tkhtml_version) >= 3.1:
                 self.experimental = True
             else:
                 self.experimental = False

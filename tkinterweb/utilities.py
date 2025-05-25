@@ -461,7 +461,8 @@ class BuiltinPageGenerator():
             <code class='header'>Resource loading</code>\
             <code>Use prebuilt Tkhtml: {use_prebuilt_tkhtml}</code>\
             <code>Resource directories: {root}{tkhtml_root}</code><code>Working directory: {working_dir}</code>\
-            <code>Dependency path: {path}</code>\
+            <code>Tcl paths: {tcl_path}</code>\
+            <code>System dependency paths: {path}</code>\
             <code class='header'>System specs</code>\
             <code>Platform: {platform}</code><code>Machine: {machine}</code><code>Processor: {processor}</code>\
         </code>\
@@ -546,6 +547,7 @@ class BuiltinPageGenerator():
                 root=f"<code class='indented'>{ROOT_DIR}</code>", 
                 tkhtml_root=f"<code class='indented'>{tkinterweb_tkhtml.TKHTML_ROOT_DIR}</code>", 
                 working_dir=f"<code class='indented'>{WORKING_DIR}</code>", 
+                tcl_path=("".join(f"<code class='indented'>{i}</code>" for i in self._html.tk.getvar("auto_path"))),
                 path=("".join(f"<code class='indented'>{i}</code>" for i in os.environ["PATH"].split(os.pathsep))),
 
                 parse_mode=self._html.cget("parsemode"), rendering_mode=self._html.cget("mode"),

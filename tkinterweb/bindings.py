@@ -98,7 +98,7 @@ class TkinterWeb(Widget):
         self.default_style = None
         self.dark_style = None
         self.use_prebuilt_tkhtml = True
-        self.tkhtml_version = "3.2"
+        self.tkhtml_version = ""
         self.experimental = False
 
         self.find_match_highlight_color = "#ef0fff"
@@ -1128,6 +1128,12 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                 self.post_message(f"Defaulting to Tkhtml {self.tkhtml_version}")
         else:
             self.tkhtml_version = tkinterweb_tkhtml.load_tkhtml(self.master, force=force)
+
+        if isinstance(self.experimental, float):
+            if float(self.tkhtml_version) >= self.experimental:
+                self.experimental = True
+            else:
+                self.experimental = False
 
     def _finish_posting_event(self, event):
         try:

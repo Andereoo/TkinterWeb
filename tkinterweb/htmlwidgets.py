@@ -120,8 +120,8 @@ class HtmlFrame(Frame):
 
     The following flags are optional and can be used to change HTML rendering behaviour:
 
-    :param experimental: If True, experimental features will be enabled. You will need to compile the cutting-edge Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental and replace the default Tkhtml binary for your system with the experimental version. Unless you need to screenshot the full page on Windows or print your page for now it is likely best to use the default Tkhtml binary and leave this setting alone.
-    :type experimental: bool
+    :param experimental: If True, experimental features will be enabled. If a float, experimental features will be enabled if the loaded Tkhtml version is greater than or equal to the given value. You will need to compile the cutting-edge Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental and replace the default Tkhtml binary for your system with the experimental version. Unless you need to screenshot the full page on Windows or print your page for now it is likely best to use the default Tkhtml binary and leave this setting alone.
+    :type experimental: bool or float
     :param use_prebuilt_tkhtml: If True (the default), the Tkhtml binary for your system supplied by TkinterWeb will be used. If your system isn't supported and you don't want to compile the Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml yourself, you could try installing Tkhtml3 system-wide and set :attr:`use_prebuilt_tkhtml` to False. Note that some crash prevention features will no longer work.
     :type use_prebuilt_tkhtml: bool
     :param tkhtml_version: The Tkhtml version to use. If the requested version is not found, TkinterWeb will fallback to Tkhtml version 3.1.
@@ -136,7 +136,7 @@ class HtmlFrame(Frame):
     :raise TypeError: If the value type is wrong and cannot be converted to the correct type."""
 
     def __init__(self, master, **kwargs):
-        # State and settings variables
+        # state and settings variables
         style = Style()
 
         self._current_url = ""
@@ -188,7 +188,7 @@ class HtmlFrame(Frame):
             "dark_style": DARK_STYLE,
             "insecure_https": False,
             "headers": HEADERS,
-            "experimental": False,
+            "experimental": 3.1,
             # No impact after loading
             "use_prebuilt_tkhtml": True,
             "tkhtml_version": "",

@@ -1052,37 +1052,37 @@ class HtmlWYSIWYG(HtmlFrame):
         self._text = new
         self.load_html(self._text)
 
-class HtmlLabel(TkinterWeb):
-    """The :class:`~tkinterweb.HtmlLabel` widget inherits from the :class:`TkinterWeb`. For a complete list of avaliable methods, configuration options, generated events, and state variables, see the :class:`TkinterWeb` docs.
-    This class also accepts one additional parameter:
+class HtmlLabel(HtmlFrame):
+    """The :class:`HtmlLabel` widget inherits from the :class:`HtmlFrame`. For a complete list of avaliable methods, configuration options, generated events, and state variables, see the :class:`HtmlFrame` docs.
 
     :param text: Set the HTML content of the widget
     :type text: str
     """
     def __init__(self, master, text="", style="", **kwargs):
-        TkinterWeb.__init__(self, master, shrink=True, **kwargs)
-        tags = list(self.bindtags())
-        tags.remove("Html")
+        HtmlFrame.__init__(self, master, vertical_scrollbar=False, shrink=True, **kwargs)
+
+        tags = list(self._html.bindtags())
+        self._html.bindtags(tags)
         self.bindtags(tags)
-        self.parse(text)
-        if style: self.parse_css(data=style)
+        self.load_html(text)
+        self.add_css(style)
+        self.allow_agent = False
 
     def configure(self, **kwargs):
         if "text" in kwargs:
-            self.reset()
-            self.parse(kwargs.pop("text"))
+            self.load_html(kwargs.pop("text"))
         if "style" in kwargs:
-            self.parse_css(data=kwargs.pop("style"))
+            self.add_css(kwargs.pop("style"))
         if kwargs: super().configure(**kwargs)
 
     def cget(self, key):
         if "text" == key:
-            return serialize_node(self, 0).splitlines()
+            return serialize_node(self._html, 0).splitlines()
         if "style" == key:
             return {
-                i[0]: {p: v for p, v in (j.split(":") for j in [i[1]])}
-                for i in self.get_computed_styles()
-                if "agent" != i[2]
+                i[0]: dict(j.split(":", 1) for j in i[1].split("; ") if j.strip())
+                for i in self._html.get_computed_styles()
+                if "agent" != i[2] or self.allow_agent
             }
         return super().cget(key)
 

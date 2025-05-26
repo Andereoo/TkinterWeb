@@ -12,7 +12,7 @@ import os
 import tkinter as tk
 from tkinter import colorchooser, filedialog, ttk
 
-from .utilities import ROOT_DIR
+from .utilities import ROOT_DIR, SplitFrag
 
 combobox_loaded = False
 
@@ -505,13 +505,10 @@ class Notebook(ttk.Frame):
         "Returns a list of widgets managed by the notebook."
         return self.pages
 
-class TkHtmlParseURL:
-    def __init__(self, uri, html=None):
-        if html is None:
-            master = tk.Tk()
-            master.withdraw()
-            self._html = TkinterWeb(master)
-        self.parsed = self.uri("::tkhtml::uri", uri)
+class TkHtmlParsedURI:
+    def __init__(self, uri, html):
+        self.parsed = html.uri(uri)
+        self._html = html
 
     def resolve(self, uri):
         return self._html.uri_resolve(self.parsed, uri)

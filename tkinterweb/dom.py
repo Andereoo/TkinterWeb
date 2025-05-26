@@ -145,7 +145,6 @@ class HTMLDocument:
             """ % (self.html, escape_Tcl(text)))
         )
 
-
     def getElementById(self, query):
         """Return an element that matches a given id.
         

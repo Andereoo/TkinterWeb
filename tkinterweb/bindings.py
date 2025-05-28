@@ -622,6 +622,11 @@ class TkinterWeb(Widget):
         if not self.get_node_tag(node): node = self.get_node_parent(node)
         return self.override_node_properties(node, *props)
 
+    def write(self, *arg, cnf={}, **kw):
+        """wait; text TEXT; continue
+        Write directly to an open HTML document stream, may be used when parsing."""
+        return self.tk.call(self._w, "write", *arg+self._options(cnf, kw))
+
     def fetch_scripts(self, attributes, url=None, data=None):
         "Fetch and run scripts"
         thread = self._begin_download()
@@ -1394,6 +1399,10 @@ class TkinterWeb(Widget):
     def _on_image_value_change(self, node, attribute, value):
         if attribute == "src":
             url = self.resolve_url(value)
+            for k, v in frozenset(self.image_directory.items()):
+                if v == node:
+                    del self.image_directory[k]
+                    break
             self.image_directory[url] = node
             if self.experimental:
                 c = self.get_node_children(node)

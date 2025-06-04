@@ -1613,6 +1613,17 @@ class TkinterWeb(Widget):
             stylecmd = lambda node=node, widgetid=widgetid: self.handle_node_style(
                 node, widgetid
             )
+        elif nodetype == "number":
+            widgetid = FormNumber(self, 
+                nodevalue,
+                self.get_node_attribute(node, "min", 0),
+                self.get_node_attribute(node, "max", 100),
+                self.get_node_attribute(node, "step", 1),
+                lambda widgetid, node=node: self._on_input_change(node, widgetid)
+            )
+            stylecmd = lambda node=node, widgetid=widgetid, widgettype="number": self.handle_node_style(
+                node, widgetid, widgettype
+            )
         else:
             widgetid = FormEntry(self, nodevalue, nodetype, lambda widgetid, node=node: self._on_input_change(node, widgetid))
             widgetid.bind(

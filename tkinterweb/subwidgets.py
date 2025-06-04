@@ -277,6 +277,49 @@ class FormRange(ttk.Scale):
     def set(self, value):
         super().set(self._check_value(value, (self.to - self.from_) / 2))
 
+class FormNumber(tk.Spinbox):
+    def __init__(self, parent, value=50, from_=0, to=100, step=1, onchangecommand=None, **kwargs):
+        self.from_ = from_ = self._check_value(from_, 0)
+        self.to = to = self._check_value(to, 100)
+        self.step = self._check_value(step, 1)
+        self.onchangecommand = onchangecommand
+        self.decimal_places = len(str(step).split('.')[-1]) if '.' in str(step) else 0
+
+        initial_value = self._check_value(value, (self.to + self.from_) / 2)
+        self.variable = tk.DoubleVar(parent, value=initial_value)
+
+        # Use textvariable instead of variable
+        super().__init__(parent, textvariable=self.variable, from_=self.from_, to=self.to, **kwargs)
+
+        self.variable.trace_add("write", self._update_value)
+
+    def _update_value(self, *args):
+        try:
+            current_value = float(self.variable.get())
+        except (ValueError, tk.TclError):
+            current_value = (self.to + self.from_) / 2
+        # Round to nearest step
+        value = round(current_value / self.step) * self.step
+        # Clamp value within range
+        value = max(self.from_, min(value, self.to))
+        # Set with proper decimal places
+        self.variable.set(round(value, self.decimal_places))
+        if self.onchangecommand:
+            self.onchangecommand(self)
+
+    def _check_value(self, value, default):
+        try:
+            if "." in value:
+                return float(value)
+            else:
+                return int(value)
+        except (ValueError, TypeError):
+            return default
+
+    def set(self, value):
+        value = self._check_value(value, (self.to + self.from_) / 2)
+        self.variable.set(round(value, self.decimal_places))
+
 class FileSelector(tk.Frame):
     "File selector widget"
 

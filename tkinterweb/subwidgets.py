@@ -271,6 +271,13 @@ class FormRange(ttk.Scale):
             stylename = f"Scale{self}.Horizontal.TScale"
             style.configure(stylename, troughcolor=bg)
             self.configure(style=stylename)
+
+        if "from_" in kwargs:
+            self.to = self._check_value(kwargs["from_"], self.from_)
+        if "to" in kwargs:
+            self.to = self._check_value(kwargs["to"], self.to)
+        if "step" in kwargs:
+            self.to = self._check_value(kwargs["step"], self.step)
             
         super().configure(**kwargs)
         
@@ -296,8 +303,9 @@ class FormNumber(tk.Spinbox):
     def _update_value(self, *args):
         try:
             current_value = float(self.variable.get())
-        except (ValueError, tk.TclError):
+        except ValueError:
             current_value = (self.to + self.from_) / 2
+        except tk.TclError: current_value = self.from_
         # Round to nearest step
         value = round(current_value / self.step) * self.step
         # Clamp value within range
@@ -316,9 +324,18 @@ class FormNumber(tk.Spinbox):
         except (ValueError, TypeError):
             return default
 
+    def configure(self, **kwargs):
+        if "from_" in kwargs:
+            self.to = self._check_value(kwargs["from_"], self.from_)
+        if "to" in kwargs:
+            self.to = self._check_value(kwargs["to"], self.to)
+        if "step" in kwargs:
+            self.to = self._check_value(kwargs["step"], self.step)
+
+        super().configure(**kwargs)
+
     def set(self, value):
-        value = self._check_value(value, (self.to + self.from_) / 2)
-        self.variable.set(round(value, self.decimal_places))
+        super().set(self._check_value(value, (self.to - self.from_) / 2))
 
 class FileSelector(tk.Frame):
     "File selector widget"

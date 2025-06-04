@@ -1650,18 +1650,21 @@ class TkinterWeb(Widget):
     def _on_input_value_change(self, node, attribute, value):
         if node not in self.form_widgets:
             return
-        
+
         nodetype = self.get_node_attribute(node, "type")
+        widget = self.form_widgets[node]
         if attribute == "value" and nodetype not in {"checkbox", "radio"}:
-            self.form_widgets[node].set(value)
+            widget.set(value)
+        elif attribute in {"min", "max", "step"} and nodetype in {"range", "number"}:
+            CONFIG_MAP = {"min": "from_", "max": "to", "step": "step"}
+            widget.configure(**{CONFIG_MAP[attribute]: value})
         elif attribute == "checked":
             if nodetype == "checkbox":
-                if value != "false": self.form_widgets[node].variable.set(1)
-                else: self.form_widgets[node].variable.set(0)
+                widget.variable.set(1 if value != "false" else 0)
             elif nodetype == "radio":
                 nodevalue = self.get_node_attribute(node, "value")
-                if value != "false": 
-                    self.form_widgets[node].variable.set(nodevalue)
+                if value != "false":
+                    widget.variable.set(nodevalue)
 
     def _on_body(self, node, index):
         "Wait for style changes on the root node."

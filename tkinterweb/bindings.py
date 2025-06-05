@@ -2274,16 +2274,19 @@ class TkinterWeb(Widget):
     def tkhtml_default_style(self):
         return self.tk.call("::tkhtml::htmlstyle")
 
-    def tkhtml_uri_decode(self, uri):
+    def tkhtml_uri_decode(self, uri, base64=False):
         "This command is designed to help scripts process data: URIs. It is completely separate from the html widget"
-        return self.tk.call("::tkhtml::decode", uri).strip(b"{}")
+        a = "-base64" if base64 else ""
+        return self.tk.call("::tkhtml::decode", a, uri)
 
     def tkhtml_uri_encode(self, uri):
         "Encodes - _ . ! ~ * ' ( )"
         return self.tk.call("::tkhtml::encode", uri)
 
-    def tkhtml_uri_escape(self, uri):
-        return self.tk.call("::tkhtml::escape_uri", uri)
+    def tkhtml_uri_escape(self, uri, query=False):
+        "Returns the decoded data."
+        a = "-query" if query else ""
+        return self.tk.call("::tkhtml::escape_uri", a, uri)
 
     def uri(self, uri):
         "Returns name of parsed uri to be used in methods below"

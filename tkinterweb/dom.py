@@ -51,7 +51,7 @@ def camel_case_to_property(string):
             new_string += i
     return new_string
 
-    # this also works:
+    # This also works:
     # from re import finditer
     # matches = finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)', string)
     # return "-".join([m.group(0).lower() for m in matches])
@@ -256,7 +256,7 @@ class HTMLElement:
                 raise TclError(f"Node {str(e).split()[-1]} is invalid")
         DOM_element_events(self)
 
-        # we need this here or crashes happen if multiple Tkhtml instances exist (depending on the Tkhtml version)
+        # We need this here or crashes happen if multiple Tkhtml instances exist (depending on the Tkhtml version)
         # no idea why, but hey, it works
         self.html.tk.createcommand("parse_fragment", self.html.parse_fragment)
         
@@ -409,7 +409,7 @@ class HTMLElement:
     @widget.setter
     def widget(self, widget): # not a JS property, but could be useful
         if self.tagName == "object":
-            # really we should do better than set the data attribute
+            # Really we should do better than set the data attribute
             # right now this also can be used to set the object's url
             # but in practice it shouldn't really matter
             if not widget:

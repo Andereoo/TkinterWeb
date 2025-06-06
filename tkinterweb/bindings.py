@@ -25,7 +25,7 @@ class TkinterWeb(Widget):
 
         master.winfo_toplevel().protocol("WM_DELETE_WINDOW", self._close)
 
-        # inherited settings
+        # Inherited settings
         waiting_options = {}
         if tkinterweb_options:
             for item, value in tkinterweb_options.items():
@@ -34,24 +34,24 @@ class TkinterWeb(Widget):
                 except AttributeError:
                     waiting_options[item] = value
 
-        # provide OS information for troubleshooting
+        # Provide OS information for troubleshooting
         self.post_message(f"Starting TkinterWeb for {PLATFORM.processor} {PLATFORM.system} with Python {'.'.join(PYTHON_VERSION)}")
 
         if self.use_prebuilt_tkhtml:
-            # get Tkhtml folder and register crash handling
+            # Get Tkhtml folder and register crash handling
             folder = get_tkhtml_folder()
             if "drawcleanupcrashcmd" not in kwargs:
                 kwargs["drawcleanupcrashcmd"] = master.register(self._on_draw_cleanup_crash_cmd)
         else:
             folder = None
 
-        # register image loading infrastructure
+        # Register image loading infrastructure
         if "imagecmd" not in kwargs:
             kwargs["imagecmd"] = master.register(self._on_image_cmd)
-        # if "logcmd" not in kwargs:
-        #    kwargs["logcmd"] = tkhtml_notifier
+        #if "logcmd" not in kwargs:
+        #    #kwargs["logcmd"] = tkhtml_notifier
 
-        # load the Tkhtml3 widget
+        # Load the Tkhtml3 widget
         try:
             auto_path = load_tkhtml(master, folder, )
             Widget.__init__(self, master, "html", kwargs)
@@ -60,7 +60,7 @@ class TkinterWeb(Widget):
             Widget.__init__(self, master, "html", kwargs)
         self.post_message(f"auto_path {auto_path}")
 
-        # create a tiny, blank frame for cursor updating
+        # Create a tiny, blank frame for cursor updating
         self.motion_frame = Frame(self, bg=self.motion_frame_bg, width=1, height=1)
         self.motion_frame.place(x=0, y=0)
 
@@ -305,7 +305,7 @@ class TkinterWeb(Widget):
     def post_event(self, event):
         "Generate a virtual event."
         if self.events_enabled and self.unstoppable:
-            # thread safety
+            # Thread safety
             self.after(0, lambda event=event: self._finish_posting_event(event))
 
     def post_message(self, message):
@@ -323,7 +323,7 @@ class TkinterWeb(Widget):
         html = self._dark_mode(html)
         self.tk.call(self._w, "parse", html)
 
-        # we assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
+        # We assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
         if not self.downloads_have_occured:
             self.post_event(DONE_LOADING_EVENT)
 
@@ -359,7 +359,7 @@ class TkinterWeb(Widget):
         if self._dark_theme_enabled:
             data = sub(self.style_dark_theme_regex, lambda match, matchtype=0: self._generate_altered_colour(match, matchtype), data)
         try:
-            #urlcmd = self.register(self.resolve_url)
+            #Urlcmd = self.register(self.resolve_url)
             importcmd = self.register(
                 lambda new_url, parent_url=url: self._on_atimport(
                     parent_url, new_url
@@ -377,7 +377,7 @@ class TkinterWeb(Widget):
             else:
                 self.tk.call(self._w, "style", "-importcmd", importcmd, data)
         except TclError:
-            # the widget doesn't exist anymore
+            # The widget doesn't exist anymore
             pass
 
     def reset(self):
@@ -545,14 +545,13 @@ class TkinterWeb(Widget):
     def replace_node_contents(self, node_handle, contents, *args):
         "Fill a node with either a Tk widget or with Tkhtml nodes."
         if not contents:
-            # calling replace on an empty node causes Tkhtml to segfault
+            # Calling replace on an empty node causes Tkhtml to segfault
             contents = self.tk.call(self._w, "fragment", " ")
         return self.tk.call(node_handle, "replace", contents, *args)
 
     def delete_node(self, node_handle):
         "Delete the given node."
-        node_parent = self.get_node_parent(node_handle)
-        self.tk.call(node_parent, "remove", node_handle)
+        self.tk.call(node_parent, "remove", self.get_node_parent(node_handle))
 
     def destroy_node(self, node_handle):
         "Destroy a node. May cause crashes so avoid it whenever possible."
@@ -672,7 +671,7 @@ class TkinterWeb(Widget):
 
             self.parse_css(f"{sheetid}.9999", data, url)
             if node:
-                # thread safety
+                # Thread safety
                 self.after(0, self._submit_element_js, node, "onload")
             if url:
                 self.post_message(f"Successfully loaded {shorten(url)}")
@@ -739,7 +738,7 @@ class TkinterWeb(Widget):
             try:
                 data, newurl, filetype, code = self._download_url(url)
                 if data and self.unstoppable:
-                    # thread safety
+                    # Thread safety
                     self.after(0, self.finish_fetching_images, node, data, name, filetype, url)
 
             except Exception as error:
@@ -758,7 +757,7 @@ class TkinterWeb(Widget):
                 self.post_message(f"Successfully loaded {shorten(url)}")
                 self.on_resource_setup(url, "image", True)
                 if node:
-                    # thread safety
+                    # Thread safety
                     self.after(0, self._submit_element_js, node, "onload")
                 if self.experimental:
                     node = self.search(f'img[src="{url}"]')
@@ -854,7 +853,7 @@ class TkinterWeb(Widget):
     def replace_node_with_widget(self, node, widgetid):
         "Replace a node with a Tk widget."
         if not widgetid:
-            # reset the node if a widget is not supplied
+            # Reset the node if a widget is not supplied
             self.map_node(node)
             return
             
@@ -917,7 +916,7 @@ class TkinterWeb(Widget):
         doctext = self.text("text")
 
         try:
-            # find matches
+            # Find matches
             if ignore_case:
                 rmatches = finditer(
                     searchtext, doctext, flags=IGNORECASE | MULTILINE
@@ -935,7 +934,7 @@ class TkinterWeb(Widget):
                 nmatches += 1
 
             if len(match_indexes) > 0:
-                # highlight matches
+                # Highlight matches
                 self.post_message(f"{nmatches} results for the search key '{searchtext}' have been found")
                 if highlight_all:
                     for num, match in enumerate(match_indexes):
@@ -969,7 +968,7 @@ class TkinterWeb(Widget):
                     self.find_current_text_color,
                 )
 
-                # scroll to node if selected match is not visible
+                # Scroll to node if selected match is not visible
                 nodebox = self.text("bbox", node1, index1, node2, index2)
                 docheight = float(self.bbox()[3])
 
@@ -1152,7 +1151,7 @@ class TkinterWeb(Widget):
         try:
             self.event_generate(event)
         except TclError:
-            # the widget doesn't exist anymore
+            # The widget doesn't exist anymore
             pass
 
     def _generate_altered_colour(self, match, matchtype=1):
@@ -1277,7 +1276,7 @@ class TkinterWeb(Widget):
             and self.stylesheets_enabled
         ):
             self._thread_check(self.fetch_styles, node, url)
-            # onload is fired if and when the stylesheet is parsed
+            # Onload is fired if and when the stylesheet is parsed
         elif "icon" in rel:
             self.icon = url
             self.post_event(ICON_CHANGED_EVENT)
@@ -1366,12 +1365,12 @@ class TkinterWeb(Widget):
             return
 
         if data == None:
-            # this doesn't work when in an attribute handler
+            # This doesn't work when in an attribute handler
             data = self.get_node_attribute(node, "data")
 
         if data != "":
             try:
-                # load widgets presented in <object> elements
+                # Load widgets presented in <object> elements
                 widgetid = self.nametowidget(data)
                 self.replace_node_with_widget(node, widgetid)
             except KeyError:
@@ -1389,7 +1388,7 @@ class TkinterWeb(Widget):
             if value:
                 self._on_object(node, value)
             else:
-                # reset the element if data is not supplied
+                # Reset the element if data is not supplied
                 # force reset because it might contain widgets that are added internally
                 self.map_node(node, True)
                 
@@ -1711,7 +1710,7 @@ class TkinterWeb(Widget):
     def _submit_deferred_scripts(self):
         if self.pending_scripts:
             for index, script in enumerate(self.pending_scripts):
-                # thread safety
+                # Thread safety
                 self.after(0, self.on_script, *script)
             self.pending_scripts = []
            
@@ -1874,7 +1873,7 @@ class TkinterWeb(Widget):
         if self._javascript_enabled:
             if attribute == "onload":
                 if node_handle in self.loaded_elements:
-                    # don't run the onload script twice
+                    # Don't run the onload script twice
                     return
                 else:
                     self.loaded_elements.append(node_handle)
@@ -1952,7 +1951,7 @@ class TkinterWeb(Widget):
     def _on_click(self, event, redirected=False):
         "Set active element flags."
         if not self.current_node:
-            # register current node if mouse has never moved
+            # Register current node if mouse has never moved
             self._on_mouse_motion(event)
 
         if not redirected:
@@ -2040,7 +2039,7 @@ class TkinterWeb(Widget):
                             self._submit_element_js(node_handle, "onmouseleave")
 
         except TclError:
-            # sometimes errors are thrown if the mouse is moving while the page is loading
+            # Sometimes errors are thrown if the mouse is moving while the page is loading
             pass
 
     def _on_click_release(self, event):

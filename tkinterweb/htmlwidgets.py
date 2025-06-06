@@ -134,7 +134,7 @@ class HtmlFrame(Frame):
     :raise TypeError: If the value type is wrong and cannot be converted to the correct type."""
 
     def __init__(self, master, **kwargs):
-        # state and settings variables
+        # State and settings variables
         style = Style()
 
         self._current_url = ""
@@ -219,7 +219,7 @@ class HtmlFrame(Frame):
 
         super().__init__(master, **kwargs)
 
-        # setup sub-widgets
+        # Setup sub-widgets
         self._html = html = TkinterWeb(self, self.tkinterweb_options, **self.tkhtml_options)
         self._hsb = hsb = AutoScrollbar(self, orient="horizontal", command=html.xview)
         self._vsb = vsb = AutoScrollbar(self, orient="vertical", command=html.yview)
@@ -235,7 +235,7 @@ class HtmlFrame(Frame):
         self._manage_hsb(self.horizontal_scrollbar)
         self._manage_vsb(self.vertical_scrollbar)
 
-        # html.document only applies to the document it is bound to (which makes things easy)
+        # Html.document only applies to the document it is bound to (which makes things easy)
         # for some reason, binding to Html only works on Linux and binding to html.document only works on Windows
         # Html fires on all documents (i.e. <iframe> elements), so it has to be handled slightly differently
         if not self._html.overflow_scroll_frame:
@@ -441,7 +441,7 @@ Load about:tkinterweb for debugging information""")
 
         self._waiting_for_reset = True
 
-        # ugly workaround for Bug #40, where urllib.urljoin constructs improperly formatted urls on Linux when url starts with file:///
+        # Ugly workaround for Bug #40, where urllib.urljoin constructs improperly formatted urls on Linux when url starts with file:///
         if not url.startswith("file://///"):
             newurl = url.replace("file:////", "file:///")
             if newurl != url:
@@ -901,7 +901,7 @@ Load about:tkinterweb for debugging information""")
             parsed = self.html.uri(url)
             if method == "GET": url = str(url) + str(data)
             prevParse = self.html.uri(self._previous_url)
-            # if url is different than the current one, load the new site
+            # If url is different than the current one, load the new site
             if (force or method == "POST" or
                 self.html.uri_defrag(parsed).replace("/", "") != self.html.uri_defrag(prevParse).replace("/", "")
             ):
@@ -961,14 +961,14 @@ Load about:tkinterweb for debugging information""")
                             self._html.post_event(URL_CHANGED_EVENT)
                         self.load_html(data, newurl)
             else:
-                # if no requests need to be made, we can signal that the page is done loading
+                # If no requests need to be made, we can signal that the page is done loading
                 self._html.post_event(DONE_LOADING_EVENT)
                 self._finish_css()
 
-            # handle URI fragments
+            # Handle URI fragments
             frag = self.html.uri_fragment(parsed)
             if frag:
-                # self._html.tk.call(self._html._w, "_force")
+                #self._html.tk.call(self._html._w, "_force")
                 self._html.update()
                 try:
                     frag = "".join(char for char in frag if char.isalnum() or char in ("-", "_"))

@@ -118,10 +118,12 @@ class HtmlFrame(Frame):
 
     The following flags are optional and can be used to change HTML rendering behaviour:
 
-    :param experimental: If True, experimental features will be enabled. If a float, experimental features will be enabled if the loaded Tkhtml version is greater than or equal to the given value. You will need to compile the cutting-edge Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental and replace the default Tkhtml binary for your system with the experimental version. Unless you need to screenshot the full page on Windows or print your page for now it is likely best to use the default Tkhtml binary and leave this setting alone.
-    :type experimental: bool or float
+    :param experimental: If True, experimental features will be enabled. If "auto", experimental features will be enabled if the loaded Tkhtml version supports experimental features. You will need to compile the cutting-edge Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental and replace the default Tkhtml binary for your system with the experimental version. Unless you need to screenshot the full page on Windows or print your page for now it is likely best to use the default Tkhtml binary and leave this setting alone.
+    :type experimental: bool or "auto"
     :param use_prebuilt_tkhtml: If True (the default), the Tkhtml binary for your system supplied by TkinterWeb will be used. If your system isn't supported and you don't want to compile the Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml yourself, you could try installing Tkhtml3 system-wide and set :attr:`use_prebuilt_tkhtml` to False. Note that some crash prevention features will no longer work.
     :type use_prebuilt_tkhtml: bool
+    :param tkhtml_version: The Tkhtml version to use. If the requested version is not found, TkinterWeb will fallback to Tkhtml version 3.1.
+    :type tkhtml_version: float or "auto"
     :param parsemode: The parse mode. In "html" mode, explicit XML-style self-closing tags are not handled specially and unknown tags are ignored. "xhtml" mode is similar to "html" mode except that explicit self-closing tags are recognized. "xml" mode is similar to "xhtml" mode except that XML CDATA sections and unknown tag names are recognized. It is usually best to leave this setting alone.
     :type parsemode: "xml", "xhtml", or "html"
     :param mode: The rendering engine mode. It is usually best to leave this setting alone.
@@ -184,10 +186,11 @@ class HtmlFrame(Frame):
             "dark_style": DARK_STYLE,
             "insecure_https": False,
             "headers": HEADERS,
-            "experimental": 3.1,
+            "experimental": "auto",
             # No impact after loading
             "use_prebuilt_tkhtml": True,
-            # internal
+            "tkhtml_version": "auto",
+            # Internal
             "overflow_scroll_frame": None,
             "embed_obj": HtmlFrame,
             "manage_vsb_func": self._manage_vsb,

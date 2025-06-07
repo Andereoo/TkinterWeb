@@ -1094,29 +1094,31 @@ class HtmlParse():
     """TkinterWeb parsing only class, parses HTML using TkinterWeb class and allows access to the document but does not spawn a widget
     """
 
-    def __init__(self, markup, **kwargs):
+    def __init__(self, markup="", features=None, **kwargs):
         if "headers" not in kwargs: kwargs["headers"] = HEADERS
+        if features: kwargs["mode"] = features
         
         self.master = root = tk.Tk()
         self.html = html = TkinterWeb(root, kwargs)
         self.document = HTMLDocument(html)
-
         html.events_enabled = html.images_enabled = False
         html.forms_enabled = html.stylesheets_enabled = False
-
         root.withdraw()
 
-        if os.path.isfile(markup): markup = "file:///" + markup
-        parsed = html.uri(markup)
-        
-        if html.uri_scheme(parsed) in frozenset({"file", "https", "http"}):
-            markup, url, file, r = html._download_url(markup)
+        self.indentation = 4
+        if markup: self.markup = markup
 
-        html.uri_destroy(parsed)
-        html.parse(markup)
+    @property
+    def markup(self):
+        return serialize_node(self.html, self.indentation)
 
-    def prettify(self, indentation=4):
-        return serialize_node(self.html, indentation)
+    @markup.setter
+    def markup(self, new):
+        if os.path.isfile(new): new = "file:///" + new
+        if new[:4] in frozenset({"file", "http"}):
+            new, url, file, r = self.html._download_url(new)
+        self.html.reset()
+        self.html.parse(new)
 
     def __str__(self):
         return self.document._node_to_html(self.html.node())

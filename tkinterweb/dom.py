@@ -95,7 +95,7 @@ class HTMLDocument:
 
         :rtype: :class:`HTMLElement`"""
         return HTMLElement(
-            self, self.html.tk.eval(f"""set body [lindex [[{self.html} node] children] 1]"""),
+            self, self.html.safe_tk_eval(f"""set body [lindex [[{self.html} node] children] 1]"""),
         )
 
     @property
@@ -104,7 +104,7 @@ class HTMLDocument:
 
         :rtype: :class:`HTMLElement`"""
         return HTMLElement(
-            self, self.html.tk.eval(f"""set root [lindex [{self.html} node] 0]"""),
+            self, self.html.safe_tk_eval(f"""set root [lindex [{self.html} node] 0]"""),
         )
     
     def createElement(self, tagname):  # taken from hv3_dom_core.tcl line 214
@@ -114,7 +114,7 @@ class HTMLDocument:
         :type tagname: str
         :rtype: :class:`HTMLElement`"""
         return HTMLElement(
-            self, self.html.tk.eval("""
+            self, self.html.safe_tk_eval("""
             set node [%s fragment "<%s>"]
             if {$node eq ""} {error "DOMException NOT_SUPPORTED_ERR"}
             return $node
@@ -128,7 +128,7 @@ class HTMLDocument:
         :type text: str
         :rtype: :class:`HTMLElement`"""
         return HTMLElement(
-            self, self.html.tk.eval("""
+            self, self.html.safe_tk_eval("""
             set tkw %s
             set text "%s"
             if {$text eq ""} {
@@ -200,7 +200,7 @@ class HTMLDocument:
         return [HTMLElement(self, i) for i in self.html.search(query)]
     
     def _node_to_html(self, node, deep=True):  # From hv3_dom_core.tcl line 311 and line 329
-        return self.html.tk.eval(r"""
+        return self.html.safe_tk_eval(r"""
         proc WidgetNode_ToHtml {node} {
             set tag [$node tag]
             if {$tag eq ""} {
@@ -275,7 +275,7 @@ class HTMLElement:
         
         :rtype: str
         :raises: :py:class:`tkinter.TclError`"""
-        return self.html.tk.eval("""
+        return self.html.safe_tk_eval("""
             set node %s
             if {[$node tag] eq ""} {error "$node is not an HTMLElement"}
 
@@ -295,7 +295,7 @@ class HTMLElement:
             self.html.replace_node_contents(node, None)
         self.html.update()
 
-        self.html.tk.eval("""
+        self.html.safe_tk_eval("""
             set html %s
             set node %s
             set tag [$node tag]
@@ -326,7 +326,7 @@ class HTMLElement:
         
         :rtype: str
         :raises: :py:class:`tkinter.TclError`"""
-        return self.html.tk.eval("""
+        return self.html.safe_tk_eval("""
             proc get_child_text {node} {
                 set txt [$node text -pre]
                 foreach child [$node children] {
@@ -346,7 +346,7 @@ class HTMLElement:
             self.html.replace_node_contents(node, None)
         self.html.update()
 
-        self.html.tk.eval("""
+        self.html.safe_tk_eval("""
             set node %s
             set textnode %s
             if {$textnode eq ""} {error "$node is empty"}

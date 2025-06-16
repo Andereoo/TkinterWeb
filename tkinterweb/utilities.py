@@ -811,8 +811,8 @@ def TclOpt(options):
     return tuple(o if o.startswith("-") else "-"+o for o in options)
 
 
-def serialize_node(widget, ib):
-    return widget.tk.eval(r"""
+def serialize_node(tkinterweb, ib):
+    return tkinterweb.safe_tk_eval(r"""
     proc indent {d} {return [string repeat { } $d]}
     proc prettify {node} {
         set depth [expr {([info level] - 1) * %d}]
@@ -840,7 +840,7 @@ def serialize_node(widget, ib):
         }
         return $ret[indent $depth]</$tag>\n
     }
-        prettify [%s node] """ % (ib, widget))
+        prettify [%s node] """ % (ib, tkinterweb))
 
 
 def placeholder(*args, **kwargs):

@@ -1137,6 +1137,22 @@ class TkinterWeb(Widget):
                 return
             self.yview_scroll(int(-1*event.delta/30), "units")
 
+    def safe_tk_eval(self, expr):
+        """Always evaluate 'expr' on the main thread."""
+        if threading.current_thread() is threading.main_thread():
+            return self.tk.eval(expr)
+        else:
+            result = [None]
+            event = threading.Event()
+
+            def wrapper():
+                result[0] = self.tk.eval(expr)
+                event.set()
+
+            self.after(0, wrapper)
+            event.wait()
+            return result[0]
+
     def _close(self):
         self.stop()
         self.winfo_toplevel().destroy()

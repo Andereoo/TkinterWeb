@@ -46,7 +46,7 @@ Removed
 * ``HtmlFrame.on_title_change()`` - bind to ``<<TitleChanged>>`` and use :attr:`.HtmlFrame.title`
 * ``HtmlFrame.on_form_submit()`` - use ``HtmlFrame.configure(on_form_submit=)``
 * ``HtmlFrame.on_link_click()`` - use ``HtmlFrame.configure(on_link_click=)``
-* ``HtmlFrame.yview_towidget()`` - use :meth:`.HTMLElement.scrollIntoView`
+* ``HtmlFrame.yview_toelement()`` - use :meth:`.HTMLElement.scrollIntoView`
 * ``HtmlFrame.get_currently_hovered_node_text()`` - :meth:`.HtmlFrame.get_currently_hovered_element`
 * ``HtmlFrame.get_currently_hovered_node_tag()`` - :meth:`.HtmlFrame.get_currently_hovered_element`
 * ``HtmlFrame.get_currently_hovered_node_attribute()`` - :meth:`.HtmlFrame.get_currently_hovered_element`

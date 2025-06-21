@@ -444,6 +444,7 @@ class BuiltinPageGenerator():
         self._html = None
         self._pages = {
     "about:blank": "<html><head><style>html,body{{background-color:{bg};color:{fg};cursor:gobbler;width:100%;height:100%;margin:0}}</style><title>about:blank</title></head><body></body></html>{i1}{i2}",
+
     "about:tkinterweb": "<html tkinterweb-overflow-x=auto><head>\
         <style>html,body{{{{background-color:{bg};color:{fg}}}}}\
             code{{{{display:block}}}}\
@@ -515,18 +516,22 @@ class BuiltinPageGenerator():
         <code class='header'>Site memory</code>\
         <code>Visited hyperlinks: {visited_links}</code>\
             </body></html>{i1}{i2}",
+
     "about:error": "<html><head><style>html,body,table,tr,td{{background-color:{bg};color:{fg};width:100%;height:100%;margin:0}}</style><title>Error {i1}</title></head>\
         <body><table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle'>\
         <h2 style='margin:0;padding:0;font-weight:normal'>Oops</h2>\
         <h3 style='margin-top:10px;margin-bottom:25px;font-weight:normal'>The page you've requested could not be found :(</h3>\
         <object handleremoval allowscrolling style='cursor:pointer' data='{i2}'></object>\
         </td></tr></table></body></html>",
+
     "about:loading": "<html><head><style>html,body,table,tr,td{{background-color:{};color:{};width:100%;height:100%;margin:0}}</style></head>\
         <body><table><tr><td tkinterweb-full-page style=\"text-align:center;vertical-align:middle\">\
         <p>Loading...</p>\
         </td></tr></table></body></html>",
+
     "about:image": "<html><head><style>html,body,table,tr {{background-color:{};color:{};width:100%;height:100%;margin:0}}</style></head><body>\
         <table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle;padding:4px 4px 0px 4px'><img style='max-width:100%;max-height:100%' src='replace:{}'><h3 style=\"margin:0;padding:0;font-weight:normal\"></td></tr></table></body></html>",
+
     "about:view-source": "<html tkinterweb-overflow-x=auto><head><style>\
         html,body{{background-color:{};color:{};}}\
         pre::before{{counter-reset:listing}}\
@@ -546,7 +551,7 @@ class BuiltinPageGenerator():
                 style_dark_theme_regex=f"<code class='indented'>{self._html.style_dark_theme_regex.replace('{', '{{').replace('}', '}}')}</code>", 
                 visited_links=("".join(f"<code class='indented'>{i}</code>" for i in self._html.visited_links)),
                 root=f"<code class='indented'>{ROOT_DIR}</code>", 
-                tkhtml_root=f"<code class='indented'>{tkinterweb_tkhtml.TKHTML_ROOT_DIR}</code>", 
+                tkhtml_root=f"<code class='indented'>{TKHTML_ROOT_DIR}</code>", 
                 working_dir=f"<code class='indented'>{WORKING_DIR}</code>", 
                 tcl_path=("".join(f"<code class='indented'>{i}</code>" for i in self._html.tk.getvar("auto_path"))),
                 path=("".join(f"<code class='indented'>{i}</code>" for i in os.environ["PATH"].split(os.pathsep))),

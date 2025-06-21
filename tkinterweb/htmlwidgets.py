@@ -436,7 +436,8 @@ Load about:tkinterweb for debugging information""")
         if not self._current_url == url:
             self._previous_url = self._current_url
         if url in BUILTIN_PAGES:
-            self.load_html(BUILTIN_PAGES[url].format(self.about_page_background, self.about_page_foreground, "", "", ""), url)
+            BUILTIN_PAGES._html = self._html
+            self.load_html(BUILTIN_PAGES[url].format(bg=self.about_page_background, fg=self.about_page_foreground, i1="", i2=""), url)
             return
 
         self._waiting_for_reset = True

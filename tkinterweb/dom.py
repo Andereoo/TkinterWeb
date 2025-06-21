@@ -51,10 +51,30 @@ def camel_case_to_property(string):
             new_string += i
     return new_string
 
-    # this also works:
+    # This also works:
     # from re import finditer
     # matches = finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)', string)
     # return "-".join([m.group(0).lower() for m in matches])
+
+
+
+def DOM_element_events(cls):  # class
+    for event in frozenset({
+        "onchange", "onclick", "oncontextmenu", "ondblclick", "onload",
+        "onmousedown", "onmouseenter", "onmouseleave", "onmousemove", "onmouseout",
+        "onmouseover", "onmouseup"
+    }):
+        # Create the getter function
+        def getter(cls, event=event):  # Default argument to capture current event
+            return cls.getAttribute(event)
+
+        # Create the setter function
+        def setter(cls, value, event=event):  # Default argument to capture current event
+            cls.setAttribute(event, value)
+
+        # Use property to create a new property with the getter and setter
+        prop = property(lambda cls: getter(cls), lambda cls, value: setter(cls, value))
+        setattr(cls.__class__, event, prop)  # Set the property on the class
 
 
 class HTMLDocument:
@@ -75,9 +95,8 @@ class HTMLDocument:
 
         :rtype: :class:`HTMLElement`"""
         return HTMLElement(
-            self, self.html.tk.eval(f"""set body [lindex [[{self.html} node] children] 1]"""),
+            self, self.html.safe_tk_eval(f"""set body [lindex [[{self.html} node] children] 1]"""),
         )
-        #return self.querySelector("body")
 
     @property
     def documentElement(self):
@@ -85,7 +104,7 @@ class HTMLDocument:
 
         :rtype: :class:`HTMLElement`"""
         return HTMLElement(
-            self, self.html.tk.eval(f"""set root [lindex [{self.html} node] 0]"""),
+            self, self.html.safe_tk_eval(f"""set root [lindex [{self.html} node] 0]"""),
         )
     
     def createElement(self, tagname):  # taken from hv3_dom_core.tcl line 214
@@ -95,8 +114,7 @@ class HTMLDocument:
         :type tagname: str
         :rtype: :class:`HTMLElement`"""
         return HTMLElement(
-            self,
-            self.html.tk.eval("""
+            self, self.html.safe_tk_eval("""
             set node [%s fragment "<%s>"]
             if {$node eq ""} {error "DOMException NOT_SUPPORTED_ERR"}
             return $node
@@ -110,8 +128,7 @@ class HTMLDocument:
         :type text: str
         :rtype: :class:`HTMLElement`"""
         return HTMLElement(
-            self, 
-            self.html.tk.eval("""
+            self, self.html.safe_tk_eval("""
             set tkw %s
             set text "%s"
             if {$text eq ""} {
@@ -128,100 +145,93 @@ class HTMLDocument:
             """ % (self.html, escape_Tcl(text)))
         )
 
-
-    def getElementById(self, query, _root=None):
+    def getElementById(self, query):
         """Return an element that matches a given id.
         
         :param query: The element id to be searched for.
         :type query: str
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
-        node = self.html.search(f"[id='{query}']", index=0, root=_root)
-        return HTMLElement(self, node)
+        return HTMLElement(self, self.html.search(f"[id='{query}']", index=0))
 
-    def getElementsByClassName(self, query, _root=None):
+    def getElementsByClassName(self, query):
         """Return all elements that match a given class name.
         
         :param query: The class to be searched for.
         :type query: str
         :rtype: list[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        nodes = self.html.search(" ".join(f".{i}" for i in query.split()), root=_root)
-        return [HTMLElement(self, node) for node in nodes]
+        return HTMLCollection(self, " ".join(f".{i}" for i in query.split()))
 
-    def getElementsByName(self, query, _root=None):
+    def getElementsByName(self, query):
         """Return all elements that match a given given name attribute.
         
         :param query: The name to be searched for.
         :type query: str
         :rtype: list[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        nodes = self.html.search(f"[name='{query}']", root=_root)
-        return [HTMLElement(self, node) for node in nodes]
+        return HTMLCollection(self, f"[name='{query}']")
 
-    def getElementsByTagName(self, query, _root=None):
+    def getElementsByTagName(self, query):
         """Return all elements that match a given tag name.
         
         :param query: The tag to be searched for.
         :type query: str
         :rtype: list[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        nodes = self.html.search(query, root=_root)
-        return [HTMLElement(self, node) for node in nodes]
+        return HTMLCollection(self, query)
 
-    def querySelector(self, query, _root=None):
+    def querySelector(self, query):
         """Return the first element that matches a given CSS selector.
         
         :param query: The CSS selector to be searched for.
         :type query: str
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
-        node = self.html.search(query, index=0, root=_root)
-        return HTMLElement(self, node)
+        return HTMLElement(self, self.html.search(query, index=0))
 
-    def querySelectorAll(self, query, _root=None):
+    def querySelectorAll(self, query):
         """Return all elements that match a given CSS selector.
         
         :param query: The CSS selector to be searched for.
         :type query: str
         :rtype: list[:class:`HTMLElement`]
         :raises: :py:class:`tkinter.TclError`"""
-        nodes = self.html.search(query, root=_root)
-        return [HTMLElement(self, node) for node in nodes]
+        return [HTMLElement(self, i) for i in self.html.search(query)]
     
     def _node_to_html(self, node, deep=True):  # From hv3_dom_core.tcl line 311 and line 329
-        return self.html.tk.eval(r"""
-            proc TclNode_to_html {node} {
-                set tag [$node tag]
-                if {$tag eq ""} {
-                    append ret [$node text -pre]
-                } else {
-                    append ret <$tag
-                    foreach {zKey zVal} [$node attribute] {
-                        set zEscaped [string map [list "\x22" "\x5C\x22"] $zVal]
-                        append ret " $zKey=\"$zEscaped\""
-                    }
-                    append ret >
-                    set void {
-                        area base br col embed hr img input keygen link meta param source track wbr
-                    }  ;# Don't add closing tags if is self-closing (void-elements)
-                    if {[lsearch -exact $void $tag] != -1} {
-                        return $ret
-                    } elseif {%d} {
-                        append ret [node_to_childrenHtml $node]
-                    }
-                    append ret </$tag>
+        return self.html.safe_tk_eval(r"""
+        proc WidgetNode_ToHtml {node} {
+            set tag [$node tag]
+            if {$tag eq ""} {
+                append ret [$node text -pre]
+            } else {
+                append ret <$tag
+                foreach {zKey zVal} [$node attribute] {
+                    set zEscaped [string map [list "\x22" "\x5C\x22"] $zVal]
+                    append ret " $zKey=\"$zEscaped\""
                 }
-            }
-            proc node_to_childrenHtml {node} {
-                set ret ""
-                foreach child [$node children] {
-                    append ret [TclNode_to_html $child]
+                append ret >
+                set void {
+                    area base br col embed hr img input keygen link meta param source track wbr
+                }  ;# Don't add closing tags if is self-closing (void-elements)
+                if {[lsearch -exact $void $tag] != -1} {
+                    return $ret
+                } elseif {%d} {
+                    append ret [WidgetNode_ChildrenToHtml $node]
                 }
-                return $ret
+                append ret </$tag>
             }
-            return [TclNode_to_html %s]
-            """ % (int(deep), extract_nested(node))
+        }
+        proc WidgetNode_ChildrenToHtml {node} {
+            set ret ""
+            foreach child [$node children] {
+                append ret [WidgetNode_ToHtml $child]
+            }
+            return $ret
+        }
+        return [WidgetNode_ToHtml %s]
+        """ % (int(deep), extract_nested(node))
         ) # May split this into 2 methods in future
 
 
@@ -239,10 +249,14 @@ class HTMLElement:
         self.html = document_manager.html
         self.node = extract_nested(node)
         self._style_cache = None  # initialize style as None
-        
-        self.html.bbox(node)  # check if the node is valid
+        try:
+            self.html.get_node_tkhtml(node)  # check if the node is valid, rises invalid command error if not.
+        except TclError as e:
+            if "invalid command name" in str(e):
+                raise TclError(f"Node {str(e).split()[-1]} is invalid")
+        DOM_element_events(self)
 
-        # we need this here or crashes happen if multiple Tkhtml instances exist (depending on the Tkhtml version)
+        # We need this here or crashes happen if multiple Tkhtml instances exist (depending on the Tkhtml version)
         # no idea why, but hey, it works
         self.html.tk.createcommand("parse_fragment", self.html.parse_fragment)
         
@@ -261,7 +275,7 @@ class HTMLElement:
         
         :rtype: str
         :raises: :py:class:`tkinter.TclError`"""
-        return self.html.tk.eval("""
+        return self.html.safe_tk_eval("""
             set node %s
             if {[$node tag] eq ""} {error "$node is not an HTMLElement"}
 
@@ -281,7 +295,7 @@ class HTMLElement:
             self.html.replace_node_contents(node, None)
         self.html.update()
 
-        self.html.tk.eval("""
+        self.html.safe_tk_eval("""
             set html %s
             set node %s
             set tag [$node tag]
@@ -312,15 +326,11 @@ class HTMLElement:
         
         :rtype: str
         :raises: :py:class:`tkinter.TclError`"""
-        return self.html.tk.eval("""
+        return self.html.safe_tk_eval("""
             proc get_child_text {node} {
-                set txt ""
+                set txt [$node text -pre]
                 foreach child [$node children] {
-                    if {[$child tag] eq ""} {
-                        append txt [$child text -pre]
-                    } else {
-                        append txt [get_child_text $child]
-                    }
+                    append txt [get_child_text $child]
                 }
                 return $txt
             }
@@ -336,7 +346,7 @@ class HTMLElement:
             self.html.replace_node_contents(node, None)
         self.html.update()
 
-        self.html.tk.eval("""
+        self.html.safe_tk_eval("""
             set node %s
             set textnode %s
             if {$textnode eq ""} {error "$node is empty"}
@@ -399,7 +409,7 @@ class HTMLElement:
     @widget.setter
     def widget(self, widget): # not a JS property, but could be useful
         if self.tagName == "object":
-            # really we should do better than set the data attribute
+            # Really we should do better than set the data attribute
             # right now this also can be used to set the object's url
             # but in practice it shouldn't really matter
             if not widget:
@@ -440,138 +450,6 @@ class HTMLElement:
     def checked(self, value):
         if self.node in self.html.form_widgets:
             self.html.set_node_attribute(self.node, "checked", value)
-
-    @property
-    def onchange(self):
-        """Convenience property for the ``onchange`` HTML attribute. Get and set the JavaScript code to execute when the input element's value changes
-        
-        :rtype: str"""
-        return self.getAttribute("onchange")
-    
-    @onchange.setter
-    def onchange(self, callback):
-        self.setAttribute("onchange", callback)
-
-    @property
-    def onload(self):
-        """Convenience property for the ``onload`` HTML attribute. Get and set the code to execute when the element loads.
-        
-        :rtype: str"""
-        return self.getAttribute("onload")
-    
-    @onload.setter
-    def onload(self, callback):
-        self.setAttribute("onload", callback)
-
-    @property
-    def onclick(self):
-        """Convenience property for the ``onclick`` HTML attribute. Get and set the code to execute when the element is clicked.
-        
-        :rtype: str"""
-        return self.getAttribute("onclick")
-    
-    @onclick.setter
-    def onclick(self, callback):
-        self.setAttribute("onclick", callback)
-
-    @property
-    def oncontextmenu(self):
-        """Convenience property for the ``oncontextmenu`` HTML attribute. Get and set the code to execute when the element is right-clicked.
-        
-        :rtype: str"""
-        return self.getAttribute("oncontextmenu")
-    
-    @oncontextmenu.setter
-    def oncontextmenu(self, callback):
-        self.setAttribute("oncontextmenu", callback)
-
-    @property
-    def ondblclick(self):
-        """Convenience property for the ``ondblclick`` HTML attribute. Get and set the code to execute when the element is double-clicked.
-        
-        :rtype: str"""
-        return self.getAttribute("ondblclick")
-    
-    @ondblclick.setter
-    def ondblclick(self, callback):
-        self.setAttribute("ondblclick", callback)
-
-    @property
-    def onmousedown(self):
-        """Convenience property for the ``onmousedown`` HTML attribute. Get and set the code to execute when any mouse button is pressed over the element.
-        
-        :rtype: str"""
-        return self.getAttribute("onmousedown")
-    
-    @onmousedown.setter
-    def onmousedown(self, callback):
-        self.setAttribute("onmousedown", callback)
-
-    @property
-    def onmouseenter(self):
-        """Convenience property for the ``onmouseenter`` HTML attribute. Get and set the code to execute when the mouse moves onto the element.
-        
-        :rtype: str"""
-        return self.getAttribute("onmouseenter")
-    
-    @onmouseenter.setter
-    def onmouseenter(self, callback):
-        self.setAttribute("onmouseenter", callback)
-
-    @property
-    def onmouseleave(self):
-        """Convenience property for the ``onmouseleave`` HTML attribute. Get and set the code to execute when the mouse moves out of the element.
-        
-        :rtype: str"""
-        return self.getAttribute("onmouseleave")
-    
-    @onmouseleave.setter
-    def onmouseleave(self, callback):
-        self.setAttribute("onmouseleave", callback)
-
-    @property
-    def onmousemove(self):
-        """Convenience property for the ``onmousemove`` HTML attribute. Get and set the code to execute when the mouse moves over the element.
-        
-        :rtype: str"""
-        return self.getAttribute("onmousemove")
-    
-    @onmousemove.setter
-    def onmousemove(self, callback):
-        self.setAttribute("onmousemove", callback)
-
-    @property
-    def onmouseout(self):
-        """Convenience property for the ``onmouseout`` HTML attribute. Get and set the code to execute when the mouse moves out of the element or its parent elements.
-        
-        :rtype: str"""
-        return self.getAttribute("onmouseout")
-    
-    @onmouseout.setter
-    def onmouseout(self, callback):
-        self.setAttribute("onmouseout", callback)
-
-    @property
-    def onmouseover(self):
-        """Convenience property for the ``onmouseover`` HTML attribute. Get and set the code to execute when the mouse moves into the element or its children elements.
-        
-        :rtype: str"""
-        return self.getAttribute("onmouseover")
-    
-    @onmouseover.setter
-    def onmouseover(self, callback):
-        self.setAttribute("onmouseover", callback)
-
-    @property
-    def onmouseup(self):
-        """Convenience property for the ``onmouseup`` HTML attribute. Get and set the code to execute when the mouse button is released over the element.
-        
-        :rtype: str"""
-        return self.getAttribute("onmouseup")
-    
-    @onmouseup.setter
-    def onmouseup(self, callback):
-        self.setAttribute("onmouseup", callback)
 
     def getAttribute(self, attribute):
         """Return the value of the given attribute..
@@ -624,58 +502,29 @@ class HTMLElement:
         self._insert_children(children, before)
 
     def getElementById(self, query):
-        """Return an element that is a child of the current element and matches the given id.
-        
-        :param query: The element id to be searched for.
-        :type query: str
-        :rtype: :class:`HTMLElement`
-        :raises: :py:class:`tkinter.TclError`"""
-        return self.document.getElementById(query, self.node)
+        "Return an element that is a child of the current element and matches the given id."
+        return HTMLElement(self, self.html.search(f"[id='{query}']", index=0, root=self.node))
 
     def getElementsByClassName(self, query):
-        """Return all elements that are children of the current element and match the given class name.
-        
-        :param query: The class to be searched for.
-        :type query: str
-        :rtype: list[:class:`HTMLElement`]
-        :raises: :py:class:`tkinter.TclError`"""
-        return self.document.getElementsByClassName(query, self.node)
+        "Return all elements that are children of the current element and match the given class name."
+        return HTMLCollection(self, " ".join(f".{i}" for i in query.split()), root=self.node)
 
     def getElementsByName(self, query):
-        """Return all elements that are children of the current element and match the given name attribute.
-        
-        :param query: The name to be searched for.
-        :type query: str
-        :rtype: list[:class:`HTMLElement`]
-        :raises: :py:class:`tkinter.TclError`"""
-        return self.document.getElementsByName(query, self.node)
+        "Return all elements that are children of the current element and match the given name attribute."
+        nodes = self.html.search()
+        return HTMLCollection(self, f"[name='{query}']", root=self.node)
 
     def getElementsByTagName(self, query):
-        """Return all elements that are children of the current element and match the given tag name.
-        
-        :param query: The tag to be searched for.
-        :type query: str
-        :rtype: list[:class:`HTMLElement`]
-        :raises: :py:class:`tkinter.TclError`"""
-        return self.document.getElementsByTagName(query, self.node)
+        "Return all elements that are children of the current element and match the given tag name."
+        return HTMLCollection(self, query, root=self.node)
 
     def querySelector(self, query):
-        """Return the first element that is a child of the current element and matches the given CSS selector.
-        
-        :param query: The CSS selector to be searched for.
-        :type query: strvalue
-        :rtype: :class:`HTMLElement`
-        :raises: :py:class:`tkinter.TclError`"""
-        return self.document.querySelector(query, self.node)
+        "Return the first element that is a child of the current element and matches the given CSS selector."
+        return HTMLElement(self, self.html.search(query, index=0, root=self.node))
 
     def querySelectorAll(self, query):
-        """Return all elements that are children of the current element and match the given CSS selector.
-        
-        :param query: The CSS selector to be searched for.
-        :type query: str
-        :rtype: list[:class:`HTMLElement`]
-        :raises: :py:class:`tkinter.TclError`"""
-        return self.document.querySelectorAll(query, self.node)
+        "Return all elements that are children of the current element and match the given CSS selector."
+        return [HTMLElement(self, i) for i in self.html.search(query, root=self.node)]
     
     def scrollIntoView(self):
         "Scroll the viewport so that this element is visible."
@@ -686,37 +535,69 @@ class HTMLElement:
 
         :rtype: :class:`~tkinterweb.dom.DOMRect`"""
         return DOMRect(self)
+
+    @property
+    def id(self):
+        """Get and set the element's id attribute.
+
+        :rtype: str"""
+        return self.getAttribute("id")
+
+    @id.setter
+    def id(self, new):
+        return self.setAttribute("id", new)
+
+    @property
+    def className(self):
+        """Get and set the element's class attribute.
+
+        :rtype: str"""
+        return self.getAttribute("class")
+
+    @className.setter
+    def className(self, new):
+        return self.setAttribute("class", new)
     
-    def _insert_children(self, children, before=None):
-        "Helper method to insert children at a specified position"
-        self.widget = None
-        
+    def _insert_children(self, children, before=None):  # Helper method to insert children at a specified position
         # Ensure children is a list
-        children = children if isinstance(children, list) else [children]
-        # Extract nodes
-        tkhtml_children_nodes = [i.node for i in children]
+        children = {children} if isinstance(children, HTMLElement) else children
+        # Extract node commands
+        tkhtml_child_nodes = tuple(i.node for i in children)
         # Insert the nodes based on the position
         if before:
-            self.html.insert_node_before(self.node, tkhtml_children_nodes, before.node)
+            self.html.insert_node_before(self.node, tkhtml_child_nodes, before.node)
         else:
-            self.html.insert_node(self.node, tkhtml_children_nodes)
+            self.html.insert_node(self.node, tkhtml_child_nodes)
+
         self.html.send_onload(children=[child.node for child in children])
 
+class HTMLCollection:
+    def __init__(self, document_manager, searchCmd, root=None):
+        self.docu = document_manager
+        self.html = document_manager.html
+        self.searchCmd = searchCmd
+        self.node = root
 
-class HTMLCollection(list):
-    # For some reason this stuff doesn't work in JavaScript
-    # We'll use it I find the need and/or if the JS bugit is addressed
+    def __iter__(self):
+        nodes = self.html.search(self.searchCmd, root=self.node)
+        return iter(HTMLElement(self.docu, node) for node in nodes)
+
+    def __getitem__(self, index): return self.item(index)
+
+    def __len__(self): return self.length
+
     @property
     def length(self):
-        return len(self)
+        return self.html.search(self.searchCmd, "length", root=self.node)
     
     def item(self, index):
-        return self[int(index)]
+        return HTMLElement(self.docu, self.html.search(self.searchCmd, index=index, root=self.node))
     
-    def namedItem(self, name):
-        for i in self:
-            if i.getAttribute("id") == name or i.getAttribute("name") == name:
-                return i
+    def namedItem(self, key):
+        for i in self.html.search(self.searchCmd, root=self.node):
+            if key in (self.html.get_node_attribute(i, j) for j in ("id", "name")):
+                return HTMLElement(self.docu, i)
+        return None  # If nothing is found
 
 class DOMRect:
     """This class generates and stores information about the element's position and size at this point in time.
@@ -750,19 +631,19 @@ class CSSStyleDeclaration:
         self.html = element_manager.html
         self.node = element_manager.node
 
-    def __getitem__(self, property):
+    def __getitem__(self, prop):
         # Get value from Tkhtml if it is a real and existing property
         try:
-            value = self.html.get_node_property(self.node, property, "-inline")
+            value = self.html.get_node_property(self.node, property, "inline")
         except TclError:
             # Ignore invalid properties
             value = ""
 
         if not value:
             # Get value from sub-properties if it is a composite property
-            if property in COMPOSITE_PROPERTIES:
+            if prop in COMPOSITE_PROPERTIES:
                 values = []
-                for key in COMPOSITE_PROPERTIES[property]:
+                for key in COMPOSITE_PROPERTIES[prop]:
                     computed = self.__getitem__(key)
                     if len(computed.split()) > 1:
                         # If the sub-properties have multiple values (eg. have their own sub-properties),
@@ -770,7 +651,7 @@ class CSSStyleDeclaration:
                         return ""
                     if computed: values.append(computed)
             
-                if len(values) == len(COMPOSITE_PROPERTIES[property]):
+                if len(values) == len(COMPOSITE_PROPERTIES[prop]):
                     if all(x == values[0] for x in values): 
                         # Simplify the return value if the values of the sub-properties are all the same
                         value = values[0]
@@ -780,54 +661,53 @@ class CSSStyleDeclaration:
             if not value:
                 # Otherwise attempt to get value from 'style' attribute
                 style = self.cssInlineStyles
-                if property in style: 
-                    value = style[property]
+                if prop in style: 
+                    value = style[prop]
                     
         return value
 
     def __setitem__(self, property, value):
-        style = self.html.get_node_properties(self.node, "-inline")
-        style[property] = value
-        sStr = " ".join(f"{p}: {v};" for p, v in style.items())
-        self.html.set_node_attribute(self.node, "style", sStr)
+        current = self.html.get_node_properties(self.node, "inline")
+        current[property] = value
+        style = " ".join(f"{p}: {v};" for p, v in current.items())
+        self.html.set_node_attribute(self.node, "style", style)
 
-    def __delitem__(self, property):
-        value = self.__getitem__(property)
+    def __delitem__(self, prop):
+        value = self.__getitem__(prop)
 
         # Delete the property from the Tkhtml properties list if it exists 
-        style = self.html.get_node_properties(self.node, "-inline")
-        if property in style: 
-            del style[property]
+        current = self.html.get_node_properties(self.node, "inline")
+        if prop in current: del current[prop]
         else:
             # Delete the property from the 'style' attribute if it exists 
-            style = self.cssInlineStyles
-            if property in style: 
-                del style[property]
+            current = self.cssInlineStyles
+            if prop in current: 
+                del current[prop]
 
         # Delete the property's sub-properties properties if applicable
         # Do this regardless of what happens above in case the property exists as a composite while its sub-properties were also set seperately
-        if property in COMPOSITE_PROPERTIES:
-            def clean(property):
-                for key in COMPOSITE_PROPERTIES[property]:
+        if prop in COMPOSITE_PROPERTIES:
+            def clean(prop):
+                for key in COMPOSITE_PROPERTIES[prop]:
                     if key in COMPOSITE_PROPERTIES:
                         clean(key)
-                    elif key in style:
-                        del style[key]
-            clean(property)
+                    elif key in current:
+                        del current[key]
+            clean(prop)
 
-        sStr = " ".join(f"{p}: {v};" for p, v in style.items())
-        self.html.set_node_attribute(self.node, "style", sStr)
+        style = " ".join(f"{p}: {v};" for p, v in current.items())
+        self.html.set_node_attribute(self.node, "style", style)
 
         return value
 
-    def __setattr__(self, property, value):
-        if property in ("node", "html"):
-            super().__setattr__(property, value)
+    def __setattr__(self, prop, value):
+        if prop in ("node", "html"):
+            super().__setattr__(prop, value)
         else:
-            self.__setitem__(camel_case_to_property(property), value)
+            self.__setitem__(camel_case_to_property(prop), value)
 
-    def __getattr__(self, property):
-        return self.__getitem__(camel_case_to_property(property))
+    def __getattr__(self, prop):
+        return self.__getitem__(camel_case_to_property(prop))
 
     @property
     def cssText(self):
@@ -841,7 +721,7 @@ class CSSStyleDeclaration:
         """Return the number of style declarations in the element's inline style declaration.
         
         :rtype: int"""
-        return len(self.html.get_node_properties(self.node, "-inline"))
+        return len(self.html.get_node_properties(self.node, "inline"))
     
     @property
     def cssProperties(self): # not a JS function, but could be useful
@@ -855,19 +735,14 @@ class CSSStyleDeclaration:
         """Return all inline properties for the element. Similar to the :attr:`cssText` property, but formatted as a dictionary.
         
         :rtype: dict"""
-        return self.html.get_node_properties(self.node, "-inline")
+        return self.html.get_node_properties(self.node, "inline")
     
     @property 
     def cssInlineStyles(self):
         """Return the content of the element's ``style`` attribute, formatted as a dictionary.
         
         :rtype: dict"""
-        inline = (self.html.get_node_attribute(self.node, "style"))
-        style = {}
-        for item in inline.split(";"):
-            if item:
-                key, old = item.split(":", 1)
-                style[key.strip()] = old.strip()
+        style = {k.strip(): o.strip() for i in self.cssText.split(";") if i for k, o in [i.split(":", 1)]}
         return style
     
     def getPropertyPriority(self, property):
@@ -877,10 +752,7 @@ class CSSStyleDeclaration:
         :type property: str
         :return: "important" or "".
         :rtype: str"""
-        style = self.cssInlineStyles
-        if property in style:
-            value = style[property]
-            if value.endswith("!important"): return "important"
+        if self.__getitem__(property).endswith("!important"): return "important"
         return ""
 
     def getPropertyValue(self, property):

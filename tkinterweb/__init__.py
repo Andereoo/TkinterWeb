@@ -8,7 +8,7 @@ Copyright (c) 2021-2025 Andereoo
 
 
 try:
-    from .htmlwidgets import HtmlFrame, HtmlLabel, TkinterWeb, Notebook
+    from .htmlwidgets import HtmlFrame, HtmlLabel, HtmlParse, HtmlWYSIWYG, Notebook, TkHtmlParsedURI, TkinterWeb
     # We keep this stuff in utilities.py so that about:tkinterweb can access it
     from .utilities import __title__, __author__, __copyright__, __license__, __version__
 except (ImportError, ModuleNotFoundError):
@@ -29,7 +29,7 @@ See https://tkinterweb.readthedocs.io/en/latest/faq.html for more information. \
     sys.exit()
 
 
-__all__ = ['HtmlFrame', 'HtmlLabel', 'TkinterWeb', 'Notebook', 'Demo']
+__all__ = ['Demo' 'HtmlParse', 'HtmlFrame', 'HtmlLabel', 'Notebook', 'TkHtmlParsedURI', 'TkinterWeb']
 
 
 class Demo():
@@ -86,3 +86,7 @@ class Demo():
             self.frame2.pack(expand=True, fill="both")
             if self.frame2.title: self.root.title(f"TkinterWeb Demo - {self.frame2.title}")
         self.afters = [self.root.after(3000, page1), self.root.after(5500, page2)]
+
+
+if __name__ == "__main__":
+        Demo()

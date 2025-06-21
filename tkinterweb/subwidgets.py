@@ -12,7 +12,7 @@ import os
 import tkinter as tk
 from tkinter import colorchooser, filedialog, ttk
 
-from .utilities import ROOT_DIR
+from .utilities import ROOT_DIR, SplitFrag
 
 combobox_loaded = False
 
@@ -271,9 +271,69 @@ class FormRange(ttk.Scale):
             stylename = f"Scale{self}.Horizontal.TScale"
             style.configure(stylename, troughcolor=bg)
             self.configure(style=stylename)
+
+        if "from_" in kwargs:
+            self.to = self._check_value(kwargs["from_"], self.from_)
+        if "to" in kwargs:
+            self.to = self._check_value(kwargs["to"], self.to)
+        if "step" in kwargs:
+            self.to = self._check_value(kwargs["step"], self.step)
             
         super().configure(**kwargs)
         
+    def set(self, value):
+        super().set(self._check_value(value, (self.to - self.from_) / 2))
+
+class FormNumber(tk.Spinbox):
+    def __init__(self, parent, value=50, from_=0, to=100, step=1, onchangecommand=None, **kwargs):
+        self.from_ = from_ = self._check_value(from_, 0)
+        self.to = to = self._check_value(to, 100)
+        self.step = self._check_value(step, 1)
+        self.onchangecommand = onchangecommand
+        self.decimal_places = len(str(step).split('.')[-1]) if '.' in str(step) else 0
+
+        initial_value = self._check_value(value, (self.to + self.from_) / 2)
+        self.variable = tk.DoubleVar(parent, value=initial_value)
+
+        # Use textvariable instead of variable
+        super().__init__(parent, textvariable=self.variable, from_=self.from_, to=self.to, **kwargs)
+
+        self.variable.trace_add("write", self._update_value)
+
+    def _update_value(self, *args):
+        try:
+            current_value = float(self.variable.get())
+        except ValueError:
+            current_value = (self.to + self.from_) / 2
+        except tk.TclError: current_value = self.from_
+        # Round to nearest step
+        value = round(current_value / self.step) * self.step
+        # Clamp value within range
+        value = max(self.from_, min(value, self.to))
+        # Set with proper decimal places
+        self.variable.set(round(value, self.decimal_places))
+        if self.onchangecommand:
+            self.onchangecommand(self)
+
+    def _check_value(self, value, default):
+        try:
+            if "." in value:
+                return float(value)
+            else:
+                return int(value)
+        except (ValueError, TypeError):
+            return default
+
+    def configure(self, **kwargs):
+        if "from_" in kwargs:
+            self.to = self._check_value(kwargs["from_"], self.from_)
+        if "to" in kwargs:
+            self.to = self._check_value(kwargs["to"], self.to)
+        if "step" in kwargs:
+            self.to = self._check_value(kwargs["step"], self.step)
+
+        super().configure(**kwargs)
+
     def set(self, value):
         super().set(self._check_value(value, (self.to - self.from_) / 2))
 
@@ -504,3 +564,48 @@ class Notebook(ttk.Frame):
     def tabs(self):
         "Returns a list of widgets managed by the notebook."
         return self.pages
+
+class TkHtmlParsedURI:
+    def __init__(self, uri, html):
+        self.parsed = html.uri(uri)
+        self._html = html
+
+    def resolve(self, uri):
+        return self._html.uri_resolve(self.parsed, uri)
+
+    def load(self, uri):
+        return self._html.uri_load(self.parsed, uri)
+
+    @property
+    def defrag(self):
+        return self._html.uri_defrag(self.parsed)
+
+    @property
+    def scheme(self):
+        return self._html.uri_scheme(self.parsed)
+
+    @property
+    def authority(self):
+        return self._html.uri_authority(self.parsed)
+
+    @property
+    def path(self):
+        return self._html.uri_path(self.parsed)
+
+    @property
+    def query(self):
+        return self._html.uri_query(self.parsed)
+
+    @property
+    def fragment(self):
+        return self._html.uri_fragment(self.parsed)
+
+    @property
+    def splitfrag(self):
+        return SplitFrag(self.defrag, self.fragment)
+
+    def __str__(self):
+        return self._html.uri_get(self.parsed)
+
+    def __del__(self):
+        self._html.uri_destroy(self.parsed)

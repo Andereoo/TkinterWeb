@@ -5,6 +5,8 @@ by adding scrolling, file loading, and many other convenience functions
 Copyright (c) 2021-2025 Andereoo
 """
 
+from urllib.parse import urldefrag, urlparse
+
 from .bindings import *
 from .dom import HTMLDocument, HTMLElement
 
@@ -235,8 +237,8 @@ class HtmlFrame(Frame):
         self._manage_hsb(self.horizontal_scrollbar)
         self._manage_vsb(self.vertical_scrollbar)
 
-        # Html.document only applies to the document it is bound to (which makes things easy)
-        # for some reason, binding to Html only works on Linux and binding to html.document only works on Windows
+        # html.document only applies to the document it is bound to (which makes things easy)
+        # For some reason, binding to Html only works on Linux and binding to html.document only works on Windows
         # Html fires on all documents (i.e. <iframe> elements), so it has to be handled slightly differently
         if not self._html.overflow_scroll_frame:
             self.bind_class("Html", "<Button-4>", html.scroll_x11)
@@ -302,8 +304,8 @@ Load about:tkinterweb for debugging information""")
         """The DOM manager. Use this to access :class:`~tkinterweb.dom.HTMLDocument` methods to manupulate the DOM.
         
         :rtype: :class:`~tkinterweb.dom.HTMLDocument`"""
-        if self._DOM_cache is None:  # lazy loading of Document Object Model
-            self._DOM_cache = HTMLDocument(self.html)
+        if self._DOM_cache is None:  # Lazy loading of Document Object Model
+            self._DOM_cache = HTMLDocument(self._html)
         return self._DOM_cache
     
     @property
@@ -570,7 +572,6 @@ Load about:tkinterweb for debugging information""")
         if ignore_text_nodes:
             if not self._html.get_node_tag(self._html.current_node):
                 node = self._html.get_node_parent(self._html.current_node)
-        print(">", node)
         return HTMLElement(self.document, node)
     
     def widget_to_element(self, widget):
@@ -645,7 +646,6 @@ Load about:tkinterweb for debugging information""")
         :raises: NotImplementedError if experimental mode is not enabled."""
         if self._html.experimental:
             cnf |= kwargs
-            self._html.post_event(BEFORE_PRINT_EVENT)
             self._html.post_message(f"Printing {self._current_url}...")
             if filename:
                 cnf["file"] = filename
@@ -660,11 +660,10 @@ Load about:tkinterweb for debugging information""")
                 except KeyError:
                     raise KeyError("Parameter 'pagesize' must be A3, A4, A5, Legal, or Letter")
 
-            self._html.update() # update the root window to ensure HTML is rendered
+            self._html.update() # Update the root window to ensure HTML is rendered
             file = self._html.postscript(cnf)
             
             # No need to save - Tkhtml handles that for us
-            self._html.post_event(AFTER_PRINT_EVENT)
             if filename:
                 self._html.post_message("Printed!")
             if file: return file
@@ -702,7 +701,7 @@ Load about:tkinterweb for debugging information""")
         title = ""
         icon = ""
         base = ""
-        style = ""
+        style = "\n"
         
         for rule in self._html.get_computed_styles():
             selector, prop, origin = rule
@@ -712,12 +711,10 @@ Load about:tkinterweb for debugging information""")
         if self._html.title: title = f"\n\t\t<title>{self._html.title}</title>"
         if self._html.icon: icon = f"\n\t\t<link rel=\"icon\" type=\"image/x-icon\" href=\"/{self._html.icon}\">"
         if self._html.base_url: base = f"\n\t\t<base href=\"{self._html.base_url}\"></base>"
-        if style: style = f"\n\t\t<style>\n{style[:-1]}\n\t\t</style>"
+        if style.strip(): style = f"\n\t\t<style>{style}\t\t</style>"
         body = self.document.body.innerHTML
 
-        if title or icon or base or style: style += "\n\t"
-
-        html = f"""<!DOCTYPE html>\n<html>\n\t<head>{title}{icon}{base}{style}</head>\n\t<body>\n\t\t{body}\n\t</body>\n</html>"""
+        html = f"""<html>\n\t<head>{title}{icon}{base}{style}\n\t</head>\n\t<body>\n\t{body}\n\t</body>\n</html>"""
         if filename:
             with open(filename, "w+") as handle:
                 handle.write(html)
@@ -738,7 +735,7 @@ Load about:tkinterweb for debugging information""")
             if not self._button:
                 self._button = tk.Button(self, text="Try Again")
             self._button.configure(command=lambda url=self._current_url: self.load_url(url, None, True))
-            self.load_html(BUILTIN_PAGES["about:error"].format(self.about_page_background, self.about_page_foreground, code, self._button), url)
+            self.load_html(BUILTIN_PAGES["about:error"].format(bg=self.about_page_background, fg=self.about_page_foreground, i1=code, i2=self._button), url)
 
     def select_all(self):
         """Select all text in the document."""
@@ -840,7 +837,7 @@ Load about:tkinterweb for debugging information""")
         :param obj: The Python object to pass.
         :type obj: anything
         :raises: RuntimeError if JavaScript is not enabled."""
-        if self.html.javascript_enabled:
+        if self._html.javascript_enabled:
             if not pythonmonkey:
                 self._initialize_javascript()
             pythonmonkey.eval(f"(function(pyObj) {{globalThis.{name} = pyObj}})")(obj)
@@ -849,8 +846,9 @@ Load about:tkinterweb for debugging information""")
 
     def _check_value(self, old, new):
         expected_type = type(old)
-        if isinstance(new, tk.Widget): return new  # This lets it be used in Tkinter canvas, canvas.create_window won't let objects be callable
-        if callable(old) or old == None:
+        if old == None and isinstance(new, tk.Widget):
+            return new
+        elif callable(old) or old == None:
             if not callable(new):
                 raise TypeError(f"expected callable object, got \"{new}\"")
         elif not isinstance(new, expected_type) and old != "auto" and new != "auto":
@@ -896,42 +894,40 @@ Load about:tkinterweb for debugging information""")
         "Finish loading urls and handle URI fragments."
         code = 404
         self._current_url = url
+
         self._html.post_event(DOWNLOADING_RESOURCE_EVENT)
+        
         try:
             method = method.upper()
-            parsed = self.html.uri(url)
-            if method == "GET": url = str(url) + str(data)
-            prevParse = self.html.uri(self._previous_url)
+            parsed = urlparse(url)
+
+            if method == "GET":
+                url = str(url) + str(data)
+
             # If url is different than the current one, load the new site
-            if (force or method == "POST" or
-                self.html.uri_defrag(parsed).replace("/", "") != self.html.uri_defrag(prevParse).replace("/", "")
-            ):
+            if force or (method == "POST") or ((urldefrag(url)[0]).replace("/", "") != (urldefrag(self._previous_url)[0]).replace("/", "")):
                 view_source = False
                 if url.startswith("view-source:"):
                     view_source = True
                     url = url.replace("view-source:", "")
-                    parsed = self.html.uri(url)
-                if self.html.uri_authority(parsed):
-                    self._html.post_message(f"Connecting to {self.html.uri_authority(parsed)}")
+                    parsed = urlparse(url)
+                self._html.post_message(f"Connecting to {parsed.netloc}")
                 if self._html.insecure_https:
                     self._html.post_message("WARNING: Using insecure HTTPS session")
-                if (self.html.uri_scheme(parsed) == "file") or (not self._html.caches_enabled):
+                if (parsed.scheme == "file") or (not self._html.caches_enabled):
                     data, newurl, filetype, code = download(
-                        url, data, method, decode, self._html.insecure_https, tuple(self._html.headers.items())
-                    )
+                        url, data, method, decode, self._html.insecure_https, tuple(self._html.headers.items()))
                 else:
                     data, newurl, filetype, code = cache_download(
-                        url, data, method, decode, self._html.insecure_https, tuple(self._html.headers.items())
-                    )
-                if self.html.uri_authority(parsed):
-                    self._html.post_message(f"Successfully connected to {self.html.uri_authority(parsed)}")
+                        url, data, method, decode, self._html.insecure_https, tuple(self._html.headers.items()))
+                self._html.post_message(f"Successfully connected to {parsed.netloc}")
                 if get_current_thread().isrunning():
                     if view_source:
-                        newurl = "view-source:" + newurl
+                        newurl = "view-source:"+newurl
                         if self._current_url != newurl:
                             self._current_url = newurl
                             self._html.post_event(URL_CHANGED_EVENT)
-                        data = str(data).replace("<", "&lt;").replace(">", "&gt;")
+                        data = str(data).replace("<","&lt;").replace(">", "&gt;")
                         data = data.splitlines()
                         length = int(len(str(len(data))))
                         if len(data) > 1:
@@ -940,22 +936,14 @@ Load about:tkinterweb for debugging information""")
                             data = data.split("</code><br>", 1)[1]
                         else:
                             data = "".join(data)
-                        self.load_html(
-                            BUILTIN_PAGES["about:view-source"].format(
-                                self.about_page_background, self.about_page_foreground, length * 9, data
-                            ),
-                            newurl
-                        )
+                        self.load_html(BUILTIN_PAGES["about:view-source"].format(bg=self.about_page_background, fg=self.about_page_foreground, i1=length*9, i2=data), newurl)
                     elif "image" in filetype:
                         self.load_html("", newurl)
-                        if self._current_url != newurl: self._html.post_event(URL_CHANGED_EVENT)
+                        if self._current_url != newurl:
+                            self._html.post_event(URL_CHANGED_EVENT)
                         name = self._html.image_name_prefix + str(len(self._html.loaded_images))
                         self._html.finish_fetching_images(None, data, name, filetype, newurl)
-                        self.add_html(
-                            BUILTIN_PAGES["about:image"].format(
-                                self.about_page_background, self.about_page_foreground, name
-                            )
-                        )
+                        self.add_html(BUILTIN_PAGES["about:image"].format(bg=self.about_page_background, fg=self.about_page_foreground, i1=name, i2=""))
                     else:
                         if self._current_url != newurl:
                             self._current_url = newurl
@@ -967,29 +955,29 @@ Load about:tkinterweb for debugging information""")
                 self._finish_css()
 
             # Handle URI fragments
-            frag = self.html.uri_fragment(parsed)
+            frag = parsed.fragment
             if frag:
                 #self._html.tk.call(self._html._w, "_force")
                 self._html.update()
                 try:
                     frag = "".join(char for char in frag if char.isalnum() or char in ("-", "_"))
                     node = self._html.search(f"[id={frag}]")
-                    if node: self._html.yview(node)
+                    if node:
+                        self._html.yview(node)
                     else:
                         node = self._html.search(f"[name={frag}]")
-                        if node: self._html.yview(node)
-                except Exception: pass
-            for i in frozenset({parsed, prevParse}): self.html.uri_destroy(i)
+                        if node:
+                            self._html.yview(node)
+                except Exception:
+                    pass
         except Exception as error:
             self._html.post_message(f"ERROR: could not load {url}: {error}")
             if "CERTIFICATE_VERIFY_FAILED" in str(error):
-                self._html.post_message(
-                    f"Check that you are using the right url scheme. Some websites only support http.\n\
-    This might also happen if your Python distribution does not come installed with website certificates.\n\
-    This is a known Python bug on older MacOS systems. \
-    Running something along the lines of \"/Applications/Python {'.'.join(PYTHON_VERSION[:2])}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
-    Otherwise, use 'configure(insecure_https=True)' to ignore website certificates."
-                )
+                self._html.post_message(f"Check that you are using the right url scheme. Some websites only support http.\n\
+This might also happen if your Python distribution does not come installed with website certificates.\n\
+This is a known Python bug on older MacOS systems. \
+Running something along the lines of \"/Applications/Python {'.'.join(PYTHON_VERSION[:2])}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
+Otherwise, use 'configure(insecure_https=True)' to ignore website certificates.")
             self.on_navigate_fail(url, error, code)
         self._thread_in_progress = None
 
@@ -1010,52 +998,30 @@ Load about:tkinterweb for debugging information""")
             raise ModuleNotFoundError("PythonMonkey is required to run JavaScript files but is not installed.")
 
     def _on_script(self, attributes, tag_contents):
-        if self.html.javascript_enabled and not pythonmonkey:
+        if self._html.javascript_enabled and not pythonmonkey:
             self._initialize_javascript()
         try:
             pythonmonkey.eval(tag_contents)
         except Exception as error:
             if "src" in attributes:
-                self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running the script from {attributes['src']}: {error}")
+                self._html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running the script from {attributes['src']}: {error}")
             else:
-                self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running a script: {error}")
+                self._html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running a script: {error}")
 
     def _on_element_script(self, node_handle, attribute, attr_contents):
-        if self.html.javascript_enabled and not pythonmonkey:
+        if self._html.javascript_enabled and not pythonmonkey:
             self._initialize_javascript()
         try:
             element = HTMLElement(self.document, node_handle)
             pythonmonkey.eval(f"(element) => {{function run() {{ {attr_contents} }}; run.bind(element)()}}")(element)
         except Exception as error:
-            self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running an {attribute} script: {error}")
+            self._html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running an {attribute} script: {error}")
 
-class HtmlWYSIWYG(HtmlFrame):
-    def __init__(self, master, **kwargs):
-        HtmlFrame.__init__(self, master, **kwargs, horizontal_scrollbar="auto")
-        tags = list(self._html.bindtags())
-        tags.remove("Html")
-        self._html.bindtags(tags)
-        self._text = ""
-        self.bind("<<TitleChanged>>", lambda event: master.title(self.title))
-        self.load_html("<h1>HEADING.</h1>")
-        self.text = self.save_page()
-        self.config_style()
-
-    def config_style(self, color="Red", width="1px"):
-        self._html.config(defaultstyle=self._html.dark_style
-            if self._html._dark_theme_enabled else self._html.default_style
-            + "\n:hover { outline: solid %s %s; } " % (width, color))
-
-    @property
-    def text(self): return self._text
-
-    @text.setter
-    def text(self, new):
-        self._text = new
-        self.load_html(self._text)
 
 class HtmlLabel(HtmlFrame):
     """The :class:`HtmlLabel` widget inherits from the :class:`HtmlFrame`. For a complete list of avaliable methods, configuration options, generated events, and state variables, see the :class:`HtmlFrame` docs.
+    
+    This class also accepts one additional parameter:
 
     :param text: Set the HTML content of the widget
     :type text: str
@@ -1064,12 +1030,11 @@ class HtmlLabel(HtmlFrame):
         HtmlFrame.__init__(self, master, vertical_scrollbar=False, shrink=True, **kwargs)
 
         tags = list(self._html.bindtags())
+        tags.remove("Html")
         self._html.bindtags(tags)
-        self.bindtags(tags)
-        self.load_html(text)
-        self.add_css(style)
-        self.allow_agent = False
 
+        self.load_html(text)
+        
     def configure(self, **kwargs):
         if "text" in kwargs:
             self.load_html(kwargs.pop("text"))
@@ -1079,7 +1044,7 @@ class HtmlLabel(HtmlFrame):
 
     def cget(self, key):
         if "text" == key:
-            return serialize_node(self._html, 0).splitlines()
+            return self._html.serialize_node(0).splitlines()
         if "style" == key:
             return {
                 i[0]: dict(j.split(":", 1) for j in i[1].split("; ") if j.strip())
@@ -1090,36 +1055,13 @@ class HtmlLabel(HtmlFrame):
 
     def config(self, **kwargs): self.configure(**kwargs)
 
-#NOTE: should probably add a method to HtmlFrame to allow parsing more efficiently and proficiently using the fragment CMD
-class HtmlParse():
-    """TkinterWeb parsing only class, parses HTML using TkinterWeb class and allows access to the document but does not spawn a widget
+class HtmlParse(HtmlFrame):
+    """
+    TkinterWeb parsing only class, parses HTML using TkinterWeb class and allows access to the document but does not spawn a widget
     """
 
-    def __init__(self, markup="", features=None, **kwargs):
-        if "headers" not in kwargs: kwargs["headers"] = HEADERS
-        if features: kwargs["mode"] = features
-        
+    def __init__(self, *args, **kwargs):
         self.master = root = tk.Tk()
-        self.html = html = TkinterWeb(root, kwargs)
-        self.document = HTMLDocument(html)
-        html.events_enabled = html.images_enabled = False
-        html.forms_enabled = html.stylesheets_enabled = False
+        HtmlFrame.__init__(root, args, kwargs)
+        self.events_enabled = self.images_enabled = self.forms_enabled = False
         root.withdraw()
-
-        self.indentation = 4
-        if markup: self.markup = markup
-
-    @property
-    def markup(self):
-        return serialize_node(self.html, self.indentation)
-
-    @markup.setter
-    def markup(self, new):
-        if os.path.isfile(new): new = "file:///" + new
-        if new[:4] in frozenset({"file", "http"}):
-            new, url, file, r = self.html._download_url(new)
-        self.html.reset()
-        self.html.parse(new)
-
-    def __str__(self):
-        return self.document._node_to_html(self.html.node())

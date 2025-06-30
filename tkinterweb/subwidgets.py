@@ -12,7 +12,7 @@ import os
 import tkinter as tk
 from tkinter import colorchooser, filedialog, ttk
 
-from .utilities import ROOT_DIR, SplitFrag
+from .utilities import ROOT_DIR
 
 combobox_loaded = False
 
@@ -364,7 +364,7 @@ class FileSelector(tk.Frame):
 
             # First find all the MIME types
             for mimetype in [a for a in accept_list if not a.startswith(".")]:
-                # the HTML spec specifies these three wildcard cases only:
+                # The HTML spec specifies these three wildcard cases only:
                 if mimetype in ("audio/*", "video/*", "image/*"):
                     extensions = [
                         k
@@ -564,48 +564,3 @@ class Notebook(ttk.Frame):
     def tabs(self):
         "Returns a list of widgets managed by the notebook."
         return self.pages
-
-class TkHtmlParsedURI:
-    def __init__(self, uri, html):
-        self.parsed = html.uri(uri)
-        self._html = html
-
-    def resolve(self, uri):
-        return self._html.uri_resolve(self.parsed, uri)
-
-    def load(self, uri):
-        return self._html.uri_load(self.parsed, uri)
-
-    @property
-    def defrag(self):
-        return self._html.uri_defrag(self.parsed)
-
-    @property
-    def scheme(self):
-        return self._html.uri_scheme(self.parsed)
-
-    @property
-    def authority(self):
-        return self._html.uri_authority(self.parsed)
-
-    @property
-    def path(self):
-        return self._html.uri_path(self.parsed)
-
-    @property
-    def query(self):
-        return self._html.uri_query(self.parsed)
-
-    @property
-    def fragment(self):
-        return self._html.uri_fragment(self.parsed)
-
-    @property
-    def splitfrag(self):
-        return SplitFrag(self.defrag, self.fragment)
-
-    def __str__(self):
-        return self._html.uri_get(self.parsed)
-
-    def __del__(self):
-        self._html.uri_destroy(self.parsed)

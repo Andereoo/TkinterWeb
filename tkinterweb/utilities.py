@@ -8,28 +8,27 @@ The lru_cache function in this file is modified from functools. Functools is cop
 """
 
 import os
-import re
 import platform
 import sys
 import threading
 
+import tkinterweb_tkhtml
+
 import ssl
 from urllib.request import Request, urlopen
-from collections import namedtuple
 
 from _thread import RLock
 from functools import update_wrapper, _make_key
 
 from tkinter import TclVersion, TkVersion
-from tkinterweb_tkhtml import TKHTML_ROOT_DIR, TKHTML_RELEASE
 
-    
-# we need this information here so the builtin pages can access it
+
+# We need this information here so the built-in pages can access it
 __title__ = 'TkinterWeb'
 __author__ = "Andereoo"
 __copyright__ = "Copyright (c) 2021-2025 Andereoo"
 __license__ = "MIT"
-__version__ = '4.3.1'
+__version__ = '4.4.0'
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
@@ -62,14 +61,14 @@ CURSOR_MAP = {
     "sw-resize": "bottom_left_corner",
     "s-resize": "bottom_side",
     "w-resize": "left_side",
-    # the following cursors only work with experimental Tkhtml
+    # The following cursors only work with experimental Tkhtml
     "context-menu": "",
     "cell": "cross",
     "vertical-text": "xterm",
     "alias": "hand2",
     "copy": "cross",
     "no-drop": "X_cursor",
-    "not-allowed": "X_cursor", # circle works too on some platforms
+    "not-allowed": "X_cursor", # Circle works too on some platforms
     "grab": "hand2",
     "grabbing": "fleur",
     "all-scroll": "",
@@ -82,7 +81,7 @@ CURSOR_MAP = {
     "zoom-in": "",
     "zoom-out": "",
     "none": "none",
-    "gobbler": "gobbler" # why not?
+    "gobbler": "gobbler" # Why not?
 }
 DEFAULT_STYLE = r"""
 /* Default stylesheet to be loaded whenever HTML is parsed. */
@@ -444,7 +443,6 @@ class BuiltinPageGenerator():
         self._html = None
         self._pages = {
     "about:blank": "<html><head><style>html,body{{background-color:{bg};color:{fg};cursor:gobbler;width:100%;height:100%;margin:0}}</style><title>about:blank</title></head><body></body></html>{i1}{i2}",
-
     "about:tkinterweb": "<html tkinterweb-overflow-x=auto><head>\
         <style>html,body{{{{background-color:{bg};color:{fg}}}}}\
             code{{{{display:block}}}}\
@@ -516,28 +514,24 @@ class BuiltinPageGenerator():
         <code class='header'>Site memory</code>\
         <code>Visited hyperlinks: {visited_links}</code>\
             </body></html>{i1}{i2}",
-
     "about:error": "<html><head><style>html,body,table,tr,td{{background-color:{bg};color:{fg};width:100%;height:100%;margin:0}}</style><title>Error {i1}</title></head>\
         <body><table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle'>\
         <h2 style='margin:0;padding:0;font-weight:normal'>Oops</h2>\
         <h3 style='margin-top:10px;margin-bottom:25px;font-weight:normal'>The page you've requested could not be found :(</h3>\
         <object handleremoval allowscrolling style='cursor:pointer' data='{i2}'></object>\
         </td></tr></table></body></html>",
-
-    "about:loading": "<html><head><style>html,body,table,tr,td{{background-color:{};color:{};width:100%;height:100%;margin:0}}</style></head>\
-        <body><table><tr><td tkinterweb-full-page style=\"text-align:center;vertical-align:middle\">\
+    "about:loading": "<html><head><style>html,body,table,tr,td{{background-color:{bg};color:{fg};width:100%;height:100%;margin:0}}</style></head>\
+        <body><table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle'>\
         <p>Loading...</p>\
-        </td></tr></table></body></html>",
-
-    "about:image": "<html><head><style>html,body,table,tr {{background-color:{};color:{};width:100%;height:100%;margin:0}}</style></head><body>\
-        <table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle;padding:4px 4px 0px 4px'><img style='max-width:100%;max-height:100%' src='replace:{}'><h3 style=\"margin:0;padding:0;font-weight:normal\"></td></tr></table></body></html>",
-
+        </td></tr></table></body></html>{i1}{i2}",
+    "about:image": "<html><head><style>html,body,table,tr {{background-color:{bg};color:{fg};width:100%;height:100%;margin:0}}</style></head><body>\
+        <table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle;padding:4px 4px 0px 4px'><img style='max-width:100%;max-height:100%' src='replace:{i1}'><h3 style='margin:0;padding:0;font-weight:normal'></td></tr></table></body></html>{i2}",
     "about:view-source": "<html tkinterweb-overflow-x=auto><head><style>\
-        html,body{{background-color:{};color:{};}}\
+        html,body{{background-color:{bg};color:{fg};}}\
         pre::before{{counter-reset:listing}}\
         code{{counter-increment:listing}}\
-        code::before{{content:counter(listing);display:inline-block;width:{}px;margin-left:5px;padding-right:5px;margin-right:5px;text-align:right;border-right:1px solid grey60;color:grey60}}\
-        </style></head><body><pre style=\"margin:0;padding:0\">{}</pre></body></html>",
+        code::before{{content:counter(listing);display:inline-block;width:{i1}px;margin-left:5px;padding-right:5px;margin-right:5px;text-align:right;border-right:1px solid grey60;color:grey60}}\
+        </style></head><body><pre style='margin:0;padding:0'>{i2}</pre></body></html>",
 }
     
     def __getitem__(self, key):
@@ -546,12 +540,12 @@ class BuiltinPageGenerator():
                 title=__title__, license=__license__, copyright=__copyright__, __version__=__version__, 
                 
                 headers=("".join(f"<br><code class='indented'>{k}: {v}</code>" for k, v in self._html.headers.items())), 
-                general_dark_theme_regexes=("".join(f"<code class='indented'>{i.replace('{', '{{').replace('}', '}}')}</code>" for i in self._html.general_dark_theme_regexes)), 
-                inline_dark_theme_regexes=("".join(f"<br><code class='indented'>{i.replace('{', '{{').replace('}', '}}')}</code>" for i in self._html.inline_dark_theme_regexes)),
-                style_dark_theme_regex=f"<code class='indented'>{self._html.style_dark_theme_regex.replace('{', '{{').replace('}', '}}')}</code>", 
+                general_dark_theme_regexes=("".join(f"<code class='indented'>{i.replace("{", "{{").replace("}", "}}")}</code>" for i in self._html.general_dark_theme_regexes)), 
+                inline_dark_theme_regexes=("".join(f"<br><code class='indented'>{i.replace("{", "{{").replace("}", "}}")}</code>" for i in self._html.inline_dark_theme_regexes)),
+                style_dark_theme_regex=f"<code class='indented'>{self._html.style_dark_theme_regex.replace("{", "{{").replace("}", "}}")}</code>", 
                 visited_links=("".join(f"<code class='indented'>{i}</code>" for i in self._html.visited_links)),
                 root=f"<code class='indented'>{ROOT_DIR}</code>", 
-                tkhtml_root=f"<code class='indented'>{TKHTML_ROOT_DIR}</code>", 
+                tkhtml_root=f"<code class='indented'>{tkinterweb_tkhtml.TKHTML_ROOT_DIR}</code>", 
                 working_dir=f"<code class='indented'>{WORKING_DIR}</code>", 
                 tcl_path=("".join(f"<code class='indented'>{i}</code>" for i in self._html.tk.getvar("auto_path"))),
                 path=("".join(f"<code class='indented'>{i}</code>" for i in os.environ["PATH"].split(os.pathsep))),
@@ -604,17 +598,15 @@ BUILTIN_ATTRIBUTES = {
     "vertical-align": "tkinterweb-full-page"
 }
 
-for event in frozenset({
-    "AfterPrint", "BeforePrint", "DoneLoading",
-    "DownloadingResource", "IconChanged", "TitleChanged",
-    "UrlChanged"}):
-    const = re.sub(r"(?<!^)(?=[A-Z])", "_", event).upper() + "_EVENT"
-    globals()[const] = f"<<{event}>>"
+
+DOWNLOADING_RESOURCE_EVENT = "<<DownloadingResource>>"
+DONE_LOADING_EVENT = "<<DoneLoading>>"
+URL_CHANGED_EVENT = "<<UrlChanged>>"
+ICON_CHANGED_EVENT = "<<IconChanged>>"
+TITLE_CHANGED_EVENT = "<<TitleChanged>>"
 
 tkhtml_loaded = False
 combobox_loaded = False
-
-SplitFrag = namedtuple("SplitFrag", ("uri", "fragment"))
 
 
 class StoppableThread(threading.Thread):
@@ -814,38 +806,6 @@ def tkhtml_notifier(name, text, *args):
 def TclOpt(options):
     "Format string into Tcl option command-line names"
     return tuple(o if o.startswith("-") else "-"+o for o in options)
-
-
-def serialize_node(tkinterweb, ib):
-    return tkinterweb.safe_tk_eval(r"""
-    proc indent {d} {return [string repeat { } $d]}
-    proc prettify {node} {
-        set depth [expr {([info level] - 1) * %d}]
-        set tag [$node tag]
-        if {$tag eq ""} {
-	    if {[string trim [$node text]] eq ""} return
-	    set z [string map {< &lt; > &gt;} [$node text -pre]]
-	    if {[[$node parent] tag] ne "pre"} {
-                return [indent $depth][regsub -all {\s+} $z " "]\n
-	    } else {
-                return [indent $depth]$z\n
-	    }
-        }
-        set ret [indent $depth]<$tag
-        foreach {zKey zVal} [$node attribute] {
-            append ret " $zKey=\"[string map [list \x22 \x5C\x22] $zVal]\""
-        }
-        append ret >\n
-        set void {area base br col embed hr img input keygen link meta param source track wbr}
-        if {[lsearch -exact $void $tag] != -1} {
-            return $ret
-        }
-        foreach child [$node children] {
-	    append ret [prettify $child]
-        }
-        return $ret[indent $depth]</$tag>\n
-    }
-        prettify [%s node] """ % (ib, tkinterweb))
 
 
 def placeholder(*args, **kwargs):

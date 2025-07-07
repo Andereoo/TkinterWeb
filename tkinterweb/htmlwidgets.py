@@ -482,6 +482,8 @@ class HtmlFrame(Frame):
         # Set the base url now in case it takes a while for the website to download
         self._html.base_url = url
 
+        if url.startswith("mailto"): return  # Don't try to load emails!
+
         if self._thread_in_progress:
             self._thread_in_progress.stop()
             

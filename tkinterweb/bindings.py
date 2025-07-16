@@ -102,6 +102,7 @@ class TkinterWeb(Widget):
         self.use_prebuilt_tkhtml = True
         self.tkhtml_version = ""
         self.experimental = False
+        self.experimental_min_version = 3.1
 
         self.find_match_highlight_color = "#ef0fff"
         self.find_match_text_color = "#fff"
@@ -206,7 +207,7 @@ class TkinterWeb(Widget):
 
         # Node handlers don't work on body and html elements. 
         # These elements also cannot be removed without causing a segfault. 
-        # Wierd.
+        # Weird.
         self.register_handler("parse", "body", self._on_body)
         self.register_handler("parse", "html", self._on_body)
 
@@ -304,6 +305,10 @@ class TkinterWeb(Widget):
         else:
             self.post_message("WARNING: threading is disabled because your Tcl/Tk library does not support threading")
             self.default_maximum_thread_count = self._maximum_thread_count = 0
+    
+    @property
+    def tkhtml_default_style(self):
+        return self.tk.call("::tkhtml::htmlstyle")
 
     def post_event(self, event):
         "Generate a virtual event."
@@ -555,7 +560,11 @@ class TkinterWeb(Widget):
     def delete_node(self, node_handle):
         "Delete the given node."
         if self.experimental:
-            self.tk.call(node_parent, "remove", self.get_node_parent(node_handle))
+            node_parent = self.get_node_parent(node_handle)
+            if node_parent:
+                self.tk.call(node_parent, "remove", node_handle)
+            else:
+                raise RuntimeError(f"root elements cannot be removed")
         else:
             node_parent = self.get_node_parent(node_handle)
             node_tag = self.get_node_tag(node_handle)
@@ -563,7 +572,7 @@ class TkinterWeb(Widget):
             if node_parent and node_tag != "body":
                 self.tk.call(node_parent, "remove", node_handle)
             else:
-                raise TclError(f"{node_tag} elements cannot be removed")
+                raise RuntimeError(f"{node_tag} elements cannot be removed")
 
     def destroy_node(self, node_handle):
         "Destroy a node. May cause crashes so avoid it whenever possible."
@@ -996,11 +1005,11 @@ class TkinterWeb(Widget):
             self.post_message(f"ERROR: an error was encountered while searching for {searchtext}: {error}")
             return nmatches, selected, matches
 
-    def get_child_text(self, node): ######
+    def get_child_text(self, node):
         """Get text of node and all its descendants recursively"""
         text = self.get_node_text(node, "-pre")
         for child in self.get_node_children(node):
-            text += self.get_element_text(child)
+            text += self.get_child_text(child)
         return text
     
     def resolve_url(self, url):
@@ -1144,7 +1153,7 @@ class TkinterWeb(Widget):
                 return
             self.yview_scroll(int(-1*event.delta/30), "units")
 
-    def safe_tk_eval(self, expr): ###
+    def safe_tk_eval(self, expr):
         """Always evaluate 'expr' on the main thread."""
         if threading.current_thread() is threading.main_thread():
             return self.tk.eval(expr)
@@ -1160,12 +1169,13 @@ class TkinterWeb(Widget):
             event.wait()
             return result[0]
 
-    def _close(self): ###
+    def _close(self): #####################
         self.stop()
         self.winfo_toplevel().destroy()
 
-
-    def serialize_node(self, ib):
+    def serialize_node(self, ib=3):
+        "Pretty-print a node's contents"
+        "Similar to innerHTML, but formatted"
         return self.safe_tk_eval(r"""
             proc indent {d} {return [string repeat { } $d]}
             proc prettify {node} {
@@ -1194,8 +1204,27 @@ class TkinterWeb(Widget):
                 }
                 return $ret[indent $depth]</$tag>\n
             }
-                prettify [%s node] """ % (ib)
+                prettify [%s node] """ % (ib, self)
         )
+
+    def serialize_node_style(self, ib=3, return_as_dict=False):
+        "Pretty-print a node's style"
+        style = {
+            i[0]: dict(j.split(":", 1) for j in i[1].split("; ") if j.strip())
+            for i in self.get_computed_styles()
+            if "agent" != i[2]
+        }
+
+        if return_as_dict:
+            return style
+        else:
+            text = ""
+            for i in style:
+                text += i + " {\n"
+                for j in style[i]:
+                    text += " "*ib + style[i][j] + ";\n"
+                text += "}\n"
+            return text
 
     def _load_tkhtml(self, force=False):
         "Load Tkhtml"
@@ -1216,7 +1245,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             self.tkhtml_version = tkinterweb_tkhtml.load_tkhtml(self.master, force=force)
         
         if self.experimental == "auto":
-            if float(self.tkhtml_version) >= 3.1:
+            if float(self.tkhtml_version) >= self.experimental_min_version:
                 self.experimental = True
             else:
                 self.experimental = False
@@ -1940,7 +1969,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             # However, the html widget doesn't support the cursor property so there's not much we can do about this
             # update_idletasks() or update() have no effect, but print() and updating the color or text of another widget does
             # Therefore we update the background color of a tiny frame that is barely visible to match the background color of the page whenever we need to change te cursor
-            # It's wierd but hey, it works
+            # It's weird but hey, it works
             self.motion_frame.config(bg=self.motion_frame_bg)
 
     def _submit_element_js(self, node_handle, attribute):
@@ -2350,65 +2379,73 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             tags = (self.node_tag,)
         widgetid.bindtags(widgetid.bindtags() + tags)
 
+
 class TkHtmlParsedURI:
+    "Bindings for Tkhtml3 URI parsing system."
+
     def __init__(self, uri, html):
-        self.parsed = html.uri(uri)
         self._html = html
+        self.parsed = self.uri(uri)
 
     def __str__(self):
-        return self._html.uri_get(self.parsed)
+        return self.uri_get(self.parsed)
 
     def __del__(self):
-        self._html.uri_destroy(self.parsed)
+        self.uri_destroy(self.parsed)
 
-    @property
-    def tkhtml_default_style(self):
-        return self.tk.call("::tkhtml::htmlstyle")
+    def uri(self, uri):
+        "Returns name of parsed uri to be used in methods below"
+        return self._html.tk.call("::tkhtml::uri", uri)
 
     def tkhtml_uri_decode(self, uri, base64=False):
-        "This command is designed to help scripts process data: URIs. It is completely separate from the html widget"
-        a = "-base64" if base64 else ""
-        return self.tk.call("::tkhtml::decode", a, uri)
+        "Decode the uri."
+        return self._html.tk.call("::tkhtml::decode", "-base64" if base64 else "", uri)
 
     def tkhtml_uri_encode(self, uri):
-        "Encodes - _ . ! ~ * ' ( )"
-        return self.tk.call("::tkhtml::encode", uri)
+        "Encodes the uri"
+        return self._html.tk.call("::tkhtml::encode", uri)
 
     def tkhtml_uri_escape(self, uri, query=False):
         "Returns the decoded data."
         a = "-query" if query else ""
-        return self.tk.call("::tkhtml::escape_uri", a, uri)
+        return self._html.tk.call("::tkhtml::escape_uri", a, uri)
 
-    def uri(self, uri):
-        "Returns name of parsed uri to be used in methods below"
-        return self.tk.call("::tkhtml::uri", uri)
+    def uri_resolve(self, uri):
+        "Resolve a uri."
+        return self._html.tk.call(self.parsed, "resolve", uri)
 
-    def uri_resolve(self, parsed, uri):
-        return self.tk.call(parsed, "resolve", uri)
+    def uri_load(self, uri):
+        "Load a uri"
+        return self._html.tk.call(self.parsed, "load", uri)
 
-    def uri_load(self, parsed, uri):
-        return self.tk.call(parsed, "load", uri)
+    def uri_get(self):
+        "Get the uri"
+        return self._html.tk.call(self.parsed, "get")
 
-    def uri_str(self, parsed):
-        return self.tk.call(parsed, "get")
+    def uri_defrag(self):
+        "Defrag the uri"
+        return self._html.tk.call(self.parsed, "get_no_fragment")
 
-    def uri_defrag(self, parsed):
-        return self.tk.call(parsed, "get_no_fragment")
+    def uri_scheme(self):
+        "Return the uri scheme."
+        return self._html.tk.call(self.parsed, "scheme")
 
-    def uri_scheme(self, parsed):
-        return self.tk.call(parsed, "scheme")
+    def uri_authority(self):
+        "Return the uri authority."
+        return self._html.tk.call(self.parsed, "authority")
 
-    def uri_authority(self, parsed):
-        return self.tk.call(parsed, "authority")
+    def uri_path(self):
+        "Return the uri path."
+        return self._html.tk.call(self.parsed, "path")
 
-    def uri_path(self, parsed):
-        return self.tk.call(parsed, "path")
+    def uri_query(self):
+        "Return the uri query."
+        return self._html.tk.call(self.parsed, "query")
 
-    def uri_query(self, parsed):
-        return self.tk.call(parsed, "query")
+    def uri_fragment(self):
+        "Return the uri fragment."
+        return self._html.tk.call(self.parsed, "fragment")
 
-    def uri_fragment(self, parsed):
-        return self.tk.call(parsed, "fragment")
-
-    def uri_destroy(self, parsed):
-        self.tk.call(parsed, "destroy")
+    def uri_destroy(self):
+        "Destroy this uri."
+        self._html.tk.call(self.parsed, "destroy")

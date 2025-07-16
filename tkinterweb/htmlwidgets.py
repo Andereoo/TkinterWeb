@@ -1033,24 +1033,28 @@ class HtmlLabel(HtmlFrame):
         tags.remove("Html")
         self._html.bindtags(tags)
 
-        self.load_html(text)
+        self.style = style
+
+        if text:
+            self.load_html(text)
+        if style:
+            self.add_css(style)
         
     def configure(self, **kwargs):
         if "text" in kwargs:
             self.load_html(kwargs.pop("text"))
+            if "style" not in kwargs:
+                self.add_css(self.style)
         if "style" in kwargs:
-            self.add_css(kwargs.pop("style"))
+            self.style = style = kwargs.pop("style")
+            self.add_css(style)
         if kwargs: super().configure(**kwargs)
 
     def cget(self, key):
         if "text" == key:
-            return self._html.serialize_node(0).splitlines()
+            return "".join(self._html.serialize_node(0).splitlines())
         if "style" == key:
-            return {
-                i[0]: dict(j.split(":", 1) for j in i[1].split("; ") if j.strip())
-                for i in self._html.get_computed_styles()
-                if "agent" != i[2] or self.allow_agent
-            }
+           return "".join(self._html.serialize_node_style(0).splitlines())
         return super().cget(key)
 
     def config(self, **kwargs): self.configure(**kwargs)

@@ -781,9 +781,11 @@ def invert_color(rgb, match, limit):
         rgb[2] = max(1, min(255, 240 - rgb[2]))
         return rgb_to_hex(*rgb)
 
+
 def get_alt_font():
     "Get the location of the truetype file to be used for image alternate text"
     return os.path.join(ROOT_DIR, "opensans.ttf")
+
 
 def notifier(text):
     "Notifications printer"

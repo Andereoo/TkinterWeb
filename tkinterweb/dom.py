@@ -305,21 +305,6 @@ class HTMLElement:
         
         :rtype: str
         :raises: :py:class:`tkinter.TclError`"""
-        # return self.html.safe_tk_eval("""
-        #     proc get_child_text {node} {
-        #         set txt ""
-        #         foreach child [$node children] {
-        #             if {[$child tag] eq ""} {
-        #                 append txt [$child text -pre]
-        #             } else {
-        #                 append txt [get_child_text $child]
-        #             }
-        #         }
-        #         return $txt
-        #     }
-        #     return [get_child_text %s]
-        #     """ % extract_nested(self.node)
-        # )
         return self.html.safe_tk_eval("""
             proc get_child_text {node} {
                 set txt [$node text -pre]
@@ -355,7 +340,7 @@ class HTMLElement:
             """ % (extract_nested(self.node), self.document.createTextNode(contents).node)
         )
 
-        @property
+    @property
     def id(self):
         """Get and set the element's id attribute.
 
@@ -901,12 +886,6 @@ class CSSStyleDeclaration:
         """Return the content of the element's ``style`` attribute, formatted as a dictionary.
         
         :rtype: dict"""
-        #inline = (self.html.get_node_attribute(self.node, "style"))
-        #style = {}
-        #for item in inline.split(";"):
-        #    if item:
-        #        key, old = item.split(":", 1)
-        #        style[key.strip()] = old.strip()
         style = {k.strip(): o.strip() for i in self.cssText.split(";") if i for k, o in [i.split(":", 1)]}
         return style
     
@@ -917,12 +896,12 @@ class CSSStyleDeclaration:
         :type property: str
         :return: "important" or "".
         :rtype: str"""
-        #style = self.cssInlineStyles
-        #if property in style:
-        #    value = style[property]
-        #    if value.endswith("!important"): return "important"
-        if self.__getitem__(property).endswith("!important"): return "important"
-        return ""
+        style = self.cssInlineStyles
+        if property in style:
+            value = style[property]
+            if value.endswith("!important"): return "important"
+        #if self.__getitem__(property).endswith("!important"): return "important"
+        #return ""
 
     def getPropertyValue(self, property):
         """Return the value of the given inline CSS property.

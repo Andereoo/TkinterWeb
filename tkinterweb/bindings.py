@@ -635,7 +635,7 @@ class TkinterWeb(Widget):
         return self.tk.call(self._w, "preload", url)
     
     def get_computed_styles(self):
-        "Get a tuple containing the computed CSS rules for each CSS selector"
+        "Get a tuple containing the computed CSS rules for each CSS selector."
         return self.tk.call(self._w, "_styleconfig")
 
     def override_node_CSS(self, node, *props):
@@ -728,18 +728,18 @@ class TkinterWeb(Widget):
                 try:  # Ensure thread safety when closing
                     alt = self.get_node_attribute(node, "alt")
                     if alt:
-                        if self.experimental:
-                            # Insert the parsed fragment directly if in experimental mode
-                            self.insert_node(node, self.parse_fragment(alt))
-                        else:
-                            # Generate an image with alternate text if not in experimental mode
-                            image = text_to_image(
-                                name, alt, self.bbox(node),
-                                self.image_alternate_text_font,
-                                self.image_alternate_text_size,
-                                self.image_alternate_text_threshold,
-                            )
-                            self.loaded_images.add(image)
+                        #if self.experimental: ################
+                        #    # Insert the parsed fragment directly if in experimental mode
+                        #    self.insert_node(node, self.parse_fragment(alt))
+                        #else:
+                        # Generate an image with alternate text if not in experimental mode
+                        image = text_to_image(
+                            name, alt, self.bbox(node),
+                            self.image_alternate_text_font,
+                            self.image_alternate_text_size,
+                            self.image_alternate_text_threshold,
+                        )
+                        self.loaded_images.add(image)
                 except (RuntimeError, TclError): pass  # Widget no longer exists
         elif not self.ignore_invalid_images:
             image = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
@@ -1698,6 +1698,17 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             stylecmd = lambda node=node, widgetid=widgetid, widgettype="range": self.handle_node_style(
                 node, widgetid, widgettype
             )
+        elif nodetype == "number":
+            widgetid = FormNumber(self, 
+                nodevalue,
+                self.get_node_attribute(node, "min", 0),
+                self.get_node_attribute(node, "max", 100),
+                self.get_node_attribute(node, "step", 1),
+                lambda widgetid, node=node: self._on_input_change(node, widgetid)
+            )
+            stylecmd = lambda node=node, widgetid=widgetid: self.handle_node_style(
+                node, widgetid
+            )
         elif nodetype == "radio":
             name = self.get_node_attribute(node, "name", "")
             if self.get_node_attribute(node, "checked", "false") != "false": 
@@ -1722,17 +1733,6 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             self.radio_buttons[name] = widgetid.variable
             stylecmd = lambda node=node, widgetid=widgetid: self.handle_node_style(
                 node, widgetid
-            )
-        elif nodetype == "number":
-            widgetid = FormNumber(self, 
-                nodevalue,
-                self.get_node_attribute(node, "min", 0),
-                self.get_node_attribute(node, "max", 100),
-                self.get_node_attribute(node, "step", 1),
-                lambda widgetid, node=node: self._on_input_change(node, widgetid)
-            )
-            stylecmd = lambda node=node, widgetid=widgetid, widgettype="number": self.handle_node_style(
-                node, widgetid, widgettype
             )
         else:
             widgetid = FormEntry(self, nodevalue, nodetype, lambda widgetid, node=node: self._on_input_change(node, widgetid))
@@ -1868,6 +1868,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
     def _handle_form_submission(self, node, event=None):
         "Submit HTML forms."
+        print("SDFFD")
         if (node not in self.form_nodes) or (not self.forms_enabled):
             return
 
@@ -1879,11 +1880,14 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         for formelement in self.loaded_forms[form]:
             nodeattrname = self.get_node_attribute(formelement, "name")
             if nodeattrname:
+                nodetype = self.get_node_attribute(formelement, "type")
                 if formelement in self.form_widgets:
                     nodevalue = self.form_widgets[formelement].get()
+                    if nodetype == "number":
+                        if not self.form_widgets[formelement].check():
+                            return
                 elif self.get_node_tag(formelement) == "hidden":
                     nodevalue = self.get_node_attribute(formelement, "value")
-                nodetype = self.get_node_attribute(formelement, "type")
                 if nodetype == "submit" or nodetype == "reset":
                     continue
                 elif nodetype == "file":
@@ -2394,7 +2398,7 @@ class TkHtmlParsedURI:
         self.uri_destroy(self.parsed)
 
     def uri(self, uri):
-        "Returns name of parsed uri to be used in methods below"
+        "Returns name of parsed uri to be used in methods below."
         return self._html.tk.call("::tkhtml::uri", uri)
 
     def tkhtml_uri_decode(self, uri, base64=False):
@@ -2402,7 +2406,7 @@ class TkHtmlParsedURI:
         return self._html.tk.call("::tkhtml::decode", "-base64" if base64 else "", uri)
 
     def tkhtml_uri_encode(self, uri):
-        "Encodes the uri"
+        "Encodes the uri."
         return self._html.tk.call("::tkhtml::encode", uri)
 
     def tkhtml_uri_escape(self, uri, query=False):
@@ -2415,15 +2419,15 @@ class TkHtmlParsedURI:
         return self._html.tk.call(self.parsed, "resolve", uri)
 
     def uri_load(self, uri):
-        "Load a uri"
+        "Load a uri."
         return self._html.tk.call(self.parsed, "load", uri)
 
     def uri_get(self):
-        "Get the uri"
+        "Get the uri."
         return self._html.tk.call(self.parsed, "get")
 
     def uri_defrag(self):
-        "Defrag the uri"
+        "Defrag the uri."
         return self._html.tk.call(self.parsed, "get_no_fragment")
 
     def uri_scheme(self):

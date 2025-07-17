@@ -9,6 +9,8 @@ Copyright (c) 2021-2025 Andereoo
 import mimetypes
 import os
 
+from decimal import Decimal, InvalidOperation
+
 import tkinter as tk
 from tkinter import colorchooser, filedialog, ttk
 
@@ -236,13 +238,14 @@ class FormRange(ttk.Scale):
     def __init__(self, parent, value=50, from_=0, to=100, step=1, onchangecommand=None, **kwargs):
         step_str = str(step)
         self.step = self._check_value(step, 1)
-        self.from_ = from_ = self._check_value(from_, 0)
-        self.to = to = self._check_value(to, 100)
+        from_ = self._check_value(from_, 0)
+        to = self._check_value(to, 100)
         self.onchangecommand = onchangecommand
         self.decimal_places = len(step_str.split('.')[-1]) if '.' in step_str else 0
-        self.variable = variable = tk.DoubleVar(parent, value=self._check_value(value, (to - from_) / 2))
+        value = round(self._check_value(value, (to - from_) / 2) / self.step) * self.step
+        self.variable = variable = tk.DoubleVar(parent, value=round(value, self.decimal_places))
 
-        ttk.Scale.__init__(self, parent, variable=variable, from_=from_, to=to)
+        ttk.Scale.__init__(self, parent, variable=variable, from_=from_, to=to, **kwargs)
 
         variable.trace_add("write", self._update_value)
 
@@ -272,70 +275,148 @@ class FormRange(ttk.Scale):
             style.configure(stylename, troughcolor=bg)
             self.configure(style=stylename)
 
-        if "from_" in kwargs:
-            self.to = self._check_value(kwargs["from_"], self.from_)
-        if "to" in kwargs:
-            self.to = self._check_value(kwargs["to"], self.to)
         if "step" in kwargs:
-            self.to = self._check_value(kwargs["step"], self.step)
+            self.step = step = self._check_value(kwargs.pop("step"), self.step)
+            step_str = str(step)
+            self.decimal_places = len(step_str.split('.')[-1]) if '.' in step_str else 0
+
+        if "from_" in kwargs:
+            kwargs["from_"] = self._check_value(kwargs["from_"], 0)
+        
+        if "to" in kwargs:
+            kwargs["to"] = self._check_value(kwargs["to"], 100)
             
         super().configure(**kwargs)
+
+
+class Tooltip:
+    def __init__(self, widget, text=""):
+        self.widget = widget
+        self.text = text
+        self.tip_window = None
+
+        self.custom_tag = f"{self}TooltipToplevel"
         
-    def set(self, value):
-        super().set(self._check_value(value, (self.to - self.from_) / 2))
+    def show(self, text=None):
+        if text:
+            self.text = text
+        
+        self.hide()
+
+        x = self.widget.winfo_rootx()
+        y = self.widget.winfo_rooty() + self.widget.winfo_height() + 2
+
+        self.tip_window = tw = tk.Toplevel(self.widget)
+        tw.wm_overrideredirect(True)
+        tw.wm_geometry(f"+{x}+{y}")
+
+        self.label = label = tk.Label(tw, text=self.text, background="#ffffe0",
+                         relief="solid", borderwidth=1, font=("tahoma", 8))
+        label.pack(ipadx=4, ipady=2)
+
+        current_tags = self.widget.winfo_toplevel().bindtags()
+        self.widget.winfo_toplevel().bindtags((self.custom_tag,) + current_tags)
+
+        self.tip_window.focus_force()
+
+        tw.bind("<FocusOut>", self.hide)
+        self.widget.winfo_toplevel().bind_class(self.custom_tag, "<Configure>", self.hide)
+
+    def hide(self, event=None):
+        if self.tip_window:
+            self.tip_window.destroy()
+            self.tip_window = None
+            self.widget.winfo_toplevel().unbind_class(self.custom_tag, "<Configure>")
+            current_tags = list(self.widget.winfo_toplevel().bindtags())
+            current_tags.remove(self.custom_tag)
+            self.widget.winfo_toplevel().bindtags(tuple(current_tags))
+            self.widget.focus_force()
+
 
 class FormNumber(tk.Spinbox):
-    def __init__(self, parent, value=50, from_=0, to=100, step=1, onchangecommand=None, **kwargs):
-        self.from_ = from_ = self._check_value(from_, 0)
-        self.to = to = self._check_value(to, 100)
-        self.step = self._check_value(step, 1)
+    def __init__(self, parent, value=0, from_=0, to=100, step=1, onchangecommand=None, **kwargs):
         self.onchangecommand = onchangecommand
-        self.decimal_places = len(str(step).split('.')[-1]) if '.' in str(step) else 0
+        self.step = self._decimalize_value(step, 1)
+        from_ = self._check_value(from_, 0)
+        to = self._check_value(to, 100)
 
-        initial_value = self._check_value(value, (self.to + self.from_) / 2)
-        self.variable = tk.DoubleVar(parent, value=initial_value)
+        self.variable = tk.DoubleVar(parent, value=value)
 
-        # Use textvariable instead of variable
-        super().__init__(parent, textvariable=self.variable, from_=self.from_, to=self.to, **kwargs)
+        super().__init__(parent, textvariable=self.variable, from_=from_, to=to, **kwargs)
 
         self.variable.trace_add("write", self._update_value)
 
+        self.tooltip = Tooltip(self)
+
     def _update_value(self, *args):
+        self.onchangecommand(self)
+
+    def check(self):
         try:
-            current_value = float(self.variable.get())
-        except ValueError:
-            current_value = (self.to + self.from_) / 2
-        except tk.TclError: current_value = self.from_
-        # Round to nearest step
-        value = round(current_value / self.step) * self.step
-        # Clamp value within range
-        value = max(self.from_, min(value, self.to))
-        # Set with proper decimal places
-        self.variable.set(round(value, self.decimal_places))
-        if self.onchangecommand:
-            self.onchangecommand(self)
+            current_value = self.variable.get()
+            current_value = Decimal(str(current_value))
+            from_ = Decimal(str(self.cget("from")))
+            to = Decimal(str(self.cget("to")))
+            
+            if current_value < from_:
+                if from_ == from_.to_integral_value():
+                    from_ = int(from_)
+                self.tooltip.show(f"Please enter a number that is larger than {from_}")
+            elif current_value > to:
+                if to == to.to_integral_value():
+                    to = int(to)
+                self.tooltip.show(f"Please enter a number that is smaller than {to}")
+            elif ((current_value - from_) % self.step) != 0:
+                lower = from_ + ((current_value - from_) // self.step) * self.step
+                upper = lower + self.step
+                if lower == lower.to_integral_value():
+                    lower = int(lower)
+                if upper == upper.to_integral_value():
+                    upper = int(upper)
+                if upper > to and lower > from_:
+                    self.tooltip.show(f"Please enter a valid number. The nearest number is {lower}.")
+                elif lower < from_ and upper < to:
+                    self.tooltip.show(f"Please enter a valid number. The nearest number is {upper}.")
+                else:
+                    self.tooltip.show(f"Please enter a valid number. The nearest numbers are {lower} and {upper}.")
+            else:
+                return True                
+        except tk.TclError:
+            self.tooltip.show("Please enter a number")
+        return False
 
     def _check_value(self, value, default):
         try:
-            if "." in value:
-                return float(value)
-            else:
-                return int(value)
-        except (ValueError, TypeError):
+            return float(value)
+        except ValueError:
             return default
+    
+    def _decimalize_value(self, value, default):
+        try:
+            return Decimal(str(value))
+        except (InvalidOperation):
+            return Decimal(str(default))
 
     def configure(self, **kwargs):
-        if "from_" in kwargs:
-            self.to = self._check_value(kwargs["from_"], self.from_)
-        if "to" in kwargs:
-            self.to = self._check_value(kwargs["to"], self.to)
         if "step" in kwargs:
-            self.to = self._check_value(kwargs["step"], self.step)
+            self.step = self._decimalize_value(kwargs.pop("step"), self.step)
+
+        if "from_" in kwargs:
+            kwargs["from_"] = self._check_value(kwargs["from_"], 0)
+        
+        if "to" in kwargs:
+            kwargs["to"] = self._check_value(kwargs["to"], 100)
 
         super().configure(**kwargs)
 
     def set(self, value):
-        super().set(self._check_value(value, (self.to - self.from_) / 2))
+        self.variable.set(value)
+        
+    def get(self):
+        try:
+            return self.variable.get()
+        except tk.TclError:
+            return None
 
 class FileSelector(tk.Frame):
     "File selector widget"

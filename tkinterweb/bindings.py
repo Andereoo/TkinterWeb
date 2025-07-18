@@ -26,8 +26,6 @@ class TkinterWeb(Widget):
         self._setup_settings()
         self._setup_status_variables()
 
-        master.winfo_toplevel().protocol("WM_DELETE_WINDOW", self._close)
-
         # Inherited settings
         waiting_options = {}
         if tkinterweb_options:
@@ -75,6 +73,7 @@ class TkinterWeb(Widget):
         self._setup_bindings()
         self._setup_handlers()
         self.update_default_style()
+
         self.post_message(f"Tkhtml {self.tkhtml_version} successfully loaded from {tkinterweb_tkhtml.TKHTML_ROOT_DIR}")
 
     def _setup_settings(self):
@@ -102,7 +101,6 @@ class TkinterWeb(Widget):
         self.use_prebuilt_tkhtml = True
         self.tkhtml_version = ""
         self.experimental = False
-        self.experimental_min_version = 3.1
 
         self.find_match_highlight_color = "#ef0fff"
         self.find_match_text_color = "#fff"
@@ -187,6 +185,7 @@ class TkinterWeb(Widget):
         self.bind("<Double-Button-1>", self._on_double_click, True)
         self.bind("<ButtonRelease-1>", self._on_click_release, True)
         self.bind_class(self.node_tag, "<Motion>", self._on_mouse_motion, True)
+        self.bind("<Destroy>", lambda event: self.stop())
 
     def _setup_handlers(self):
         "Register node handlers."
@@ -618,8 +617,8 @@ class TkinterWeb(Widget):
         full = "-full" if full else ""
         name = self.tk.call(self._w, "image", full)
         data = self.tk.call(name, "data")
-        self.tk.call("image", "delete", "name")
-        return name, data
+        self.tk.call("image", "delete", name)
+        return data
 
     def postscript(self, cnf={}, **kwargs):
         """Print the contents of the canvas to a postscript file.
@@ -728,7 +727,7 @@ class TkinterWeb(Widget):
                 try:  # Ensure thread safety when closing
                     alt = self.get_node_attribute(node, "alt")
                     if alt:
-                        #if self.experimental: ################
+                        #if self.experimental: ################ Should work, but doesn't
                         #    # Insert the parsed fragment directly if in experimental mode
                         #    self.insert_node(node, self.parse_fragment(alt))
                         #else:
@@ -1169,10 +1168,6 @@ class TkinterWeb(Widget):
             event.wait()
             return result[0]
 
-    def _close(self): #####################
-        self.stop()
-        self.winfo_toplevel().destroy()
-
     def serialize_node(self, ib=3):
         "Pretty-print a node's contents"
         "Similar to innerHTML, but formatted"
@@ -1233,22 +1228,22 @@ class TkinterWeb(Widget):
 
         if self.use_prebuilt_tkhtml:
             try:
-                file, self.tkhtml_version = tkinterweb_tkhtml.get_tkhtml_file(self.tkhtml_version)
-                tkinterweb_tkhtml.load_tkhtml_file(self.master, file, force=force)
+                loaded_version = tkinterweb_tkhtml.get_loaded_tkhtml_version()
+                if loaded_version and not force:
+                    self.tkhtml_version = loaded_version
+                    self.post_message(f"Using Tkhtml {loaded_version} because it is already loaded")
+                    tkinterweb_tkhtml.load_tkhtml_file(self.master, file=None, force=force)
+                else:
+                    file, self.tkhtml_version, self.experimental = tkinterweb_tkhtml.get_tkhtml_file(self.tkhtml_version, experimental=self.experimental)
+                    tkinterweb_tkhtml.load_tkhtml_file(self.master, file, force=force)
             except TclError as error:
                 self.post_message(f"WARNING: An error occured while loading Tkhtml {self.tkhtml_version}: {error}\n\n\
 It is likely that not all dependencies are installed. Make sure Cairo is installed on your system. Some features may be missing.")
-                file, self.tkhtml_version = tkinterweb_tkhtml.get_tkhtml_file(index=0)
+                file, self.tkhtml_version, self.experimental = tkinterweb_tkhtml.get_tkhtml_file(index=0, experimental=self.experimental)
                 tkinterweb_tkhtml.load_tkhtml_file(self.master, file, force=force)
                 self.post_message(f"Defaulting to Tkhtml {self.tkhtml_version}")
         else:
             self.tkhtml_version = tkinterweb_tkhtml.load_tkhtml(self.master, force=force)
-        
-        if self.experimental == "auto":
-            if float(self.tkhtml_version) >= self.experimental_min_version:
-                self.experimental = True
-            else:
-                self.experimental = False
 
     def _finish_posting_event(self, event):
         try:
@@ -1868,7 +1863,6 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
     def _handle_form_submission(self, node, event=None):
         "Submit HTML forms."
-        print("SDFFD")
         if (node not in self.form_nodes) or (not self.forms_enabled):
             return
 

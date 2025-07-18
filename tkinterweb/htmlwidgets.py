@@ -124,7 +124,7 @@ class HtmlFrame(Frame):
     :type experimental: bool or "auto"
     :param use_prebuilt_tkhtml: If True (the default), the Tkhtml binary for your system supplied by TkinterWeb will be used. If your system isn't supported and you don't want to compile the Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml yourself, you could try installing Tkhtml3 system-wide and set :attr:`use_prebuilt_tkhtml` to False. Note that some crash prevention features will no longer work.
     :type use_prebuilt_tkhtml: bool
-    :param tkhtml_version: The Tkhtml version to use. If the requested version is not found, TkinterWeb will fallback to Tkhtml version 3.1.
+    :param tkhtml_version: The Tkhtml version to use. If the requested version is not found, TkinterWeb will fallback to Tkhtml 3.0. Only one Tkhtml version can be loaded at a time.
     :type tkhtml_version: float or "auto"
     :param parsemode: The parse mode. In "html" mode, explicit XML-style self-closing tags are not handled specially and unknown tags are ignored. "xhtml" mode is similar to "html" mode except that explicit self-closing tags are recognized. "xml" mode is similar to "xhtml" mode except that XML CDATA sections and unknown tag names are recognized. It is usually best to leave this setting alone.
     :type parsemode: "xml", "xhtml", or "html"
@@ -188,7 +188,7 @@ class HtmlFrame(Frame):
             "dark_style": DARK_STYLE,
             "insecure_https": False,
             "headers": HEADERS,
-            "experimental": "auto",
+            "experimental": False,
             # No impact after loading
             "use_prebuilt_tkhtml": True,
             "tkhtml_version": "auto",
@@ -605,7 +605,7 @@ Load about:tkinterweb for debugging information""")
         :raises: NotImplementedError if experimental mode is not enabled, :attr:`full` is set to True, and TkinterWeb is running on Windows."""
         if self._html.experimental or PLATFORM.system != "Windows":
             self._html.post_message(f"Taking a screenshot of {self._current_url}...")
-            image, data = self._html.image(full=full)
+            data = self._html.image(full=full)
             height = len(data)
             width = len(data[0].split())
             image = create_RGB_image(data, width, height)
@@ -1019,13 +1019,14 @@ Otherwise, use 'configure(insecure_https=True)' to ignore website certificates."
 
 
 class HtmlLabel(HtmlFrame):
-    """The :class:`HtmlLabel` widget inherits from the :class:`HtmlFrame`. For a complete list of avaliable methods, configuration options, generated events, and state variables, see the :class:`HtmlFrame` docs.
+    """The :class:`HtmlLabel` widget is a label-like HTML widget. It inherits from the :class:`HtmlFrame` class. For a complete list of avaliable methods, properties, configuration options, and generated events, see the :class:`HtmlFrame` docs.
     
-    This class also accepts one additional parameter:
+    This class also accepts two additional parameters:
 
     :param text: Set the HTML content of the widget
     :type text: str
     """
+
     def __init__(self, master, text="", style="", **kwargs):
         HtmlFrame.__init__(self, master, vertical_scrollbar=False, shrink=True, **kwargs)
 
@@ -1060,12 +1061,21 @@ class HtmlLabel(HtmlFrame):
     def config(self, **kwargs): self.configure(**kwargs)
 
 class HtmlParse(HtmlFrame):
+    """The :class:`HtmlParse` class parses HTML but does not spawn a widget. It inherits from the :class:`HtmlFrame` class. For a complete list of avaliable methods, properties, configuration options, and generated events, see the :class:`HtmlFrame` docs.
     """
-    TkinterWeb parsing only class, parses HTML using TkinterWeb class and allows access to the document but does not spawn a widget
-    """
+    def __init__(self, **kwargs):
+        self.root = root = tk.Tk()
 
-    def __init__(self, *args, **kwargs):
-        self.master = root = tk.Tk()
-        HtmlFrame.__init__(root, args, kwargs)
-        self.events_enabled = self.images_enabled = self.forms_enabled = False
+        self._is_destroying = False
+
+        for flag in ["events_enabled", "images_enabled", "forms_enabled"]:
+            if flag not in kwargs:
+                kwargs[flag] = False
+                
+        HtmlFrame.__init__(self, root, **kwargs)
+
         root.withdraw()
+
+    def destroy(self):
+        super().destroy()
+        self.root.destroy()

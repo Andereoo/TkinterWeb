@@ -295,7 +295,7 @@ class Tooltip:
         self.text = text
         self.tip_window = None
 
-        self.custom_tag = f"{self}TooltipToplevel"
+        self.custom_tag = f"tkinterweb.{self}.tooltiptoplevel"
         
     def show(self, text=None):
         if text:

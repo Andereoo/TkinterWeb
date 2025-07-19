@@ -540,7 +540,7 @@ class BuiltinPageGenerator():
                 title=__title__, license=__license__, copyright=__copyright__, __version__=__version__, 
                 
                 headers=("".join(f"<br><code class='indented'>{k}: {v}</code>" for k, v in self._html.headers.items())), 
-                general_dark_theme_regexes=("".join(f"<code class='indented'>{i.replace('{', '{{').replace('}', '}}'}</code>" for i in self._html.general_dark_theme_regexes)), 
+                general_dark_theme_regexes=("".join(f"<code class='indented'>{i.replace('{', '{{').replace('}', '}}')}</code>" for i in self._html.general_dark_theme_regexes)), 
                 inline_dark_theme_regexes=("".join(f"<br><code class='indented'>{i.replace('{', '{{').replace('}', '}}')}</code>" for i in self._html.inline_dark_theme_regexes)),
                 style_dark_theme_regex=f"<code class='indented'>{self._html.style_dark_theme_regex.replace('{', '{{').replace('}', '}}')}</code>", 
                 visited_links=("".join(f"<code class='indented'>{i}</code>" for i in self._html.visited_links)),

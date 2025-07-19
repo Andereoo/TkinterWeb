@@ -140,7 +140,7 @@ class HTMLDocument:
         
         :param query: The class to be searched for.
         :type query: str
-        :rtype: list[:class:`HTMLElement`]
+        :rtype: :class:`HTMLCollection`
         :raises: :py:class:`tkinter.TclError`"""
         return HTMLCollection(self, " ".join(f".{i}" for i in query.split()), root=_root)
 
@@ -149,7 +149,7 @@ class HTMLDocument:
         
         :param query: The name to be searched for.
         :type query: str
-        :rtype: list[:class:`HTMLElement`]
+        :rtype: :class:`HTMLCollection`
         :raises: :py:class:`tkinter.TclError`"""
         return HTMLCollection(self, f"[name='{query}']", root=_root)
 
@@ -158,7 +158,7 @@ class HTMLDocument:
         
         :param query: The tag to be searched for.
         :type query: str
-        :rtype: list[:class:`HTMLElement`]
+        :rtype: :class:`HTMLCollection`
         :raises: :py:class:`tkinter.TclError`"""
         return HTMLCollection(self, query, root=_root)
 
@@ -176,7 +176,7 @@ class HTMLDocument:
         
         :param query: The CSS selector to be searched for.
         :type query: str
-        :rtype: list[:class:`HTMLElement`]
+        :rtype: :class:`HTMLCollection`
         :raises: :py:class:`tkinter.TclError`"""
         return HTMLCollection(self, query, root=_root) 
     
@@ -389,7 +389,7 @@ class HTMLElement:
     def children(self):
         """Get the element's children elements.
         
-        :rtype: list[:class:`HTMLElement`]
+        :rtype: :class:`HTMLCollection`
         :raises: :py:class:`tkinter.TclError`"""
         return [HTMLElement(self, i) for i in self.html.get_node_children(self.node)]
     
@@ -649,7 +649,7 @@ class HTMLElement:
         
         :param query: The class to be searched for.
         :type query: str
-        :rtype: list[:class:`HTMLElement`]
+        :rtype: :class:`HTMLCollection`
         :raises: :py:class:`tkinter.TclError`"""
         return self.document.getElementsByClassName(query, self.node)
 
@@ -658,7 +658,7 @@ class HTMLElement:
         
         :param query: The name to be searched for.
         :type query: str
-        :rtype: list[:class:`HTMLElement`]
+        :rtype: :class:`HTMLCollection`
         :raises: :py:class:`tkinter.TclError`"""
         return self.document.getElementsByName(query, self.node)
 
@@ -667,7 +667,7 @@ class HTMLElement:
         
         :param query: The tag to be searched for.
         :type query: str
-        :rtype: list[:class:`HTMLElement`]
+        :rtype: :class:`HTMLCollection`
         :raises: :py:class:`tkinter.TclError`"""
         return self.document.getElementsByTagName(query, self.node)
 
@@ -685,7 +685,7 @@ class HTMLElement:
         
         :param query: The CSS selector to be searched for.
         :type query: str
-        :rtype: list[:class:`HTMLElement`]
+        :rtype: :class:`HTMLCollection`
         :raises: :py:class:`tkinter.TclError`"""
         return self.document.querySelectorAll(query, self.node)
     
@@ -714,6 +714,16 @@ class HTMLElement:
 
 
 class HTMLCollection:
+    """This class stores results from various :class:`HTMLElement` methods.
+    
+    :param document_manager: The :class:`~tkinterweb.dom.HTMLDocument` instance this class is tied to.
+    :type document_manager: :class:`~tkinterweb.dom.HTMLDocument`
+    :param search_string: The CSS query string to search using.
+    :type search_string: str
+    :param root: The Tkhtml node to search.
+    :type root: Tkhtml3 node
+    :ivar html: The element's corresponding :class:`~tkinterweb.TkinterWeb` instance.
+    :ivar node: The element's corresponding Tkhtml node."""
     def __init__(self, document_manager, search_string, root=None):
         self.document = document_manager
         self.html = document_manager.html
@@ -732,12 +742,23 @@ class HTMLCollection:
 
     @property
     def length(self):
+        """Returns the number of items in the collection."""
         return self.html.search(self.search_string, "length", root=self.node)
     
     def item(self, index):
+        """Returns the element at the given index into the list.
+
+        param index: The index of the element to get.
+        :type index: int
+        :rtype: :class:`HTMLElement`"""
         return HTMLElement(self.document, self.html.search(self.search_string, index=index, root=self.node))
     
     def namedItem(self, key):
+        """Returns the element whose id or name matches key.
+
+        param key: The id or name to search for.
+        :type key: str
+        :rtype: :class:`HTMLElement` or None"""
         for i in self.html.search(self.search_string, root=self.node):
             if key in (self.html.get_node_attribute(i, j) for j in ("id", "name")):
                 return HTMLElement(self.document, i)

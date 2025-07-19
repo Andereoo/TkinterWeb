@@ -11,7 +11,7 @@ This code was originally created for testing TkinterWeb and is a bit of a mess, 
  - searching pages
  - embedding Tkinter widgets
  - managing input elements
- - using JavaScript and calling Python functions from JavaScript
+ - triggering Python code using JavaScript events
  - manipulating the DOM
  - and others
  
@@ -29,6 +29,7 @@ from tkinter import filedialog
 from tkinter import ttk
 
 from tkinterweb import HtmlFrame, Notebook, __version__
+from tkinterweb.dom import HTMLElement
 from tkinterweb.utilities import BUILTIN_PAGES, DONE_LOADING_EVENT, URL_CHANGED_EVENT, TITLE_CHANGED_EVENT, DOWNLOADING_RESOURCE_EVENT
 
 import os
@@ -91,7 +92,8 @@ class Page(tk.Frame):
         find_close = ttk.Button(findbar, text="Close", command=self.open_findbar, cursor="hand2")
 
         self.frame = frame = HtmlFrame(self, message_func=self.add_message, on_link_click=self.link_click, on_form_submit=self.form_submit)
-        self.sidebar = sidebar = HtmlFrame(frame, width=250, fontscale=0.8, selection_enabled=False, messages_enabled=False, javascript_enabled=True)
+        
+        self.sidebar = sidebar = HtmlFrame(frame, width=250, fontscale=0.8, selection_enabled=False, messages_enabled=False, javascript_enabled=True, on_element_script=self.run_script)
         sidebar.grid_propagate(False)
 
         self.images_var = images_var = tk.IntVar(value=self.frame["images_enabled"])
@@ -132,17 +134,6 @@ class Page(tk.Frame):
         frame.grid(column=0, row=1, sticky="nsew")
         bottombar.grid(column=0, row=4, sticky="ew")
 
-        self.sidebar.register_JS_object("zoom", lambda scale: self.frame.configure(zoom=scale))
-        self.sidebar.register_JS_object("fontscale", lambda scale: self.frame.configure(fontscale=scale))
-        self.sidebar.register_JS_object("parsemode", lambda parsemode: self.frame.configure(parsemode=parsemode))
-        def update_header(value):
-            self.frame["headers"]["User-Agent"] = value
-        self.sidebar.register_JS_object("headers", update_header)
-        def update_color(color, value):
-            self.frame[color] = value
-            self.frame.html.update_tags()
-        self.sidebar.register_JS_object("color", update_color)
-
         self.sidebar.load_html(f"""<html>
   <body>
     <style>
@@ -165,36 +156,36 @@ class Page(tk.Frame):
 
     <div>
       <p style="float:left">Zoom:</p>
-      <span style="float:right" id="zoom">{self.frame['zoom']}</span>
-      <input onchange="document.getElementById('zoom').textContent = this.value; zoom(this.value)" style="width: 100%" type="range" min="0.1" max="10" step="0.1" value="{self.frame['zoom']}">
+      <span style="float:right" id="zoom">{frame['zoom']}</span>
+      <input onchange="document.getElementById('zoom').textContent = this.value; frame.configure(zoom=this.value)" style="width: 100%" type="range" min="0.1" max="10" step="0.1" value="{self.frame['zoom']}">
     </div>
     
     <div>
       <p style="float:left">Font scale:</p>
-      <span style="float:right" id="fontscale">{self.frame['fontscale']}</span>
-      <input onchange="document.getElementById('fontscale').textContent = this.value; fontscale(this.value)" style="width: 100%" type="range" min="0.1" max="10" step="0.1" value="{self.frame['fontscale']}">
+      <span style="float:right" id="fontscale">{frame['fontscale']}</span>
+      <input onchange="document.getElementById('fontscale').textContent = this.value; frame.configure(fontscale=this.value)" style="width: 100%" type="range" min="0.1" max="10" step="0.1" value="{self.frame['fontscale']}">
     </div>
     
     <hr style="margin-bottom:10px;margin-top:10px">
     
     <p>User agent:</p>
-    <input onchange="headers(this.value)" style="padding: 5px 0px 3px 0px; width: 100%; color:black" type="text" value="{self.frame['headers']['User-Agent']}">
+    <input onchange="frame['headers']['User-Agent'] = this.value" style="padding: 5px 0px 3px 0px; width: 100%; color:black" type="text" value="{frame['headers']['User-Agent']}">
     <hr style="margin-bottom:10px;margin-top:0">
     
     <p>Parse mode:</p>
-    <select onchange="parsemode(this.value)" style="padding: 3px 0px 1px 0px; width:100%; color:black">
+    <select onchange="frame.configure(parsemode=this.value)" style="padding: 3px 0px 1px 0px; width:100%; color:black">
       <option value="xml">xml</option>
       <option value="xhtml">xhtml</option>
       <option value="html">html</option>
     </select>
     <hr style="margin-bottom:10px;margin-top:0">
 
-    <input type="color" onchange="color('find_match_highlight_color', this.value)" value="{self.frame['find_match_highlight_color']}">
-    <input type="color" onchange="color('find_match_text_color', this.value)" value="{self.frame['find_match_text_color']}"><label>Find matches</label><br>
-    <input type="color" onchange="color('find_current_highlight_color', this.value)" value="{self.frame['find_current_highlight_color']}">
-    <input type="color" onchange="color('find_current_text_color', this.value)" value="{self.frame['find_current_text_color']}"><label>Current match</label><br>
-    <input type="color" onchange="color('selected_text_highlight_color', this.value)" value="{self.frame['selected_text_highlight_color']}">
-    <input type="color" onchange="color('selected_text_color', this.value)" value="{self.frame['selected_text_color']}"><label>Selected text</label><br>
+    <input type="color" onchange="frame['find_match_highlight_color'] = this.value; frame.html.update_tags()" value="{frame['find_match_highlight_color']}">
+    <input type="color" onchange="frame['find_match_text_color'] = this.value; frame.html.update_tags()" value="{frame['find_match_text_color']}"><label>Find matches</label><br>
+    <input type="color" onchange="frame['find_current_highlight_color'] = this.value; frame.html.update_tags()" value="{frame['find_current_highlight_color']}">
+    <input type="color" onchange="frame['find_current_text_color'] = this.value; frame.html.update_tags()" value="{frame['find_current_text_color']}"><label>Current match</label><br>
+    <input type="color" onchange="frame['selected_text_highlight_color'] = this.value; frame.html.update_tags()" value="{frame['selected_text_highlight_color']}">
+    <input type="color" onchange="frame['selected_text_color'] = this.value; frame.html.update_tags()" value="{frame['selected_text_color']}"><label>Selected text</label><br>
 
     <hr>
     
@@ -240,6 +231,12 @@ class Page(tk.Frame):
         settingsbutton.bind("<Escape>", lambda x: self.close_sidebar())
 
         self.toggle_theme(False)
+    
+    def run_script(self, node_handle, attribute, attr_contents):
+        document = self.sidebar.document
+        frame = self.frame
+        this = HTMLElement(document, node_handle)
+        exec(attr_contents)
 
     def apply_dark_theme(self):
         self.style.configure(".", background="#2b2b2b", foreground="#FFFFFF")

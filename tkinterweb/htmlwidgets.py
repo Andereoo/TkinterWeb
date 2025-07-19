@@ -120,10 +120,12 @@ class HtmlFrame(Frame):
 
     The following flags are optional and can be used to change HTML rendering behaviour:
 
-    :param experimental: If True, experimental features will be enabled. You will need to compile the cutting-edge Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental and replace the default Tkhtml binary for your system with the experimental version. Unless you need to screenshot the full page on Windows or print your page for now it is likely best to use the default Tkhtml binary and leave this setting alone.
-    :type experimental: bool
+    :param experimental: If True, experimental features will be enabled. If "auto", experimental features will be enabled if the loaded Tkhtml version supports experimental features. You will need to compile the cutting-edge Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental and replace the default Tkhtml binary for your system with the experimental version. Unless you need to screenshot the full page on Windows or print your page for now it is likely best to use the default Tkhtml binary and leave this setting alone.
+    :type experimental: bool or "auto"
     :param use_prebuilt_tkhtml: If True (the default), the Tkhtml binary for your system supplied by TkinterWeb will be used. If your system isn't supported and you don't want to compile the Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml yourself, you could try installing Tkhtml3 system-wide and set :attr:`use_prebuilt_tkhtml` to False. Note that some crash prevention features will no longer work.
     :type use_prebuilt_tkhtml: bool
+    :param tkhtml_version: The Tkhtml version to use. If the requested version is not found, TkinterWeb will fallback to Tkhtml 3.0. Only one Tkhtml version can be loaded at a time.
+    :type tkhtml_version: float or "auto"
     :param parsemode: The parse mode. In "html" mode, explicit XML-style self-closing tags are not handled specially and unknown tags are ignored. "xhtml" mode is similar to "html" mode except that explicit self-closing tags are recognized. "xml" mode is similar to "xhtml" mode except that XML CDATA sections and unknown tag names are recognized. It is usually best to leave this setting alone.
     :type parsemode: "xml", "xhtml", or "html"
     :param mode: The rendering engine mode. It is usually best to leave this setting alone.
@@ -134,7 +136,7 @@ class HtmlFrame(Frame):
     :raise TypeError: If the value type is wrong and cannot be converted to the correct type."""
 
     def __init__(self, master, **kwargs):
-        # state and settings variables
+        # State and settings variables
         style = Style()
 
         self._current_url = ""
@@ -187,9 +189,10 @@ class HtmlFrame(Frame):
             "insecure_https": False,
             "headers": HEADERS,
             "experimental": False,
-            # no impact after loading
+            # No impact after loading
             "use_prebuilt_tkhtml": True,
-            # internal
+            "tkhtml_version": "auto",
+            # Internal
             "overflow_scroll_frame": None,
             "embed_obj": HtmlFrame,
             "manage_vsb_func": self._manage_vsb,
@@ -218,7 +221,7 @@ class HtmlFrame(Frame):
 
         super().__init__(master, **kwargs)
 
-        # setup sub-widgets
+        # Setup sub-widgets
         self._html = html = TkinterWeb(self, self.tkinterweb_options, **self.tkhtml_options)
         self._hsb = hsb = AutoScrollbar(self, orient="horizontal", command=html.xview)
         self._vsb = vsb = AutoScrollbar(self, orient="vertical", command=html.yview)
@@ -235,7 +238,7 @@ class HtmlFrame(Frame):
         self._manage_vsb(self.vertical_scrollbar)
 
         # html.document only applies to the document it is bound to (which makes things easy)
-        # for some reason, binding to Html only works on Linux and binding to html.document only works on Windows
+        # For some reason, binding to Html only works on Linux and binding to html.document only works on Windows
         # Html fires on all documents (i.e. <iframe> elements), so it has to be handled slightly differently
         if not self._html.overflow_scroll_frame:
             self.bind_class("Html", "<Button-4>", html.scroll_x11)
@@ -266,7 +269,9 @@ The API changed in version 4. See https://tkinterweb.readthedocs.io/ for details
 
 Debugging messages are enabled. Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLabel() to disable these messages.
                                 
-Load about:tkinterweb for debugging information""")
+Load about:tkinterweb for debugging information.
+                                
+If you enjoyed using this package, consider donating at https://buymeacoffee.com/andereoo!""")
 
     @property
     def title(self):
@@ -301,8 +306,8 @@ Load about:tkinterweb for debugging information""")
         """The DOM manager. Use this to access :class:`~tkinterweb.dom.HTMLDocument` methods to manupulate the DOM.
         
         :rtype: :class:`~tkinterweb.dom.HTMLDocument`"""
-        if self._DOM_cache is None:  # lazy loading of Document Object Model
-            self._DOM_cache = HTMLDocument(self.html)
+        if self._DOM_cache is None:  # Lazy loading of Document Object Model
+            self._DOM_cache = HTMLDocument(self._html)
         return self._DOM_cache
     
     @property
@@ -435,12 +440,13 @@ Load about:tkinterweb for debugging information""")
         if not self._current_url == url:
             self._previous_url = self._current_url
         if url in BUILTIN_PAGES:
-            self.load_html(BUILTIN_PAGES[url].format(self.about_page_background, self.about_page_foreground, "", "", ""), url)
+            BUILTIN_PAGES._html = self._html
+            self.load_html(BUILTIN_PAGES[url].format(bg=self.about_page_background, fg=self.about_page_foreground, i1="", i2=""), url)
             return
 
         self._waiting_for_reset = True
 
-        # ugly workaround for Bug #40, where urllib.urljoin constructs improperly formatted urls on Linux when url starts with file:///
+        # Ugly workaround for Bug #40, where urllib.urljoin constructs improperly formatted urls on Linux when url starts with file:///
         if not url.startswith("file://///"):
             newurl = url.replace("file:////", "file:///")
             if newurl != url:
@@ -480,11 +486,14 @@ Load about:tkinterweb for debugging information""")
         else:
             self._continue_loading(url, data, method, decode)
 
-    def add_html(self, html_source):
+    def add_html(self, html_source, return_element=False):
         """Parse HTML and add it to the end of the current document. Unlike :meth:`HtmlFrame.load_html`, :meth:`HtmlFrame.add_html` adds rendered HTML code without clearing the original document.
         
         :param html_source: The HTML code to render.
-        """
+        :type html_source: str
+        :param return_element: If True, return the root element of the added HTML.
+        :type return_element: :class:`~tkinterweb.dom.HTMLElement`"""
+
         self._previous_url = ""
         if not self._html.base_url:
             path = WORKING_DIR
@@ -492,16 +501,57 @@ Load about:tkinterweb for debugging information""")
                 path = f"/{path}"
             base_url = f"file://{path}/"
             self._html.base_url = self._current_url = base_url
-        self._html.parse(html_source)
+
+        if return_element:
+            node = self._html.parse_fragment(html_source)
+            body = self.document.body.node
+            self.html.insert_node(body, node)
+            node = HTMLElement(self.document, node)
+        else:
+            self._html.parse(html_source)
+            node = None
 
         self._finish_css()
         self._handle_resize(force=True)
 
+        return node
+    
+    def insert_html(self, html_source, index=0, return_element=False):
+        """Parse HTML and insert it into the current document.
+        
+        :param html_source: The HTML code to render.
+        :type html_source: str
+        :param index: The index of the element to insert before.
+        :type index: int
+        :param return_element: If True, return the root element of the inserted HTML.
+        :type return_element: :class:`~tkinterweb.dom.HTMLElement`
+        :return: The root HTMLElement of the new HTML.
+        """
+
+        self._previous_url = ""
+        if not self._html.base_url:
+            path = WORKING_DIR
+            if not path.startswith("/"):
+                path = f"/{path}"
+            base_url = f"file://{path}/"
+            self._html.base_url = self._current_url = base_url
+
+        node = self._html.parse_fragment(html_source)
+        body = self.document.body.node
+        child = self._html.get_node_children(body)[index]
+        self.html.insert_node_before(body, node, child)
+ 
+        self._finish_css()
+        self._handle_resize(force=True)
+
+        if return_element:
+            return HTMLElement(self.document, node)
+    
     def add_css(self, css_source):
         """Send CSS stylesheets to the parser. This can be used to alter the appearance of already-loaded documents.
         
         :param css_source: The CSS code to parse.
-        :type url: str"""
+        :type css_source: str"""
         if self._waiting_for_reset:
             self._accumulated_styles.append(css_source)
         else:
@@ -581,7 +631,7 @@ Load about:tkinterweb for debugging information""")
         :raises: NotImplementedError if experimental mode is not enabled, :attr:`full` is set to True, and TkinterWeb is running on Windows."""
         if self._html.experimental or PLATFORM.system != "Windows":
             self._html.post_message(f"Taking a screenshot of {self._current_url}...")
-            image, data = self._html.image(full=full)
+            data = self._html.image(full=full)
             height = len(data)
             width = len(data[0].split())
             image = create_RGB_image(data, width, height)
@@ -636,7 +686,7 @@ Load about:tkinterweb for debugging information""")
                 except KeyError:
                     raise KeyError("Parameter 'pagesize' must be A3, A4, A5, Legal, or Letter")
 
-            self._html.update() # update the root window to ensure HTML is rendered
+            self._html.update() # Update the root window to ensure HTML is rendered
             file = self._html.postscript(cnf)
             
             # No need to save - Tkhtml handles that for us
@@ -711,7 +761,7 @@ Load about:tkinterweb for debugging information""")
             if not self._button:
                 self._button = tk.Button(self, text="Try Again")
             self._button.configure(command=lambda url=self._current_url: self.load_url(url, None, True))
-            self.load_html(BUILTIN_PAGES["about:error"].format(self.about_page_background, self.about_page_foreground, code, self._button), url)
+            self.load_html(BUILTIN_PAGES["about:error"].format(bg=self.about_page_background, fg=self.about_page_foreground, i1=code, i2=self._button), url)
 
     def select_all(self):
         """Select all text in the document."""
@@ -813,7 +863,7 @@ Load about:tkinterweb for debugging information""")
         :param obj: The Python object to pass.
         :type obj: anything
         :raises: RuntimeError if JavaScript is not enabled."""
-        if self.html.javascript_enabled:
+        if self._html.javascript_enabled:
             if not pythonmonkey:
                 self._initialize_javascript()
             pythonmonkey.eval(f"(function(pyObj) {{globalThis.{name} = pyObj}})")(obj)
@@ -880,7 +930,7 @@ Load about:tkinterweb for debugging information""")
             if method == "GET":
                 url = str(url) + str(data)
 
-            # if url is different than the current one, load the new site
+            # If url is different than the current one, load the new site
             if force or (method == "POST") or ((urldefrag(url)[0]).replace("/", "") != (urldefrag(self._previous_url)[0]).replace("/", "")):
                 view_source = False
                 if url.startswith("view-source:"):
@@ -912,31 +962,31 @@ Load about:tkinterweb for debugging information""")
                             data = data.split("</code><br>", 1)[1]
                         else:
                             data = "".join(data)
-                        self.load_html(BUILTIN_PAGES["about:view-source"].format(self.about_page_background, self.about_page_foreground, length*9, data), newurl)
+                        self.load_html(BUILTIN_PAGES["about:view-source"].format(bg=self.about_page_background, fg=self.about_page_foreground, i1=length*9, i2=data), newurl)
                     elif "image" in filetype:
                         self.load_html("", newurl)
                         if self._current_url != newurl:
                             self._html.post_event(URL_CHANGED_EVENT)
                         name = self._html.image_name_prefix + str(len(self._html.loaded_images))
                         self._html.finish_fetching_images(None, data, name, filetype, newurl)
-                        self.add_html(BUILTIN_PAGES["about:image"].format(self.about_page_background, self.about_page_foreground, name))
+                        self.add_html(BUILTIN_PAGES["about:image"].format(bg=self.about_page_background, fg=self.about_page_foreground, i1=name, i2=""))
                     else:
                         if self._current_url != newurl:
                             self._current_url = newurl
                             self._html.post_event(URL_CHANGED_EVENT)
                         self.load_html(data, newurl)
             else:
-                # if no requests need to be made, we can signal that the page is done loading
+                # If no requests need to be made, we can signal that the page is done loading
                 self._html.post_event(DONE_LOADING_EVENT)
                 self._finish_css()
 
-            # handle URI fragments
+            # Handle URI fragments
             frag = parsed.fragment
             if frag:
                 #self._html.tk.call(self._html._w, "_force")
                 self._html.update()
                 try:
-                    frag = ''.join(char for char in frag if char.isalnum() or char in ("-", "_"))
+                    frag = "".join(char for char in frag if char.isalnum() or char in ("-", "_"))
                     node = self._html.search(f"[id={frag}]")
                     if node:
                         self._html.yview(node)
@@ -955,7 +1005,6 @@ This is a known Python bug on older MacOS systems. \
 Running something along the lines of \"/Applications/Python {'.'.join(PYTHON_VERSION[:2])}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
 Otherwise, use 'configure(insecure_https=True)' to ignore website certificates.")
             self.on_navigate_fail(url, error, code)
-
         self._thread_in_progress = None
 
     def _finish_css(self):        
@@ -975,39 +1024,84 @@ Otherwise, use 'configure(insecure_https=True)' to ignore website certificates."
             raise ModuleNotFoundError("PythonMonkey is required to run JavaScript files but is not installed.")
 
     def _on_script(self, attributes, tag_contents):
-        if self.html.javascript_enabled and not pythonmonkey:
+        if self._html.javascript_enabled and not pythonmonkey:
             self._initialize_javascript()
         try:
             pythonmonkey.eval(tag_contents)
         except Exception as error:
             if "src" in attributes:
-                self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running the script from {attributes['src']}: {error}")
+                self._html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running the script from {attributes['src']}: {error}")
             else:
-                self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running a script: {error}")
+                self._html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running a script: {error}")
 
     def _on_element_script(self, node_handle, attribute, attr_contents):
-        if self.html.javascript_enabled and not pythonmonkey:
+        if self._html.javascript_enabled and not pythonmonkey:
             self._initialize_javascript()
         try:
             element = HTMLElement(self.document, node_handle)
             pythonmonkey.eval(f"(element) => {{function run() {{ {attr_contents} }}; run.bind(element)()}}")(element)
         except Exception as error:
-            self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running an {attribute} script: {error}")
+            self._html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running an {attribute} script: {error}")
 
 
 class HtmlLabel(HtmlFrame):
-    """The :class:`HtmlLabel` widget inherits from the :class:`HtmlFrame`. For a complete list of avaliable methods, configuration options, generated events, and state variables, see the :class:`HtmlFrame` docs.
+    """The :class:`HtmlLabel` widget is a label-like HTML widget. It inherits from the :class:`HtmlFrame` class. For a complete list of avaliable methods, properties, configuration options, and generated events, see the :class:`HtmlFrame` docs.
     
-    This class also accepts one additional parameter:
+    This class also accepts two additional parameters:
 
     :param text: Set the HTML content of the widget
     :type text: str
     """
-    def __init__(self, master, text="", **kwargs):
+
+    def __init__(self, master, text="", style="", **kwargs):
         HtmlFrame.__init__(self, master, vertical_scrollbar=False, shrink=True, **kwargs)
 
         tags = list(self._html.bindtags())
         tags.remove("Html")
         self._html.bindtags(tags)
 
-        self.load_html(text)
+        self.style = style
+
+        if text:
+            self.load_html(text)
+        if style:
+            self.add_css(style)
+        
+    def configure(self, **kwargs):
+        if "text" in kwargs:
+            self.load_html(kwargs.pop("text"))
+            if "style" not in kwargs:
+                self.add_css(self.style)
+        if "style" in kwargs:
+            self.style = style = kwargs.pop("style")
+            self.add_css(style)
+        if kwargs: super().configure(**kwargs)
+
+    def cget(self, key):
+        if "text" == key:
+            return "".join(self._html.serialize_node(0).splitlines())
+        if "style" == key:
+           return "".join(self._html.serialize_node_style(0).splitlines())
+        return super().cget(key)
+
+    def config(self, **kwargs): self.configure(**kwargs)
+
+class HtmlParse(HtmlFrame):
+    """The :class:`HtmlParse` class parses HTML but does not spawn a widget. It inherits from the :class:`HtmlFrame` class. For a complete list of avaliable methods, properties, configuration options, and generated events, see the :class:`HtmlFrame` docs.
+    """
+    def __init__(self, **kwargs):
+        self.root = root = tk.Tk()
+
+        self._is_destroying = False
+
+        for flag in ["events_enabled", "images_enabled", "forms_enabled"]:
+            if flag not in kwargs:
+                kwargs[flag] = False
+                
+        HtmlFrame.__init__(self, root, **kwargs)
+
+        root.withdraw()
+
+    def destroy(self):
+        super().destroy()
+        self.root.destroy()

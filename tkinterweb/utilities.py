@@ -12,6 +12,8 @@ import platform
 import sys
 import threading
 
+import tkinterweb_tkhtml
+
 import ssl
 from urllib.request import Request, urlopen
 
@@ -19,15 +21,14 @@ from _thread import RLock
 from functools import update_wrapper, _make_key
 
 from tkinter import TclVersion, TkVersion
-from tkinterweb_tkhtml import TKHTML_ROOT_DIR, TKHTML_RELEASE
 
-    
-# we need this information here so the builtin pages can access it
+
+# We need this information here so the built-in pages can access it
 __title__ = 'TkinterWeb'
 __author__ = "Andereoo"
 __copyright__ = "Copyright (c) 2021-2025 Andereoo"
 __license__ = "MIT"
-__version__ = '4.3.1'
+__version__ = '4.4.0'
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
@@ -60,14 +61,14 @@ CURSOR_MAP = {
     "sw-resize": "bottom_left_corner",
     "s-resize": "bottom_side",
     "w-resize": "left_side",
-    # the following cursors only work with experimental Tkhtml
+    # The following cursors only work with experimental Tkhtml
     "context-menu": "",
     "cell": "cross",
     "vertical-text": "xterm",
     "alias": "hand2",
     "copy": "cross",
     "no-drop": "X_cursor",
-    "not-allowed": "X_cursor", # circle works too on some platforms
+    "not-allowed": "X_cursor", # Circle works too on some platforms
     "grab": "hand2",
     "grabbing": "fleur",
     "all-scroll": "",
@@ -80,7 +81,7 @@ CURSOR_MAP = {
     "zoom-in": "",
     "zoom-out": "",
     "none": "none",
-    "gobbler": "gobbler" # why not?
+    "gobbler": "gobbler" # Why not?
 }
 DEFAULT_STYLE = r"""
 /* Default stylesheet to be loaded whenever HTML is parsed. */
@@ -437,37 +438,161 @@ INPUT[type="submit"],INPUT[type="button"], INPUT[type="reset"], BUTTON {
 }
 """
 
-BUILTIN_PAGES = {
-    "about:blank": "<html><head><style>html,body{{background-color:{};color:{};cursor:gobbler;width:100%;height:100%;margin:0}}</style><title>about:blank</title></head><body></body></html>",
-    "about:tkinterweb": "<html tkinterweb-overflow-x=auto><head><style>html,body{{background-color:{};color:{};}}</style><title>about:tkinterweb</title><style>code{{display:block}}</style></head><body>\
-        <code>Welcome to "+__title__+"!</code><code>Licenced under the "+__license__+" licence</code><code>"+__copyright__+"</code>\
-        <code style=\"display:block;text-decoration:underline;margin-top:35px\">Debugging information</code>\
-        <code>Version: "+__version__+"</code><code>Default headers: "+HEADERS["User-Agent"]+"</code><code>Default parse mode: "+DEFAULT_PARSE_MODE+"</code>\
-        <code>Default rendering engine mode: "+DEFAULT_ENGINE_MODE+"</code>\
-        <code>Prebuilt Tkhtml version: "+TKHTML_RELEASE+"</code> \
-        <code style=\"display:block\">Root directory: "+ROOT_DIR+"</code><code style=\"display:block\">Tkhtml root directory: "+TKHTML_ROOT_DIR+"</code><code style=\"display:block\">Working directory: "+WORKING_DIR+"</code>\
-        <code style=\"display:block;text-decoration:underline;margin-top:35px\">System specs</code>\
-        <code>Python version: "+".".join(PYTHON_VERSION)+"</code><code>Tcl version: "+str(TclVersion)+"</code><code>Tk version: "+str(TkVersion)+"</code>\
-        <code>Platform: "+str(PLATFORM.system)+"</code><code>Machine: "+str(PLATFORM.machine)+"</code><code>Processor: "+str(PLATFORM.processor)+"</code></body></html>",
-    "about:error": "<html><head><style>html,body,table,tr,td{{background-color:{};color:{};width:100%;height:100%;margin:0}}</style><title>Error {}</title></head>\
-        <body><table><tr><td tkinterweb-full-page style=\"text-align:center;vertical-align:middle\">\
-        <h2 style=\"margin:0;padding:0;font-weight:normal\">Oops</h2>\
-        <h3 style=\"margin-top:10px;margin-bottom:25px;font-weight:normal\">The page you've requested could not be found :(</h3>\
-        <object handleremoval allowscrolling style=\"cursor:pointer\" data=\"{}\"></object>\
+class BuiltinPageGenerator():
+    def __init__(self):
+        self._html = None
+        self._pages = {
+    "about:blank": "<html><head><style>html,body{{background-color:{bg};color:{fg};cursor:gobbler;width:100%;height:100%;margin:0}}</style><title>about:blank</title></head><body></body></html>{i1}{i2}",
+    "about:tkinterweb": "<html tkinterweb-overflow-x=auto><head>\
+        <style>html,body{{{{background-color:{bg};color:{fg}}}}}\
+            code{{{{display:block}}}}\
+            span{{{{margin-right:10px;border:1px solid black;width:20px;padding-left:45px}}}}\
+            .header{{{{display:block;text-decoration:underline;margin-top:25px}}}}\
+            .closeheader{{{{display:block;text-decoration:underline}}}}\
+            .section{{{{margin-left:10px;border-left:2px solid lightgrey;padding-left:10px}}}}\
+            .indented{{{{margin-left:20px}}}}\
+            .colourbox{{{{margin-right:75px;display:inline}}}}</style>\
+        <title>about:tkinterweb</title></head><body>\
+        <code>Welcome to {title}!</code><code>Licenced under the {license} licence</code><code>{copyright}</code>\
+        <code class='header'>Debugging information</code><code class='section'>\
+            <code class='closeheader'>Versioning</code>\
+            <code>Version: {__version__}</code><code>Tkhtml version: {tkhtml_version}</code>\
+            <code>Python version: {python_version}</code><code>Tcl version: {tcl_version}</code><code>Tk version: {tk_version}</code>\
+            <code class='header'>Resource loading</code>\
+            <code>Use prebuilt Tkhtml: {use_prebuilt_tkhtml}</code>\
+            <code>Resource directories: {root}{tkhtml_root}</code><code>Working directory: {working_dir}</code>\
+            <code>Tcl paths: {tcl_path}</code>\
+            <code>System dependency paths: {path}</code>\
+            <code class='header'>System specs</code>\
+            <code>Platform: {platform}</code><code>Machine: {machine}</code><code>Processor: {processor}</code>\
+        </code>\
+        <code class='header'>Preferences</code><code class='section'>\
+            <code class='closeheader'>Renderer settings</code>\
+            <code>Parse mode: {parse_mode}</code>\
+            <code>Rendering engine mode: {rendering_mode}</code>\
+            <code>Zoom: {zoom}</code>\
+            <code>Font scale: {font_scale}</code>\
+            <code class='header'>HTTP settings</code>\
+            <code>Headers: {headers}</code>\
+            <code>Insecure HTTPS: {insecure_https}</code>\
+            <code class='header'>Threading settings</code>\
+            <code>Threading enabled: {threading_enabled}</code>\
+            <code>Tcl allows threading: {allow_threading}</code>\
+            <code>Maximum thread count: {maximum_thread_count}</code>\
+            <code class='header'>Image settings</code>\
+            <code>Images enabled: {images_enabled}</code>\
+            <code>Ignore invalid images: {ignore_invalid_images}</code>\
+            <code>Image alt text: {image_alternate_text_enabled}</code>\
+            <code class='header'>Flags</code>\
+            <code>Experimental mode: {experimental}</code>\
+            <code>Stylesheets enabled: {stylesheets_enabled}</code>\
+            <code>Javascript enabled: {javascript_enabled}</code>\
+            <code>Forms enabled: {forms_enabled}</code>\
+            <code>Objects enabled: {objects_enabled}</code>\
+            <code>Caches enabled: {caches_enabled}</code>\
+            <code>Crash prevention enabled: {crash_prevention_enabled}</code>\
+            <code>Debug messages enabled: {messages_enabled}</code>\
+            <code>Events enabled: {events_enabled}</code>\
+            <code>Selection enabled: {selection_enabled}</code>\
+            <code class='header'>Colours</code>\
+            <span style='background-color:{find_match_highlight_color}'>&nbsp;</span><code class='colourbox'>Found text highlight colour: {find_match_highlight_color}</code><code></code>\
+            <span style='background-color:{find_match_text_color}'>&nbsp;</span><code class='colourbox'>Found text colour: {find_match_text_color}</code><code></code>\
+            <span style='background-color:{find_current_highlight_color}'>&nbsp;</span><code class='colourbox'>Current found match highlight colour: {find_current_highlight_color}</code><code></code>\
+            <span style='background-color:{find_current_text_color}'>&nbsp;</span><code class='colourbox'>Current found match text colour: {find_current_text_color}</code><code></code>\
+            <span style='background-color:{selected_text_highlight_color}'>&nbsp;</span><code class='colourbox'>Selected text highlight colour: {selected_text_highlight_color}</code><code></code>\
+            <span style='background-color:{selected_text_color}'>&nbsp;</span><code class='colourbox'>Selected text colour: {selected_text_color}</code><code></code>\
+            <span style='background-color:{bg}'>&nbsp;</span><code class='colourbox'>About page background colour: {bg}</code><code></code>\
+            <span style='background-color:{fg}'>&nbsp;</span><code class='colourbox'>About page foreground colour: {fg}</code><code></code>\
+            <code class='header'>Dark mode settings</code>\
+            <code>Dark mode: {dark_theme_enabled}</code>\
+            <code>Image inversion: {image_inversion_enabled}</code>\
+            <code>Dark theme general regexes: {general_dark_theme_regexes}</code>\
+            <code>Dark theme inline regexes: {inline_dark_theme_regexes}</code>\
+            <code>Dark theme style regex: {style_dark_theme_regex}</code>\
+            <code>Colour threshold: {dark_theme_limit}</code>\
+        </code>\
+        <code class='header'>Site memory</code>\
+        <code>Visited hyperlinks: {visited_links}</code>\
+            </body></html>{i1}{i2}",
+    "about:error": "<html><head><style>html,body,table,tr,td{{background-color:{bg};color:{fg};width:100%;height:100%;margin:0}}</style><title>Error {i1}</title></head>\
+        <body><table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle'>\
+        <h2 style='margin:0;padding:0;font-weight:normal'>Oops</h2>\
+        <h3 style='margin-top:10px;margin-bottom:25px;font-weight:normal'>The page you've requested could not be found :(</h3>\
+        <object handleremoval allowscrolling style='cursor:pointer' data='{i2}'></object>\
         </td></tr></table></body></html>",
-    "about:loading": "<html><head><style>html,body,table,tr,td{{background-color:{};color:{};width:100%;height:100%;margin:0}}</style></head>\
-        <body><table><tr><td tkinterweb-full-page style=\"text-align:center;vertical-align:middle\">\
+    "about:loading": "<html><head><style>html,body,table,tr,td{{background-color:{bg};color:{fg};width:100%;height:100%;margin:0}}</style></head>\
+        <body><table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle'>\
         <p>Loading...</p>\
-        </td></tr></table></body></html>",
-    "about:image": "<html><head><style>html,body,table,tr {{background-color:{};color:{};width:100%;height:100%;margin:0}}</style></head><body>\
-        <table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle;padding:4px 4px 0px 4px'><img style='max-width:100%;max-height:100%' src='replace:{}'><h3 style=\"margin:0;padding:0;font-weight:normal\"></td></tr></table></body></html>",
+        </td></tr></table></body></html>{i1}{i2}",
+    "about:image": "<html><head><style>html,body,table,tr {{background-color:{bg};color:{fg};width:100%;height:100%;margin:0}}</style></head><body>\
+        <table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle;padding:4px 4px 0px 4px'><img style='max-width:100%;max-height:100%' src='replace:{i1}'><h3 style='margin:0;padding:0;font-weight:normal'></td></tr></table></body></html>{i2}",
     "about:view-source": "<html tkinterweb-overflow-x=auto><head><style>\
-        html,body{{background-color:{};color:{};}}\
+        html,body{{background-color:{bg};color:{fg};}}\
         pre::before{{counter-reset:listing}}\
         code{{counter-increment:listing}}\
-        code::before{{content:counter(listing);display:inline-block;width:{}px;margin-left:5px;padding-right:5px;margin-right:5px;text-align:right;border-right:1px solid grey60;color:grey60}}\
-        </style></head><body><pre style=\"margin:0;padding:0\">{}</pre></body></html>",
+        code::before{{content:counter(listing);display:inline-block;width:{i1}px;margin-left:5px;padding-right:5px;margin-right:5px;text-align:right;border-right:1px solid grey60;color:grey60}}\
+        </style></head><body><pre style='margin:0;padding:0'>{i2}</pre></body></html>",
 }
+    
+    def __getitem__(self, key):
+        if key == "about:tkinterweb":
+            return self._pages[key].format(bg="{bg}", fg="{fg}", i1="{i1}", i2="{i2}", 
+                title=__title__, license=__license__, copyright=__copyright__, __version__=__version__, 
+                
+                headers=("".join(f"<br><code class='indented'>{k}: {v}</code>" for k, v in self._html.headers.items())), 
+                general_dark_theme_regexes=("".join(f"<code class='indented'>{i.replace("{", "{{").replace("}", "}}")}</code>" for i in self._html.general_dark_theme_regexes)), 
+                inline_dark_theme_regexes=("".join(f"<br><code class='indented'>{i.replace("{", "{{").replace("}", "}}")}</code>" for i in self._html.inline_dark_theme_regexes)),
+                style_dark_theme_regex=f"<code class='indented'>{self._html.style_dark_theme_regex.replace("{", "{{").replace("}", "}}")}</code>", 
+                visited_links=("".join(f"<code class='indented'>{i}</code>" for i in self._html.visited_links)),
+                root=f"<code class='indented'>{ROOT_DIR}</code>", 
+                tkhtml_root=f"<code class='indented'>{tkinterweb_tkhtml.TKHTML_ROOT_DIR}</code>", 
+                working_dir=f"<code class='indented'>{WORKING_DIR}</code>", 
+                tcl_path=("".join(f"<code class='indented'>{i}</code>" for i in self._html.tk.getvar("auto_path"))),
+                path=("".join(f"<code class='indented'>{i}</code>" for i in os.environ["PATH"].split(os.pathsep))),
+
+                parse_mode=self._html.cget("parsemode"), rendering_mode=self._html.cget("mode"),
+                zoom=self._html.cget("zoom"), font_scale=self._html.cget("fontscale"), 
+                
+                python_version=".".join(PYTHON_VERSION), tcl_version=TclVersion, tk_version=TkVersion,
+                platform=PLATFORM.system, machine=PLATFORM.machine, processor=PLATFORM.processor,
+                
+                insecure_https=self._html.insecure_https, use_prebuilt_tkhtml=self._html.use_prebuilt_tkhtml,
+                allow_threading=self._html.allow_threading, threading_enabled=self._html.threading_enabled, 
+                caches_enabled=self._html.caches_enabled, dark_theme_enabled=self._html.dark_theme_enabled,
+                image_inversion_enabled=self._html.image_inversion_enabled, crash_prevention_enabled=self._html.crash_prevention_enabled, 
+                javascript_enabled=self._html.javascript_enabled, messages_enabled=self._html.messages_enabled, 
+                events_enabled=self._html.events_enabled, selection_enabled=self._html.selection_enabled, 
+                stylesheets_enabled=self._html.stylesheets_enabled, images_enabled=self._html.images_enabled, 
+                forms_enabled=self._html.forms_enabled, objects_enabled=self._html.objects_enabled, 
+                ignore_invalid_images=self._html.ignore_invalid_images, image_alternate_text_enabled=self._html.image_alternate_text_enabled, 
+                find_match_highlight_color=self._html.find_match_highlight_color, find_match_text_color=self._html.find_match_text_color, 
+                find_current_highlight_color=self._html.find_current_highlight_color, find_current_text_color=self._html.find_current_text_color,
+                selected_text_highlight_color=self._html.selected_text_highlight_color, selected_text_color=self._html.selected_text_color,
+                maximum_thread_count=self._html.maximum_thread_count, experimental=self._html.experimental,
+                dark_theme_limit=self._html.dark_theme_limit, image_alternate_text_threshold=self._html.image_alternate_text_threshold,
+                image_alternate_text_size=self._html.image_alternate_text_size, tkhtml_version=self._html.tkhtml_version
+            )
+        else:
+            return self._pages[key]
+
+    def __len__(self):
+        return len(self._pages)
+
+    def __iter__(self):
+        return iter(self._pages)
+
+    def keys(self):
+        return self._pages.keys()
+
+    def items(self):
+        return self._pages.items()
+
+    def values(self):
+        return self._pages.values()
+
+# We make this dictionary a class so that we can generate debugging information on the fly
+BUILTIN_PAGES = BuiltinPageGenerator()
+
 BUILTIN_ATTRIBUTES = {
     "overflow-x": "tkinterweb-overflow-x",
     "vertical-align": "tkinterweb-full-page"
@@ -656,9 +781,11 @@ def invert_color(rgb, match, limit):
         rgb[2] = max(1, min(255, 240 - rgb[2]))
         return rgb_to_hex(*rgb)
 
+
 def get_alt_font():
     "Get the location of the truetype file to be used for image alternate text"
     return os.path.join(ROOT_DIR, "opensans.ttf")
+
 
 def notifier(text):
     "Notifications printer"
@@ -676,6 +803,12 @@ def tkhtml_notifier(name, text, *args):
     except Exception:
         "sys.stdout.write doesn't work in .pyw files."
         "Since .pyw files have no console, we won't bother printing messages."
+
+
+def TclOpt(options):
+    "Format string into Tcl option command-line names"
+    return tuple(o if o.startswith("-") else "-"+o for o in options)
+
 
 def placeholder(*args, **kwargs):
     """Blank placeholder function. The only purpose of this is to

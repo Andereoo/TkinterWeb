@@ -73,6 +73,7 @@ class TkinterWeb(Widget):
         self._setup_bindings()
         self._setup_handlers()
         self.update_default_style()
+
         self.post_message(f"Tkhtml {self.tkhtml_version} successfully loaded from {tkinterweb_tkhtml.TKHTML_ROOT_DIR}")
 
     def _setup_settings(self):
@@ -184,6 +185,7 @@ class TkinterWeb(Widget):
         self.bind("<Double-Button-1>", self._on_double_click, True)
         self.bind("<ButtonRelease-1>", self._on_click_release, True)
         self.bind_class(self.node_tag, "<Motion>", self._on_mouse_motion, True)
+        self.bind("<Destroy>", lambda event: self.stop())
 
     def _setup_handlers(self):
         "Register node handlers."
@@ -203,8 +205,8 @@ class TkinterWeb(Widget):
         self.register_handler("node", "img", self._on_image)
 
         # Node handlers don't work on body and html elements. 
-        # These elements also cannot be removed without causing a segfault. 
-        # Wierd.
+        # These elements also cannot be removed without causing a segfault in vanilla Tkhtml. 
+        # Weird.
         self.register_handler("parse", "body", self._on_body)
         self.register_handler("parse", "html", self._on_body)
 
@@ -302,10 +304,14 @@ class TkinterWeb(Widget):
         else:
             self.post_message("WARNING: threading is disabled because your Tcl/Tk library does not support threading")
             self.default_maximum_thread_count = self._maximum_thread_count = 0
+    
+    @property
+    def tkhtml_default_style(self):
+        return self.tk.call("::tkhtml::htmlstyle")
 
     def post_event(self, event):
         "Generate a virtual event."
-        if self.events_enabled:
+        if self.events_enabled: # and self.unstoppable
             # Thread safety
             self.after(0, lambda event=event: self._finish_posting_event(event))
 
@@ -428,9 +434,9 @@ class TkinterWeb(Widget):
         "Return the name of the Html tag that generated this document node, or an empty string if the node is a text node."
         return self.tk.call(self._w, "tag", subcommand, tag_name, *args)
 
-    def search(self, selector, cnf={}, **kwargs):
+    def search(self, selector, *a, cnf={}, **kw):
         """Search the document for the specified CSS selector; return a Tkhtml3 node if found."""
-        return self.tk.call((self._w, "search", selector)+self._options(cnf, kwargs))
+        return self.tk.call((self._w, "search", selector)+TclOpt(a)+self._options(cnf, kw))
 
     def xview(self, *args):
         "Used to control horizontal scrolling."
@@ -487,7 +493,7 @@ class TkinterWeb(Widget):
 
     def get_node_text(self, node_handle, *args):
         "Get the text content of the given node."
-        return self.tk.call(node_handle, "text", *args)
+        return self.tk.call(node_handle, "text", *TclOpt(args))
 
     def set_node_text(self, node_handle, new):
         "Set the text content of the given node."
@@ -510,9 +516,7 @@ class TkinterWeb(Widget):
         if value:  # Backwards compatability
             return self.tk.call(node_handle, "attribute", attribute, value)
         else:
-            return self.tk.call(
-                node_handle, "attribute", "-default", default, attribute
-            )
+            return self.tk.call(node_handle, "attribute", "-default", default, attribute)
 
     def set_node_attribute(self, node_handle, attribute, value):
         "Set the specified attribute of the given node."
@@ -525,11 +529,11 @@ class TkinterWeb(Widget):
 
     def get_node_property(self, node_handle, node_property, *args):
         "Get the specified CSS property of the given node."
-        return self.tk.call(node_handle, "property", *args, node_property)
+        return self.tk.call(node_handle, "property", *TclOpt(args), node_property)
 
     def get_node_properties(self, node_handle, *args):
         "Get the CSS properties of the given node."
-        prop = self.tk.call(node_handle, "property", *args)
+        prop = self.tk.call(node_handle, "property", *TclOpt(args))
         return dict(zip(prop[0::2], prop[1::2]))
 
     def override_node_properties(self, node_handle, *props):
@@ -554,13 +558,20 @@ class TkinterWeb(Widget):
 
     def delete_node(self, node_handle):
         "Delete the given node."
-        node_parent = self.get_node_parent(node_handle)
-        node_tag = self.get_node_tag(node_handle)
-        # Removing the body element causes a segfault
-        if node_parent and node_tag != "body":
-            self.tk.call(node_parent, "remove", node_handle)
+        if self.experimental:
+            node_parent = self.get_node_parent(node_handle)
+            if node_parent:
+                self.tk.call(node_parent, "remove", node_handle)
+            else:
+                raise RuntimeError(f"root elements cannot be removed")
         else:
-            raise TclError(f"{node_tag} elements cannot be removed")
+            node_parent = self.get_node_parent(node_handle)
+            node_tag = self.get_node_tag(node_handle)
+            # Removing the body element causes a segfault
+            if node_parent and node_tag != "body":
+                self.tk.call(node_parent, "remove", node_handle)
+            else:
+                raise RuntimeError(f"{node_tag} elements cannot be removed")
 
     def destroy_node(self, node_handle):
         "Destroy a node. May cause crashes so avoid it whenever possible."
@@ -575,8 +586,13 @@ class TkinterWeb(Widget):
         self.tk.call(node, "dynamic", "clear", name)
 
     def get_node_tkhtml(self, node_handle):
-        "Get pathName of node (I think)."
+        "Get the path name of node."
         return self.tk.call(node_handle, "html")
+
+    def get_node_stacking(self, node_handle):
+        """Return the node-handle that forms the stacking context this node is located in.
+        Return "" for the root-element or any element that is part of an orphan subtree."""
+        return self.tk.call(node_handle, "stacking")
 
     def get_current_node(self, event):
         "Get current node."
@@ -600,7 +616,9 @@ class TkinterWeb(Widget):
         Does not work on Windows unless experimental Tkhtml is used."""
         full = "-full" if full else ""
         name = self.tk.call(self._w, "image", full)
-        return name, self.tk.call(name, "data")
+        data = self.tk.call(name, "data")
+        self.tk.call("image", "delete", name)
+        return data
 
     def postscript(self, cnf={}, **kwargs):
         """Print the contents of the canvas to a postscript file.
@@ -616,8 +634,17 @@ class TkinterWeb(Widget):
         return self.tk.call(self._w, "preload", url)
     
     def get_computed_styles(self):
-        "Get a tuple containing the computed CSS rules for each CSS selector"
+        "Get a tuple containing the computed CSS rules for each CSS selector."
         return self.tk.call(self._w, "_styleconfig")
+
+    def override_node_CSS(self, node, *props):
+        "Overrides the node's properties; if it is a text node, it overrides the parent's properties."
+        if not self.get_node_tag(node): node = self.get_node_parent(node)
+        return self.override_node_properties(node, *props)
+
+    def write(self, *arg, cnf={}, **kw):
+        """Write directly to an open HTML document stream, may be used when parsing."""
+        return self.tk.call(self._w, "write", *arg+self._options(cnf, kw))
 
     def fetch_scripts(self, attributes, url=None, data=None):
         "Fetch and run scripts"
@@ -697,17 +724,24 @@ class TkinterWeb(Widget):
                 image = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
                 self.loaded_images.add(image)
             elif self.image_alternate_text_enabled:
-                alt = self.get_node_attribute(node, "alt")
-                if alt and self.experimental:
-                    self.insert_node(node, self.parse_fragment(alt))
-                elif alt:
-                    image = text_to_image(
-                        name, alt, self.bbox(node),
-                        self.image_alternate_text_font,
-                        self.image_alternate_text_size,
-                        self.image_alternate_text_threshold,
-                    )
-                    self.loaded_images.add(image)
+                try:  # Ensure thread safety when closing
+                    alt = self.get_node_attribute(node, "alt")
+                    if alt:
+                        ### Should work, but doesn't
+                        #if self.experimental: 
+                        #    # Insert the parsed fragment directly if in experimental mode
+                        #    self.insert_node(node, self.parse_fragment(alt))
+                        #else:
+
+                        # Generate an image with alternate text if not in experimental mode
+                        image = text_to_image(
+                            name, alt, self.bbox(node),
+                            self.image_alternate_text_font,
+                            self.image_alternate_text_size,
+                            self.image_alternate_text_threshold,
+                        )
+                        self.loaded_images.add(image)
+                except (RuntimeError, TclError): pass  # Widget no longer exists
         elif not self.ignore_invalid_images:
             image = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
             self.loaded_images.add(image)
@@ -724,8 +758,7 @@ class TkinterWeb(Widget):
         else:
             try:
                 data, newurl, filetype, code = self._download_url(url)
-
-                if self.unstoppable and data:
+                if data and self.unstoppable:
                     # Thread safety
                     self.after(0, self.finish_fetching_images, node, data, name, filetype, url)
 
@@ -746,10 +779,10 @@ class TkinterWeb(Widget):
                 if node:
                     # Thread safety
                     self.after(0, self._submit_element_js, node, "onload")
-                if self.experimental:
-                    node = self.search(f'img[src="{url}"]')
-                    if node:
-                        if self.get_node_children(node): self.delete_node(self.get_node_children(node))
+                #if self.experimental:
+                #    node = self.search(f'img[src="{url}"]')
+                #    if node:
+                #        if self.get_node_children(node): self.delete_node(self.get_node_children(node))
             else:
                 self.load_alt_text(url, name)
                 self.post_message(f"ERROR: the image {url} could not be shown: either PyGObject, CairoSVG, or both PyCairo and Rsvg must be installed to parse .svg files")
@@ -972,6 +1005,13 @@ class TkinterWeb(Widget):
         except Exception as error:
             self.post_message(f"ERROR: an error was encountered while searching for {searchtext}: {error}")
             return nmatches, selected, matches
+
+    def get_child_text(self, node):
+        """Get text of node and all its descendants recursively"""
+        text = self.get_node_text(node, "-pre")
+        for child in self.get_node_children(node):
+            text += self.get_child_text(child)
+        return text
     
     def resolve_url(self, url):
         "Generate a full url from the specified url."
@@ -1114,6 +1154,75 @@ class TkinterWeb(Widget):
                 return
             self.yview_scroll(int(-1*event.delta/30), "units")
 
+    def safe_tk_eval(self, expr):
+        """Always evaluate 'expr' on the main thread."""
+        if threading.current_thread() is threading.main_thread():
+            return self.tk.eval(expr)
+        else:
+            result = [None]
+            event = threading.Event()
+
+            def wrapper():
+                result[0] = self.tk.eval(expr)
+                event.set()
+
+            self.after(0, wrapper)
+            event.wait()
+            return result[0]
+
+    def serialize_node(self, ib=3):
+        "Pretty-print a node's contents"
+        "Similar to innerHTML, but formatted"
+        return self.safe_tk_eval(r"""
+            proc indent {d} {return [string repeat { } $d]}
+            proc prettify {node} {
+                set depth [expr {([info level] - 1) * %d}]
+                set tag [$node tag]
+                if {$tag eq ""} {
+                if {[string trim [$node text]] eq ""} return
+                set z [string map {< &lt; > &gt;} [$node text -pre]]
+                if {[[$node parent] tag] ne "pre"} {
+                        return [indent $depth][regsub -all {\s+} $z " "]\n
+                } else {
+                        return [indent $depth]$z\n
+                }
+                }
+                set ret [indent $depth]<$tag
+                foreach {zKey zVal} [$node attribute] {
+                    append ret " $zKey=\"[string map [list \x22 \x5C\x22] $zVal]\""
+                }
+                append ret >\n
+                set void {area base br col embed hr img input keygen link meta param source track wbr}
+                if {[lsearch -exact $void $tag] != -1} {
+                    return $ret
+                }
+                foreach child [$node children] {
+                append ret [prettify $child]
+                }
+                return $ret[indent $depth]</$tag>\n
+            }
+                prettify [%s node] """ % (ib, self)
+        )
+
+    def serialize_node_style(self, ib=3, return_as_dict=False):
+        "Pretty-print a node's style"
+        style = {
+            i[0]: dict(j.split(":", 1) for j in i[1].split("; ") if j.strip())
+            for i in self.get_computed_styles()
+            if "agent" != i[2]
+        }
+
+        if return_as_dict:
+            return style
+        else:
+            text = ""
+            for i in style:
+                text += i + " {\n"
+                for j in style[i]:
+                    text += " "*ib + style[i][j] + ";\n"
+                text += "}\n"
+            return text
+
     def _load_tkhtml(self, force=False):
         "Load Tkhtml"
         if self.tkhtml_version == "auto":
@@ -1121,22 +1230,22 @@ class TkinterWeb(Widget):
 
         if self.use_prebuilt_tkhtml:
             try:
-                file, self.tkhtml_version = tkinterweb_tkhtml.get_tkhtml_file(self.tkhtml_version)
-                tkinterweb_tkhtml.load_tkhtml_file(self.master, file, force=force)
+                loaded_version = tkinterweb_tkhtml.get_loaded_tkhtml_version()
+                if loaded_version and not force:
+                    self.tkhtml_version = loaded_version
+                    self.post_message(f"Using Tkhtml {loaded_version} because it is already loaded")
+                    tkinterweb_tkhtml.load_tkhtml_file(self.master, file=None, force=force)
+                else:
+                    file, self.tkhtml_version, self.experimental = tkinterweb_tkhtml.get_tkhtml_file(self.tkhtml_version, experimental=self.experimental)
+                    tkinterweb_tkhtml.load_tkhtml_file(self.master, file, force=force)
             except TclError as error:
                 self.post_message(f"WARNING: An error occured while loading Tkhtml {self.tkhtml_version}: {error}\n\n\
 It is likely that not all dependencies are installed. Make sure Cairo is installed on your system. Some features may be missing.")
-                file, self.tkhtml_version = tkinterweb_tkhtml.get_tkhtml_file(index=0)
+                file, self.tkhtml_version, self.experimental = tkinterweb_tkhtml.get_tkhtml_file(index=0, experimental=self.experimental)
                 tkinterweb_tkhtml.load_tkhtml_file(self.master, file, force=force)
                 self.post_message(f"Defaulting to Tkhtml {self.tkhtml_version}")
         else:
             self.tkhtml_version = tkinterweb_tkhtml.load_tkhtml(self.master, force=force)
-        
-        if self.experimental == "auto":
-            if float(self.tkhtml_version) >= 3.1:
-                self.experimental = True
-            else:
-                self.experimental = False
 
     def _finish_posting_event(self, event):
         try:
@@ -1280,8 +1389,8 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         if not self.stylesheets_enabled or not self.unstoppable:
             return
         try:
-            url = urljoin(parent_url, new_url)
-            self.post_message(f"Loading stylesheet from {shorten(url)}")
+            new_url = urljoin(parent_url, new_url)
+            self.post_message(f"Loading stylesheet from {shorten(new_url)}")
 
             self._thread_check(self.fetch_styles, url=new_url)
 
@@ -1396,7 +1505,14 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     def _on_image_value_change(self, node, attribute, value):
         if attribute == "src":
             url = self.resolve_url(value)
+            for k, v in frozenset(self.image_directory.items()):
+                if v == node:
+                    del self.image_directory[k]
+                    break
             self.image_directory[url] = node
+            if self.experimental:
+                c = self.get_node_children(node)
+                if c: self.destroy_node(c)
 
     def _on_image_cmd(self, url):
         "Handle images."
@@ -1579,6 +1695,17 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             stylecmd = lambda node=node, widgetid=widgetid, widgettype="range": self.handle_node_style(
                 node, widgetid, widgettype
             )
+        elif nodetype == "number":
+            widgetid = FormNumber(self, 
+                nodevalue,
+                self.get_node_attribute(node, "min", 0),
+                self.get_node_attribute(node, "max", 100),
+                self.get_node_attribute(node, "step", 1),
+                lambda widgetid, node=node: self._on_input_change(node, widgetid)
+            )
+            stylecmd = lambda node=node, widgetid=widgetid: self.handle_node_style(
+                node, widgetid
+            )
         elif nodetype == "radio":
             name = self.get_node_attribute(node, "name", "")
             if self.get_node_attribute(node, "checked", "false") != "false": 
@@ -1630,18 +1757,21 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     def _on_input_value_change(self, node, attribute, value):
         if node not in self.form_widgets:
             return
-        
+
         nodetype = self.get_node_attribute(node, "type")
+        widget = self.form_widgets[node]
         if attribute == "value" and nodetype not in {"checkbox", "radio"}:
-            self.form_widgets[node].set(value)
+            widget.set(value)
+        elif attribute in {"min", "max", "step"} and nodetype in {"range", "number"}:
+            CONFIG_MAP = {"min": "from_", "max": "to", "step": "step"}
+            widget.configure(**{CONFIG_MAP[attribute]: value})
         elif attribute == "checked":
             if nodetype == "checkbox":
-                if value != "false": self.form_widgets[node].variable.set(1)
-                else: self.form_widgets[node].variable.set(0)
+                widget.variable.set(1 if value != "false" else 0)
             elif nodetype == "radio":
                 nodevalue = self.get_node_attribute(node, "value")
-                if value != "false": 
-                    self.form_widgets[node].variable.set(nodevalue)
+                if value != "false":
+                    widget.variable.set(nodevalue)
 
     def _on_body(self, node, index):
         "Wait for style changes on the root node."
@@ -1746,11 +1876,14 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         for formelement in self.loaded_forms[form]:
             nodeattrname = self.get_node_attribute(formelement, "name")
             if nodeattrname:
+                nodetype = self.get_node_attribute(formelement, "type")
                 if formelement in self.form_widgets:
                     nodevalue = self.form_widgets[formelement].get()
+                    if nodetype == "number":
+                        if not self.form_widgets[formelement].check():
+                            return
                 elif self.get_node_tag(formelement) == "hidden":
                     nodevalue = self.get_node_attribute(formelement, "value")
-                nodetype = self.get_node_attribute(formelement, "type")
                 if nodetype == "submit" or nodetype == "reset":
                     continue
                 elif nodetype == "file":
@@ -1836,7 +1969,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             # However, the html widget doesn't support the cursor property so there's not much we can do about this
             # update_idletasks() or update() have no effect, but print() and updating the color or text of another widget does
             # Therefore we update the background color of a tiny frame that is barely visible to match the background color of the page whenever we need to change te cursor
-            # It's wierd but hey, it works
+            # It's weird but hey, it works
             self.motion_frame.config(bg=self.motion_frame_bg)
 
     def _submit_element_js(self, node_handle, attribute):
@@ -2245,3 +2378,74 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         else:
             tags = (self.node_tag,)
         widgetid.bindtags(widgetid.bindtags() + tags)
+
+
+class TkHtmlParsedURI:
+    "Bindings for Tkhtml3 URI parsing system."
+
+    def __init__(self, uri, html):
+        self._html = html
+        self.parsed = self.uri(uri)
+
+    def __str__(self):
+        return self.uri_get(self.parsed)
+
+    def __del__(self):
+        self.uri_destroy(self.parsed)
+
+    def uri(self, uri):
+        "Returns name of parsed uri to be used in methods below."
+        return self._html.tk.call("::tkhtml::uri", uri)
+
+    def tkhtml_uri_decode(self, uri, base64=False):
+        "Decode the uri."
+        return self._html.tk.call("::tkhtml::decode", "-base64" if base64 else "", uri)
+
+    def tkhtml_uri_encode(self, uri):
+        "Encodes the uri."
+        return self._html.tk.call("::tkhtml::encode", uri)
+
+    def tkhtml_uri_escape(self, uri, query=False):
+        "Returns the decoded data."
+        a = "-query" if query else ""
+        return self._html.tk.call("::tkhtml::escape_uri", a, uri)
+
+    def uri_resolve(self, uri):
+        "Resolve a uri."
+        return self._html.tk.call(self.parsed, "resolve", uri)
+
+    def uri_load(self, uri):
+        "Load a uri."
+        return self._html.tk.call(self.parsed, "load", uri)
+
+    def uri_get(self):
+        "Get the uri."
+        return self._html.tk.call(self.parsed, "get")
+
+    def uri_defrag(self):
+        "Defrag the uri."
+        return self._html.tk.call(self.parsed, "get_no_fragment")
+
+    def uri_scheme(self):
+        "Return the uri scheme."
+        return self._html.tk.call(self.parsed, "scheme")
+
+    def uri_authority(self):
+        "Return the uri authority."
+        return self._html.tk.call(self.parsed, "authority")
+
+    def uri_path(self):
+        "Return the uri path."
+        return self._html.tk.call(self.parsed, "path")
+
+    def uri_query(self):
+        "Return the uri query."
+        return self._html.tk.call(self.parsed, "query")
+
+    def uri_fragment(self):
+        "Return the uri fragment."
+        return self._html.tk.call(self.parsed, "fragment")
+
+    def uri_destroy(self):
+        "Destroy this uri."
+        self._html.tk.call(self.parsed, "destroy")

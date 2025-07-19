@@ -124,7 +124,7 @@ class HtmlFrame(Frame):
     :type experimental: bool or "auto"
     :param use_prebuilt_tkhtml: If True (the default), the Tkhtml binary for your system supplied by TkinterWeb will be used. If your system isn't supported and you don't want to compile the Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml yourself, you could try installing Tkhtml3 system-wide and set :attr:`use_prebuilt_tkhtml` to False. Note that some crash prevention features will no longer work.
     :type use_prebuilt_tkhtml: bool
-    :param tkhtml_version: The Tkhtml version to use. If the requested version is not found, TkinterWeb will fallback to Tkhtml version 3.1.
+    :param tkhtml_version: The Tkhtml version to use. If the requested version is not found, TkinterWeb will fallback to Tkhtml 3.0. Only one Tkhtml version can be loaded at a time.
     :type tkhtml_version: float or "auto"
     :param parsemode: The parse mode. In "html" mode, explicit XML-style self-closing tags are not handled specially and unknown tags are ignored. "xhtml" mode is similar to "html" mode except that explicit self-closing tags are recognized. "xml" mode is similar to "xhtml" mode except that XML CDATA sections and unknown tag names are recognized. It is usually best to leave this setting alone.
     :type parsemode: "xml", "xhtml", or "html"
@@ -136,7 +136,7 @@ class HtmlFrame(Frame):
     :raise TypeError: If the value type is wrong and cannot be converted to the correct type."""
 
     def __init__(self, master, **kwargs):
-        # state and settings variables
+        # State and settings variables
         style = Style()
 
         self._current_url = ""
@@ -188,7 +188,7 @@ class HtmlFrame(Frame):
             "dark_style": DARK_STYLE,
             "insecure_https": False,
             "headers": HEADERS,
-            "experimental": "auto",
+            "experimental": False,
             # No impact after loading
             "use_prebuilt_tkhtml": True,
             "tkhtml_version": "auto",
@@ -511,6 +511,26 @@ Load about:tkinterweb for debugging information""")
         else:
             self._html.parse_css(data=css_source, override=True)
 
+    def insert_html(self, html_source, before=False, up=True):
+        """Parse HTML and add it to the end (or start) of the current document. Unlike ``add_html``, ``insert_html`` returns the root node of rendered HTML.
+        
+        :param html_source: The HTML code to render.
+        :param before: Whether to add to start.
+        :param up[data]: Whether to add update the widget.
+        :return: The root node of new HTML.
+        """
+        frag = self._html.parse_fragment(html_source)
+        body = self.html.tk.eval(f"return [lindex [[{self.html} node] children] 1]")
+        if before and self.html.get_node_children(body):
+            first = self.html.tk.eval(f"return [lindex {body} children] 0]")
+            self.html.insert_node_before(body, frag, first)
+        else:
+            self.html.insert_node(body, frag)
+        self._finish_css()
+        self._handle_resize(force=True)
+        if up: self.html.update()
+        return frag
+
     def stop(self):
         """Stop loading this page and abandon all pending requests."""
         if self._thread_in_progress:
@@ -585,7 +605,7 @@ Load about:tkinterweb for debugging information""")
         :raises: NotImplementedError if experimental mode is not enabled, :attr:`full` is set to True, and TkinterWeb is running on Windows."""
         if self._html.experimental or PLATFORM.system != "Windows":
             self._html.post_message(f"Taking a screenshot of {self._current_url}...")
-            image, data = self._html.image(full=full)
+            data = self._html.image(full=full)
             height = len(data)
             width = len(data[0].split())
             image = create_RGB_image(data, width, height)
@@ -940,7 +960,7 @@ Load about:tkinterweb for debugging information""")
                 #self._html.tk.call(self._html._w, "_force")
                 self._html.update()
                 try:
-                    frag = ''.join(char for char in frag if char.isalnum() or char in ("-", "_"))
+                    frag = "".join(char for char in frag if char.isalnum() or char in ("-", "_"))
                     node = self._html.search(f"[id={frag}]")
                     if node:
                         self._html.yview(node)
@@ -959,7 +979,6 @@ This is a known Python bug on older MacOS systems. \
 Running something along the lines of \"/Applications/Python {'.'.join(PYTHON_VERSION[:2])}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
 Otherwise, use 'configure(insecure_https=True)' to ignore website certificates.")
             self.on_navigate_fail(url, error, code)
-
         self._thread_in_progress = None
 
     def _finish_css(self):        
@@ -1000,18 +1019,63 @@ Otherwise, use 'configure(insecure_https=True)' to ignore website certificates."
 
 
 class HtmlLabel(HtmlFrame):
-    """The :class:`HtmlLabel` widget inherits from the :class:`HtmlFrame`. For a complete list of avaliable methods, configuration options, generated events, and state variables, see the :class:`HtmlFrame` docs.
+    """The :class:`HtmlLabel` widget is a label-like HTML widget. It inherits from the :class:`HtmlFrame` class. For a complete list of avaliable methods, properties, configuration options, and generated events, see the :class:`HtmlFrame` docs.
     
-    This class also accepts one additional parameter:
+    This class also accepts two additional parameters:
 
     :param text: Set the HTML content of the widget
     :type text: str
     """
-    def __init__(self, master, text="", **kwargs):
+
+    def __init__(self, master, text="", style="", **kwargs):
         HtmlFrame.__init__(self, master, vertical_scrollbar=False, shrink=True, **kwargs)
 
         tags = list(self._html.bindtags())
         tags.remove("Html")
         self._html.bindtags(tags)
 
-        self.load_html(text)
+        self.style = style
+
+        if text:
+            self.load_html(text)
+        if style:
+            self.add_css(style)
+        
+    def configure(self, **kwargs):
+        if "text" in kwargs:
+            self.load_html(kwargs.pop("text"))
+            if "style" not in kwargs:
+                self.add_css(self.style)
+        if "style" in kwargs:
+            self.style = style = kwargs.pop("style")
+            self.add_css(style)
+        if kwargs: super().configure(**kwargs)
+
+    def cget(self, key):
+        if "text" == key:
+            return "".join(self._html.serialize_node(0).splitlines())
+        if "style" == key:
+           return "".join(self._html.serialize_node_style(0).splitlines())
+        return super().cget(key)
+
+    def config(self, **kwargs): self.configure(**kwargs)
+
+class HtmlParse(HtmlFrame):
+    """The :class:`HtmlParse` class parses HTML but does not spawn a widget. It inherits from the :class:`HtmlFrame` class. For a complete list of avaliable methods, properties, configuration options, and generated events, see the :class:`HtmlFrame` docs.
+    """
+    def __init__(self, **kwargs):
+        self.root = root = tk.Tk()
+
+        self._is_destroying = False
+
+        for flag in ["events_enabled", "images_enabled", "forms_enabled"]:
+            if flag not in kwargs:
+                kwargs[flag] = False
+                
+        HtmlFrame.__init__(self, root, **kwargs)
+
+        root.withdraw()
+
+    def destroy(self):
+        super().destroy()
+        self.root.destroy()

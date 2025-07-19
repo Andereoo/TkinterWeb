@@ -781,9 +781,11 @@ def invert_color(rgb, match, limit):
         rgb[2] = max(1, min(255, 240 - rgb[2]))
         return rgb_to_hex(*rgb)
 
+
 def get_alt_font():
     "Get the location of the truetype file to be used for image alternate text"
     return os.path.join(ROOT_DIR, "opensans.ttf")
+
 
 def notifier(text):
     "Notifications printer"
@@ -801,6 +803,12 @@ def tkhtml_notifier(name, text, *args):
     except Exception:
         "sys.stdout.write doesn't work in .pyw files."
         "Since .pyw files have no console, we won't bother printing messages."
+
+
+def TclOpt(options):
+    "Format string into Tcl option command-line names"
+    return tuple(o if o.startswith("-") else "-"+o for o in options)
+
 
 def placeholder(*args, **kwargs):
     """Blank placeholder function. The only purpose of this is to

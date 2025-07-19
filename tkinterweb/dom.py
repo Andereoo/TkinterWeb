@@ -714,7 +714,7 @@ class HTMLElement:
 
 
 class HTMLCollection:
-    """This class stores results from various :class:`HTMLElement` methods.
+    """This class stores results from various :class:`HTMLElement` methods. It behaves like a Python list, with some extras.
     
     :param document_manager: The :class:`~tkinterweb.dom.HTMLDocument` instance this class is tied to.
     :type document_manager: :class:`~tkinterweb.dom.HTMLDocument`

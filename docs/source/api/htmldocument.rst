@@ -10,6 +10,9 @@ Document Object Model Documentation
 .. autoclass:: tkinterweb.dom.HTMLElement
    :members:
 
+.. autoclass:: tkinterweb.dom.HTMLCollection
+   :members:
+
 .. autoclass:: tkinterweb.dom.CSSStyleDeclaration
    :members:
 

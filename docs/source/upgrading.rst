@@ -81,6 +81,10 @@ Renamed
 Added
 -----
 
+* :class:`.HTMLParse` (new in version 4.4)
+* :class:`.TkHtmlParsedURI` (new in version 4.4)
+* :class:`.HTMLCollection` (new in version 4.4)
+
 * :meth:`.HtmlFrame.clear_selection`
 * :meth:`.HtmlFrame.get_currently_hovered_element`
 * :meth:`.HtmlFrame.widget_to_element` (new in version 4.2)
@@ -89,6 +93,7 @@ Added
 * :meth:`.HtmlFrame.show_error_page`
 * :meth:`.HtmlFrame.print_page`
 * :meth:`.HtmlFrame.screenshot_page`
+* :meth:`.HtmlFrame.insert_html` (new in version 4.4)
 * :meth:`.HtmlFrame.register_JS_object`` (new in version 4.1)
 * :attr:`.HtmlFrame.base_url`
 * :attr:`.HtmlFrame.icon`
@@ -116,6 +121,8 @@ Added
 * :attr:`.HTMLElement.onmouseout` (new in version 4.1)
 * :attr:`.HTMLElement.onmouseover` (new in version 4.1)
 * :attr:`.HTMLElement.onmouseup` (new in version 4.1)
+* :attr:`.HTMLElement.id` (new in version 4.4)
+* :attr:`.HTMLElement.class` (new in version 4.4)
 
 
 * :class:`.CSSStyleDeclaration`
@@ -137,7 +144,13 @@ Added
 * :meth:`.TkinterWeb.replace_node_contents` (new in version 4.2)
 * :meth:`.TkinterWeb.map_node` (new in version 4.2)
 * :meth:`.TkinterWeb.replace_node_with_widget` (new in version 4.2)
-
+* :meth:`.TkinterWeb.get_node_stacking` (new in version 4.2)
+* :meth:`.TkinterWeb.override_node_CSS` (new in version 4.4)
+* :meth:`.TkinterWeb.write` (new in version 4.4)
+* :meth:`.TkinterWeb.get_child_text` (new in version 4.4)
+* :meth:`.TkinterWeb.safe_tk_eval` (new in version 4.4)
+* :meth:`.TkinterWeb.serialize_node` (new in version 4.4)
+* :meth:`.TkinterWeb.serialize_node_style` (new in version 4.4)
 
 * ``utilities.DOWNLOADING_RESOURCE_EVENT`` (equivalent to ``<<DownloadingResource>>``)
 * ``utilities.DONE_LOADING_EVENT`` (equivalent to ``<<DoneLoading>>``)
@@ -149,6 +162,8 @@ Added
 * Support for many JavaScript events was added in version 4.1.
 
 * The ``tkinterweb-full-page`` attribute can now be added to elements to make them the same height as the viewport. This can be used for vertical alignment of page content. See the TkinterWeb Demo class in `__init__.py <https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/__init__.py>`_ for example usage.
+
+* Support for the HTML number input was added in version 4.4.
 
 Changed
 -------
@@ -177,3 +192,5 @@ Changed
 * The TkinterWeb demo and some of the built-in pages have been updated. Many internal methods and variables have been renamed, removed, or modified.
 
 * As of version 4.3, prebuilt Tkhtml binaries have been split off into a new package, TkinterWeb-Tkhtml. This has been done to work towards `bug #52 <https://github.com/Andereoo/TkinterWeb/issues/52>`_ and reduce the download size of the TkinterWeb package when updating.
+
+* As of version 4.4, it is possible to choose specific Tkhtml versions if supplied. It is now only possible to enable experimental mode if an experimental Tkhtml release is detected.

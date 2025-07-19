@@ -23,3 +23,6 @@ This widget also emits the following Tkinter virtual events that can be bound to
 
 .. autoclass:: tkinterweb.HtmlLabel
    :members:
+
+.. autoclass:: tkinterweb.HtmlParse
+   :members:

@@ -492,7 +492,8 @@ If you enjoyed using this package, consider donating at https://buymeacoffee.com
         :param html_source: The HTML code to render.
         :type html_source: str
         :param return_element: If True, return the root element of the added HTML.
-        :type return_element: :class:`~tkinterweb.dom.HTMLElement`"""
+        :type return_element: :class:`~tkinterweb.dom.HTMLElement`
+        :return: :class:`~tkinterweb.dom.HTMLElement` or None"""
 
         self._previous_url = ""
         if not self._html.base_url:
@@ -525,8 +526,7 @@ If you enjoyed using this package, consider donating at https://buymeacoffee.com
         :type index: int
         :param return_element: If True, return the root element of the inserted HTML.
         :type return_element: :class:`~tkinterweb.dom.HTMLElement`
-        :return: The root HTMLElement of the new HTML.
-        """
+        :return: :class:`~tkinterweb.dom.HTMLElement` or None"""
 
         self._previous_url = ""
         if not self._html.base_url:

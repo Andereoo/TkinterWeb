@@ -193,4 +193,6 @@ Changed
 
 * As of version 4.3, prebuilt Tkhtml binaries have been split off into a new package, TkinterWeb-Tkhtml. This has been done to work towards `bug #52 <https://github.com/Andereoo/TkinterWeb/issues/52>`_ and reduce the download size of the TkinterWeb package when updating.
 
+* As of version 4.4, :meth:`.HtmlFrame.add_html` is now accepts the additional parameter ``return_element``. 
+
 * As of version 4.4, it is possible to choose specific Tkhtml versions if supplied. It is now only possible to enable experimental mode if an experimental Tkhtml release is detected.

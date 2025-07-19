@@ -28,7 +28,7 @@ __title__ = 'TkinterWeb'
 __author__ = "Andereoo"
 __copyright__ = "Copyright (c) 2021-2025 Andereoo"
 __license__ = "MIT"
-__version__ = '4.4.2'
+__version__ = '4.4.3'
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")

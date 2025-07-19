@@ -71,21 +71,21 @@ def text_to_image(name, alt, nodebox, font_type, font_size, threshold):
     image = PhotoImage(image, name=name)
     return image
 
-def is_mostly_one_color(image, tolerance=30):
+def invert_image(image, limit):
+    from PIL import Image, ImageOps
     from collections import Counter
 
-    pixels = list(image.resize((100, 100), Image.Resampling.NEAREST).getdata())
-    counter = Counter(pixels)
-    dominant_color = max(counter, key=counter.get)
-    def is_similar(c1, c2):
-        return sum(abs(a - b) for a, b in zip(c1, c2)) < tolerance * 3
-    similar_count = sum(1 for p in pixels if is_similar(p, dominant_color))
-    ratio = similar_count / len(pixels)
+    def is_mostly_one_color(image, tolerance=30):
+        pixels = list(image.resize((100, 100), Image.Resampling.NEAREST).getdata())
+        counter = Counter(pixels)
+        dominant_color = max(counter, key=counter.get)
+        def is_similar(c1, c2):
+            return sum(abs(a - b) for a, b in zip(c1, c2)) < tolerance * 3
+        similar_count = sum(1 for p in pixels if is_similar(p, dominant_color))
+        ratio = similar_count / len(pixels)
+        return ratio, dominant_color
 
-    return ratio, dominant_color
-
-def invert_image(image, limit):
-    from PIL import ImageOps
+    image = Image.open(BytesIO(image))
 
     if image.mode in {'RGBA', 'LA', 'P'}:
         image = image.convert("RGBA")
@@ -163,9 +163,8 @@ def data_to_image(data, name, imagetype, invert, limit):
         else:
             photoimage = None
     elif invert:
-        from PIL import Image
         from PIL.ImageTk import PhotoImage
-        image = invert_image(Image.open(BytesIO(data)), limit)
+        image = invert_image(data, limit)
         photoimage = PhotoImage(image=image, name=name)
     elif imagetype in ("image/png", "image/gif", "image/ppm", "image/pgm",):
         # tkinter.PhotoImage has less overhead, so use it when possible

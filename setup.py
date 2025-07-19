@@ -16,7 +16,7 @@ extras["full"] = extras["javascript"] + extras["svg"]
 
 setup(
     name="tkinterweb",
-    version="4.4.1",
+    version="4.4.2",
     python_requires=">=3.2",
     description="HTML/CSS viewer for Tkinter",
     long_description=README,
@@ -35,6 +35,6 @@ setup(
     keywords="tkinter, Tkinter, tkhtml, Tkhtml, Tk, HTML, CSS, webbrowser",
     packages=find_namespace_packages(include=["tkinterweb", "tkinterweb.*"]),
     include_package_data=True,
-    install_requires=["tkinterweb-tkhtml", "pillow"],
+    install_requires=["tkinterweb-tkhtml>=1.1.1", "pillow"],
     extras_require = extras,
 )

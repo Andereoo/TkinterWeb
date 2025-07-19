@@ -7,7 +7,10 @@ Copyright (c) 2025 Andereoo
 import os, shutil, sys
 import subprocess
 
-PYTHON_CMD = "python3"
+if os.name == "nt":
+    PYTHON_CMD = "python"
+else:
+    PYTHON_CMD = "python3"
 
 ROOT_PATH = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 DIST_ROOT_PATH = os.path.join(ROOT_PATH, "dist")

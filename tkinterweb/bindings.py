@@ -2004,6 +2004,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         if self.embed_obj:
             widgetid = self.embed_obj(self,
                 messages_enabled=self.messages_enabled,
+                message_func=self.message_func,
                 overflow_scroll_frame=self,
                 stylesheets_enabled = self.stylesheets_enabled,
                 images_enabled = self.images_enabled,

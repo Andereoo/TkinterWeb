@@ -16,7 +16,7 @@ extras["full"] = extras["javascript"] + extras["svg"]
 
 setup(
     name="tkinterweb",
-    version="4.4.3",
+    version="4.4.4",
     python_requires=">=3.2",
     description="HTML/CSS viewer for Tkinter",
     long_description=README,

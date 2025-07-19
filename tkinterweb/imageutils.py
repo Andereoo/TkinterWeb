@@ -17,6 +17,30 @@ from io import BytesIO
 # Additionally, CairoSVG will only detect TkinterWeb-Tkhtml's Cairo binary after Tkhtml is loaded 
 rsvg_type = None
 
+def check_Cairo():
+    global cairo, rsvg, rsvg_type
+    if rsvg_type == None:
+        try:
+            import cairo
+            import rsvg
+            rsvg_type = 1
+        except ImportError:
+            try:
+                import cairosvg as cairo
+                rsvg_type = 2
+            except (ImportError, FileNotFoundError, OSError,):
+                try:
+                    import gi
+                    gi.require_version('Rsvg', '2.0')
+                    from gi.repository import Rsvg as rsvg
+                    # Don't import PyGobject's Cairo if PyCairo has already been imported
+                    if not cairo:
+                        gi.require_version('cairo', '1.0')
+                        from gi.repository import cairo
+                    rsvg_type = 3
+                except (ValueError, ImportError,):
+                    rsvg_type = 0
+
 def text_to_image(name, alt, nodebox, font_type, font_size, threshold):
     from PIL import Image
     from PIL.ImageTk import PhotoImage

@@ -1505,14 +1505,15 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     def _on_image_value_change(self, node, attribute, value):
         if attribute == "src":
             url = self.resolve_url(value)
-            for k, v in frozenset(self.image_directory.items()):
-                if v == node:
-                    del self.image_directory[k]
-                    break
+            if node in self.image_directory.values():
+                for k, v in frozenset(self.image_directory.items()):
+                    if v == node:
+                        del self.image_directory[k]
+                        break
             self.image_directory[url] = node
-            if self.experimental:
-                c = self.get_node_children(node)
-                if c: self.destroy_node(c)
+            # if self.experimental:
+            #     c = self.get_node_children(node)
+            #     if c: self.destroy_node(c)
 
     def _on_image_cmd(self, url):
         "Handle images."

@@ -81,7 +81,7 @@ Renamed
 Added
 -----
 
-* :class:`.HTMLParse` (new in version 4.4)
+* :class:`.HtmlParse` (new in version 4.4)
 * :class:`.TkHtmlParsedURI` (new in version 4.4)
 * :class:`.HTMLCollection` (new in version 4.4)
 

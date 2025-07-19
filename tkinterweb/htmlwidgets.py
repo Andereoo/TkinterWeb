@@ -269,7 +269,9 @@ The API changed in version 4. See https://tkinterweb.readthedocs.io/ for details
 
 Debugging messages are enabled. Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLabel() to disable these messages.
                                 
-Load about:tkinterweb for debugging information""")
+Load about:tkinterweb for debugging information.
+                                
+If you enjoyed using this package, consider donating at https://buymeacoffee.com/andereoo!""")
 
     @property
     def title(self):

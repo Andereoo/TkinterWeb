@@ -484,11 +484,14 @@ Load about:tkinterweb for debugging information""")
         else:
             self._continue_loading(url, data, method, decode)
 
-    def add_html(self, html_source):
+    def add_html(self, html_source, return_element=False):
         """Parse HTML and add it to the end of the current document. Unlike :meth:`HtmlFrame.load_html`, :meth:`HtmlFrame.add_html` adds rendered HTML code without clearing the original document.
         
         :param html_source: The HTML code to render.
-        """
+        :type html_source: str
+        :param return_element: If True, return the root element of the added HTML.
+        :type return_element: :class:`~tkinterweb.dom.HTMLElement`"""
+
         self._previous_url = ""
         if not self._html.base_url:
             path = WORKING_DIR
@@ -496,40 +499,61 @@ Load about:tkinterweb for debugging information""")
                 path = f"/{path}"
             base_url = f"file://{path}/"
             self._html.base_url = self._current_url = base_url
-        self._html.parse(html_source)
+
+        if return_element:
+            node = self._html.parse_fragment(html_source)
+            body = self.document.body.node
+            self.html.insert_node(body, node)
+            node = HTMLElement(self.document, node)
+        else:
+            self._html.parse(html_source)
+            node = None
 
         self._finish_css()
         self._handle_resize(force=True)
 
+        return node
+    
+    def insert_html(self, html_source, index=0, return_element=False):
+        """Parse HTML and insert it into the current document.
+        
+        :param html_source: The HTML code to render.
+        :type html_source: str
+        :param index: The index of the element to insert before.
+        :type index: int
+        :param return_element: If True, return the root element of the inserted HTML.
+        :type return_element: :class:`~tkinterweb.dom.HTMLElement`
+        :return: The root HTMLElement of the new HTML.
+        """
+
+        self._previous_url = ""
+        if not self._html.base_url:
+            path = WORKING_DIR
+            if not path.startswith("/"):
+                path = f"/{path}"
+            base_url = f"file://{path}/"
+            self._html.base_url = self._current_url = base_url
+
+        node = self._html.parse_fragment(html_source)
+        body = self.document.body.node
+        child = self._html.get_node_children(body)[index]
+        self.html.insert_node_before(body, node, child)
+ 
+        self._finish_css()
+        self._handle_resize(force=True)
+
+        if return_element:
+            return HTMLElement(self.document, node)
+    
     def add_css(self, css_source):
         """Send CSS stylesheets to the parser. This can be used to alter the appearance of already-loaded documents.
         
         :param css_source: The CSS code to parse.
-        :type url: str"""
+        :type css_source: str"""
         if self._waiting_for_reset:
             self._accumulated_styles.append(css_source)
         else:
             self._html.parse_css(data=css_source, override=True)
-
-    def insert_html(self, html_source, before=False, up=True):
-        """Parse HTML and add it to the end (or start) of the current document. Unlike ``add_html``, ``insert_html`` returns the root node of rendered HTML.
-        
-        :param html_source: The HTML code to render.
-        :param before: Whether to add to start.
-        :param up[data]: Whether to add update the widget.
-        :return: The root node of new HTML.
-        """
-        frag = self._html.parse_fragment(html_source)
-        body = self.html.tk.eval(f"return [lindex [[{self.html} node] children] 1]")
-        if before and self.html.get_node_children(body):
-            first = self.html.tk.eval(f"return [lindex {body} children] 0]")
-            self.html.insert_node_before(body, frag, first)
-        else:
-            self.html.insert_node(body, frag)
-        self._finish_css()
-        self._handle_resize(force=True)
-        if up: self.html.update()
-        return frag
 
     def stop(self):
         """Stop loading this page and abandon all pending requests."""

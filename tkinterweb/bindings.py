@@ -205,7 +205,7 @@ class TkinterWeb(Widget):
         self.register_handler("node", "img", self._on_image)
 
         # Node handlers don't work on body and html elements. 
-        # These elements also cannot be removed without causing a segfault. 
+        # These elements also cannot be removed without causing a segfault in vanilla Tkhtml. 
         # Weird.
         self.register_handler("parse", "body", self._on_body)
         self.register_handler("parse", "html", self._on_body)
@@ -727,10 +727,12 @@ class TkinterWeb(Widget):
                 try:  # Ensure thread safety when closing
                     alt = self.get_node_attribute(node, "alt")
                     if alt:
-                        #if self.experimental: ################ Should work, but doesn't
+                        ### Should work, but doesn't
+                        #if self.experimental: 
                         #    # Insert the parsed fragment directly if in experimental mode
                         #    self.insert_node(node, self.parse_fragment(alt))
                         #else:
+
                         # Generate an image with alternate text if not in experimental mode
                         image = text_to_image(
                             name, alt, self.bbox(node),
@@ -777,10 +779,10 @@ class TkinterWeb(Widget):
                 if node:
                     # Thread safety
                     self.after(0, self._submit_element_js, node, "onload")
-                if self.experimental:
-                    node = self.search(f'img[src="{url}"]')
-                    if node:
-                        if self.get_node_children(node): self.delete_node(self.get_node_children(node))
+                #if self.experimental:
+                #    node = self.search(f'img[src="{url}"]')
+                #    if node:
+                #        if self.get_node_children(node): self.delete_node(self.get_node_children(node))
             else:
                 self.load_alt_text(url, name)
                 self.post_message(f"ERROR: the image {url} could not be shown: either PyGObject, CairoSVG, or both PyCairo and Rsvg must be installed to parse .svg files")
@@ -1387,8 +1389,8 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         if not self.stylesheets_enabled or not self.unstoppable:
             return
         try:
-            url = urljoin(parent_url, new_url)
-            self.post_message(f"Loading stylesheet from {shorten(url)}")
+            new_url = urljoin(parent_url, new_url)
+            self.post_message(f"Loading stylesheet from {shorten(new_url)}")
 
             self._thread_check(self.fetch_styles, url=new_url)
 

@@ -88,8 +88,8 @@ def load_cairo():
     if rsvg_type == None:
         try:
             import cairo
-            import rsvg
             globals()['cairo'] = cairo
+            import rsvg
             globals()['rsvg'] = rsvg
             rsvg_type = 1
         except ImportError:
@@ -102,7 +102,7 @@ def load_cairo():
                     import gi
                     gi.require_version('Rsvg', '2.0')
                     from gi.repository import Rsvg as rsvg
-                    globals()['cairo'] = rsvg
+                    globals()['rsvg'] = rsvg
                     # Don't import PyGobject's Cairo if PyCairo has already been imported
                     if not cairo:
                         gi.require_version('cairo', '1.0')

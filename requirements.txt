@@ -1,2 +1,2 @@
-tkinterweb-tkhtml >= 1.2.0
+tkinterweb-tkhtml >= 1.1.1
 Pillow >= 10.0.0

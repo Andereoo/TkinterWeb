@@ -41,3 +41,11 @@ html_theme = 'sphinx_rtd_theme'
 
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
+
+def skip_member(app, what, name, obj, skip, options):
+    if name == "destroy" and what == "class":
+        return True
+    return skip
+
+def setup(app):
+    app.connect("autodoc-skip-member", skip_member)

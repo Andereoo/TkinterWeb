@@ -18,7 +18,7 @@ Or, you can choose to install optional dependencies as well:
 .. code-block:: console
 
    $ pip install tkinterweb[javascript] # to also install JavaScript support
-   $ pip install tkinterweb[svg] # to also install Scalable Vector Graphics support. On Windows this might take some extra work.
+   $ pip install tkinterweb[svg] # to also install Scalable Vector Graphics support.
    $ pip install tkinterweb[full] # to install all optional dependencies
 
 You can run the TkinterWeb demo to see if it worked!

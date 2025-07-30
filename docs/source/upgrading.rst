@@ -9,13 +9,14 @@ Summary of changes
 
 * Faster load speed
 * A more intuitive API
-* Support for experimental Tkhtml features, such as page printing and ``border-radius``
+* Support for experimental Tkhtml features, such as page printing
 * Widget behaviour and API is now more closely aligned with standard Tkinter widgets
 * The DOM API now more closely mirrors its JavaScript counterparts
 * Dozens of new configuration options, including access to more settings and the ability to link a JavaScript interpreter
 * Basic JavaScript support (new in version 4.1)
 * Improved embedded widget handling (new in version 4.2)
 * More DOM improvements
+* SVG support on Windows and pre-built experimental binaries, including ``border-radius`` support (new in version 4.4)
 
 Removed
 -------

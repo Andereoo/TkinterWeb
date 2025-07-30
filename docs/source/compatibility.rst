@@ -7,7 +7,8 @@ Webpage Compatibility
 **HTML/CSS:**
 
 * TkinterWeb supports HTML 4.01 and CSS 2.1. A full list of supported CSS declarations can be found at http://tkhtml.tcl.tk/support.html. 
-* Most CSS pseudo-elements, such as ``:hover`` and ``:active`` are also supported. 
+* Most CSS pseudo-elements, such as ``:hover`` and ``:active`` are also supported.
+* If experimental mode is enabled, ``border-radius`` and ``overflow-x``, as well as more cursor options are also supported.
 
 **JavaScript:**
 

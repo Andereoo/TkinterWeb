@@ -8,7 +8,7 @@ Webpage Compatibility
 
 * TkinterWeb supports HTML 4.01 and CSS 2.1. A full list of supported CSS declarations can be found at http://tkhtml.tcl.tk/support.html. 
 * Most CSS pseudo-elements, such as ``:hover`` and ``:active`` are also supported.
-* If experimental mode is enabled, ``border-radius`` and ``overflow-x``, as well as more cursor options are also supported.
+* On 64-bit Windows and Linux, ``border-radius`` and more cursor options are also supported. 
 
 **JavaScript:**
 
@@ -41,4 +41,4 @@ Alternatively, you can install Tkhtml system-wide (i.e. through your system pack
 
 If you are encountering issues on your system or are are using an unsupported system, feel free to submit a bug report or feature request. You may need to compile Tkhtml on your system. See https://github.com/Andereoo/TkinterWeb-Tkhtml/.
 
-Our experimental Tkhtml version is not provided as a pre-built binary but can be compiled from the source code at  https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental. This version has better cross-platform compatibility, is printable, and introduces support for some new CSS3 properties, including border-radius!
+The experimental Tkhtml version is not provided as a pre-built binary but can be compiled from the source code at https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental. This version has better cross-platform compatibility, is printable, and introduces support for some new CSS3 properties!

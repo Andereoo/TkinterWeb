@@ -4,6 +4,12 @@ Welcome to TkinterWeb's documentation!
 **TkinterWeb** is a cross-platform Python library that provides bindings and extensions for the Tkhtml3 widget from http://tkhtml.tcl.tk, which enables displaying HTML and CSS code in
 Tkinter applications. It offers fast and lightweight web browser widgets for Tkinter.
 
+Some of TkinterWeb's uses include:
+* Displaying websites, feeds, help files, and other styled HTML
+* Displaying images, including SVG images
+* Designing apps using HTML templates
+* Creating prettier apps, with rounded buttons and more!
+
 Check out the :doc:`usage` section to learn how to get started and discover tips and tricks, :doc:`faq` for frequently asked questions, and the :doc:`api` to explore all of the widgets and functions at your disposal!
 
 Contents

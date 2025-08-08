@@ -9,7 +9,13 @@
 **A fast and lightweight web browser widget for Tkinter.**
 
 ## Overview
-**TkinterWeb offers bindings and extensions for the Tkhtml3 widget from http://tkhtml.tcl.tk, which enables displaying HTML and CSS code in Tkinter applications.**
+**TkinterWeb offers bindings and extensions for the Tkhtml3 widget from http://tkhtml.tcl.tk, which enables displaying HTML and CSS code in Tkinter applications.** 
+
+Some of TkinterWeb's uses include:
+* Displaying websites, feeds, help files, and other styled HTML
+* Displaying images, including SVG images
+* Designing apps using HTML templates
+* Creating prettier apps, with rounded buttons and more!
 
 All [major operating systems](https://tkinterweb.readthedocs.io/en/latest/compatibility.html#a-note-on-tkhtml-binaries) running Python 3.2+ are supported. 
 
@@ -71,6 +77,7 @@ See [Frequently Asked Questions](https://tkinterweb.readthedocs.io/en/latest/faq
 **HTML/CSS:**
 * TkinterWeb supports HTML 4.01 and CSS 2.1. A full list of supported CSS declarations can be found at http://tkhtml.tcl.tk/support.html. 
 * Most CSS pseudo-elements, such as `:hover` and `:active` are also supported. 
+* On 64-bit Windows and Linux, ``border-radius`` and more cursor options are also supported. 
 
 **JavaScript:**
 * Javascript only partly supported at the moment.

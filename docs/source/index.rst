@@ -5,6 +5,7 @@ Welcome to TkinterWeb's documentation!
 Tkinter applications. It offers fast and lightweight web browser widgets for Tkinter.
 
 Some of TkinterWeb's uses include:
+
 * Displaying websites, feeds, help files, and other styled HTML
 * Displaying images, including SVG images
 * Designing apps using HTML templates

@@ -9,7 +9,7 @@
 **A fast and lightweight web browser widget for Tkinter.**
 
 ## Overview
-**TkinterWeb offers bindings and extensions for the Tkhtml3 widget from http://tkhtml.tcl.tk, which enables displaying HTML and CSS code in Tkinter applications.** 
+**TkinterWeb offers bindings and extensions to a modified version of the Tkhtml3 widget from http://tkhtml.tcl.tk, which enables displaying HTML and CSS code in Tkinter applications.** 
 
 Some of TkinterWeb's uses include:
 * Displaying websites, feeds, help files, and other styled HTML

@@ -78,7 +78,10 @@ class TkinterWeb(Widget):
 
     def _setup_settings(self):
         "Widget settings."
-        self.allow_threading = bool(self.master.tk.eval('set tcl_platform(threaded)'))
+        try:
+            self.allow_threading = bool(self.master.tk.call("set", "tcl_platform(threaded)"))
+        except tk.TclError: # if tcl_platform(threaded) doesn't exist, we can assume threading is enabled
+            self.allow_threading = True
 
         self._caches_enabled = True
         self._dark_theme_enabled = False
@@ -195,6 +198,7 @@ class TkinterWeb(Widget):
         self.register_handler("node", "title", self._on_title)
         self.register_handler("node", "a", self._on_a)
         self.register_handler("node", "base", self._on_base)
+        self.register_handler("node", "meta", self._on_meta)
         self.register_handler("node", "input", self._on_input)
         self.register_handler("node", "textarea", self._on_textarea)
         self.register_handler("node", "select", self._on_select)
@@ -1409,6 +1413,18 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         href = self.get_node_attribute(node, "href", "")
         if href:
             self.base_url = self.resolve_url(href)
+
+    
+    def _on_meta(self, node):
+        "Partly handle <meta> elements."
+        if self.get_node_attribute(node, "http-equiv") == "refresh":
+            content = self.get_node_attribute(node, "content").split(";")
+            if len(content) == 2:
+                if content[1].startswith("url="):
+                    url = self.resolve_url(content[1].lstrip("url="))
+                    self.post_message(f"Redirecting to '{shorten(url)}'")
+                    self.visited_links.append(url)
+                    self.on_link_click(url)
 
     def _on_a(self, node):
         "Handle <a> elements."

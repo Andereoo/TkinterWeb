@@ -1,7 +1,7 @@
 """
 The core Python bindings to Tkhtml3
 
-Copyright (c) 2021-2025 Andereoo
+Copyright (c) 2021-2025 Andrew Clarke
 """
 
 from re import IGNORECASE, MULTILINE, split, sub, finditer
@@ -50,16 +50,9 @@ class TkinterWeb(Widget):
         # if "logcmd" not in kwargs:
         #    kwargs["logcmd"] = tkhtml_notifier
 
-        # Load the Tkhtml3 widget
+        # Load and initialize the Tkhtml3 widget
         self._load_tkhtml()
-        
-        try:
-            Widget.__init__(self, master, "html", kwargs)
-        except TclError:
-            # The current Tcl session closes when all apps are closed, even if the current Python session is still running
-            # Force a reload of Tkhtml when this happens
-            self._load_tkhtml(True)
-            Widget.__init__(self, master, "html", kwargs)
+        Widget.__init__(self, master, "html", kwargs)
 
         # Create a tiny, blank frame for cursor updating
         self.motion_frame = Frame(self, bg=self.motion_frame_bg, width=1, height=1)
@@ -73,8 +66,6 @@ class TkinterWeb(Widget):
         self._setup_bindings()
         self._setup_handlers()
         self.update_default_style()
-
-        self.post_message(f"Tkhtml {self.tkhtml_version} successfully loaded from {tkinterweb_tkhtml.TKHTML_ROOT_DIR}")
 
     def _setup_settings(self):
         "Widget settings."
@@ -129,6 +120,7 @@ class TkinterWeb(Widget):
         
         self.maximum_thread_count = 20
         self.insecure_https = False
+        self.ssl_cafile = None
         self.headers = {}
         self.dark_theme_limit = 160
         self.style_dark_theme_regex = r"([^:;\s{]+)\s?:\s?([^;{!]+)(?=!|;|})"
@@ -1227,29 +1219,33 @@ class TkinterWeb(Widget):
                 text += "}\n"
             return text
 
-    def _load_tkhtml(self, force=False):
+    def _load_tkhtml(self):
         "Load Tkhtml"
         if self.tkhtml_version == "auto":
             self.tkhtml_version = None
 
-        if self.use_prebuilt_tkhtml:
-            try:
-                loaded_version = tkinterweb_tkhtml.get_loaded_tkhtml_version()
-                if loaded_version and not force:
-                    self.tkhtml_version = loaded_version
-                    self.post_message(f"Using Tkhtml {loaded_version} because it is already loaded")
-                    tkinterweb_tkhtml.load_tkhtml_file(self.master, file=None, force=force)
-                else:
-                    file, self.tkhtml_version, self.experimental = tkinterweb_tkhtml.get_tkhtml_file(self.tkhtml_version, experimental=self.experimental)
-                    tkinterweb_tkhtml.load_tkhtml_file(self.master, file, force=force)
-            except TclError as error:
-                self.post_message(f"WARNING: An error occured while loading Tkhtml {self.tkhtml_version}: {error}\n\n\
+        try:
+            loaded_version = tkinterweb_tkhtml.get_loaded_tkhtml_version(self.master)
+            self.post_message(f"Using Tkhtml {loaded_version} because it is already loaded")
+        except TclError:
+            if self.use_prebuilt_tkhtml:
+                try:
+                    file, loaded_version, self.experimental = tkinterweb_tkhtml.get_tkhtml_file(self.tkhtml_version, experimental=self.experimental)
+                    tkinterweb_tkhtml.load_tkhtml_file(self.master, file)
+                    self.post_message(f"Tkhtml {loaded_version} successfully loaded from {tkinterweb_tkhtml.TKHTML_ROOT_DIR}")
+                except TclError as error: # If something goes wrong, try again with version 3.0 in case it is a Cairo issue
+                    self.post_message(f"WARNING: An error occured while loading Tkhtml {loaded_version}: {error}\n\n\
 It is likely that not all dependencies are installed. Make sure Cairo is installed on your system. Some features may be missing.")
-                file, self.tkhtml_version, self.experimental = tkinterweb_tkhtml.get_tkhtml_file(index=0, experimental=self.experimental)
-                tkinterweb_tkhtml.load_tkhtml_file(self.master, file, force=force)
-                self.post_message(f"Defaulting to Tkhtml {self.tkhtml_version}")
-        else:
-            self.tkhtml_version = tkinterweb_tkhtml.load_tkhtml(self.master, force=force)
+                    file, loaded_version, self.experimental = tkinterweb_tkhtml.get_tkhtml_file(index=0, experimental=self.experimental)
+                    try:
+                        tkinterweb_tkhtml.load_tkhtml_file(self.master, file)
+                        self.post_message(f"Tkhtml {loaded_version} successfully loaded from {tkinterweb_tkhtml.TKHTML_ROOT_DIR}")
+                    except TclError as error: # If it still won't load it never will. It is most likely that the system is not supported. The user needs to compile and install Tkhtml.
+                        raise TclError(f"{error} It is likely that your system is not supported out of the box. {tkinterweb_tkhtml.HELP_MESSAGE}") from error
+            else:
+                tkinterweb_tkhtml.load_tkhtml(self.master)
+                loaded_version = tkinterweb_tkhtml.get_loaded_tkhtml_version(self.master)
+                self.post_message(f"Tkhtml {loaded_version} successfully loaded")
 
     def _finish_posting_event(self, event):
         try:
@@ -1322,9 +1318,9 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
     def _download_url(self, url):
         if url.startswith("file://") or (not self._caches_enabled):
-            return download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))
+            return download(url, insecure=self.insecure_https, cafile=self.ssl_cafile, headers=tuple(self.headers.items()))
         else:
-            return cache_download(url, insecure=self.insecure_https, headers=tuple(self.headers.items()))
+            return cache_download(url, insecure=self.insecure_https, cafile=self.ssl_cafile, headers=tuple(self.headers.items()))
     
     def _thread_check(self, callback, *args, **kwargs):
         if not self.downloads_have_occured:
@@ -2041,6 +2037,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                 selected_text_color = self.selected_text_color,
                 visited_links = self.visited_links,
                 insecure_https = self.insecure_https,
+                ssl_cafile = self.ssl_cafile,
             )
 
             if html:

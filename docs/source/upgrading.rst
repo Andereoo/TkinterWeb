@@ -16,10 +16,13 @@ Summary of changes
 * Basic JavaScript support (new in version 4.1)
 * Improved embedded widget handling (new in version 4.2)
 * More DOM improvements
-* SVG support on Windows and pre-built experimental binaries, including ``border-radius`` support (new in version 4.4)
+* SVG support on Windows and ``border-radius`` support on Windows and Linux (new in version 4.4)
+* Support for Tcl 9 (new in version 4.5)
 
 Removed
 -------
+
+Version 4.0:
 
 * ``HtmlFrame.get_zoom()`` - use ``HtmlFrame.cget("zoom")``
 * ``HtmlFrame.set_zoom()`` - use ``HtmlFrame.configure(zoom=)``
@@ -52,17 +55,22 @@ Removed
 * ``HtmlFrame.get_currently_hovered_node_tag()`` - :meth:`.HtmlFrame.get_currently_hovered_element`
 * ``HtmlFrame.get_currently_hovered_node_attribute()`` - :meth:`.HtmlFrame.get_currently_hovered_element`
 * ``HtmlFrame.get_current_link()`` - use :meth:`.HtmlFrame.get_currently_hovered_element`
-* ``HtmlFrame.replace_widget()`` (deprecated in version 4.2) - use :meth:`.HtmlFrame.widget_to_element` and :attr:`.HTMLElement.widget`
-* ``HtmlFrame.replace_element()`` (deprecated in version 4.2) - use :attr:`.HTMLElement.widget`
-* ``HtmlFrame.remove_widget()`` (deprecated in version 4.2) - use :meth:`.HTMLElement.remove`
-* ``TkinterWeb.replace_widget()`` (removed in version 4.2)
-* ``TkinterWeb.replace_element()`` (removed in version 4.2)
-* ``TkinterWeb.remove_widget()`` (removed in version 4.2)
 
 * The ``widgetid`` attribute no longer embeds widgets. Use ``<object data=name_of_your_widget></object>`` or :attr:`.HTMLElement.widget` instead. This improves load speeds and allows for widget style handling.
 
+Version 4.2:
+
+* ``HtmlFrame.replace_widget()``- use :meth:`.HtmlFrame.widget_to_element` and :attr:`.HTMLElement.widget`
+* ``HtmlFrame.replace_element()``- use :attr:`.HTMLElement.widget`
+* ``HtmlFrame.remove_widget()``- use :meth:`.HTMLElement.remove`
+* ``TkinterWeb.replace_widget()``
+* ``TkinterWeb.replace_element()``
+* ``TkinterWeb.remove_widget()``
+
 Renamed
 -------
+
+Version 4.0:
 
 * ``HtmlFrame.get_currently_selected_text()`` -> :meth:`.HtmlFrame.get_selection`
 
@@ -82,20 +90,16 @@ Renamed
 Added
 -----
 
-* :class:`.HtmlParse` (new in version 4.4)
-* :class:`.TkHtmlParsedURI` (new in version 4.4)
-* :class:`.HTMLCollection` (new in version 4.4)
+Version 4.0:
 
 * :meth:`.HtmlFrame.clear_selection`
 * :meth:`.HtmlFrame.get_currently_hovered_element`
-* :meth:`.HtmlFrame.widget_to_element` (new in version 4.2)
 * :meth:`.HtmlFrame.save_page`
 * :meth:`.HtmlFrame.snapshot_page`
 * :meth:`.HtmlFrame.show_error_page`
 * :meth:`.HtmlFrame.print_page`
 * :meth:`.HtmlFrame.screenshot_page`
-* :meth:`.HtmlFrame.insert_html` (new in version 4.4)
-* :meth:`.HtmlFrame.register_JS_object`` (new in version 4.1)
+
 * :attr:`.HtmlFrame.base_url`
 * :attr:`.HtmlFrame.icon`
 * :attr:`.HtmlFrame.title`
@@ -107,24 +111,6 @@ Added
 * :meth:`.HTMLElement.querySelector`
 * :meth:`.HTMLElement.querySelectorAll`
 * :meth:`.HTMLElement.scrollIntoView`
-* :attr:`.HTMLElement.widget` (new in version 4.1, updated in version 4.2)
-* :attr:`.HTMLElement.value` (new in version 4.1)
-* :attr:`.HTMLElement.checked` (new in version 4.1)
-* :attr:`.HTMLElement.onchange` (new in version 4.1)
-* :attr:`.HTMLElement.onload` (new in version 4.1)
-* :attr:`.HTMLElement.onclick` (new in version 4.1)
-* :attr:`.HTMLElement.oncontextmenu` (new in version 4.1)
-* :attr:`.HTMLElement.ondblclick` (new in version 4.1)
-* :attr:`.HTMLElement.onmousedown` (new in version 4.1)
-* :attr:`.HTMLElement.onmouseenter` (new in version 4.1)
-* :attr:`.HTMLElement.onmouseleave` (new in version 4.1)
-* :attr:`.HTMLElement.onmousemove` (new in version 4.1)
-* :attr:`.HTMLElement.onmouseout` (new in version 4.1)
-* :attr:`.HTMLElement.onmouseover` (new in version 4.1)
-* :attr:`.HTMLElement.onmouseup` (new in version 4.1)
-* :attr:`.HTMLElement.id` (new in version 4.4)
-* :attr:`.HTMLElement.class` (new in version 4.4)
-
 
 * :class:`.CSSStyleDeclaration`
 * :attr:`.CSSStyleDeclaration.*` (any camel-case CSS property)
@@ -132,26 +118,12 @@ Added
 * :attr:`.CSSStyleDeclaration.length`
 * :attr:`.CSSStyleDeclaration.cssProperties`
 * :attr:`.CSSStyleDeclaration.cssInlineProperties`
-* :attr:`.CSSStyleDeclaration.setProperty` (new in version 4.1)
-* :attr:`.CSSStyleDeclaration.getPropertyValue` (new in version 4.1)
-* :attr:`.CSSStyleDeclaration.removeProperty` (new in version 4.1)
 
 * :meth:`.TkinterWeb.enable_imagecache`
 * :meth:`.TkinterWeb.destroy_node`
 * :meth:`.TkinterWeb.get_node_properties`
 * :meth:`.TkinterWeb.override_node_properties`
 * :meth:`.TkinterWeb.update_tags`
-* :meth:`.TkinterWeb.send_onload` (new in version 4.1)
-* :meth:`.TkinterWeb.replace_node_contents` (new in version 4.2)
-* :meth:`.TkinterWeb.map_node` (new in version 4.2)
-* :meth:`.TkinterWeb.replace_node_with_widget` (new in version 4.2)
-* :meth:`.TkinterWeb.get_node_stacking` (new in version 4.2)
-* :meth:`.TkinterWeb.override_node_CSS` (new in version 4.4)
-* :meth:`.TkinterWeb.write` (new in version 4.4)
-* :meth:`.TkinterWeb.get_child_text` (new in version 4.4)
-* :meth:`.TkinterWeb.safe_tk_eval` (new in version 4.4)
-* :meth:`.TkinterWeb.serialize_node` (new in version 4.4)
-* :meth:`.TkinterWeb.serialize_node_style` (new in version 4.4)
 
 * ``utilities.DOWNLOADING_RESOURCE_EVENT`` (equivalent to ``<<DownloadingResource>>``)
 * ``utilities.DONE_LOADING_EVENT`` (equivalent to ``<<DoneLoading>>``)
@@ -160,14 +132,75 @@ Added
 * ``utilities.TITLE_CHANGED_EVENT`` (equivalent to ``<<TitleChanged>>``)
 
 * Many new configuration options were added. See the :doc:`api/htmlframe` for a complete list.
-* Support for many JavaScript events was added in version 4.1.
 
 * The ``tkinterweb-full-page`` attribute can now be added to elements to make them the same height as the viewport. This can be used for vertical alignment of page content. See the TkinterWeb Demo class in `__init__.py <https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/__init__.py>`_ for example usage.
 
-* Support for the HTML number input was added in version 4.4.
+Version 4.1:
+
+* :meth:`.HtmlFrame.register_JS_object``
+* :attr:`.HTMLElement.widget` (updated again in version 4.2)
+* :attr:`.HTMLElement.value`
+* :attr:`.HTMLElement.checked`
+* :attr:`.HTMLElement.onchange`
+* :attr:`.HTMLElement.onload`
+* :attr:`.HTMLElement.onclick`
+* :attr:`.HTMLElement.oncontextmenu`
+* :attr:`.HTMLElement.ondblclick`
+* :attr:`.HTMLElement.onmousedown`
+* :attr:`.HTMLElement.onmouseenter`
+* :attr:`.HTMLElement.onmouseleave`
+* :attr:`.HTMLElement.onmousemove`
+* :attr:`.HTMLElement.onmouseout`
+* :attr:`.HTMLElement.onmouseover`
+* :attr:`.HTMLElement.onmouseup`
+
+* :attr:`.CSSStyleDeclaration.setProperty`
+* :attr:`.CSSStyleDeclaration.getPropertyValue`
+* :attr:`.CSSStyleDeclaration.removeProperty`
+
+* :meth:`.TkinterWeb.send_onload`
+
+* Added support for many JavaScript events.
+
+Version 4.2:
+
+* :meth:`.HtmlFrame.widget_to_element`
+
+* :meth:`.TkinterWeb.replace_node_contents`
+* :meth:`.TkinterWeb.map_node`
+* :meth:`.TkinterWeb.replace_node_with_widget`
+* :meth:`.TkinterWeb.get_node_stacking`
+
+Version 4.4:
+
+* :class:`.HtmlParse`
+* :class:`.TkHtmlParsedURI`
+* :class:`.HTMLCollection`
+
+* :meth:`.HtmlFrame.insert_html`
+
+* :attr:`.HTMLElement.id`
+* :attr:`.HTMLElement.class`
+
+* :meth:`.TkinterWeb.override_node_CSS`
+* :meth:`.TkinterWeb.write`
+* :meth:`.TkinterWeb.get_child_text`
+* :meth:`.TkinterWeb.safe_tk_eval`
+* :meth:`.TkinterWeb.serialize_node`
+* :meth:`.TkinterWeb.serialize_node_style`
+
+* Added support for the HTML number input.
+
+* The new configuration option ``tkhtml_version`` can be used to choose a specific Tkhtml version to load.
+
+Version 4.5:
+
+* The new configuration option ``ssl_cafile`` can be used to proivide a path to a CA Certificate file. See  `bug #28 <https://github.com/Andereoo/TkinterWeb/issues/28>`_ .
 
 Changed
 -------
+
+Version 4.0:
 
 * :meth:`.HtmlFrame.configure`, :meth:`.HtmlFrame.config`, :meth:`.HtmlFrame.cget`, and :meth:`.HtmlFrame.__init__` now support more configuration options.
 * :meth:`.HtmlFrame.load_website`, :meth:`.HtmlFrame.load_file`, and :meth:`.HtmlFrame.load_url` no longer accept the ``insecure`` parameter. use ``HTMLElement.configure(insecure=)``.
@@ -175,25 +208,38 @@ Changed
 * Enabling/disabling caches now enables/disables the Tkhtml image cache.
 * Threading now cannot be enabled if the Tcl/Tk build does not support it.
 
-* :meth:`.HTMLElement.remove` now raises a TclError when invoked on ``<html>`` or ``<body>`` elements, which previously caused segmentation faults.
-* :attr:`.HTMLElement.innerHTML` and :attr:`.HTMLElement.textContent` now raise a TclError when invoked on ``<html>`` elements, which previously caused segmentation faults.
+* :meth:`.HTMLElement.remove` now raises a :py:class:`tkinter.TclError` when invoked on ``<html>`` or ``<body>`` elements, which previously caused segmentation faults.
+* :attr:`.HTMLElement.innerHTML` and :attr:`.HTMLElement.textContent` now raise a :py:class:`tkinter.TclError` when invoked on ``<html>`` elements, which previously caused segmentation faults.
 
 * Shorthand CSS properties can now be set and returned after the document is loaded.
-
   
 * The ability to style color selector inputs was improved.
 * The ability to access form elements has improved.
 * Text elements now emit the ``<<Modified>>`` event *after* the content updates.
-
-* As of version 4.1, :meth:`.HtmlFrame.screenshot_page` is now partially supported on Windows and now accepts the additional parameter ``show``. 
-* As of version 4.1, the default selection and find text colors are less abrupt.
-
-* As of version 4.2, widgets embedded in the document can now be removed without removing the containing element. 
-
 * The TkinterWeb demo and some of the built-in pages have been updated. Many internal methods and variables have been renamed, removed, or modified.
 
-* As of version 4.3, prebuilt Tkhtml binaries have been split off into a new package, TkinterWeb-Tkhtml. This has been done to work towards `bug #52 <https://github.com/Andereoo/TkinterWeb/issues/52>`_ and reduce the download size of the TkinterWeb package when updating.
+Version 4.1:
 
-* As of version 4.4, :meth:`.HtmlFrame.add_html` is now accepts the additional parameter ``return_element``. 
+* :meth:`.HtmlFrame.screenshot_page` is now partially supported on Windows and now accepts the additional parameter ``show``. 
+* The default selection and find text colors are less abrupt.
 
-* As of version 4.4, it is possible to choose specific Tkhtml versions if supplied. It is now only possible to enable experimental mode if an experimental Tkhtml release is detected.
+Version 4.2:
+
+* Widgets embedded in the document can now be removed without removing the containing element. 
+
+Version 4.3:
+
+* Prebuilt Tkhtml binaries have been split off into a new package, `TkinterWeb-Tkhtml <https://pypi.org/project/tkinterweb-tkhtml/>`_. This has been done to work towards `bug #52 <https://github.com/Andereoo/TkinterWeb/issues/52>`_ and reduce the download size of the TkinterWeb package when updating.
+
+Version 4.4:
+
+* :meth:`.HtmlFrame.add_html` is now accepts the additional parameter ``return_element``. 
+
+* It is now only possible to enable experimental mode if an experimental Tkhtml release is detected.
+
+* Some experimental HTML features were enabled in Windows and Linux. ``border-radius`` is now supported!
+
+Version 4.5:
+
+* Periods are now supported in url fragments. See  `bug #143 <https://github.com/Andereoo/TkinterWeb/issues/143>`_ .
+* Tkhtml file loading was updated in version 4.5. Some error messages have also been updated. Please submit a bug report if you notice any issues.

@@ -1,7 +1,7 @@
 """
 Various constants and utilities used by TkinterWeb
 
-Copyright (c) 2021-2025 Andereoo
+Copyright (c) 2021-2025 Andrew Clarke
 
 Some of the CSS code in this file is modified from the Tkhtml/Hv3 project. Tkhtml is copyright (c) 2005 Dan Kennedy.
 The lru_cache function in this file is modified from functools. Functools is copyright (c) Python Software Foundation.
@@ -20,15 +20,13 @@ from urllib.request import Request, urlopen
 from _thread import RLock
 from functools import update_wrapper, _make_key
 
-from tkinter import TclVersion, TkVersion
-
 
 # We need this information here so the built-in pages can access it
 __title__ = 'TkinterWeb'
-__author__ = "Andereoo"
-__copyright__ = "Copyright (c) 2021-2025 Andereoo"
+__author__ = "Andrew Clarke"
+__copyright__ = "(c) 2021-2025 Andrew Clarke"
 __license__ = "MIT"
-__version__ = '4.4.4'
+__version__ = '4.5.0'
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
@@ -438,6 +436,8 @@ INPUT[type="submit"],INPUT[type="button"], INPUT[type="reset"], BUTTON {
 """
 
 class BuiltinPageGenerator():
+    """BUILTIN_PAGES used to be a dictionary of URIs and corresponding HTML code.
+    Instead, we use this page generator class so that we can generate debugging information on demand."""
     def __init__(self):
         self._html = None
         self._pages = {
@@ -455,7 +455,7 @@ class BuiltinPageGenerator():
         <code>Welcome to {title}!</code><code>Licenced under the {license} licence</code><code>{copyright}</code>\
         <code class='header'>Debugging information</code><code class='section'>\
             <code class='closeheader'>Versioning</code>\
-            <code>Version: {__version__}</code><code>Tkhtml version: {tkhtml_version}</code>\
+            <code>Version: {__version__}</code><code>Tkhtml version: {tkhtml_version}</code><code>TkinterWeb-Tkhtml version: {tkw_tkhtml_version}</code>\
             <code>Python version: {python_version}</code><code>Tcl version: {tcl_version}</code><code>Tk version: {tk_version}</code>\
             <code class='header'>Resource loading</code>\
             <code>Use prebuilt Tkhtml: {use_prebuilt_tkhtml}</code>\
@@ -465,6 +465,7 @@ class BuiltinPageGenerator():
             <code class='header'>System specs</code>\
             <code>Platform: {platform}</code><code>Machine: {machine}</code><code>Processor: {processor}</code>\
         </code>\
+         <iframe src=\"about:tkinterweb\" height=\"200\" width=\"300\" title=\"Iframe Example\"></iframe> \
         <code class='header'>Preferences</code><code class='section'>\
             <code class='closeheader'>Renderer settings</code>\
             <code>Parse mode: {parse_mode}</code>\
@@ -474,6 +475,7 @@ class BuiltinPageGenerator():
             <code class='header'>HTTP settings</code>\
             <code>Headers: {headers}</code>\
             <code>Insecure HTTPS: {insecure_https}</code>\
+            <code>CA file path: {ssl_cafile}</code>\
             <code class='header'>Threading settings</code>\
             <code>Threading enabled: {threading_enabled}</code>\
             <code>Tcl allows threading: {allow_threading}</code>\
@@ -552,10 +554,10 @@ class BuiltinPageGenerator():
                 parse_mode=self._html.cget("parsemode"), rendering_mode=self._html.cget("mode"),
                 zoom=self._html.cget("zoom"), font_scale=self._html.cget("fontscale"), 
                 
-                python_version=".".join(PYTHON_VERSION), tcl_version=TclVersion, tk_version=TkVersion,
+                tkw_tkhtml_version=tkinterweb_tkhtml.__version__, python_version=".".join(PYTHON_VERSION), tcl_version=self._html.tk.call("info", "patchlevel"), tk_version=self._html.tk.call("package", "present", "Tk"),
                 platform=PLATFORM.system, machine=PLATFORM.machine, processor=PLATFORM.processor,
                 
-                insecure_https=self._html.insecure_https, use_prebuilt_tkhtml=self._html.use_prebuilt_tkhtml,
+                insecure_https=self._html.insecure_https, ssl_cafile=self._html.ssl_cafile, use_prebuilt_tkhtml=self._html.use_prebuilt_tkhtml,
                 allow_threading=self._html.allow_threading, threading_enabled=self._html.threading_enabled, 
                 caches_enabled=self._html.caches_enabled, dark_theme_enabled=self._html.dark_theme_enabled,
                 image_inversion_enabled=self._html.image_inversion_enabled, crash_prevention_enabled=self._html.crash_prevention_enabled, 
@@ -569,7 +571,7 @@ class BuiltinPageGenerator():
                 selected_text_highlight_color=self._html.selected_text_highlight_color, selected_text_color=self._html.selected_text_color,
                 maximum_thread_count=self._html.maximum_thread_count, experimental=self._html.experimental,
                 dark_theme_limit=self._html.dark_theme_limit, image_alternate_text_threshold=self._html.image_alternate_text_threshold,
-                image_alternate_text_size=self._html.image_alternate_text_size, tkhtml_version=self._html.tkhtml_version
+                image_alternate_text_size=self._html.image_alternate_text_size, tkhtml_version=tkinterweb_tkhtml.get_loaded_tkhtml_version(self._html)
             )
         else:
             return self._pages[key]
@@ -624,8 +626,8 @@ class StoppableThread(threading.Thread):
 
 
 class PlaceholderThread:
-    "Fake StoppableThread. The only purpose of this is to provide fake methods that mirror the StoppableThread class."
-    "This means that if a download is running in the MainThread, the stop flags can still be set without raising errors, though they won't do anything."
+    """Fake StoppableThread. The only purpose of this is to provide fake methods that mirror the StoppableThread class.
+    This means that if a download is running in the MainThread, the stop flags can still be set without raising errors, though they won't do anything."""
 
     def stop(self):
         return
@@ -638,7 +640,6 @@ def _lru_cache_wrapper(user_function):
     """This function is a modified version of the one that comes built-in with functools.
     It only adds to the cache if the data is not None.
     This means that if a page load is stopped, re-loading the page will not cause the page to be blank."""
-    sentinel = object()
     make_key = _make_key
     PREV, NEXT, KEY, RESULT = 0, 1, 2, 3
 
@@ -700,20 +701,22 @@ def lru_cache():
     return decorator
 
 
-def download(url, data=None, method="GET", decode=None, insecure=False, headers=()):
-    "Fetch files"
-    "Note that headers should be converted from dict to tuple before calling download() as dicts aren't hashable"
-    ctx = ssl.create_default_context()
-    if insecure:
-        ctx.check_hostname = False
-        ctx.verify_mode = ssl.CERT_NONE
+def download(url, data=None, method="GET", decode=None, insecure=False, cafile=None, headers=()):
+    "Fetch files. Note that headers should be converted from dict to tuple before calling download() as dicts aren't hashable."
+    if insecure or cafile:
+        context = ssl.create_default_context(cafile=cafile)
+        if insecure:
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+    else:
+        context = None
 
     thread = get_current_thread()
     url = url.replace(" ", "%20")
     if data and (method == "POST"):
-        req = urlopen(Request(url, data, headers=dict(headers)), context=ctx)
+        req = urlopen(Request(url, data, headers=dict(headers)), context=context)
     else:
-        req = urlopen(Request(url, headers=dict(headers)), context=ctx)
+        req = urlopen(Request(url, headers=dict(headers)), context=context)
     if not thread.isrunning():
         return None, url, "", ""
     data = req.read()
@@ -791,8 +794,8 @@ def notifier(text):
     try:
         sys.stdout.write(str(text) + "\n\n")
     except Exception:
-        "sys.stdout.write doesn't work in .pyw files."
-        "Since .pyw files have no console, we won't bother printing messages."
+        """sys.stdout.write doesn't work in .pyw files.
+        Since .pyw files have no console, we won't bother printing messages."""
 
 
 def tkhtml_notifier(name, text, *args):
@@ -800,8 +803,8 @@ def tkhtml_notifier(name, text, *args):
     try:
         sys.stdout.write("DEBUG " + str(name) + ": " + str(text) + "\n\n")
     except Exception:
-        "sys.stdout.write doesn't work in .pyw files."
-        "Since .pyw files have no console, we won't bother printing messages."
+        """sys.stdout.write doesn't work in .pyw files.
+        Since .pyw files have no console, we won't bother printing messages."""
 
 
 def TclOpt(options):

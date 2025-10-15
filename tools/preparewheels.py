@@ -1,7 +1,7 @@
 """
 Wheel and sdist generator for TkinterWeb
 
-Copyright (c) 2025 Andereoo
+Copyright (c) 2025 Andrew Clarke
 """
 
 import os, shutil, sys

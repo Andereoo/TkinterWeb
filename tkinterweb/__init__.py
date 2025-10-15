@@ -1,9 +1,9 @@
 """
-TkinterWeb v4.4
+TkinterWeb v4.5
 This is a wrapper for the Tkhtml3 widget from http://tkhtml.tcl.tk/tkhtml.html, 
 which displays styled HTML documents in Tkinter.
 
-Copyright (c) 2021-2025 Andereoo
+Copyright (c) 2021-2025 Andrew Clarke
 """
 
 

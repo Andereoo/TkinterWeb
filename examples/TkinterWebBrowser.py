@@ -15,7 +15,7 @@ This code was originally created for testing TkinterWeb and is a bit of a mess, 
  - manipulating the DOM
  - and others
  
-Copyright (c) 2025 Andereoo
+Copyright (c) 2025 Andrew Clarke
 """
 
 import os

@@ -2,7 +2,7 @@
 Widgets that expand on the functionality of the basic bindings
 by adding scrolling, file loading, and many other convenience functions
 
-Copyright (c) 2021-2025 Andereoo
+Copyright (c) 2021-2025 Andrew Clarke
 """
 
 from urllib.parse import urldefrag, urlparse
@@ -23,7 +23,7 @@ class HtmlFrame(Frame):
     :param master: The parent widget.
     :type master: :py:class:`tkinter.Widget`
 
-    The following flags are optional and can be used to register callbacks:
+    Callbacks:
 
     :param on_navigate_fail: The function to be called when a url cannot be loaded. The target url, error, and code will be passed as arguments. By default the TkinterWeb error page is shown.
     :type on_navigate_fail: function
@@ -34,13 +34,13 @@ class HtmlFrame(Frame):
     :param on_script: The function to be called when a ``<script>`` element is encountered. This can be used to connect a script handler, such as a JavaScript engine. The script element's attributes and contents will be passed as arguments.
     :type on_script: function
     :param on_element_script: The function to be called when a JavaScript event attribute on an element is encountered. This can be used to connect a script handler, such as a JavaScript engine, or even to run your own Python code. The element's corresponding Tkhtml3 node, relevant attribute, and attribute contents will be passed as arguments. New in version 4.1.
-    :type on_element_script: callable
+    :type on_element_script: function
     :param on_resource_setup: The function to be called when an image or stylesheet load finishes. The resource's url, type ("stylesheet" or "image"), and whether setup was successful or not (True or False) will be passed as arguments.
     :type on_resource_setup: function
     :param message_func: The function to be called when a debug message is issued. This only works if :attr:`messages_enabled` is set to True. The message will be passed as an argument. By default the message is printed.
     :type message_func: function
 
-    The following flags are optional and can be used to change the widget's appearance:
+    Widget appearance:
 
     :param visited_links: The list used to determine if a hyperlink should be given the CSS ``:visited`` flag.
     :type visited_links: list
@@ -55,7 +55,7 @@ class HtmlFrame(Frame):
     :param shrink: If False, the widget's width and height are set by the width and height options as per usual. You may still need to call ``grid_propagate(0)`` or ``pack_propagate(0)`` for Tkinter to respect the set width and height. If this option is set to True, the widget's requested width and height are determined by the current document.
     :type shrink: bool
 
-    The following flags are optional and can be used to enable or disable certain features:
+    Features:
 
     :param messages_enabled: Enable/disable messages. This is enabled by default.
     :type messages_enabled: bool
@@ -88,7 +88,7 @@ class HtmlFrame(Frame):
     :param ignore_invalid_images: If enabled and alt text is disabled or the image has no alt text, a broken image icon will be displayed in place of the image.
     :type ignore_invalid_images: bool
 
-    The following flags are optional and can be used to change widget colors and styling:
+    Widget colors and styling:
 
     :param about_page_background: The default background color of built-in pages. By default this matches the :py:class:`ttk.Frame` background color to better integrate custom documents with Tkinter.
     :type about_page_background: str
@@ -111,14 +111,16 @@ class HtmlFrame(Frame):
     :param dark_style: The stylesheet used to set the default appearance of HTML elements when dark mode is enabled. It is generally best to leave this setting alone.
     :type dark_style: str
 
-    The following flags are optional and can be used to change download behaviour:
+    Download behaviour:
 
     :param insecure_https: If True, website certificate errors are ignored. This can be used to work around issues where :py:mod:`ssl` is unable to get a page's certificate on some older Mac systems.
     :type insecure_https: bool
+    :param ssl_cafile: Path to a file containing CA certificates. This can be used to work around issues where :py:mod:`ssl` is unable to get a page's certificate on some older Mac systems. New in version 4.5.
+    :type ssl_cafile: bool or str
     :param headers: The headers used by urllib's :py:class:`~urllib.request.Request` when fetching a resource.
     :type headers: dict
 
-    The following flags are optional and can be used to change HTML rendering behaviour:
+    HTML rendering behaviour:
 
     :param experimental: If True, experimental features will be enabled. If "auto", experimental features will be enabled if the loaded Tkhtml version supports experimental features. You will need to compile the cutting-edge Tkhtml widget from https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental and replace the default Tkhtml binary for your system with the experimental version. Unless you need to screenshot the full page on Windows or print your page for now it is likely best to use the default Tkhtml binary and leave this setting alone.
     :type experimental: bool or "auto"
@@ -187,6 +189,7 @@ class HtmlFrame(Frame):
             "default_style": DEFAULT_STYLE,
             "dark_style": DARK_STYLE,
             "insecure_https": False,
+            "ssl_cafile": None,
             "headers": HEADERS,
             "experimental": False,
             # No impact after loading
@@ -874,7 +877,10 @@ If you enjoyed using this package, consider donating at https://buymeacoffee.com
         expected_type = type(old)
         if old == None and isinstance(new, tk.Widget):
             return new
-        elif callable(old) or old == None:
+        elif old == None:
+            if (not callable(new)) and (new != None):
+                raise TypeError(f"expected callable object, got \"{new}\"")
+        elif callable(old):
             if not callable(new):
                 raise TypeError(f"expected callable object, got \"{new}\"")
         elif not isinstance(new, expected_type) and old != "auto" and new != "auto":
@@ -942,10 +948,10 @@ If you enjoyed using this package, consider donating at https://buymeacoffee.com
                     self._html.post_message("WARNING: Using insecure HTTPS session")
                 if (parsed.scheme == "file") or (not self._html.caches_enabled):
                     data, newurl, filetype, code = download(
-                        url, data, method, decode, self._html.insecure_https, tuple(self._html.headers.items()))
+                        url, data, method, decode, self._html.insecure_https, self._html.ssl_cafile, tuple(self._html.headers.items()))
                 else:
                     data, newurl, filetype, code = cache_download(
-                        url, data, method, decode, self._html.insecure_https, tuple(self._html.headers.items()))
+                        url, data, method, decode, self._html.insecure_https, self._html.ssl_cafile, tuple(self._html.headers.items()))
                 self._html.post_message(f"Successfully connected to {parsed.netloc}")
                 if get_current_thread().isrunning():
                     if view_source:
@@ -983,11 +989,11 @@ If you enjoyed using this package, consider donating at https://buymeacoffee.com
             # Handle URI fragments
             frag = parsed.fragment
             if frag:
-                #self._html.tk.call(self._html._w, "_force")
                 self._html.update()
                 try:
-                    frag = "".join(char for char in frag if char.isalnum() or char in ("-", "_"))
-                    node = self._html.search(f"[id={frag}]")
+                    frag = "".join(char for char in frag if char.isalnum() or char in ("-", "_", ".")).replace(".", r"\.")
+                    node = self._html.search(f"[id='{frag}']")
+                    
                     if node:
                         self._html.yview(node)
                     else:

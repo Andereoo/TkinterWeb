@@ -1,7 +1,7 @@
 """
 Generate Tk images and alt text
 
-Copyright (c) 2021-2025 Andereoo
+Copyright (c) 2021-2025 Andrew Clarke
 """
 
 from tkinter import PhotoImage as TkPhotoImage

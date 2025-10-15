@@ -1,9 +1,9 @@
 """
 Various constants and utilities used by TkinterWeb
 
-Some of the CSS code in this file is modified from the Tkhtml/Hv3 project. See tkinterweb-tkhtml/COPYRIGHT.
+Copyright (c) 2021-2025 Andrew Clarke
 
-Copyright (c) 2021-2025 Andereoo
+Some of the CSS code in this file is modified from the Tkhtml/Hv3 project. Tkhtml is copyright (c) 2005 Dan Kennedy.
 """
 
 import mimetypes

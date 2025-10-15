@@ -1,12 +1,12 @@
-![Python 3](https://img.shields.io/pypi/pyversions/tkinterweb)
 ![PyPi Downloads](https://static.pepy.tech/badge/tkinterweb/month)
 ![MIT Licence](https://img.shields.io/pypi/l/tkinterweb) 
+![Python 3](https://img.shields.io/pypi/pyversions/tkinterweb)
 ![Made in Canada](https://img.shields.io/badge/%F0%9F%87%A8%F0%9F%87%A6%20made%20in%20Canada-grey)
 
 <a href="https://www.buymeacoffee.com/andereoo" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-violet.png" alt="Buy Me A Coffee" style="height: 35px !important;width: 140px !important;" ></a>
 
 # TkinterWeb 
-**A fast and lightweight web browser widget for Tkinter.**
+**Fast and lightweight web browser and app design widgets for Tkinter.**
 
 ## Overview
 **TkinterWeb offers bindings and extensions to a modified version of the Tkhtml3 widget from http://tkhtml.tcl.tk, which enables enables the display of HTML and CSS code in Tkinter applications.** 
@@ -77,7 +77,7 @@ See [Frequently Asked Questions](https://tkinterweb.readthedocs.io/en/latest/faq
 **HTML/CSS:**
 * TkinterWeb supports HTML 4.01 and CSS 2.1. A full list of supported CSS declarations can be found at http://tkhtml.tcl.tk/support.html. 
 * Most CSS pseudo-elements, such as `:hover` and `:active` are also supported. 
-* On 64-bit Windows and Linux, ``border-radius`` and more cursor options are also supported. 
+* On 64-bit Windows and Linux, ``border-radius`` and more cursor options are also supported. ``overflow-x`` is also supported on ``body`` and ``html`` elements.
 
 **JavaScript:**
 * Javascript only partly supported at the moment.

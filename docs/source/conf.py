@@ -7,10 +7,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname((os.path.realpath(__file__))))))
 
-from tkinterweb import __title__, __author__, __version__
+from tkinterweb import __title__, __copyright__, __author__, __version__
 
 project = __title__
-copyright = '2021-2025, Andereoo'
+copyright = __copyright__
 author = __author__
 
 release = ".".join(__version__.split(".")[:2])
@@ -37,7 +37,7 @@ templates_path = ['_templates']
 
 autodoc_member_order = 'bysource'
 
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'sphinx_rtd_theme' # May switch to agogo or alabaster or python_docs_theme
 
 # -- Options for EPUB output
 epub_show_urls = 'footnote'

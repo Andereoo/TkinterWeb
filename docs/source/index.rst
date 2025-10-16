@@ -38,7 +38,7 @@ Love this project?
 
 You can help this project by submitting a `bug report <https://github.com/Andereoo/TkinterWeb/issues/new>`_ to report bugs or suggest new features, or by submitting a `pull request <https://github.com/Andereoo/TkinterWeb/pulls>`_ to offer fixes. Your help makes TkinterWeb become more stable and full-featured!
 
-Or, if you're feeling generous, you can show your support by buying me a coffee :)
+Or, if you’d like to support ongoing development and maintenance, please consider supporting this project by [buying me a coffee](https://buymeacoffee.com/andereoo) — any amount is hugely appreciated!
 
 .. raw:: html
    

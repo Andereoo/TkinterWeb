@@ -452,7 +452,10 @@ class BuiltinPageGenerator():
             .indented{{{{margin-left:20px}}}}\
             .colourbox{{{{margin-right:75px;display:inline}}}}</style>\
         <title>about:tkinterweb</title></head><body>\
-        <code>Welcome to {title}!</code><code>Licenced under the {license} licence</code><code>{copyright}</code>\
+        <code>Welcome to {title}!</code><code>Licenced under the {license} licence</code><code>Copyright {copyright}</code>\
+        <code>✉ <a href=https://github.com/Andereoo/TkinterWeb>github.com/Andereoo/TkinterWeb</a></code>\
+        <code>✨ <a href=https://tkinterweb.readthedocs.io>tkinterweb.readthedocs.io</a></code>\
+        <code>☕ <a href=https://buymeacoffee.com/andereoo>buymeacoffee.com/andereoo</a></code>\
         <code class='header'>Debugging information</code><code class='section'>\
             <code class='closeheader'>Versioning</code>\
             <code>Version: {__version__}</code><code>Tkhtml version: {tkhtml_version}</code><code>TkinterWeb-Tkhtml version: {tkw_tkhtml_version}</code>\

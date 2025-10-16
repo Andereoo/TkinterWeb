@@ -274,7 +274,7 @@ Debugging messages are enabled. Use the parameter `messages_enabled = False` whe
                                 
 Load about:tkinterweb for debugging information.
                                 
-If you enjoyed using this package, consider donating at https://buymeacoffee.com/andereoo!""")
+If you benefited from using this package, please consider supporting its development by donating at https://buymeacoffee.com/andereoo - any amount helps!""")
 
     @property
     def title(self):

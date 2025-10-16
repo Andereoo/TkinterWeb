@@ -1,6 +1,24 @@
 System and Webpage Compatibility
 ================================
 
+System Compatibility
+--------------------
+
+**TkinterWeb supports all platforms but only ships with precompiled Tkhtml binaries for the most common platforms:**
+
+* x86_64 Windows, Linux, and macOS
+* i686 Windows and Linux
+* ARM64 Macos and Linux
+* ARMv71 Linux
+
+If your system is unsupported, compile and install Tkhtml by visiting https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/3.1-TclTk9 and running ``python compile.py --install``.
+
+Alternatively, you can install Tkhtml system-wide (i.e. through your system package manager) and then add the parameter :attr:`use_prebuilt_tkhtml=False` when creating your :class:`~tkinterweb.HtmlFrame` or :class:`~tkinterweb.HtmlLabel` widget to use the system's Tkhtml. Keep in mind that some features will no longer work.
+
+If you are encountering issues, feel free to submit a bug report or feature request.
+
+The experimental Tkhtml version is not provided as a pre-built binary but can be compiled from the source code at https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental. This version has better cross-platform compatibility, is printable, and introduces support for some new CSS3 properties!
+
 Webpage Compatibility
 ---------------------
 
@@ -25,22 +43,3 @@ Webpage Compatibility
   * To load Scalable Vector Graphic images, :py:mod:`CairoSVG`, both :py:mod:`PyCairo` and :py:mod:`PyGObject`, or both :py:mod:`PyCairo` and :py:mod:`Rsvg` must also be installed. 
   
 * Without these packages, TkinterWeb will still function properly, but SVG files will not be shown.
-
-
-A Note on Tkhtml Binaries
--------------------------
-
-**TkinterWeb supports all platforms but only ships with precompiled Tkhtml binaries for the most common platforms:**
-
-* x86_64 Windows, Linux, and macOS
-* i686 Windows and Linux
-* ARM64 Macos and Linux
-* ARMv71 Linux
-
-If your system is unsupported, compile and install Tkhtml by visiting https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/3.1-TclTk9 and running `python compile.py --install`.
-
-Alternatively, you can install Tkhtml system-wide (i.e. through your system package manager) and then add the parameter :attr:`use_prebuilt_tkhtml=False` when creating your :class:`~tkinterweb.HtmlFrame` or :class:`~tkinterweb.HtmlLabel` widget to use the system's Tkhtml. Keep in mind that some features will no longer work.
-
-If you are encountering issues, feel free to submit a bug report or feature request.
-
-The experimental Tkhtml version is not provided as a pre-built binary but can be compiled from the source code at https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental. This version has better cross-platform compatibility, is printable, and introduces support for some new CSS3 properties!

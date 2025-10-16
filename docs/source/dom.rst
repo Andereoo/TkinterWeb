@@ -1,5 +1,5 @@
-DOM Manipulation with TkinterWeb
-================================
+DOM Manipulation
+================
 
 .. warning::
     The API changed significantly in version 4.0.0. See :doc:`../upgrading` for details.

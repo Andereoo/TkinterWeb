@@ -92,6 +92,8 @@ Similarly, bindings can also be applied to navigation keys:
     yourhtmlframe.bind_all("<Home>", lambda e: yourhtmlframe.yview_moveto(0))
     yourhtmlframe.bind_all("<End>", lambda e: yourhtmlframe.yview_moveto(1))
 
+Alternatively, you can also use the :attr:`on_element_script` parameter of the :class:`~tkinterweb.HtmlFrame` widget to set a callback for events emitted by individual HTML elements (i.e. handle an element's ``onclick`` attribute). See :ref:`using-your-own-interpreter` for more details and the `HtmlElement documentation <api/htmldocument.html#tkinterweb.dom.HTMLElement.onchange>`_ for a full list of supported events.
+
 **Changing the title**
 
 To change the title of the window every time the title of a website changes, use the following:

@@ -51,9 +51,9 @@ Pages
    :maxdepth: 1
 
    usage
-   javascript
    geometry
    dom
+   javascript
    faq
    compatibility
    upgrading

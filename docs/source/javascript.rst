@@ -63,6 +63,8 @@ To register new JavaScript object, use :meth:`.HtmlFrame.register_JS_object`. Th
     yourhtmlframe.register_JS_object("alert", open_alert_window)
     yourhtmlframe.load_html("<script>alert('Hello, world!')</script><p>Hello, world!</p>")
 
+.. _using-your-own-interpreter:
+
 Using your own interpreter
 --------------------------
 
@@ -77,7 +79,7 @@ Alternatively, you can register your own callback for ``<script>`` elements usin
     yourhtmlframe.load_html("<div id='container'><script>// Do stuff</script><p>Test</p></div>")
 
 
-You can also use the the :attr:`on_element_script` parameter to handle event scripts (i.e. handle an element's ``onclick`` attribute). The element's corresponding Tkhtml node, relevant event, and code to execute will be passed as parameters.
+You can also use the :attr:`on_element_script` parameter to handle event scripts (i.e. handle an element's ``onclick`` attribute). The element's corresponding Tkhtml node, relevant event, and code to execute will be passed as parameters.
 
 If needed you can always then create an :class:`~tkinterweb.dom.HTMLElement` instance from a Tkhtml node:
 

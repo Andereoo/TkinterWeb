@@ -253,3 +253,4 @@ Version 4.6:
 * Url fragments are now tracked as the document loads. This ensures that the fragment is still visible even after loading CSS files or images that change the layout of the document.
 * ``gzip`` and ``deflate`` content encodings are now supported. Brotli compression is also supported if the :py:mod:`brotli` module is installed. This increases page load speeds and decreases bandwidth usage in some websites.
 * Pressing Ctrl-A in an HTML number input, text input, or textarea will cause the widget's text to be selected. Pasting will now overwrite any selected text.
+* Loading local files with a query string in the url will no longer raise an error.

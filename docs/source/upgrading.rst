@@ -201,8 +201,8 @@ Version 4.6:
 
 * The new configuration option ``request_timeout`` can be used to specify the number of seconds to wait before a request times out.
 
-Changed
--------
+Changed/Fixed
+-------------
 
 Version 4.0:
 

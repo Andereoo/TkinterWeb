@@ -5,8 +5,6 @@ by adding scrolling, file loading, and many other convenience functions
 Copyright (c) 2021-2025 Andrew Clarke
 """
 
-from urllib.parse import urldefrag, urlparse
-
 from .bindings import *
 from .dom import HTMLDocument, HTMLElement
 

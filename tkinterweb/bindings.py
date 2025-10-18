@@ -6,7 +6,7 @@ Copyright (c) 2021-2025 Andrew Clarke
 
 from re import IGNORECASE, MULTILINE, split, sub, finditer
 
-from urllib.parse import urlencode, urljoin, urlparse
+from urllib.parse import urldefrag, urlencode, urljoin, urlparse
 
 from tkinter import Widget, Frame, TclError
 

@@ -16,6 +16,7 @@ import tkinterweb_tkhtml
 
 import ssl, gzip, zlib
 from urllib.request import Request, urlopen
+from urllib.parse import urldefrag, urlunparse, urlparse
 
 try:
     import brotli
@@ -721,6 +722,11 @@ def download(url, data=None, method="GET", decode=None, insecure=False, cafile=N
             context.verify_mode = ssl.CERT_NONE
     else:
         context = None
+    
+    # Remove the query string if it exists and the url points to a local file
+    if url.startswith("file://") and ("?" in url):
+        parsed = urlparse(url)
+        url = urlunparse(parsed._replace(query=""))
 
     thread = get_current_thread()
     url = url.replace(" ", "%20")

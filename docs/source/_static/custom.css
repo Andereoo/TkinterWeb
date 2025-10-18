@@ -1,0 +1,10 @@
+.wy-nav-side {overflow:hidden !important;}
+#rtd-search-form input {width:80% !important;color:black !important;}
+.wy-breadcrumbs .icon-home:before {content:"Home" !important;font-family:Lato,proxima-nova,Helvetica Neue,Arial,sans-serif !important;}
+.wy-breadcrumbs .wy-breadcrumbs-aside {display:none;}
+.wy-side-nav-search {padding-left:0 !important;padding-right:0 !important;}
+.wy-breadcrumbs .breadcrumb-item {display:inline !important;}
+.fa-arrow-circle-right:before {content:" >" !important;}
+.fa-arrow-circle-left:before {content:"< " !important;}
+.highlight-python,.highlight-console {border:1px solid #e1e4e5 !important;margin:1px 0 24px !important;background:#f8f8f8 !important;}
+.highlight pre {white-space:pre !important;margin:0 !important;padding:12px !important;display:block !important;}

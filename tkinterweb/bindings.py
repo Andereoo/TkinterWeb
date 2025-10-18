@@ -6,7 +6,7 @@ Copyright (c) 2021-2025 Andrew Clarke
 
 from re import IGNORECASE, MULTILINE, split, sub, finditer
 
-from urllib.parse import urldefrag, urlencode, urljoin, urlparse
+from urllib.parse import urlencode, urljoin
 
 from tkinter import Widget, Frame, TclError
 
@@ -1114,8 +1114,9 @@ class TkinterWeb(Widget):
         if not widget:
             widget = event.widget
 
-        # If the user scrolls on the page while it is loading, stop scrolling to the fragment
-        widget.fragment = None
+        # If the user scrolls on the page while its resources are loading, stop scrolling to the fragment
+        if isinstance(widget.fragment, tuple):
+            widget.fragment = None
             
         yview = widget.yview()
 
@@ -1142,7 +1143,8 @@ class TkinterWeb(Widget):
         "Manage scrolling on Windows/MacOS."
 
         # If the user scrolls on the page while it is loading, stop scrolling to the fragment
-        self.fragment = None
+        if isinstance(self.fragment, tuple):
+            self.fragment = None
 
         yview = self.yview() 
 
@@ -1270,15 +1272,15 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     def _handle_load_finish(self, post_event=True):
         if self.fragment:
             try:
-                if isinstance(self.fragment, str):
+                if isinstance(self.fragment, tuple):
+                    self.yview(self.fragment)
+                else:
                     node = self.search(f"[id='{self.fragment}']")
                     if not node: 
                         node = self.search(f"[name={self.fragment}]")
                     if node:
                         self.fragment = node
                         self.yview(node)
-                else:
-                    self.yview(self.fragment)
             except tk.TclError:
                 pass
         

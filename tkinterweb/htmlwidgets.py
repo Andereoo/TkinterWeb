@@ -8,6 +8,8 @@ Copyright (c) 2021-2025 Andrew Clarke
 from .bindings import *
 from .dom import HTMLDocument, HTMLElement
 
+from urllib.parse import urldefrag
+
 from tkinter.ttk import Frame, Style
 
 # JavaScript is experimental and not used by everyone

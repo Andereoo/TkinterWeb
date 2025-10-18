@@ -16,7 +16,7 @@ import tkinterweb_tkhtml
 
 import ssl, gzip, zlib
 from urllib.request import Request, urlopen
-from urllib.parse import urldefrag, urlunparse, urlparse
+from urllib.parse import urlunparse, urlparse
 
 try:
     import brotli

@@ -119,6 +119,8 @@ class HtmlFrame(Frame):
     :type ssl_cafile: bool or str
     :param headers: The headers used by urllib's :py:class:`~urllib.request.Request` when fetching a resource.
     :type headers: dict
+    :param request_timeout: The number of seconds to wait when fetching a resource before timing out.
+    :type request_timeout: int
 
     HTML rendering behaviour:
 
@@ -190,6 +192,7 @@ class HtmlFrame(Frame):
             "dark_style": DARK_STYLE,
             "insecure_https": False,
             "ssl_cafile": None,
+            "request_timeout": 15,
             "headers": HEADERS,
             "experimental": False,
             # No impact after loading
@@ -371,14 +374,18 @@ If you benefited from using this package, please consider supporting its develop
     def __setitem__(self, key, value):
         self.configure(**{key: value})
 
-    def load_html(self, html_source, base_url=None):
+    def load_html(self, html_source, base_url=None, fragment=None):
         """Clear the current page and parse the given HTML code.
         
         :param html_source: The HTML code to render.
         :type html_source: str
         :param base_url: The base url to use when parsing stylesheets and images. If this argument is not supplied, it will be set to the current working directory.
-        :type base_url: str, optional"""
+        :type base_url: str, optional
+        :param fragment: The url fragment to scroll to after the document loads.
+        :type fragment: str, optional"""
         self._html.reset()
+
+        if fragment: fragment = "".join(char for char in fragment if char.isalnum() or char in ("-", "_", ".")).replace(".", r"\.")
 
         if base_url == None:
             path = WORKING_DIR
@@ -386,6 +393,7 @@ If you benefited from using this package, please consider supporting its develop
                 path = f"/{path}"
             base_url = f"file://{path}/"
         self._html.base_url = self._current_url = base_url
+        self._html.fragment = fragment
         self._html.parse(html_source)
 
         self._finish_css()
@@ -936,6 +944,8 @@ If you benefited from using this package, please consider supporting its develop
             if method == "GET":
                 url = str(url) + str(data)
 
+            fragment = parsed.fragment
+
             # If url is different than the current one, load the new site
             if force or (method == "POST") or ((urldefrag(url)[0]).replace("/", "") != (urldefrag(self._previous_url)[0]).replace("/", "")):
                 view_source = False
@@ -948,10 +958,10 @@ If you benefited from using this package, please consider supporting its develop
                     self._html.post_message("WARNING: Using insecure HTTPS session")
                 if (parsed.scheme == "file") or (not self._html.caches_enabled):
                     data, newurl, filetype, code = download(
-                        url, data, method, decode, self._html.insecure_https, self._html.ssl_cafile, tuple(self._html.headers.items()))
+                        url, data, method, decode, self._html.insecure_https, self._html.ssl_cafile, tuple(self._html.headers.items()), self._html.request_timeout)
                 else:
                     data, newurl, filetype, code = cache_download(
-                        url, data, method, decode, self._html.insecure_https, self._html.ssl_cafile, tuple(self._html.headers.items()))
+                        url, data, method, decode, self._html.insecure_https, self._html.ssl_cafile, tuple(self._html.headers.items()), self._html.request_timeout)
                 self._html.post_message(f"Successfully connected to {parsed.netloc}")
                 if get_current_thread().isrunning():
                     if view_source:
@@ -980,28 +990,12 @@ If you benefited from using this package, please consider supporting its develop
                         if self._current_url != newurl:
                             self._current_url = newurl
                             self._html.post_event(URL_CHANGED_EVENT)
-                        self.load_html(data, newurl)
+                        self.load_html(data, newurl, fragment)
             else:
                 # If no requests need to be made, we can signal that the page is done loading
-                self._html.post_event(DONE_LOADING_EVENT)
+                self._html.fragment = fragment
+                self._html._handle_load_finish()
                 self._finish_css()
-
-            # Handle URI fragments
-            frag = parsed.fragment
-            if frag:
-                self._html.update()
-                try:
-                    frag = "".join(char for char in frag if char.isalnum() or char in ("-", "_", ".")).replace(".", r"\.")
-                    node = self._html.search(f"[id='{frag}']")
-                    
-                    if node:
-                        self._html.yview(node)
-                    else:
-                        node = self._html.search(f"[name={frag}]")
-                        if node:
-                            self._html.yview(node)
-                except Exception:
-                    pass
         except Exception as error:
             self._html.post_message(f"ERROR: could not load {url}: {error}")
             if "CERTIFICATE_VERIFY_FAILED" in str(error):
@@ -1009,7 +1003,7 @@ If you benefited from using this package, please consider supporting its develop
 This might also happen if your Python distribution does not come installed with website certificates.\n\
 This is a known Python bug on older MacOS systems. \
 Running something along the lines of \"/Applications/Python {'.'.join(PYTHON_VERSION[:2])}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
-Otherwise, use 'configure(insecure_https=True)' to ignore website certificates.")
+Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certificates or 'HtmlFrame(master, ssl_cafile=[path_to_your_cafile])' to specify the path to your CA file if you know where it is.")
             self.on_navigate_fail(url, error, code)
         self._thread_in_progress = None
 

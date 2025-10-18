@@ -5,7 +5,6 @@ Copyright (c) 2021-2025 Andrew Clarke
 """
 
 from tkinter import PhotoImage as TkPhotoImage
-from io import BytesIO
 
 # Some folks only use TkinterWeb as a fancy label widget and don't need to load images
 # Or, if they do load images, they don't need support for images not supported by Tk
@@ -74,6 +73,7 @@ def text_to_image(name, alt, nodebox, font_type, font_size, threshold):
 def invert_image(image, limit):
     from PIL import Image, ImageOps
     from collections import Counter
+    from io import BytesIO
 
     def is_mostly_one_color(image, tolerance=30):
         pixels = list(image.resize((100, 100), Image.Resampling.NEAREST).getdata())
@@ -141,6 +141,7 @@ def data_to_image(data, name, imagetype, invert, limit):
     if "svg" in imagetype:
         load_cairo()
         if rsvg_type == 1 or rsvg_type == 3:
+            from io import BytesIO
             if rsvg_type == 1:
                 svg = rsvg.Handle(data=data)
                 img = cairo.ImageSurface(

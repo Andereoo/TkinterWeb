@@ -9,7 +9,7 @@
 **Fast and lightweight web browser and app design widgets for Tkinter.**
 
 ## Overview
-**TkinterWeb offers bindings and extensions to a modified version of the Tkhtml3 widget from http://tkhtml.tcl.tk, which enables enables the display of HTML and CSS code in Tkinter applications.** 
+**TkinterWeb offers bindings and extensions to a modified version of the Tkhtml3 widget from [http://tkhtml.tcl.tk](https://web.archive.org/web/20250219233338/http://tkhtml.tcl.tk/), which enables enables the display of HTML and CSS code in Tkinter applications.** 
 
 Some of TkinterWeb's uses include:
 * Displaying websites, feeds, help files, and other styled HTML
@@ -33,7 +33,7 @@ from tkinterweb import HtmlFrame # import the HtmlFrame widget
 
 root = tk.Tk() # create the Tkinter window
 frame = HtmlFrame(root) # create the HtmlFrame widget
-frame.load_website("http://tkhtml.tcl.tk/tkhtml.html") # load a website
+frame.load_website("https://web.archive.org/web/20250219233338/http://tkhtml.tcl.tk/") # load a website
 frame.pack(fill="both", expand=True) # attach the HtmlFrame widget to the window
 root.mainloop()
 ```

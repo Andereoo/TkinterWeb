@@ -7,11 +7,12 @@ README = (HERE / "README.md").read_text()
 extras = dict()
 extras["javascript"] = ["pythonmonkey"]
 extras["svg"] = ["cairosvg"]
-extras["full"] = extras["javascript"] + extras["svg"]
+extras["requests"] = ["brotli"]
+extras["full"] = extras["javascript"] + extras["svg"] + extras["requests"]
 
 setup(
     name="tkinterweb",
-    version="4.5.2",
+    version="4.6.0",
     python_requires=">=3.2",
     description="HTML/CSS viewer for Tkinter",
     long_description=README,

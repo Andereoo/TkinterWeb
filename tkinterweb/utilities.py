@@ -14,8 +14,14 @@ import threading
 
 import tkinterweb_tkhtml
 
-import ssl
+import ssl, gzip, zlib
 from urllib.request import Request, urlopen
+
+try:
+    import brotli
+    has_brotli = True
+except ImportError:
+    has_brotli = False
 
 from _thread import RLock
 from functools import update_wrapper, _make_key
@@ -26,7 +32,7 @@ __title__ = 'TkinterWeb'
 __author__ = "Andrew Clarke"
 __copyright__ = "(c) 2021-2025 Andrew Clarke"
 __license__ = "MIT"
-__version__ = '4.5.2'
+__version__ = '4.6.0'
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
@@ -36,7 +42,8 @@ PYTHON_VERSION = platform.python_version_tuple()
 
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha"
+    "User-Agent": "Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha",
+    "Accept-Encoding": ("gzip, deflate, br" if has_brotli else "gzip, deflate"),
 }
 DEFAULT_PARSE_MODE = "xml"
 DEFAULT_ENGINE_MODE = "standards"
@@ -479,6 +486,7 @@ class BuiltinPageGenerator():
             <code>Headers: {headers}</code>\
             <code>Insecure HTTPS: {insecure_https}</code>\
             <code>CA file path: {ssl_cafile}</code>\
+            <code>Request timeout: {request_timeout}s</code>\
             <code class='header'>Threading settings</code>\
             <code>Threading enabled: {threading_enabled}</code>\
             <code>Tcl allows threading: {allow_threading}</code>\
@@ -547,7 +555,7 @@ class BuiltinPageGenerator():
                 general_dark_theme_regexes=("".join(f"<code class='indented'>{i.replace('{', '{{').replace('}', '}}')}</code>" for i in self._html.general_dark_theme_regexes)), 
                 inline_dark_theme_regexes=("".join(f"<br><code class='indented'>{i.replace('{', '{{').replace('}', '}}')}</code>" for i in self._html.inline_dark_theme_regexes)),
                 style_dark_theme_regex=f"<code class='indented'>{self._html.style_dark_theme_regex.replace('{', '{{').replace('}', '}}')}</code>", 
-                visited_links=("".join(f"<code class='indented'>{i}</code>" for i in self._html.visited_links)),
+                visited_links=(("".join(f"<code class='indented'>{i}</code>" for i in self._html.visited_links)) if self._html.visited_links else None),
                 root=f"<code class='indented'>{ROOT_DIR}</code>", 
                 tkhtml_root=f"<code class='indented'>{tkinterweb_tkhtml.TKHTML_ROOT_DIR}</code>", 
                 working_dir=f"<code class='indented'>{WORKING_DIR}</code>", 
@@ -560,7 +568,7 @@ class BuiltinPageGenerator():
                 tkw_tkhtml_version=tkinterweb_tkhtml.__version__, python_version=".".join(PYTHON_VERSION), tcl_version=self._html.tk.call("info", "patchlevel"), tk_version=self._html.tk.call("package", "present", "Tk"),
                 platform=PLATFORM.system, machine=PLATFORM.machine, processor=PLATFORM.processor,
                 
-                insecure_https=self._html.insecure_https, ssl_cafile=self._html.ssl_cafile, use_prebuilt_tkhtml=self._html.use_prebuilt_tkhtml,
+                insecure_https=self._html.insecure_https, ssl_cafile=self._html.ssl_cafile, request_timeout=self._html.request_timeout, use_prebuilt_tkhtml=self._html.use_prebuilt_tkhtml,
                 allow_threading=self._html.allow_threading, threading_enabled=self._html.threading_enabled, 
                 caches_enabled=self._html.caches_enabled, dark_theme_enabled=self._html.dark_theme_enabled,
                 image_inversion_enabled=self._html.image_inversion_enabled, crash_prevention_enabled=self._html.crash_prevention_enabled, 
@@ -704,7 +712,7 @@ def lru_cache():
     return decorator
 
 
-def download(url, data=None, method="GET", decode=None, insecure=False, cafile=None, headers=()):
+def download(url, data=None, method="GET", decode=None, insecure=False, cafile=None, headers=(), timeout=15):
     "Fetch files. Note that headers should be converted from dict to tuple before calling download() as dicts aren't hashable."
     if insecure or cafile:
         context = ssl.create_default_context(cafile=cafile)
@@ -717,31 +725,45 @@ def download(url, data=None, method="GET", decode=None, insecure=False, cafile=N
     thread = get_current_thread()
     url = url.replace(" ", "%20")
     if data and (method == "POST"):
-        req = urlopen(Request(url, data, headers=dict(headers)), context=context)
+        req = Request(url, data, headers=dict(headers))
     else:
-        req = urlopen(Request(url, headers=dict(headers)), context=context)
+        req = Request(url, headers=dict(headers))
     if not thread.isrunning():
         return None, url, "", ""
-    data = req.read()
-    url = req.geturl()
-    info = req.info()
-    code = req.getcode()
+    
+    with urlopen(req, context=context, timeout=timeout) as res:
+        data = res.read()
+        url = res.geturl()
+        info = res.info()
+        code = res.getcode()
 
-    try:
-        maintype = info.get_content_maintype()
-        filetype = info.get_content_type()
-    except AttributeError:
-        maintype = info.maintype
-        filetype = info.type
-    if (maintype != "image") or ("svg" in filetype):
-        if decode:
-            data = data.decode(decode, errors="ignore")
+        if not url.startswith("file://"):
+            enc = res.getheader("Content-Encoding", "").lower()
+            if enc == "gzip":
+                data = gzip.decompress(data)
+            elif enc == "deflate":
+                try:
+                    data = zlib.decompress(data)
+                except zlib.error:
+                    data = zlib.decompressobj(-zlib.MAX_WBITS).decompress(data)
+            elif enc == "br" and has_brotli:
+                data = brotli.decompress(data)
+
+        try:
+            maintype = info.get_content_maintype()
+            filetype = info.get_content_type()
+        except AttributeError:
+            maintype = info.maintype
+            filetype = info.type
+        if (maintype != "image") or ("svg" in filetype):
+            if decode:
+                data = data.decode(decode, errors="ignore")
+            else:
+                data = data.decode(errors="ignore")
+        if not thread.isrunning():
+            return None, url, "", code
         else:
-            data = data.decode(errors="ignore")
-    if not thread.isrunning():
-        return None, url, "", code
-    else:
-        return data, url, filetype, code
+            return data, url, filetype, code
 
 
 @lru_cache()

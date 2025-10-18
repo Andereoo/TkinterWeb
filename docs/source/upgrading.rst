@@ -195,7 +195,11 @@ Version 4.4:
 
 Version 4.5:
 
-* The new configuration option ``ssl_cafile`` can be used to proivide a path to a CA Certificate file. See  `bug #28 <https://github.com/Andereoo/TkinterWeb/issues/28>`_ .
+* The new configuration option ``ssl_cafile`` can be used to provide a path to a CA Certificate file. See  `bug #28 <https://github.com/Andereoo/TkinterWeb/issues/28>`_ .
+
+Version 4.6:
+
+* The new configuration option ``request_timeout`` can be used to specify the number of seconds to wait before a request times out.
 
 Changed
 -------
@@ -243,3 +247,9 @@ Version 4.5:
 
 * Periods are now supported in url fragments. See  `bug #143 <https://github.com/Andereoo/TkinterWeb/issues/143>`_ .
 * Tkhtml file loading was updated in version 4.5. Some error messages have also been updated. Please submit a bug report if you notice any issues.
+
+Version 4.6:
+
+* Url fragments are now tracked as the document loads. This ensures that the fragment is still visible even after loading CSS files or images that change the layout of the document.
+* ``gzip`` and ``deflate`` content encodings are now supported. Brotli compression is also supported if the :py:mod:`brotli` module is installed. This increases page load speeds and decreases bandwidth usage in some websites.
+* Pressing Ctrl-A in an HTML number input, text input, or textarea will cause the widget's text to be selected. Pasting will now overwrite any selected text.

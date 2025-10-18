@@ -121,6 +121,7 @@ class TkinterWeb(Widget):
         self.maximum_thread_count = 20
         self.insecure_https = False
         self.ssl_cafile = None
+        self.request_timeout = 15
         self.headers = {}
         self.dark_theme_limit = 160
         self.style_dark_theme_regex = r"([^:;\s{]+)\s?:\s?([^;{!]+)(?=!|;|})"
@@ -138,6 +139,7 @@ class TkinterWeb(Widget):
         self.title = ""
         self.icon = ""
 
+        self.fragment = ""
         self.style_count = 0
         self.active_threads = []
         self.loaded_images = set()
@@ -328,7 +330,10 @@ class TkinterWeb(Widget):
 
         # We assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
         if not self.downloads_have_occured:
-            self.post_event(DONE_LOADING_EVENT)
+            self._handle_load_finish()
+        else:
+            # Scroll to the fragment if given but do not issue a done loading event
+            self._handle_load_finish(False)
 
         self._submit_deferred_scripts()
         self.send_onload()
@@ -403,6 +408,7 @@ class TkinterWeb(Widget):
         self.selection_end_node = None
         self.title = ""
         self.icon = ""
+        self.fragment = ""
         self.vsb_type = self.manage_vsb_func()
         self.manage_hsb_func()
         self._set_cursor("default")
@@ -1107,6 +1113,9 @@ class TkinterWeb(Widget):
         "Manage scrolling on Linux."
         if not widget:
             widget = event.widget
+
+        # If the user scrolls on the page while it is loading, stop scrolling to the fragment
+        widget.fragment = None
             
         yview = widget.yview()
 
@@ -1131,6 +1140,10 @@ class TkinterWeb(Widget):
 
     def scroll(self, event):
         "Manage scrolling on Windows/MacOS."
+
+        # If the user scrolls on the page while it is loading, stop scrolling to the fragment
+        self.fragment = None
+
         yview = self.yview() 
 
         if self._javascript_enabled:
@@ -1254,6 +1267,24 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             # The widget doesn't exist anymore
             pass
 
+    def _handle_load_finish(self, post_event=True):
+        if self.fragment:
+            try:
+                if isinstance(self.fragment, str):
+                    node = self.search(f"[id='{self.fragment}']")
+                    if not node: 
+                        node = self.search(f"[name={self.fragment}]")
+                    if node:
+                        self.fragment = node
+                        self.yview(node)
+                else:
+                    self.yview(self.fragment)
+            except tk.TclError:
+                pass
+        
+        if post_event:
+            self.post_event(DONE_LOADING_EVENT)
+
     def _generate_altered_colour(self, match, matchtype=1):
         "Invert document colours. Highly experimental."
         colors = match.group(2).replace("\n", "")
@@ -1318,9 +1349,9 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
     def _download_url(self, url):
         if url.startswith("file://") or (not self._caches_enabled):
-            return download(url, insecure=self.insecure_https, cafile=self.ssl_cafile, headers=tuple(self.headers.items()))
+            return download(url, insecure=self.insecure_https, cafile=self.ssl_cafile, headers=tuple(self.headers.items()), timeout=self.request_timeout)
         else:
-            return cache_download(url, insecure=self.insecure_https, cafile=self.ssl_cafile, headers=tuple(self.headers.items()))
+            return cache_download(url, insecure=self.insecure_https, cafile=self.ssl_cafile, headers=tuple(self.headers.items()), timeout=self.request_timeout)
     
     def _thread_check(self, callback, *args, **kwargs):
         if not self.downloads_have_occured:
@@ -1574,6 +1605,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         else:
             self.loaded_forms[node] = inputs
             self.post_message("Successfully setup form")
+            #self.post_message(f"Successfully setup form element {node}")
 
     def _on_table(self, node):
         """Handle <form> elements in tables; workaround for bug #48."
@@ -1600,8 +1632,9 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
            
             for form in inputs:
                 self.loaded_forms[form] = inputs[form]
-                self.post_message("Successfully setup table form")
                 self.waiting_forms -= 1
+                self.post_message("Successfully setup table form")
+                #self.post_message(f"Successfully setup table form element {node}")
 
     def _on_select(self, node):
         "Handle <select> elements."
@@ -1639,6 +1672,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                 node, widgetid, widgettype
             ),
         )
+        #self.post_message(f"Successfully setup select element {node}")
 
     def _on_textarea(self, node):
         "Handle <textarea> elements."
@@ -1658,6 +1692,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                 node, widgetid, widgettype
             ),
         )
+        #self.post_message(f"Successfully setup select element {node}")
 
     def _on_input(self, node):
         "Handle <input> elements."
@@ -1766,6 +1801,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
         if state != "false": 
             widgetid.configure(state="disabled")
+        #self.post_message(f"Successfully setup {nodetype if nodetype else "text"} input element {node}")
 
     def _on_input_value_change(self, node, attribute, value):
         if node not in self.form_widgets:
@@ -1819,7 +1855,9 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     def _finish_download(self, thread):
         self.active_threads.remove(thread)
         if len(self.active_threads) == 0:
-            self.post_event(DONE_LOADING_EVENT)
+            self._handle_load_finish()
+        else:
+            self._handle_load_finish(False)
 
     def _submit_deferred_scripts(self):
         if self.pending_scripts:
@@ -2038,6 +2076,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                 visited_links = self.visited_links,
                 insecure_https = self.insecure_https,
                 ssl_cafile = self.ssl_cafile,
+                request_timeout = self.request_timeout,
             )
 
             if html:

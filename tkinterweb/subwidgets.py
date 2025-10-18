@@ -122,6 +122,9 @@ class ScrolledTextBox(tk.Frame):
                                     borderwidth=0,
                                     selectborderwidth=0,
                                     highlightthickness=0,
+                                    undo=True, 
+                                    maxundo=-1, 
+                                    autoseparators=True,
                                     **kwargs)
         tbox.grid(row=0, column=0, sticky="nsew")
 
@@ -136,6 +139,15 @@ class ScrolledTextBox(tk.Frame):
         tbox.bind("<Button-5>", self.scroll_x11)
         tbox.bind("<Control-Key-a>", self.select_all)
         tbox.bind('<KeyRelease>', lambda event: onchangecommand(self) if onchangecommand else None)
+        tbox.bind("<<Paste>>", self._on_paste)
+
+    def _on_paste(self, event):
+        try:
+            self.tbox.delete("sel.first", "sel.last")
+        except tk.TclError:
+            pass
+        self.tbox.insert("insert", self.tbox.clipboard_get())
+        return "break"
 
     def select_all(self, event):
         self.tbox.tag_add("sel", "1.0", "end")
@@ -179,13 +191,28 @@ class ScrolledTextBox(tk.Frame):
 
 class FormEntry(tk.Entry):
     def __init__(self, parent, value="", entry_type="", onchangecommand=None, **kwargs):
+        if entry_type == "password":
+            kwargs["show"] = "*"
         tk.Entry.__init__(self, parent, borderwidth=0, highlightthickness=0, **kwargs)
         self.insert(0, value)
 
         self.bind("<KeyRelease>", lambda event: onchangecommand(self) if onchangecommand else None)
-        if entry_type == "password":
-            self.configure(show="*")
-            
+        self.bind("<Control-a>", self._select_all)
+        self.bind("<<Paste>>", self._on_paste)
+
+    def _on_paste(self, event):
+        try:
+            self.delete("sel.first", "sel.last")
+        except tk.TclError:
+            pass
+        self.insert("insert", self.clipboard_get())
+        return "break"
+
+    def _select_all(self, event):
+        self.selection_range(0, "end")
+        self.icursor("end")
+        return "break"
+
     def set(self, value):
         self.delete(0, "end")
         self.insert(0, value)
@@ -347,6 +374,22 @@ class FormNumber(tk.Spinbox):
         self.variable.trace_add("write", self._update_value)
 
         self.tooltip = Tooltip(self)
+
+        self.bind("<Control-a>", self._select_all)
+        self.bind("<<Paste>>", self._on_paste)
+
+    def _on_paste(self, event):
+        try:
+            self.delete("sel.first", "sel.last")
+        except tk.TclError:
+            pass
+        self.insert("insert", self.clipboard_get())
+        return "break"
+
+    def _select_all(self, event):
+        self.selection_range(0, "end")
+        self.icursor("end")
+        return "break"
 
     def _update_value(self, *args):
         self.onchangecommand(self)

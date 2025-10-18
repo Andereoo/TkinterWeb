@@ -19,6 +19,7 @@ Or, you can choose to install optional dependencies as well:
 
    $ pip install tkinterweb[javascript] # to also install JavaScript support
    $ pip install tkinterweb[svg] # to also install Scalable Vector Graphics support.
+   $ pip install tkinterweb[requests] # to also install Brotli compression support for faster page loads on some sites.
    $ pip install tkinterweb[full] # to install all optional dependencies
 
 You can run the TkinterWeb demo to see if it worked!

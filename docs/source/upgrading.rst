@@ -262,4 +262,4 @@ Version 4.6:
 Version 4.7
 
 * Fixed flickering when moving the mouse over scrollbars in ``<iframe>`` elements
-* :meth:`.HtmlFrame.bind` now binds `<Enter>` and `<Leave>` directly. All other events are still bound to the associated :class:`~tkinterweb.TkinterWeb` instance.
+* :meth:`.HtmlFrame.bind` now binds ``<Enter>`` and ``<Leave>`` directly. All other events are still bound to the associated :class:`~tkinterweb.TkinterWeb` instance.

@@ -614,6 +614,7 @@ BUILTIN_ATTRIBUTES = {
 
 DOWNLOADING_RESOURCE_EVENT = "<<DownloadingResource>>"
 DONE_LOADING_EVENT = "<<DoneLoading>>"
+DOM_CONTENT_LOADED_EVENT = "<<DOMContentLoaded>>"
 URL_CHANGED_EVENT = "<<UrlChanged>>"
 ICON_CHANGED_EVENT = "<<IconChanged>>"
 TITLE_CHANGED_EVENT = "<<TitleChanged>>"

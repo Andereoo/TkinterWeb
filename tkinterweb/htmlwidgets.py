@@ -261,13 +261,10 @@ class HtmlFrame(Frame):
 
         hsb.bind("<Enter>", html._on_leave)
         vsb.bind("<Enter>", html._on_leave)
-
         self.bind("<Leave>", html._on_leave)
         self.bind("<Enter>", html._on_mouse_motion)
-        html.bind("<Configure>", self._handle_resize)
-
         
-        self.bind = html.bind
+        html.bind("<Configure>", self._handle_resize)
 
         self._html.post_message(f"""Welcome to TkinterWeb!
                                 
@@ -367,6 +364,13 @@ If you benefited from using this package, please consider supporting its develop
         elif key in self.tkhtml_options.keys():
             return self._html.cget(key)
         return super().cget(key)
+    
+    def bind(self, sequence, *args, **kwargs):
+        "Add an event binding. For convenience, some bindings will be bound to this widget and others will be bound to its children."
+        if sequence in {"<Leave>", "<Enter>"}:
+            super().bind(sequence, *args, **kwargs)
+        else:
+            self._html.bind(sequence, *args, **kwargs)
     
     def __getitem__(self, key):
         return self.cget(key)

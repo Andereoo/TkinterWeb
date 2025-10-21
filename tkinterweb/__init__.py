@@ -45,7 +45,7 @@ class Demo():
         
         frame.load_url("https://tkinterweb.readthedocs.io/en/latest/")
         frame.bind("<<TitleChanged>>", lambda event: self.root.title(frame.title))
-        frame.bind("<<DoneLoading>>", self.done_loading)
+        frame.bind("<<DOMContentLoaded>>", self.done_loading)
         frame.pack(expand=True, fill="both")
 
         root.mainloop()
@@ -76,7 +76,7 @@ class Demo():
             self.frame.document.querySelector("div[role=\"search\"]").remove()
             head = self.frame.document.getElementsByTagName("head")[0].innerHTML
             for code_block in self.frame.document.getElementsByClassName("highlight"):
-                iframe = HtmlFrame(self.frame, horizontal_scrollbar="auto", shrink=True, overflow_scroll_frame=self.frame.html)
+                iframe = HtmlFrame(self.frame, messages_enabled=False, horizontal_scrollbar="auto", shrink=True, overflow_scroll_frame=self.frame.html)
                 text = self.HTML_to_text(code_block.innerHTML, "<span", "</span>")
                 iframe.load_html(f"{head}<div class='highlight'>{text}</div>", base_url=self.frame.base_url)
                 code_block.widget = iframe

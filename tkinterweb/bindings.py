@@ -327,6 +327,7 @@ class TkinterWeb(Widget):
         html = self._crash_prevention(html)
         html = self._dark_mode(html)
         self.tk.call(self._w, "parse", html)
+        self.post_event(DOM_CONTENT_LOADED_EVENT)
 
         # We assume that if no downloads have been made by now the document has finished loading, so we send the done loading signal
         if not self.downloads_have_occured:
@@ -817,16 +818,15 @@ class TkinterWeb(Widget):
                 self.replace_node_contents(node, widgetid)
 
         self._add_bindtags(widgetid, allowscrolling)
-
         widgetid.bind(
             "<Enter>",
-            lambda event, node_handle=node: self._on_embedded_mouse_motion(
+            lambda event, node_handle=node: self._on_embedded_mouse_enter(
                 event, node_handle=node_handle
             ),
         )
         widgetid.bind(
             "<Leave>",
-            lambda event, node_handle=None: self._on_embedded_mouse_motion(
+            lambda event, node_handle=None: self._on_embedded_mouse_leave(
                 event, node_handle=node_handle
             ),
         )
@@ -2138,7 +2138,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                 self.set_node_flags(node_handle, "active")
                 self.prev_active_node = node_handle
 
-    def _on_leave(self, event):
+    def _on_leave(self, event=None):
         "Reset cursor and node state when leaving this widget"
         self._set_cursor("default")
         if self.stylesheets_enabled:
@@ -2420,9 +2420,15 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         except TclError:
             self._set_cursor("default")
 
-    def _on_embedded_mouse_motion(self, event, node_handle):
+    def _on_embedded_mouse_enter(self, event, node_handle):
         self.on_embedded_node = node_handle
         self._on_mouse_motion(event)
+    
+    def _on_embedded_mouse_leave(self, event, node_handle):
+        self.on_embedded_node = node_handle
+        # Calling self._on_mouse_motion here seems so cause some flickering
+        # event.x and event.y are relative to this node and not self
+        # We could fix this but I don't notice any noticeable side effects of not including it
 
     def _add_bindtags(self, widgetid, allowscrolling=True):
         "Add bindtags to allow scrolling and on_embedded_mouse function calls."

@@ -201,6 +201,9 @@ Version 4.6:
 
 * The new configuration option ``request_timeout`` can be used to specify the number of seconds to wait before a request times out.
 
+Version 4.7:
+* The new ``<<DOMContentLoaded>>`` event will be generated once the page DOM content has loaded. The page may not be done loading, but at this point it is possible to interact with the DOM.
+
 Changed/Fixed
 -------------
 

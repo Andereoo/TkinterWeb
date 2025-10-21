@@ -33,11 +33,11 @@ from tkinterweb import HtmlFrame # import the HtmlFrame widget
 
 root = tk.Tk() # create the Tkinter window
 frame = HtmlFrame(root) # create the HtmlFrame widget
-frame.load_website("https://web.archive.org/web/20250219233338/http://tkhtml.tcl.tk/") # load a website
+frame.load_website("https://tkinterweb.readthedocs.io/en/latest/index.html") # load a website
 frame.pack(fill="both", expand=True) # attach the HtmlFrame widget to the window
 root.mainloop()
 ```
-![TkinterWeb](/images/tkinterweb-tkhtml.png)
+![TkinterWeb](/images/tkinterweb-demo.png)
 
 See [Getting Started](https://tkinterweb.readthedocs.io/en/latest/usage.html) for more tips and tricks.
 

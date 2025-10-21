@@ -867,7 +867,7 @@ class TkinterWeb(Widget):
             widgetid.configure(background=bg, foreground=fg, font=font)
 
     def map_node(self, node, force=False):
-        "Redraw a node if it currently containing a Tk widget."
+        "Redraw a node if it currently contains a Tk widget."
         if force or (self.get_node_attribute(node, self.widget_container_attr) != ""):
             self.set_node_attribute(node, self.widget_container_attr, "")
             self.replace_node_contents(node, node)
@@ -1009,7 +1009,7 @@ class TkinterWeb(Widget):
             return nmatches, selected, matches
 
     def get_child_text(self, node):
-        """Get text of node and all its descendants recursively"""
+        """Get text of node and all its descendants recursively."""
         text = self.get_node_text(node, "-pre")
         for child in self.get_node_children(node):
             text += self.get_child_text(child)
@@ -1020,7 +1020,7 @@ class TkinterWeb(Widget):
         return urljoin(self.base_url, url)
     
     def update_tags(self):
-        "Update selection and find tag colors"
+        "Update selection and find tag colours."
         self.tag("configure", "findtext", "-bg", self.find_match_highlight_color, "-fg", self.find_match_text_color)
         self.tag("configure", "findtextselected", "-bg", self.find_current_highlight_color, "-fg", self.find_current_text_color)
         self.tag("configure", "selection", "-bg", self.selected_text_highlight_color, "-fg", self.selected_text_color)

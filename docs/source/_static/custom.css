@@ -8,7 +8,7 @@
   color: #cacaca !important;
 }
 
-.wy-side-nav-search {
+.wy-side-nav-search, .wy-nav-top, .note .admonition-title, .wy-menu-vertical a:active {
   background-color: rgb(77, 122, 77) !important;
 }
 
@@ -36,13 +36,11 @@ a .rst-content tt {
   background-color: rgb(230, 238, 230) !important;
 }
 
-.note .admonition-title {
-  background-color: rgb(77, 122, 77) !important;
-}
-
 #rtd-search-form input {
   width: 80% !important;
   color: black !important;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .wy-breadcrumbs .icon-home:before {
@@ -166,8 +164,4 @@ dd .sig-paren {
   border-top: 2px solid #ccc !important;
   padding: 5px 12px 7px !important;
   border-bottom-width: 1px !important;
-}
-
-.wy-menu-vertical a:active {
-  background-color: rgb(77, 122, 77) !important
 }

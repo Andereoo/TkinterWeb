@@ -335,6 +335,9 @@ If you benefited from using this package, please consider supporting its develop
             elif key in self.tkinterweb_options:
                 value = self._check_value(self.tkinterweb_options[key], kwargs.pop(key))
                 setattr(self._html, key, value)
+                if key in {"find_match_highlight_color", "find_match_text_color", "find_current_highlight_color",
+                           "find_current_text_color", "selected_text_highlight_color", "selected_text_color"}:
+                    self._html.update_tags()
             elif key in self.tkhtml_options:
                 self._html[key] = kwargs.pop(key)
                 if key == "zoom":

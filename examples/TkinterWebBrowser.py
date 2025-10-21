@@ -180,12 +180,12 @@ class Page(tk.Frame):
     </select>
     <hr style="margin-bottom:10px;margin-top:0">
 
-    <input type="color" onchange="frame['find_match_highlight_color'] = this.value; frame.html.update_tags()" value="{frame['find_match_highlight_color']}">
-    <input type="color" onchange="frame['find_match_text_color'] = this.value; frame.html.update_tags()" value="{frame['find_match_text_color']}"><label>Find matches</label><br>
-    <input type="color" onchange="frame['find_current_highlight_color'] = this.value; frame.html.update_tags()" value="{frame['find_current_highlight_color']}">
-    <input type="color" onchange="frame['find_current_text_color'] = this.value; frame.html.update_tags()" value="{frame['find_current_text_color']}"><label>Current match</label><br>
-    <input type="color" onchange="frame['selected_text_highlight_color'] = this.value; frame.html.update_tags()" value="{frame['selected_text_highlight_color']}">
-    <input type="color" onchange="frame['selected_text_color'] = this.value; frame.html.update_tags()" value="{frame['selected_text_color']}"><label>Selected text</label><br>
+    <input type="color" onchange="frame['find_match_highlight_color'] = this.value" value="{frame['find_match_highlight_color']}">
+    <input type="color" onchange="frame['find_match_text_color'] = this.value" value="{frame['find_match_text_color']}"><label>Find matches</label><br>
+    <input type="color" onchange="frame['find_current_highlight_color'] = this.value" value="{frame['find_current_highlight_color']}">
+    <input type="color" onchange="frame['find_current_text_color'] = this.value" value="{frame['find_current_text_color']}"><label>Current match</label><br>
+    <input type="color" onchange="frame['selected_text_highlight_color'] = this.value" value="{frame['selected_text_highlight_color']}">
+    <input type="color" onchange="frame['selected_text_color'] = this.value" value="{frame['selected_text_color']}"><label>Selected text</label><br>
 
     <hr>
     

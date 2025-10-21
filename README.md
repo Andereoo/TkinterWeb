@@ -46,7 +46,8 @@ To install TkinterWeb, simply type `pip install tkinterweb` in the command promp
 
 Or, you can also choose to install optional dependencies: 
 * Use `pip install tkinterweb[javascript]` to also install JavaScript dependencies.
-* Use `pip install tkinterweb[svg]` to also install Scalable Vector Graphics dependencies. Keep in mind these packages may not work on Windows out of the box.
+* Use `pip install tkinterweb[svg]` to also install Scalable Vector Graphics dependencies.
+* Use `pip install tkinterweb[requests]` to also install Brotli compression support for faster page loads on some sites.
 * Use `pip install tkinterweb[full]` to install all optional dependencies.
 
 ## Dependencies
@@ -54,7 +55,7 @@ Or, you can also choose to install optional dependencies:
 * Tkinter (which is automatically packaged with most Python installations)
 * TkinterWeb-Tkhtml (can be installed via `pip install tkinterweb-tkhtml`)
 * PIL (can be installed via `pip install pillow`)
-* PIL.ImageTk (may be automatically installed with PIL on some systems, otherwise needs to be installed to load most image types)
+* PIL.ImageTk (may be automatically installed with PIL on some systems, otherwise needs to be installed in order to load most image types)
 
 Pip will automatically install PIL and TkinterWeb-Tkhtml when installing TkinterWeb.
 
@@ -67,6 +68,7 @@ Pip will automatically install PIL and TkinterWeb-Tkhtml when installing Tkinter
 * [`tkinterweb.Demo`](https://tkinterweb.readthedocs.io/en/latest/usage.html#installation)
 * [`tkinterweb.HtmlFrame`](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html)
 * [`tkinterweb.HtmlLabel`](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html#tkinterweb.HtmlLabel)
+* [`tkinterweb.HtmlParse`](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html#tkinterweb.HtmlParse)
 * [`tkinterweb.TkinterWeb`](https://tkinterweb.readthedocs.io/en/latest/api/tkinterweb.html)
 * [`tkinterweb.Notebook`](https://tkinterweb.readthedocs.io/en/latest/api/notebook.html) (a Tkhtml-compatible drop-in replacement for `ttk.Notebook`)
 
@@ -75,19 +77,19 @@ See [Frequently Asked Questions](https://tkinterweb.readthedocs.io/en/latest/faq
 
 ## Webpage Compatability
 **HTML/CSS:**
-* TkinterWeb supports HTML 4.01 and CSS 2.1. A full list of supported CSS declarations can be found at http://tkhtml.tcl.tk/support.html. 
+* TkinterWeb supports HTML 4.01 and CSS 2.1. A full list of supported CSS declarations can be found at [http://tkhtml.tcl.tk/support.html](https://web.archive.org/web/20250325123206/http://tkhtml.tcl.tk/support.html).
 * Most CSS pseudo-elements, such as `:hover` and `:active` are also supported. 
-* On 64-bit Windows and Linux, ``border-radius`` and more cursor options are also supported. ``overflow-x`` is also supported on ``body`` and ``html`` elements.
+* On 64-bit Windows and Linux, ``border-radius`` and more cursor options are also supported.
 
 **JavaScript:**
 * Javascript only partly supported at the moment.
    * To use JavaScript, PythonMonkey must be installed.
+* It is also possible for the user to connect their own JavaScript interpreter or manipulate the document through Python.
 * See [Using JavaScript](https://tkinterweb.readthedocs.io/en/latest/javascript.html) for more information and [DOM Manipulation with TkinterWeb](https://tkinterweb.readthedocs.io/en/latest/dom.html) for information on manipulating the document through Python.
 
 **Images:**
 * TkinterWeb supports nearly 50 different image types through PIL.
-    * In order to load Scalable Vector Graphic images, CairoSVG, both PyCairo and PyGObject, or both PyCairo and Rsvg must be installed. 
-* Without these packages, TkinterWeb will still function properly, but SVG files will not be shown.
+* In order to load Scalable Vector Graphic images, CairoSVG, both PyCairo and PyGObject, or both PyCairo and Rsvg must also be installed. 
 
 ## Contributing
 **The best ways to contribute to this project are by submitting a [bug report](https://github.com/Andereoo/TkinterWeb/issues/new) to report bugs or suggest new features, or by submitting a [pull request](https://github.com/Andereoo/TkinterWeb/pulls) to offer fixes. Your help makes TkinterWeb become more stable and full-featured!**

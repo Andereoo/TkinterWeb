@@ -24,7 +24,7 @@ Webpage Compatibility
 
 **HTML/CSS:**
 
-* TkinterWeb supports HTML 4.01 and CSS 2.1. A full list of supported CSS declarations can be found at http://tkhtml.tcl.tk/support.html. 
+* TkinterWeb supports HTML 4.01 and CSS 2.1. A full list of supported CSS declarations can be found at `http://tkhtml.tcl.tk/support.html <https://web.archive.org/web/20250325123206/http://tkhtml.tcl.tk/support.html>`_.  ``overflow-x`` is also supported on ``body`` and ``html`` elements.
 * Most CSS pseudo-elements, such as ``:hover`` and ``:active`` are also supported.
 * On 64-bit Windows and Linux, ``border-radius`` and more cursor options are also supported. 
 
@@ -34,12 +34,10 @@ Webpage Compatibility
 
   * To use JavaScript, :py:mod:`PythonMonkey`  must be installed.
 
-* It is also possible for the user to connect a JavaScript interpreter and then manipulate the document through Python. See :doc:`javascript` and :doc:`dom` for more information.
+* It is also possible for the user to connect their own JavaScript interpreter or manipulate the document through Python. See :doc:`javascript` and :doc:`dom` for more information.
 
 **Images:**
 
 * TkinterWeb supports nearly 50 different image types through :py:mod:`PIL`.
 
-  * To load Scalable Vector Graphic images, :py:mod:`CairoSVG`, both :py:mod:`PyCairo` and :py:mod:`PyGObject`, or both :py:mod:`PyCairo` and :py:mod:`Rsvg` must also be installed. 
-  
-* Without these packages, TkinterWeb will still function properly, but SVG files will not be shown.
+* In order to load Scalable Vector Graphic images, :py:mod:`CairoSVG`, both :py:mod:`PyCairo` and :py:mod:`PyGObject`, or both :py:mod:`PyCairo` and :py:mod:`Rsvg` must also be installed. 

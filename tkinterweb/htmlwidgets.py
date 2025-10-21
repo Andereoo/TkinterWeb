@@ -366,7 +366,7 @@ If you benefited from using this package, please consider supporting its develop
         return super().cget(key)
     
     def bind(self, sequence, *args, **kwargs):
-        "Add an event binding. For convenience, some bindings will be bound to this widget and others will be bound to its children."
+        "Add an event binding. For convenience, some bindings will be bound to this widget and others will be bound to its associated :class:`~tkinterweb.TkinterWeb` instance."
         if sequence in {"<Leave>", "<Enter>"}:
             super().bind(sequence, *args, **kwargs)
         else:

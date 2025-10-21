@@ -257,3 +257,9 @@ Version 4.6:
 * ``gzip`` and ``deflate`` content encodings are now supported. Brotli compression is also supported if the :py:mod:`brotli` module is installed. This increases page load speeds and decreases bandwidth usage in some websites.
 * Pressing Ctrl-A in an HTML number input, text input, or textarea will cause the widget's text to be selected. Pasting will now overwrite any selected text.
 * Loading local files with a query string in the url will no longer raise an error.
+* Fixed :meth:`.HTMLDocument.querySelector`.
+
+Version 4.7
+
+* Fixed flickering when moving the mouse over scrollbars in ``<iframe>`` elements
+* :meth:`.HtmlFrame.bind` now binds `<Enter>` and `<Leave>` directly. All other events are still bound to the associated :class:`~tkinterweb.TkinterWeb` instance.

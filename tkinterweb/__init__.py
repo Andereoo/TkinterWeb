@@ -47,7 +47,7 @@ class Demo():
         frame.bind("<<TitleChanged>>", lambda event: self.root.title(frame.title))
         frame.bind("<<DoneLoading>>", self.done_loading)
         frame.pack(expand=True, fill="both")
-        
+
         root.mainloop()
 
     def HTML_to_text(self, text, start, end):
@@ -77,7 +77,8 @@ class Demo():
             head = self.frame.document.getElementsByTagName("head")[0].innerHTML
             for code_block in self.frame.document.getElementsByClassName("highlight"):
                 iframe = HtmlFrame(self.frame, horizontal_scrollbar="auto", shrink=True, overflow_scroll_frame=self.frame.html)
-                iframe.load_html(f"{head}<div class='highlight'>{self.HTML_to_text(code_block.innerHTML, "<span", "</span>")}</div>", base_url=self.frame.base_url)
+                text = self.HTML_to_text(code_block.innerHTML, "<span", "</span>")
+                iframe.load_html(f"{head}<div class='highlight'>{text}</div>", base_url=self.frame.base_url)
                 code_block.widget = iframe
         except TclError:
             pass

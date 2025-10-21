@@ -40,50 +40,53 @@ class Demo():
         import tkinter as tk
 
         self.root = root = tk.Tk()
-        self.frame = HtmlFrame(root, on_navigate_fail=self.on_error)
-        self.frame2 = frame2 = HtmlFrame(root, messages_enabled=False)
+        self.frame = frame = HtmlFrame(root, on_navigate_fail=self.on_error, on_link_click=self.navigate, selected_text_highlight_color="#e6eee6")
         self.button = tk.Button(root, cursor="hand2")
-
-        self.afters = []
         
-        self.load()
-        frame2.bind("<<TitleChanged>>", lambda event: self.root.title(frame2.title))
-        frame2.pack(expand=True, fill="both")
+        frame.load_url("https://tkinterweb.readthedocs.io/en/latest/")
+        frame.bind("<<TitleChanged>>", lambda event: self.root.title(frame.title))
+        frame.bind("<<DoneLoading>>", self.done_loading)
+        frame.pack(expand=True, fill="both")
+        
         root.mainloop()
 
-    def load(self, url="https://wiki.python.org/moin/TkInter"):
-        self.button.configure(text="Continue", command=self.change_button)
-        self.frame.load_html(f"""<html><head><style>td {{text-align:center;vertical-align:middle}} html,body,table,tr{{width:100%;height:100%;margin:0}}</style></head><body><table><tr><td tkinterweb-full-page id="container">
-        <code>Still waiting for response from <a href="https://wiki.python.org/moin/TkInter">wiki.python.org</a>...</code></td></tr></table></body></html>""")
-        self.frame.load_url(url)
-        self.frame2.load_html(f"""<html><head><title>TkinterWeb Demo</title><style>#viewer {{width:100%; height: 300px}} td {{text-align:center;vertical-align:middle;padding: 10px}} h3{{margin:0 0 10px 0;padding:0;font-weight:normal}} html,body,table,tr{{background-color:{self.frame["about_page_background"]};color:{self.frame["about_page_foreground"]};width:100%;height:100%;margin:0}}</style></head>
-        <body><table><tr><td tkinterweb-full-page id="container">
-        <h3 id="heading">Welcome to TkinterWeb!</h3><object id="button" data={self.button}></object>
-        </td></tr></table></body></html>""")
+    def HTML_to_text(self, text, start, end):
+        "Make HTML code bwtween two strings display as plain text"
+        import re
+        pattern = re.compile(re.escape(start) + r'(.*?)' + re.escape(end), re.DOTALL)
+        def replacer(match):
+            inner = match.group(1)
+            escaped = inner.replace("<", "&lt;").replace(">", "&gt;").replace("&gt;", ">", 1)
+            return start + escaped + end
+        return pattern.sub(replacer, text)
+    
+    def navigate(self, url):
+        "Only display files from the docs page or from tkhtml.tcl.tk"
+        from urllib.parse import urlparse
+        if urlparse(self.frame.current_url).netloc == urlparse(url).netloc or "tkhtml.tcl.tk" in url:
+            self.frame.load_url(url)
+        else:
+            import webbrowser
+            webbrowser.open(url)
+
+    def done_loading(self, event):
+        "Remove the search bar and display code blocks in iframes to allow horizontal scrolling when the page loads"
+        from tkinter import TclError
+        try:
+            self.frame.document.querySelector("div[role=\"search\"]").remove()
+            head = self.frame.document.getElementsByTagName("head")[0].innerHTML
+            for code_block in self.frame.document.getElementsByClassName("highlight"):
+                iframe = HtmlFrame(self.frame, horizontal_scrollbar="auto", shrink=True, overflow_scroll_frame=self.frame.html)
+                iframe.load_html(f"{head}<div class='highlight'>{self.HTML_to_text(code_block.innerHTML, "<span", "</span>")}</div>", base_url=self.frame.base_url)
+                code_block.widget = iframe
+        except TclError:
+            pass
 
     def on_error(self, url, error, code):
-        for after in self.afters:
-            self.root.after_cancel(after)
-        self.button.configure(text="Try Again", command=lambda url=self.frame.current_url: self.load(url))
+        "Show an error page if the page fails to load"
+        self.button.configure(text="Try Again", command=lambda url=self.frame.current_url: self.frame.load_url(url))
         html = f"""<html><head><title>TkinterWeb Demo - Error {code}</title><style>td {{text-align:center;vertical-align:middle}} h3{{margin:0 0 10px 0;padding:0;font-weight:normal}} html,body,table,tr{{background-color:{self.frame["about_page_background"]};color:{self.frame["about_page_foreground"]};width:100%;height:100%;margin:0}}</style></head>
         <body><table><tr><td tkinterweb-full-page>
         <h3>Error {code}</h3><h3>An internet connection is required to display the TkinterWeb demo :(</h3><object id="button" data={self.button}></object>
         </td></tr></table></body></html>"""
-        if self.frame2.winfo_ismapped():
-            self.frame2.load_html(html)
-        else:
-            self.frame.load_html(html)
-
-    def change_button(self):
-        self.button.configure(text="Please don't press this button again", command=self.change_page)
-    
-    def change_page(self):
-        heading = self.frame2.document.getElementById("heading")
-        self.frame2.document.getElementById("button").widget = None
-        def page1():
-            heading.textContent = "Enjoy this website written about Tkinter, displayed in Tkinter:"
-        def page2():
-            self.frame2.pack_forget()
-            self.frame.pack(expand=True, fill="both")
-            if self.frame.title: self.root.title(f"TkinterWeb Demo - {self.frame.title}")
-        self.afters = [self.root.after(3000, page1), self.root.after(5500, page2)]
+        self.frame.load_html(html)

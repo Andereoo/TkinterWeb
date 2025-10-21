@@ -169,7 +169,7 @@ class HTMLDocument:
         :type query: str
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
-        return HTMLElement(self, self.html.search(query, index=0), root=_root)
+        return HTMLElement(self, self.html.search(query, index=0, root=_root))
 
     def querySelectorAll(self, query, _root=None):
         """Return all elements that match a given CSS selector.
@@ -234,7 +234,7 @@ class HTMLElement:
             self.html.get_node_tkhtml(node)  # check if the node is valid, rises invalid command error if not.
         except TclError as e:
             if "invalid command name" in str(e):
-                raise TclError(f"Node {str(e).split()[-1]} is invalid")
+                raise TclError("Element does not exist or is invalid")
 
         # We need this here or crashes happen if multiple Tkhtml instances exist (depending on the Tkhtml version)
         # No idea why, but hey, it works

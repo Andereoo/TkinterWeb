@@ -99,14 +99,12 @@ See [Frequently Asked Questions](https://tkinterweb.readthedocs.io/en/latest/faq
 Please check the [FAQs](https://tkinterweb.readthedocs.io/en/latest/faq.html) and [closed bugs](https://github.com/Andereoo/TkinterWeb/issues?q=is%3Aissue) before submitting a bug report to see if your question as already been answered.
 
 ## Credits
-**TkinterWeb is powered by the [Tkhtml project](http://tkhtml.tcl.tk/index.html).**
+**TkinterWeb is powered by the [Tkhtml project](https://web.archive.org/web/20250219233338/http://tkhtml.tcl.tk/).**
 
-Thanks to the [TkinterHtml package](https://bitbucket.org/aivarannamaa/tkinterhtml) for providing the bindings on which this project is based.
+Special thanks to [Christopher Chavez](https://github.com/chrstphrchvz), [Zamy846692](https://github.com/Zamy846692), [Jośe Fernando Moyano](https://github.com/jofemodo), [Bumshakalaka](https://github.com/Bumshakalaka), [Trov5](https://github.com/TRVRStash), [Mark Mayo](https://github.com/marksmayo), [Jaedson Silva](https://github.com/jaedsonpys), [Nick Moore](https://github.com/nickzoic), [Leonardo Saurwein](https://github.com/Sau1707), and [Hbregalad](https://github.com/hbregalad) for their code suggestions and pull requests.
 
-Thanks to the [BRL-CAD project](https://github.com/BRL-CAD/brlcad) for providing modifications for Tkhtml on 64-bit Windows platforms.
+Special thanks to [Christopher Chavez](https://github.com/chrstphrchvz), Jan Nijtmans, and everyone else in the tcl-core mailing list for the help making border rounding work on Windows and MacOSX, and to [Zamy846692](https://github.com/Zamy846692) for spearheading experimental Tkhtml development.
 
-Thanks to [Google Fonts](https://github.com/google/fonts) for providing the font used for generating alternative text when images fail to load.
-
-Special thanks to [Zamy846692](https://github.com/Zamy846692), [Jośe Fernando Moyano](https://github.com/jofemodo), [Bumshakalaka](https://github.com/Bumshakalaka), [Trov5](https://github.com/TRVRStash), [Mark Mayo](https://github.com/marksmayo), [Jaedson Silva](https://github.com/jaedsonpys), [Nick Moore](https://github.com/nickzoic), [Leonardo Saurwein](https://github.com/Sau1707), and [Hbregalad](https://github.com/hbregalad) for their code suggestions and pull requests.
+Thanks to the [TkinterHtml package](https://bitbucket.org/aivarannamaa/tkinterhtml) for providing the bindings on which this project is based, the [BRL-CAD project](https://github.com/BRL-CAD/brlcad) for providing modifications for Tkhtml on 64-bit Windows, and [Google Fonts](https://github.com/google/fonts) for providing the font used for generating alternative text when images fail to load.
 
 A huge thanks to everyone else who supported this project by reporting bugs and providing suggestions!

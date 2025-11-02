@@ -199,7 +199,7 @@ class TkinterWeb(Widget):
                 "<Up>", "Control-Up>", "Control-Shift-Up>", "<KP_Up>", "<Control-KP_Up>", "<Control-Shift-KP_Up>", 
                 "<Down>", "Control-Down>", "Control-Shift-Down>", "<KP_Down>", "<Control-KP_Down>", "<Control-Shift-KP_Down>",
                 "<Prior>", "<KP_Prior>", "<Next>", "<KP_Next>", "<Home>", "<KP_Home>", "<End>", "<KP_End>", "<FocusOut>", "<FocusIn>"}:
-            method = f"_on_{i.strip("<>").split("-")[-1].split("_")[-1].lower()}"
+            method = "_on_" + i.strip("<>").split("-")[-1].split("_")[-1].lower()
             self.bind(i, getattr(self, method))
     
         self.bind_class(self.node_tag, "<Motion>", self._on_mouse_motion, True)

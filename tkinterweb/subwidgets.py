@@ -688,3 +688,44 @@ class Notebook(ttk.Frame):
     def tabs(self):
         "Returns a list of widgets managed by the notebook."
         return self.pages
+    
+class BlinkyFrame(tk.Frame):
+    "A blinking caret-style frame"
+    def __init__(self, master, *args, blink_delay=600, **kwargs):
+        tk.Frame.__init__(self, master, *args, **kwargs)
+        self.blink_delay = blink_delay
+
+        self._is_placed = False
+        self._x = 0
+        self._y = 0
+        self.pending = None
+
+    def place(self, x, y, *args, _internal=False, **kwargs):
+        if _internal:
+            super().place(*args, x=x, y=y, **kwargs)
+        else:
+            if self.pending:
+                self.after_cancel(self.pending)
+            self._is_placed = True
+            self._x = x
+            self._y = y
+            super().place(*args, x=x, y=y, **kwargs)
+            self.pending = self.after(self.blink_delay, self._blink)
+
+    def place_forget(self, _internal=False):
+        if not _internal:
+            if self.pending:
+                self.after_cancel(self.pending)
+            self.pending = None
+            self._is_placed = False
+        super().place_forget()
+
+    def _blink(self):
+        if self._is_placed:
+            self.place_forget(True)
+        else:
+            self.place(self._x, self._y, _internal=True)
+        
+        self.update()
+        self._is_placed = not(self._is_placed)
+        self.pending = self.after(self.blink_delay, self._blink)

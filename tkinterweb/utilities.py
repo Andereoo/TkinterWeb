@@ -33,7 +33,7 @@ __title__ = 'TkinterWeb'
 __author__ = "Andrew Clarke"
 __copyright__ = "(c) 2021-2025 Andrew Clarke"
 __license__ = "MIT"
-__version__ = '4.7.0'
+__version__ = '4.8.0'
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
@@ -498,6 +498,7 @@ class BuiltinPageGenerator():
             <code>Image alt text: {image_alternate_text_enabled}</code>\
             <code class='header'>Flags</code>\
             <code>Experimental mode: {experimental}</code>\
+            <code>Caret browsing mode: {caret_mode}</code>\
             <code>Stylesheets enabled: {stylesheets_enabled}</code>\
             <code>Javascript enabled: {javascript_enabled}</code>\
             <code>Forms enabled: {forms_enabled}</code>\
@@ -581,7 +582,7 @@ class BuiltinPageGenerator():
                 find_match_highlight_color=self._html.find_match_highlight_color, find_match_text_color=self._html.find_match_text_color, 
                 find_current_highlight_color=self._html.find_current_highlight_color, find_current_text_color=self._html.find_current_text_color,
                 selected_text_highlight_color=self._html.selected_text_highlight_color, selected_text_color=self._html.selected_text_color,
-                maximum_thread_count=self._html.maximum_thread_count, experimental=self._html.experimental,
+                maximum_thread_count=self._html.maximum_thread_count, experimental=self._html.experimental, caret_mode=self._html.caret_browsing_enabled,
                 dark_theme_limit=self._html.dark_theme_limit, image_alternate_text_threshold=self._html.image_alternate_text_threshold,
                 image_alternate_text_size=self._html.image_alternate_text_size, tkhtml_version=tkinterweb_tkhtml.get_loaded_tkhtml_version(self._html)
             )

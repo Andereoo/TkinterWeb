@@ -6,7 +6,7 @@
 <a href="https://www.buymeacoffee.com/andereoo" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-violet.png" alt="Buy Me A Coffee" style="height: 35px !important;width: 140px !important;" ></a>
 
 # TkinterWeb 
-**Fast and lightweight web browser and app design widgets for Tkinter.**
+**Fast and lightweight web browser, rich text, and app design widgets for Tkinter.**
 
 ## Overview
 **TkinterWeb offers bindings and extensions to a modified version of the Tkhtml3 widget from [http://tkhtml.tcl.tk](https://web.archive.org/web/20250219233338/http://tkhtml.tcl.tk/), which enables enables the display of HTML and CSS code in Tkinter applications.** 
@@ -14,6 +14,7 @@
 Some of TkinterWeb's uses include:
 * Displaying websites, feeds, help files, and other styled HTML
 * Displaying images, including SVG images
+* Creating a rich text or HTML editor
 * Designing apps using HTML templates
 * Creating prettier apps, with rounded buttons and more!
 
@@ -22,7 +23,7 @@ All [major operating systems](https://tkinterweb.readthedocs.io/en/latest/compat
 ## Usage
 
 **TkinterWeb provides:**
-* A [frame](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html) widget to display websites, help files, RSS feeds, and any other styled HTML in Tkinter.
+* A [frame](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html) widget to display and edit websites, help files, RSS feeds, and any other styled HTML in Tkinter.
 * A [label](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html#tkinterweb.HtmlLabel) widget that can display styled HTML.
 * A [geometry manager](https://tkinterweb.readthedocs.io/en/latest/geometry.html) to display Tkinter widgets *and HTML elements* together in a Tkinter application.
 

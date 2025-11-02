@@ -1,15 +1,13 @@
 Using JavaScript
 ================
 
-.. warning::
+.. note::
     JavaScript support is new in version 4.1. Make sure you are using the latest version of TkinterWeb.
 
 Overview
 --------
 
-**JavaScript is fully supported through Mozilla's SpiderMonkey engine, but not all DOM commands are supported.** See the :doc:`api/htmldocument` for an exhaustive list of supported DOM commands.
-
-Only enable JavaScript on documents with code you know and trust.
+**JavaScript is fully supported through Mozilla's SpiderMonkey engine, but not all DOM commands are supported.**  See the :doc:`api/htmldocument` for an exhaustive list of supported DOM commands.
 
 Setup
 ------
@@ -26,9 +24,11 @@ Or when installing TkinterWeb, use:
 
    $ pip install tkinterweb[javascript]
 
-Then add the parameter :attr:`javascript_enabled=True` when creating your :class:`~tkinterweb.HtmlFrame` or :class:`~tkinterweb.HtmlLabel` widget.
+Then add ``yourhtmlframe.configure(caret_browsing_enabled=True)`` to your script or add the parameter ``javascript_enabled=True`` when creating your :class:`~tkinterweb.HtmlFrame` or :class:`~tkinterweb.HtmlLabel` widget.
 
-How-To
+**Only enable JavaScript on documents with code you know and trust.**
+
+How-to
 ------
 
 To change the color and text of a ``<p>`` element when clicked, you could use the following:
@@ -89,6 +89,7 @@ If needed you can always then create an :class:`~tkinterweb.dom.HTMLElement` ins
     ...
     yourhtmlelement = HTMLElement(yourhtmlframe.document, yourtkhtmlnode)
 
+-------------------
 
 It is also possible to interact with the document through Python instead. See :doc:`dom`.
 

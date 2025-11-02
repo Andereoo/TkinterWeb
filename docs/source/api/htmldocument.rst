@@ -1,8 +1,8 @@
 Document Object Model Documentation
 ===================================
 
-.. warning::
-    The API changed significantly in version 4.0.0. See :doc:`../upgrading` for details.
+.. note::
+    The API changed significantly in version 4. See :doc:`the changelog <../upgrading>` for details.
 
 .. autoclass:: tkinterweb.dom.HTMLDocument
    :members:

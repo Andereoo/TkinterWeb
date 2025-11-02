@@ -1,17 +1,17 @@
 Embedding Widgets
 =================
 
-.. warning::
-    The API changed significantly in version 4.0.0. See :doc:`upgrading` for details.
+.. note::
+    The API changed significantly in version 4. See :doc:`the changelog <upgrading>` for details.
 
 Overview
 --------
 
-By default, Tkinter provides three geometry managers: pack, place, and grid. While these geometry managers are very powerful, achieving certain layouts, especially with scrolling, can be painful.
+By default, Tkinter provides three geometry managers: pack, place, and grid. While these geometry managers are very powerful, achieving certain layouts, especially with scrolling, can be very difficult.
 
 **TkinterWeb provides a system for attaching Tkinter widgets onto the window, and handles layouts, images, selection, scrolling, and much more for you.**
 
-How-To
+How-to
 ------
 
 To place a Tkinter widget inside an HTML document, add the ``data=[yourwidget]`` attribute to an ``<object>`` element. For example, to add a button under some italic text, one could do:
@@ -31,7 +31,7 @@ Widget position and sizing can be modified using CSS styling on the widget's ass
 
 To get the element containing your widget, either use :meth:`.HtmlFrame.widget_to_element`.
 
-Widget Handling
+Widget handling
 ---------------
 
 You can also set, remove, or change the widget in any element later (new in version 4.2):
@@ -44,6 +44,8 @@ You can also set, remove, or change the widget in any element later (new in vers
     yourelement.widget = yourbutton # set the element's widget
 
 The widget can be removed from the element via ``yourelement.widget = None``.
+
+-------------------
 
 See :doc:`dom` (new in version 3.25) for more details.
 

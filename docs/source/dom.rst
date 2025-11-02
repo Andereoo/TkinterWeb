@@ -1,8 +1,8 @@
 DOM Manipulation
 ================
 
-.. warning::
-    The API changed significantly in version 4.0.0. See :doc:`../upgrading` for details.
+.. note::
+    The API changed significantly in version 4. See :doc:`the changelog <upgrading>` for details.
 
 Overview
 --------
@@ -10,7 +10,7 @@ Overview
 **TkinterWeb provides a handful of functions that allow for manipulation of the webpage. They are fashioned after common JavaScript functions.**
 
 
-How-To
+How-to
 --------
 
 To manipulate the Document Object Model, use the :attr:`~tkinterweb.HtmlFrame.document` property of your :class:`~tkinterweb.HtmlFrame` or :class:`~tkinterweb.HtmlLabel` widget. For example, to create a heading with blue text inside of an element with the id "container", one can use the following:
@@ -24,6 +24,8 @@ To manipulate the Document Object Model, use the :attr:`~tkinterweb.HtmlFrame.do
     new_header.textContent = "Hello, world!"
     new_header.style.color = "blue"
     container.appendChild(new_header)
+
+-------------------
 
 See the :doc:`api/htmldocument` for an exhaustive list of supported commands.
 

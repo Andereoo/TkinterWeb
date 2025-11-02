@@ -1,14 +1,8 @@
 TkinterWeb Documentation
 ========================
 
-.. warning::
-    The API changed significantly in version 4.0.0. See :doc:`../upgrading` for details.
-
-The :class:`~tkinterweb.TkinterWeb` class is the low-level widget that bridges the gap between the underlying Tkhtml3 widget and Tkinter. 
-
-**Do not use this widget unless absolutely nessessary.** Instead use the :class:`~tkinterweb.HtmlFrame` widget.
-
-This widget can be accessed through the :attr:`~tkinterweb.HtmlFrame.html` property of the :class:`~tkinterweb.HtmlFrame` and :class:`~tkinterweb.HtmlLabel` widgets to access underlying settings and commands that are not a part of the :class:`~tkinterweb.HtmlFrame` API.
+.. note::
+    The API changed significantly in version 4. See :doc:`the changelog <../upgrading>` for details.
 
 .. autoclass:: tkinterweb.TkinterWeb
    :members:
@@ -18,5 +12,9 @@ The :class:`~tkinterweb.TkinterWeb` class also includes dozens of variables that
 
 Please see the source code for more details.
 
+.. autoclass:: tkinterweb.bindings.CaretManager
+   :members:
+
 .. autoclass:: tkinterweb.TkHtmlParsedURI
    :members:
+

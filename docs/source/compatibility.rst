@@ -1,7 +1,7 @@
 System and Webpage Compatibility
 ================================
 
-System Compatibility
+System compatibility
 --------------------
 
 **TkinterWeb supports all platforms but only ships with precompiled Tkhtml binaries for the most common platforms:**
@@ -19,7 +19,7 @@ If you are encountering issues, feel free to submit a bug report or feature requ
 
 The experimental Tkhtml version is not provided as a pre-built binary but can be compiled from the source code at https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/experimental. This version has better cross-platform compatibility, is printable, and introduces support for some new CSS3 properties!
 
-Webpage Compatibility
+Webpage compatibility
 ---------------------
 
 **HTML/CSS:**

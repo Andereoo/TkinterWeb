@@ -1,6 +1,5 @@
-Porting to TkinterWeb 4+
-========================
-
+Changelog
+=========
 
 **The API changed significantly in version 4.0.0**
 
@@ -11,13 +10,13 @@ Summary of changes
 * A more intuitive API
 * Support for experimental Tkhtml features, such as page printing
 * Widget behaviour and API is now more closely aligned with standard Tkinter widgets
-* The DOM API now more closely mirrors its JavaScript counterparts
+* Many DOM improvements. The DOM API now more closely mirrors its JavaScript counterpart.
 * Dozens of new configuration options, including access to more settings and the ability to link a JavaScript interpreter
 * Basic JavaScript support (new in version 4.1)
 * Improved embedded widget handling (new in version 4.2)
-* More DOM improvements
 * SVG support on Windows and ``border-radius`` support on Windows and Linux (new in version 4.4)
 * Support for Tcl 9 (new in version 4.5)
+* Caret browsing functionality (new in version 4.8)
 
 Removed
 -------
@@ -60,12 +59,15 @@ Version 4.0:
 
 Version 4.2:
 
-* ``HtmlFrame.replace_widget()``- use :meth:`.HtmlFrame.widget_to_element` and :attr:`.HTMLElement.widget`
-* ``HtmlFrame.replace_element()``- use :attr:`.HTMLElement.widget`
-* ``HtmlFrame.remove_widget()``- use :meth:`.HTMLElement.remove`
 * ``TkinterWeb.replace_widget()``
 * ``TkinterWeb.replace_element()``
 * ``TkinterWeb.remove_widget()``
+
+Version 4.8
+
+* ``HtmlFrame.replace_widget()`` (deprecated in version 4.0) - use :meth:`.HtmlFrame.widget_to_element` and :attr:`.HTMLElement.widget`
+* ``HtmlFrame.replace_element()`` (deprecated in version 4.0) - use :attr:`.HTMLElement.widget`
+* ``HtmlFrame.remove_widget()`` (deprecated in version 4.0) - use :meth:`.HTMLElement.remove`
 
 Renamed
 -------
@@ -138,6 +140,7 @@ Version 4.0:
 Version 4.1:
 
 * :meth:`.HtmlFrame.register_JS_object``
+
 * :attr:`.HTMLElement.widget` (updated again in version 4.2)
 * :attr:`.HTMLElement.value`
 * :attr:`.HTMLElement.checked`
@@ -202,7 +205,32 @@ Version 4.6:
 * The new configuration option ``request_timeout`` can be used to specify the number of seconds to wait before a request times out.
 
 Version 4.7:
+
 * The new ``<<DOMContentLoaded>>`` event will be generated once the page DOM content has loaded. The page may not be done loading, but at this point it is possible to interact with the DOM.
+
+Version 4.8:
+
+* :meth:`.HtmlFrame.get_page_text`
+* :meth:`.HtmlFrame.get_caret_position`
+* :meth:`.HtmlFrame.get_caret_page_position`
+* :meth:`.HtmlFrame.set_caret_position`
+* :meth:`.HtmlFrame.set_caret_page_position`
+* :meth:`.HtmlFrame.shift_caret_left`
+* :meth:`.HtmlFrame.shift_caret_right`
+* :meth:`.HtmlFrame.get_selection_position`
+* :meth:`.HtmlFrame.get_selection_page_position`
+* :meth:`.HtmlFrame.set_selection_position`
+* :meth:`.HtmlFrame.set_selection_page_position`
+
+* :attr:`.HTMLElement.previousSibling`
+* :attr:`.HTMLElement.nextSibling`
+
+* :meth:`.TkinterWeb.update_selection`
+* :meth:`.TkinterWeb.tkhtml_offset_to_text_index`
+
+* :class:`~tkinterweb.bindings.CaretManager`
+
+* The new configuration option ``caret_browsing_enabled`` can be used to enable or disable caret browsing mode.
 
 Changed/Fixed
 -------------
@@ -259,7 +287,12 @@ Version 4.6:
 * Loading local files with a query string in the url will no longer raise an error.
 * Fixed :meth:`.HTMLDocument.querySelector`.
 
-Version 4.7
+Version 4.7:
 
-* Fixed flickering when moving the mouse over scrollbars in ``<iframe>`` elements
-* :meth:`.HtmlFrame.bind` now binds ``<Enter>`` and ``<Leave>`` directly. All other events are still bound to the associated :class:`~tkinterweb.TkinterWeb` instance.
+* Fixed flickering when moving the mouse over scrollbars in ``<iframe>`` elements.
+* ``bind()`` calls to the :meth:`.HtmlFrame.bind` respect requests to bind ``<Enter>`` and ``<Leave>``. All other events are still bound to the associated :class:`~tkinterweb.TkinterWeb` instance. Keep in mind that overriding the default bindings to ``<Enter>`` and ``<Leave>`` may cause unwanted side effects. 
+
+Version 4.8:
+
+* All HTML widgets now bind to ``<Up>``, ``<Down>``, ``<Left>``, ``<Right>``, ``<Prior>``, ``<Next>``, ``<Home>``, and ``<End>`` by default.
+* Fixed :meth:`.HTMLElement.parentElement`.

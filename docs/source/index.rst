@@ -18,7 +18,7 @@ Welcome to TkinterWeb!
     :alt: Made in Canada
 
 
-**TkinterWeb** is a Python library that offers fast and lightweight web browser and app design widgets for Tkinter.
+**TkinterWeb** is a Python library that offers fast and lightweight web browser, rich text, and app design widgets for Tkinter.
 
 It provides bindings and extensions for the Tkhtml3 widget from `http://tkhtml.tcl.tk <https://web.archive.org/web/20250219233338/http://tkhtml.tcl.tk/>`_, which enables displaying HTML and CSS code in Tkinter applications.
 
@@ -27,6 +27,7 @@ Top features
 
 * Displaying websites, feeds, help files, and other styled HTML
 * Displaying images, including SVG images
+* Creating a rich text or HTML editor
 * Designing apps using HTML templates
 * Creating prettier apps, with rounded buttons and more!
 
@@ -54,6 +55,7 @@ Pages
    geometry
    dom
    javascript
+   caret
    faq
    compatibility
    upgrading

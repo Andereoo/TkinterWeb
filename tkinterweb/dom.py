@@ -326,20 +326,23 @@ class HTMLElement:
             self.html.replace_node_contents(node, None)
         self.html.update()
 
-        self.html.safe_tk_eval("""
-            set node %s
-            set textnode %s
-            if {$textnode eq ""} {error "$node is empty"}
-            if {[$node tag] eq "html"} {error "textContent cannot be set on <$tag> elements"}
-            $node remove [$node children]
-            foreach child [$node children] {
-                $child destroy
-            }
-            $node insert $textnode
-            
-            update  ;# This must be done to see changes on-screen
-            """ % (extract_nested(self.node), self.document.createTextNode(contents).node)
-        )
+        if self.tagName:
+            self.html.safe_tk_eval("""
+                set node %s
+                set textnode %s
+                if {$textnode eq ""} {error "$node is empty"}
+                if {[$node tag] eq "html"} {error "textContent cannot be set on <$tag> elements"}
+                $node remove [$node children]
+                foreach child [$node children] {
+                    $child destroy
+                }
+                $node insert $textnode
+                
+                update  ;# This must be done to see changes on-screen
+                """ % (extract_nested(self.node), self.document.createTextNode(contents).node)
+            )
+        else:
+            self.html.set_node_text(self.node, contents)
 
     @property
     def id(self):
@@ -383,7 +386,7 @@ class HTMLElement:
         
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
-        return HTMLElement(self, self.html.get_node_parent(self.node))
+        return HTMLElement(self.document, self.html.get_node_parent(self.node))
 
     @property
     def children(self):
@@ -391,7 +394,21 @@ class HTMLElement:
         
         :rtype: :class:`HTMLCollection`
         :raises: :py:class:`tkinter.TclError`"""
-        return [HTMLElement(self, i) for i in self.html.get_node_children(self.node)]
+        return [HTMLElement(self.document, i) for i in self.html.get_node_children(self.node)]
+    
+    @property
+    def previousSibling(self):
+        """Get the element's preceding sibling.
+        
+        :rtype: :class:`HTMLElement`"""
+        return self._find_siblings(True)
+    
+    @property
+    def nextSibling(self):
+        """Get the element's following sibling.
+        
+        :rtype: :class:`HTMLElement`"""
+        return self._find_siblings()
     
     @property
     def widget(self): # Not a real JS property, but still useful
@@ -699,7 +716,8 @@ class HTMLElement:
         :rtype: :class:`~tkinterweb.dom.DOMRect`"""
         return DOMRect(self)
     
-    def _insert_children(self, children, before=None):  # Helper method to insert children at a specified position
+    def _insert_children(self, children, before=None):
+        "Helper method to insert children at a specified position"
         # Ensure children is a list
         children = {children} if isinstance(children, HTMLElement) else children
         # Extract nodes
@@ -711,6 +729,18 @@ class HTMLElement:
             self.html.insert_node(self.node, tkhtml_child_nodes)
 
         self.html.send_onload(children=[child.node for child in children])
+    
+    def _find_siblings(self, reverse=False):
+        "Helper method to find node children"
+        parent = self.html.get_node_parent(self.node)
+        if parent:
+            siblings = list(self.html.get_node_children(parent))
+            if reverse:
+                list(reversed(siblings))
+            for e, i in enumerate(siblings):
+                if extract_nested(i) == self.node and len(siblings) > e + 1:
+                    return HTMLElement(self.document, siblings[e+1])
+        return None
 
 
 class HTMLCollection:

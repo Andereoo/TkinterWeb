@@ -42,8 +42,8 @@ if os.name == "nt":
 version = []
 for letter in __version__.split("."):
     version.append(int(letter))
-if tuple(version) < (3, 25, 12):
-    raise RuntimeError("This demo needs TkinterWeb version 3.25.12 or higher.")
+if tuple(version) < (4, 8, 0):
+    raise RuntimeError("This demo needs TkinterWeb version 4.8.0 or higher.")
 
 
 NEW_TAB = "about:tkinterweb"
@@ -114,6 +114,10 @@ class Page(tk.Frame):
         invert_page_enabled = ttk.Checkbutton(sidebar, text="Dark theme", variable=invert_page_var, command=self.toggle_theme)
         self.invert_images_var = invert_images_var = tk.IntVar(value=self.frame["image_inversion_enabled"])
         invert_images_enabled = ttk.Checkbutton(sidebar, text="Image inverter", variable=invert_images_var, command=self.toggle_inverter)
+        self.selection_var = selection_var = tk.IntVar(value=self.frame["selection_enabled"])
+        selection_enabled = ttk.Checkbutton(sidebar, text="Text selection enabled", variable=selection_var, command=self.toggle_selection)
+        self.caret_browsing_var = caret_browsing_var = tk.IntVar(value=self.frame["caret_browsing_enabled"])
+        caret_browsing_enabled = ttk.Checkbutton(sidebar, text="Caret browsing enabled", variable=caret_browsing_var, command=self.toggle_caret_browsing)
         
         self.view_source_button = view_source_button = ttk.Button(sidebar, text="View page source", command=self.view_source)
         about_button = ttk.Button(sidebar, text="About TkinterWeb", command=lambda url="about:tkinterweb": self.open_new_tab(url))
@@ -150,6 +154,8 @@ class Page(tk.Frame):
     <object allowscrolling data={caches_enabled}></object><br>
     <object allowscrolling data={emojis_enabled}></object>
     <object allowscrolling data={threads_enabled}></object><hr>
+    <object allowscrolling data={selection_enabled}></object>
+    <object allowscrolling data={caret_browsing_enabled}></object><hr>
     
     <object allowscrolling data={invert_page_enabled}></object><br>
     <object allowscrolling data={invert_images_enabled}></object><hr>
@@ -514,6 +520,12 @@ class Page(tk.Frame):
         self.frame.configure(image_inversion_enabled = self.invert_images_var.get())
         self.reload()
 
+    def toggle_selection(self):
+        self.frame.configure(selection_enabled = self.selection_var.get())
+
+    def toggle_caret_browsing(self):
+        self.frame.configure(caret_browsing_enabled = self.caret_browsing_var.get())
+
     def open_sidebar(self, keep_open=False):
         self.sidebar.grid_propagate(False)
         if self.sidebar.winfo_ismapped() and not keep_open:
@@ -676,12 +688,14 @@ class Browser(tk.Tk):
 
         page = Page(frame)
  
-        self.bind_all("<Up>", lambda e: frame.select().frame.html.yview_scroll(-5, "units"))
-        self.bind_all("<Down>", lambda e: frame.select().frame.html.yview_scroll(5, "units"))
-        self.bind_all("<Prior>", lambda e: frame.select().frame.html.yview_scroll(-1, "pages"))
-        self.bind_all("<Next>", lambda e: frame.select().frame.html.yview_scroll(1, "pages"))
-        self.bind_all("<Home>", lambda e: frame.select().frame.html.yview_moveto(0))
-        self.bind_all("<End>", lambda e: frame.select().frame.html.yview_moveto(1))
+        self.bind_all("<Up>", lambda e: frame.select().frame.html._on_up(e))
+        self.bind_all("<Down>", lambda e: frame.select().frame.html._on_down(e))
+        self.bind_all("<Left>", lambda e: frame.select().frame.html._on_left(e))
+        self.bind_all("<Right>", lambda e: frame.select().frame.html._on_right(e))
+        self.bind_all("<Prior>", lambda e: frame.select().frame.html._on_prior(e))
+        self.bind_all("<Next>", lambda e: frame.select().frame.html._on_next(e))
+        self.bind_all("<Home>", lambda e: frame.select().frame.html._on_home(e))
+        self.bind_all("<End>", lambda e: frame.select().frame.html._on_end(e))
         self.bind_all("<Control-w>", lambda e: frame.select().close_current_tab())
         self.bind_all("<Control-t>", lambda e: frame.select().open_new_tab())
         self.bind_all("<Control-f>", lambda e: frame.select().open_findbar(True))

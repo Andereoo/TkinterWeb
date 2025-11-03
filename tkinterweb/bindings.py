@@ -1282,7 +1282,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             except TypeError:
                 pass
             return text, offset
-        
+
     def _set_cursor(self, cursor):
         "Set the document cursor."
         if self._current_cursor != cursor:
@@ -1610,10 +1610,12 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             if self.text_mode and not (event.state & 0x4):
                 return
             
-            if node_tag == "input" and node_type == "reset":
-                self.form_manager._handle_form_reset(node_handle)
-            elif node_tag == "input" and node_type in {"submit", "image"}:
-                self.form_manager._handle_form_submission(node_handle)
+            if node_tag == "input":
+                if node_type == "reset":
+                    self._handle_form_reset(node_handle)
+                elif node_type in {"submit", "image"}:
+                    self._handle_form_submission(node_handle)
+
             else:
                 for node in self.hovered_nodes:
                     if node != node_handle:
@@ -1731,6 +1733,20 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         utilities.deprecate("send_onload", "event_manager")
         return self.event_manager.send_onload(root, children)
 
+
+    def tkhtml_uri_decode(self, uri, base64=False):
+        "This command is designed to help scripts process data: URIs. It is completely separate from the html widget"
+        c = ("::tkhtml::decode", "-base64", uri) if base64 else ("::tkhtml::decode", uri)
+        return self.tk.call(*c).strip(b"}")
+
+    def tkhtml_uri_encode(self, uri):
+        "Encodes the uri."
+        return self._html.tk.call("::tkhtml::encode", uri)
+
+    def tkhtml_uri_escape(self, uri, query=False):
+        "Returns the decoded data."
+        a = "-query" if query else ""
+        return self._html.tk.call("::tkhtml::escape_uri", a, uri)
 
 class TkHtmlParsedURI:
     """Bindings for the Tkhtml URI parsing system. 

@@ -165,6 +165,9 @@ Version 4.1:
 
 * Added support for many JavaScript events.
 
+* The new configuration option ``on_element_script`` can be used to add a callback to run when a JavaScript event attribute on an element is encountered.
+* The new configuration option ``javascript_enabled`` can be used to enable JavaScript support.
+
 Version 4.2:
 
 * :meth:`.HtmlFrame.widget_to_element`
@@ -183,7 +186,7 @@ Version 4.4:
 * :meth:`.HtmlFrame.insert_html`
 
 * :attr:`.HTMLElement.id`
-* :attr:`.HTMLElement.class`
+* :attr:`.HTMLElement.className`
 
 * :meth:`.TkinterWeb.override_node_CSS`
 * :meth:`.TkinterWeb.write`

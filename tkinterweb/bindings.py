@@ -240,7 +240,9 @@ class TkinterWeb(Widget):
     def caret_manager(self):
         """The widget's corresponding caret manager.
         
-        :rtype: :class:`~tkinterweb.bindings.CaretManager`"""
+        :rtype: :class:`~tkinterweb.bindings.CaretManager`
+        
+        New in version 4.8."""
         if self._caret_manager_cache is None:
             self._caret_manager_cache = CaretManager(self)
         return self._caret_manager_cache
@@ -393,7 +395,9 @@ class TkinterWeb(Widget):
 
     def send_onload(self, root=None, children=None):
         """Send the onload signal for nodes that aren't handled at runtime.
-        We keep this a seperate command so that it can be run after inserting elements or changing the innerHTML"""
+        We keep this a seperate command so that it can be run after inserting elements or changing the innerHTML.
+        
+        New in version 4.1."""
         if not self._javascript_enabled:
             return
         if children:
@@ -615,7 +619,9 @@ class TkinterWeb(Widget):
         return self.tk.call(node_handle, "insert", "-before", before, child_nodes)
     
     def replace_node_contents(self, node_handle, contents, *args):
-        "Fill a node with either a Tk widget or with Tkhtml nodes."
+        """Fill a node with either a Tk widget or with Tkhtml nodes.
+        
+        New in version 4.2."""
         if not contents:
             # Calling replace on an empty node causes Tkhtml to segfault
             contents = self.tk.call(self._w, "fragment", " ")
@@ -661,7 +667,9 @@ class TkinterWeb(Widget):
 
     def get_node_stacking(self, node_handle):
         """Return the node-handle that forms the stacking context this node is located in.
-        Return "" for the root-element or any element that is part of an orphan subtree."""
+        Return "" for the root-element or any element that is part of an orphan subtree.
+        
+        New in version 4.2."""
         return self.tk.call(node_handle, "stacking")
 
     def get_current_node(self, event):
@@ -708,12 +716,16 @@ class TkinterWeb(Widget):
         return self.tk.call(self._w, "_styleconfig")
 
     def override_node_CSS(self, node, *props):
-        "Overrides the node's properties; if it is a text node, it overrides the parent's properties."
+        """Overrides the node's properties; if it is a text node, it overrides the parent's properties.
+        
+        New in version 4.4."""
         if not self.get_node_tag(node): node = self.get_node_parent(node)
         return self.override_node_properties(node, *props)
 
     def write(self, *arg, cnf={}, **kw):
-        """Write directly to an open HTML document stream, may be used when parsing."""
+        """Write directly to an open HTML document stream, may be used when parsing.
+        
+        New in version 4.4."""
         return self.tk.call(self._w, "write", *arg+self._options(cnf, kw))
 
     def fetch_scripts(self, attributes, url=None, data=None):
@@ -934,13 +946,17 @@ class TkinterWeb(Widget):
             widgetid.configure(background=bg, foreground=fg, font=font)
 
     def map_node(self, node, force=False):
-        "Redraw a node if it currently contains a Tk widget."
+        """Redraw a node if it currently contains a Tk widget.
+        
+        New in version 4.2."""
         if force or (self.get_node_attribute(node, self.widget_container_attr) != ""):
             self.set_node_attribute(node, self.widget_container_attr, "")
             self.replace_node_contents(node, node)
 
     def replace_node_with_widget(self, node, widgetid):
-        "Replace a node with a Tk widget."
+        """Replace a node with a Tk widget.
+        
+        New in version 4.2."""
         if not widgetid:
             # Reset the node if a widget is not supplied
             self.map_node(node)
@@ -1076,7 +1092,9 @@ class TkinterWeb(Widget):
             return nmatches, selected, matches
 
     def get_child_text(self, node):
-        """Get text of node and all its descendants recursively."""
+        """Get text of node and all its descendants recursively.
+        
+        New in version 4.4."""
         text = self.get_node_text(node, "-pre")
         for child in self.get_node_children(node):
             text += self.get_child_text(child)
@@ -1112,7 +1130,9 @@ class TkinterWeb(Widget):
         self.selection_start_node = None
     
     def update_selection(self):
-        "Update the current selection."
+        """Update the current selection.
+
+        New in version 4.8."""
         self.tag("delete", "selection")
         self.tag(
             "add",
@@ -1245,7 +1265,9 @@ class TkinterWeb(Widget):
             self.yview_scroll(int(-1*event.delta/30), "units")
 
     def safe_tk_eval(self, expr):
-        """Always evaluate 'expr' on the main thread."""
+        """Always evaluate the given expression on the main thread.
+        
+        New in version 4.4."""
         if threading.current_thread() is threading.main_thread():
             return self.tk.eval(expr)
         else:
@@ -1261,8 +1283,9 @@ class TkinterWeb(Widget):
             return result[0]
 
     def serialize_node(self, ib=3):
-        "Pretty-print a node's contents"
-        "Similar to innerHTML, but formatted"
+        """Pretty-print a node's contents. Similar to innerHTML, but formatted.
+
+        New in version 4.4."""
         return self.safe_tk_eval(r"""
             proc indent {d} {return [string repeat { } $d]}
             proc prettify {node} {
@@ -1295,7 +1318,9 @@ class TkinterWeb(Widget):
         )
 
     def serialize_node_style(self, ib=3, return_as_dict=False):
-        "Pretty-print a node's style"
+        """Pretty-print a node's style.
+
+        New in version 4.4."""
         style = {
             i[0]: dict(j.split(":", 1) for j in i[1].split("; ") if j.strip())
             for i in self.get_computed_styles()
@@ -1314,7 +1339,9 @@ class TkinterWeb(Widget):
             return text
         
     def tkhtml_offset_to_text_index(self, node, offset, invert=False):
-        "Translate a Tkhtml node offset to a node text index or back."
+        """Translate a Tkhtml node offset to a node text index or back.
+
+        New in version 4.8."""
         # Ideally we would use the pathName text offset/index commands,
         # but for the end user I think it is more useful to get an index within a Tkhtml node rather than in the entire document
         text = self.get_node_text(node)
@@ -2549,7 +2576,9 @@ class CaretManager:
     :ivar blink_delay: The caret's blink delay, in milliseconds. 
     :ivar caret_colour: The caret's colour. If None, the text colour under it will be matched.
     :ivar scrolling_threshold: If the distance between the visible part of the page and the caret is nonzero but is less than this number, a scrolling animation will play.
-    :ivar scrolling_teleport: If the distance between the visible part of the page and the caret is nonzero but is greater than :attr:`scrolling_threshold`, the page is scrolled to this number before the scrolling animation plays."""
+    :ivar scrolling_teleport: If the distance between the visible part of the page and the caret is nonzero but is greater than :attr:`scrolling_threshold`, the page is scrolled to this number before the scrolling animation plays.
+    
+    New in version 4.8."""
     
     def __init__(self, html):
         self.html = html
@@ -2830,7 +2859,9 @@ class CaretManager:
 class TkHtmlParsedURI:
     """Bindings for the Tkhtml URI parsing system. 
     
-    The underlying commands are largely unmaintained. Consider using the methods provided by the :class:`.HtmlFrame` widget and by Python's :py:mod:`urllib` library."""
+    The underlying commands are largely unmaintained. Consider using the methods provided by the :class:`.HtmlFrame` widget and by Python's :py:mod:`urllib` library.
+    
+    New in version 4.4."""
 
     def __init__(self, uri, html):
         self._html = html

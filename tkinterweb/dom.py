@@ -348,7 +348,9 @@ class HTMLElement:
     def id(self):
         """Get and set the element's id attribute.
 
-        :rtype: str"""
+        :rtype: str
+        
+        New in version 4.4."""
         return self.getAttribute("id")
 
     @id.setter
@@ -359,7 +361,9 @@ class HTMLElement:
     def className(self):
         """Get and set the element's class attribute.
 
-        :rtype: str"""
+        :rtype: str
+        
+        New in version 4.4."""
         return self.getAttribute("class")
 
     @className.setter
@@ -400,14 +404,18 @@ class HTMLElement:
     def previousSibling(self):
         """Get the element's preceding sibling.
         
-        :rtype: :class:`HTMLElement`"""
+        :rtype: :class:`HTMLElement`
+        
+        New in version 4.8."""
         return self._find_siblings(True)
     
     @property
     def nextSibling(self):
         """Get the element's following sibling.
         
-        :rtype: :class:`HTMLElement`"""
+        :rtype: :class:`HTMLElement`
+        
+        New in version 4.8."""
         return self._find_siblings()
     
     @property
@@ -418,7 +426,9 @@ class HTMLElement:
         
         If the widget already exists in the document, it will first be removed from its previous element.
 
-        :rtype: :py:class:`tkinter.Widget` or None"""
+        :rtype: :py:class:`tkinter.Widget` or None
+        
+        New in version 4.1."""
         attr = self.getAttribute(self.html.widget_container_attr)
         if attr != "":
             return self.html.nametowidget(attr)
@@ -443,7 +453,9 @@ class HTMLElement:
     def value(self):
         """Get and set the input's value. Only works on ``<input>``, ``<textarea>``, and ``<select>`` elements.
         
-        :rtype: str"""
+        :rtype: str
+        
+        New in version 4.1."""
         if self.node in self.html.form_widgets:
             return self.html.form_widgets[self.node].get()
         return None
@@ -457,7 +469,9 @@ class HTMLElement:
     def checked(self):
         """Convenience property for the ``checked`` HTML attribute. Check/uncheck a radiobutton or checkbox or see if the element is checked.
         
-        :rtype: bool"""
+        :rtype: bool
+        
+        New in version 4.1."""
         if self.node in self.html.form_widgets:
             if self.html.get_node_attribute(self.node, "checked", "false") != "false":
                 return True
@@ -474,7 +488,9 @@ class HTMLElement:
     def onchange(self):
         """Convenience property for the ``onchange`` HTML attribute. Get and set the JavaScript code to execute when the input element's value changes
         
-        :rtype: str"""
+        :rtype: str
+        
+        New in version 4.1."""
         return self.getAttribute("onchange")
     
     @onchange.setter
@@ -485,7 +501,9 @@ class HTMLElement:
     def onload(self):
         """Convenience property for the ``onload`` HTML attribute. Get and set the code to execute when the element loads.
         
-        :rtype: str"""
+        :rtype: str
+        
+        New in version 4.1."""
         return self.getAttribute("onload")
     
     @onload.setter
@@ -496,7 +514,9 @@ class HTMLElement:
     def onclick(self):
         """Convenience property for the ``onclick`` HTML attribute. Get and set the code to execute when the element is clicked.
         
-        :rtype: str"""
+        :rtype: str
+        
+        New in version 4.1."""
         return self.getAttribute("onclick")
     
     @onclick.setter
@@ -507,7 +527,9 @@ class HTMLElement:
     def oncontextmenu(self):
         """Convenience property for the ``oncontextmenu`` HTML attribute. Get and set the code to execute when the element is right-clicked.
         
-        :rtype: str"""
+        :rtype: str
+        
+        New in version 4.1."""
         return self.getAttribute("oncontextmenu")
     
     @oncontextmenu.setter
@@ -518,7 +540,9 @@ class HTMLElement:
     def ondblclick(self):
         """Convenience property for the ``ondblclick`` HTML attribute. Get and set the code to execute when the element is double-clicked.
         
-        :rtype: str"""
+        :rtype: str
+        
+        New in version 4.1."""
         return self.getAttribute("ondblclick")
     
     @ondblclick.setter
@@ -529,7 +553,9 @@ class HTMLElement:
     def onmousedown(self):
         """Convenience property for the ``onmousedown`` HTML attribute. Get and set the code to execute when any mouse button is pressed over the element.
         
-        :rtype: str"""
+        :rtype: str
+        
+        New in version 4.1."""
         return self.getAttribute("onmousedown")
     
     @onmousedown.setter
@@ -540,7 +566,9 @@ class HTMLElement:
     def onmouseenter(self):
         """Convenience property for the ``onmouseenter`` HTML attribute. Get and set the code to execute when the mouse moves onto the element.
         
-        :rtype: str"""
+        :rtype: str
+        
+        New in version 4.1."""
         return self.getAttribute("onmouseenter")
     
     @onmouseenter.setter
@@ -551,7 +579,9 @@ class HTMLElement:
     def onmouseleave(self):
         """Convenience property for the ``onmouseleave`` HTML attribute. Get and set the code to execute when the mouse moves out of the element.
         
-        :rtype: str"""
+        :rtype: str
+        
+        New in version 4.1."""
         return self.getAttribute("onmouseleave")
     
     @onmouseleave.setter
@@ -562,7 +592,9 @@ class HTMLElement:
     def onmousemove(self):
         """Convenience property for the ``onmousemove`` HTML attribute. Get and set the code to execute when the mouse moves over the element.
         
-        :rtype: str"""
+        :rtype: str
+        
+        New in version 4.1."""
         return self.getAttribute("onmousemove")
     
     @onmousemove.setter
@@ -573,7 +605,9 @@ class HTMLElement:
     def onmouseout(self):
         """Convenience property for the ``onmouseout`` HTML attribute. Get and set the code to execute when the mouse moves out of the element or its parent elements.
         
-        :rtype: str"""
+        :rtype: str
+        
+        New in version 4.1."""
         return self.getAttribute("onmouseout")
     
     @onmouseout.setter
@@ -584,7 +618,9 @@ class HTMLElement:
     def onmouseover(self):
         """Convenience property for the ``onmouseover`` HTML attribute. Get and set the code to execute when the mouse moves into the element or its children elements.
         
-        :rtype: str"""
+        :rtype: str
+        
+        New in version 4.1."""
         return self.getAttribute("onmouseover")
     
     @onmouseover.setter
@@ -595,7 +631,9 @@ class HTMLElement:
     def onmouseup(self):
         """Convenience property for the ``onmouseup`` HTML attribute. Get and set the code to execute when the mouse button is released over the element.
         
-        :rtype: str"""
+        :rtype: str
+        
+        New in version 4.1."""
         return self.getAttribute("onmouseup")
     
     @onmouseup.setter
@@ -753,7 +791,9 @@ class HTMLCollection:
     :param root: The Tkhtml node to search.
     :type root: Tkhtml3 node
     :ivar html: The element's corresponding :class:`~tkinterweb.TkinterWeb` instance.
-    :ivar node: The element's corresponding Tkhtml node."""
+    :ivar node: The element's corresponding Tkhtml node.
+    
+    New in version 4.4."""
     def __init__(self, document_manager, search_string, root=None):
         self.document = document_manager
         self.html = document_manager.html
@@ -962,7 +1002,9 @@ class CSSStyleDeclaration:
 
         :param property: The CSS property to get.
         :type property: str
-        :rtype: str"""
+        :rtype: str
+        
+        New in version 4.1."""
         return self.__getitem__(property)
 
     def removeProperty(self, property):
@@ -971,7 +1013,9 @@ class CSSStyleDeclaration:
         :param property: The CSS property to remove.
         :type property: str
         :returns: the old value of the given property, or "" if the property did not exist.
-        :rtype: str"""
+        :rtype: str
+
+        New in version 4.1."""
         return self.__delitem__(property)
 
     def setProperty(self, property, value):
@@ -982,5 +1026,7 @@ class CSSStyleDeclaration:
         :param property: The CSS property to set.
         :type property: str
         :returns: the old value of the given property, or "" if the property did not exist.
-        :rtype: str"""
+        :rtype: str
+        
+        New in version 4.1."""
         self.__setitem__(property, value)

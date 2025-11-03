@@ -61,7 +61,7 @@ class HtmlFrame(Frame):
     :type messages_enabled: bool
     :param selection_enabled: Enable/disable selection. This is enabled by default.
     :type selection_enabled: bool
-    :param caret_browsing_enabled: Enable/disable caret browsing. This is disabled by default.
+    :param caret_browsing_enabled: Enable/disable caret browsing. This is disabled by default. New in version 4.8.
     :type caret_browsing_enabled: bool
     :param stylesheets_enabled: Enable/disable stylesheets. This is enabled by default.
     :type stylesheets_enabled: bool
@@ -121,7 +121,7 @@ class HtmlFrame(Frame):
     :type ssl_cafile: bool or str
     :param headers: The headers used by urllib's :py:class:`~urllib.request.Request` when fetching a resource.
     :type headers: dict
-    :param request_timeout: The number of seconds to wait when fetching a resource before timing out.
+    :param request_timeout: The number of seconds to wait when fetching a resource before timing out. New in version 4.6.
     :type request_timeout: int
 
     HTML rendering behaviour:
@@ -550,7 +550,9 @@ If you benefited from using this package, please consider supporting its develop
         :type index: int
         :param return_element: If True, return the root element of the inserted HTML.
         :type return_element: :class:`~tkinterweb.dom.HTMLElement`
-        :return: :class:`~tkinterweb.dom.HTMLElement` or None"""
+        :return: :class:`~tkinterweb.dom.HTMLElement` or None
+        
+        New in version 4.4."""
 
         self._previous_url = ""
         if not self._html.base_url:
@@ -612,13 +614,15 @@ If you benefited from using this package, please consider supporting its develop
             return nmatches
     
     def widget_to_element(self, widget):
-        """Get the HTML element containing the given widget. New in version 4.2.
+        """Get the HTML element containing the given widget.
         
         :param widget: The widget to search for.
         :type widget: :py:class:`tkinter.Widget`
         :return: The element containing the given widget.
         :rtype: :class:`~tkinterweb.dom.HTMLElement`
-        :raises: :py:class:`tkinter.TclError` if the given widget is not in the document."""
+        :raises: :py:class:`tkinter.TclError` if the given widget is not in the document.
+        
+        New in version 4.2."""
         for node in self._html.search(f"[{self._html.widget_container_attr}]"):
             if self._html.get_node_attribute(node, self._html.widget_container_attr) == str(widget):
                 return HTMLElement(self.document, node)
@@ -762,7 +766,9 @@ If you benefited from using this package, please consider supporting its develop
         """Return the page's text content.
         
         :return: A string containing the page's text content.
-        :rtype: str"""
+        :rtype: str
+        
+        New in version 4.8."""
         return self._html.text("text")
     
     def show_error_page(self, url, error, code):
@@ -848,7 +854,9 @@ If you benefited from using this package, please consider supporting its develop
         :return: The :class:`~tkinterweb.dom.HTMLElement` under the caret, the text content of that element, and an index representing the position in that string that the caret is at. If the caret is not visible, this method will return None
         :rtype: :class:`~tkinterweb.dom.HTMLElement`, str, int or None
         
-        The element returned will always be a text node. If you need to change the style or HTML content of a text node you will first need to get its parent."""
+        The element returned will always be a text node. If you need to change the style or HTML content of a text node you will first need to get its parent.
+        
+        New in version 4.8."""
         if self._html.caret_manager.node:
             _, pre_text, index = self._html.tkhtml_offset_to_text_index(self._html.caret_manager.node, self._html.caret_manager.offset)
             return HTMLElement(self.document, self._html.caret_manager.node), pre_text, index
@@ -859,7 +867,9 @@ If you benefited from using this package, please consider supporting its develop
         """Get the position of the caret, as an index relative to the page text content. Get the page's text content via :meth:`HtmlFrame.get_page_text`.
 
         :return: An index representing the position in the page’s text content that the caret is at. If the caret is not visible, this method will return None
-        :rtype: int or None"""
+        :rtype: int or None
+        
+        New in version 4.8."""
         if self._html.caret_manager.node:
             return self._html.text("text"), self._html.text("offset", self._html.caret_manager.node, self._html.caret_manager.offset)
         else:
@@ -875,7 +885,9 @@ If you benefited from using this package, please consider supporting its develop
         :param index: The index in the element's text content to place the caret at.
         :type index: int
 
-        :raises: :py:class:`RuntimeError` if the given element is empty or has been removed."""
+        :raises: :py:class:`RuntimeError` if the given element is empty or has been removed.
+        
+        New in version 4.8."""
         text, pre_text, offset = self._html.tkhtml_offset_to_text_index(element.node, index, True)
         if not self._html.bbox(element.node):
             raise RuntimeError(f"the element {element} is not visible.")
@@ -887,18 +899,24 @@ If you benefited from using this package, please consider supporting its develop
         """Set the position of the caret given a text index. This can be useful if a specific HTML element is not known (i.e. if known HTML elements have been removed).
 
         :param index: The index in the page's text content to place the caret at.
-        :type index: int"""
+        :type index: int
+        
+        New in version 4.8."""
         if self._html.caret_manager.node:
             self._html.caret_manager.set(None, index, recalculate=True)
 
     def shift_caret_left(self):
         """Shift the caret left. 
-        If the caret is at the beginning of a node, this method will move the caret to the end of the previous text node."""
+        If the caret is at the beginning of a node, this method will move the caret to the end of the previous text node.
+        
+        New in version 4.8."""
         self._html.caret_manager.shift_left()
 
     def shift_caret_right(self):
         """Shift the caret right. 
-        If the caret is at the end of a node, this method will move the caret to the beginning of the next text node."""
+        If the caret is at the end of a node, this method will move the caret to the beginning of the next text node.
+        
+        New in version 4.8."""
         self._html.caret_manager.shift_right()
 
     def get_selection_position(self):
@@ -919,7 +937,9 @@ If you benefited from using this package, please consider supporting its develop
             
         :rtype: A pair of (:class:`~tkinterweb.dom.HTMLElement`, str, int) tuples and a list of :class:`~tkinterweb.dom.HTMLElement` objects, or None
 
-        The elements returned will always be text nodes. If you need to change the style or HTML content of a text node you will first need to get its parent."""
+        The elements returned will always be text nodes. If you need to change the style or HTML content of a text node you will first need to get its parent.
+        
+        New in version 4.8."""
 
         if self._html.selection_start_node and self._html.selection_end_node:
             if self._html.selection_start_node != self._html.selection_end_node:
@@ -967,7 +987,9 @@ If you benefited from using this package, please consider supporting its develop
         """Get the start and end position of selected text, as indexes relative to the page's text content.
 
         :return: Two indexes representing the selection's start and end positions in that string. If no selection is found, this method will return None.
-        :rtype: int, int or None"""
+        :rtype: int, int or None
+        
+        New in version 4.8."""
         if self._html.selection_start_node and self._html.selection_end_node:
             start_index = self._html.text("offset", self._html.selection_start_node, self._html.selection_start_offset)
             end_index = self._html.text("offset", self._html.selection_end_node, self._html.selection_end_offset)
@@ -988,7 +1010,9 @@ If you benefited from using this package, please consider supporting its develop
         :param end_index: The index in the element's text content to end the selection at.
         :type end_index: int
 
-        :raises: :py:class:`RuntimeError` if the given elements are empty or have been removed."""
+        :raises: :py:class:`RuntimeError` if the given elements are empty or have been removed.
+        
+        New in version 4.8."""
         text, _, start_offset = self._html.tkhtml_offset_to_text_index(start_element.node, start_index, True)
         text2, _, end_offset = self._html.tkhtml_offset_to_text_index(end_element.node, end_index, True)
 
@@ -1012,7 +1036,9 @@ If you benefited from using this package, please consider supporting its develop
         :param start_index: The index in the pages's text content to begin the selection at.
         :type start_index: int
         :param end_index: The index in the page's text content to end the selection at.
-        :type end_index: int"""
+        :type end_index: int
+        
+        New in version 4.8."""
         start_node, start_offset = self._html.text("index", start_index)
         end_node, end_offset = self._html.text("index", end_index)
         self.html.selection_start_node = start_node
@@ -1209,8 +1235,10 @@ class HtmlLabel(HtmlFrame):
     
     This class also accepts two additional parameters:
 
-    :param text: Set the HTML content of the widget
+    :param text: The HTML content of the widget
     :type text: str
+    :param style: The CSS code of the widget
+    :type style: str
     """
 
     def __init__(self, master, text="", style="", **kwargs):
@@ -1253,7 +1281,9 @@ class HtmlLabel(HtmlFrame):
 class HtmlParse(HtmlFrame):
     """The :class:`HtmlParse` class parses HTML but does not spawn a widget. It inherits from the :class:`HtmlFrame` class. 
     
-    For a complete list of avaliable methods, properties, configuration options, and generated events, see the :class:`HtmlFrame` docs."""
+    For a complete list of avaliable methods, properties, configuration options, and generated events, see the :class:`HtmlFrame` docs.
+    
+    New in version 4.4."""
     def __init__(self, **kwargs):
         self.root = root = tk.Tk()
 

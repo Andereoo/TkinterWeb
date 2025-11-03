@@ -827,7 +827,7 @@ If you benefited from using this package, please consider supporting its develop
         :type name: str
         :param obj: The Python object to pass.
         :type obj: anything
-        :raises: RuntimeError if JavaScript is not enabled."""
+        :raises: :py:class:`RuntimeError` if JavaScript is not enabled."""
         if self._html.javascript_enabled:
             if not pythonmonkey:
                 self._initialize_javascript()

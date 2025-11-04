@@ -1741,12 +1741,12 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
     def tkhtml_uri_encode(self, uri):
         "Encodes the uri."
-        return self._html.tk.call("::tkhtml::encode", uri)
+        return self.tk.call("::tkhtml::encode", uri)
 
     def tkhtml_uri_escape(self, uri, query=False):
         "Returns the decoded data."
         a = "-query" if query else ""
-        return self._html.tk.call("::tkhtml::escape_uri", a, uri)
+        return self.tk.call("::tkhtml::escape_uri", a, uri)
 
 class TkHtmlParsedURI:
     """Bindings for the Tkhtml URI parsing system. 
@@ -1763,10 +1763,10 @@ class TkHtmlParsedURI:
         return f"{self._html._w}::{self.__class__.__name__.lower()}"
 
     def __str__(self):
-        return self.uri_get(self.parsed)
+        return self.get(self.parsed)
 
     def __del__(self):
-        self.uri_destroy(self.parsed)
+        self.destroy(self.parsed)
 
     def uri(self, uri):
         "Returns name of parsed uri to be used in methods below."
@@ -1775,7 +1775,7 @@ class TkHtmlParsedURI:
     def tkhtml_uri_decode(self, uri, base64=False):
         "This command is designed to help scripts process data: URIs. It is completely separate from the html widget"
         c = ("::tkhtml::decode", "-base64", uri) if base64 else ("::tkhtml::decode", uri)
-        return self.tk.call(*c).strip(b"}")
+        return self._html.tk.call(*c).strip(b"}")
 
     def tkhtml_uri_encode(self, uri):
         "Encodes the uri."
@@ -1790,38 +1790,51 @@ class TkHtmlParsedURI:
         "Resolve a uri."
         return self._html.tk.call(self.parsed, "resolve", uri)
 
-    def uri_load(self, uri):
+    @property
+    def load(self, uri):
         "Load a uri."
         return self._html.tk.call(self.parsed, "load", uri)
 
-    def uri_get(self):
+    @property
+    def get(self):
         "Get the uri."
         return self._html.tk.call(self.parsed, "get")
 
-    def uri_defrag(self):
+    @property
+    def defrag(self):
         "Defrag the uri."
         return self._html.tk.call(self.parsed, "get_no_fragment")
 
-    def uri_scheme(self):
+    @property
+    def scheme(self):
         "Return the uri scheme."
         return self._html.tk.call(self.parsed, "scheme")
 
-    def uri_authority(self):
+    @property
+    def authority(self):
         "Return the uri authority."
         return self._html.tk.call(self.parsed, "authority")
 
-    def uri_path(self):
+    @property
+    def path(self):
         "Return the uri path."
         return self._html.tk.call(self.parsed, "path")
 
-    def uri_query(self):
+    @property
+    def query(self):
         "Return the uri query."
         return self._html.tk.call(self.parsed, "query")
 
-    def uri_fragment(self):
+    @property
+    def fragment(self):
         "Return the uri fragment."
         return self._html.tk.call(self.parsed, "fragment")
 
-    def uri_destroy(self):
+    @property
+    def splitfrag(self):
+        "Return namedtuple with uri and fragment"
+        return utilities.SplitFrag(self.defrag, self.fragment)
+
+    def destroy(self):
         "Destroy this uri."
         self._html.tk.call(self.parsed, "destroy")

@@ -168,6 +168,7 @@ dd .sig-paren {
 
 .wy-side-nav-search > a {
   padding-block: 0px !important;
+  margin-block: 0px !important;
 }
 
 .wy-side-nav-search > a:hover {

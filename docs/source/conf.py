@@ -31,6 +31,8 @@ intersphinx_mapping = {
     'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
 }
 
+html_logo = "_static/logo.png"
+html_theme_options = {"logo_only": True}
 templates_path = ['_templates']
 
 html_static_path = ['_static']

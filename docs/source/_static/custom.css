@@ -165,3 +165,15 @@ dd .sig-paren {
   padding: 5px 12px 7px !important;
   border-bottom-width: 1px !important;
 }
+
+.wy-side-nav-search > a {
+  padding-block: 0px !important;
+}
+
+.wy-side-nav-search > a:hover {
+  background: transparent !important;
+}
+
+.wy-side-nav-search > a img.logo {
+  max-width: 250px !important;
+}

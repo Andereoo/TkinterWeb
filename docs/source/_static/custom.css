@@ -167,8 +167,8 @@ dd .sig-paren {
 }
 
 .wy-side-nav-search > a {
-  padding-block: 0px !important;
-  margin-block: 0px !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 .wy-side-nav-search > a:hover {
@@ -177,4 +177,5 @@ dd .sig-paren {
 
 .wy-side-nav-search > a img.logo {
   max-width: 250px !important;
+  margin: 0 !important;
 }

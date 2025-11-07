@@ -3,9 +3,10 @@
 ![Python 3](https://img.shields.io/pypi/pyversions/tkinterweb)
 ![Made in Canada](https://img.shields.io/badge/%F0%9F%87%A8%F0%9F%87%A6%20made%20in%20Canada-grey)
 
-<a href="https://www.buymeacoffee.com/andereoo" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-violet.png" alt="Buy Me A Coffee" style="height: 35px !important;width: 140px !important;" ></a>
+<div style="margin-bottom: 0px"><a href="https://www.buymeacoffee.com/andereoo" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-violet.png" alt="Buy Me A Coffee" style="height: 36px; width: 146px;" ></a></div>
 
-![TkinterWeb](/docs/source/_static/banner.png)
+<p align="center"><img src="./docs/source/_static/banner.png" style="width: 425px"/></p>
+
 **<p align="center">Fast and lightweight web browser, rich text, and app design widgets for Tkinter.</p>**
 
 ## Overview

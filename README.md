@@ -5,8 +5,8 @@
 
 <a href="https://www.buymeacoffee.com/andereoo" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-violet.png" alt="Buy Me A Coffee" style="height: 35px !important;width: 140px !important;" ></a>
 
-# TkinterWeb 
-**Fast and lightweight web browser, rich text, and app design widgets for Tkinter.**
+![TkinterWeb](/docs/source/_static/banner.png)
+**<p align="center">Fast and lightweight web browser, rich text, and app design widgets for Tkinter.</p>**
 
 ## Overview
 **TkinterWeb offers bindings and extensions to a modified version of the Tkhtml3 widget from [http://tkhtml.tcl.tk](https://web.archive.org/web/20250219233338/http://tkhtml.tcl.tk/), which enables enables the display of HTML and CSS code in Tkinter applications.** 

@@ -5,8 +5,8 @@
 
 <a href="https://www.buymeacoffee.com/andereoo" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-violet.png" alt="Buy Me A Coffee" style="height: 35px !important;width: 140px !important;" ></a>
 
-# TkinterWeb 
-**Fast and lightweight web browser, rich text, and app design widgets for Tkinter.**
+![TkinterWeb](/docs/source/_static/banner.png)
+**<p align="center">Fast and lightweight web browser, rich text, and app design widgets for Tkinter.</p>**
 
 ## Overview
 **TkinterWeb offers bindings and extensions to a modified version of the Tkhtml3 widget from [http://tkhtml.tcl.tk](https://web.archive.org/web/20250219233338/http://tkhtml.tcl.tk/), which enables enables the display of HTML and CSS code in Tkinter applications.** 
@@ -27,7 +27,7 @@ All [major operating systems](https://tkinterweb.readthedocs.io/en/latest/compat
 * A [label](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html#tkinterweb.HtmlLabel) widget that can display styled HTML.
 * A [geometry manager](https://tkinterweb.readthedocs.io/en/latest/geometry.html) to display Tkinter widgets *and HTML elements* together in a Tkinter application.
 
-**TkinterWeb can be used in any Tkinter application to display websites, help pages, documentation, and much more! Here is an example:**
+**TkinterWeb can be used in any Tkinter application to display and edit websites, help pages, documentation, and much more! Here is an example:**
 ```
 import tkinter as tk
 from tkinterweb import HtmlFrame # import the HtmlFrame widget

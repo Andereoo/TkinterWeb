@@ -27,7 +27,7 @@ All [major operating systems](https://tkinterweb.readthedocs.io/en/latest/compat
 * A [label](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html#tkinterweb.HtmlLabel) widget that can display styled HTML.
 * A [geometry manager](https://tkinterweb.readthedocs.io/en/latest/geometry.html) to display Tkinter widgets *and HTML elements* together in a Tkinter application.
 
-**TkinterWeb can be used in any Tkinter application to display websites, help pages, documentation, and much more! Here is an example:**
+**TkinterWeb can be used in any Tkinter application to display and edit websites, help pages, documentation, and much more! Here is an example:**
 ```
 import tkinter as tk
 from tkinterweb import HtmlFrame # import the HtmlFrame widget

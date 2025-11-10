@@ -201,7 +201,7 @@ Version 4.4:
 
 Version 4.5:
 
-* The new configuration option ``ssl_cafile`` can be used to provide a path to a CA Certificate file. See  `bug #28 <https://github.com/Andereoo/TkinterWeb/issues/28>`_ .
+* The new configuration option ``ssl_cafile`` can be used to provide a path to a CA Certificate file. See  `bug #28 <https://github.com/Andereoo/TkinterWeb/issues/28>`_.
 
 Version 4.6:
 

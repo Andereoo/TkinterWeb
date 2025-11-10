@@ -1,4 +1,4 @@
-Using Caret Browsing Mode
+Making Documents Editable
 =========================
 
 .. note::

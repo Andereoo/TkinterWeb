@@ -54,8 +54,8 @@ Pages
    usage
    geometry
    dom
-   javascript
    caret
+   javascript
    faq
    compatibility
    upgrading

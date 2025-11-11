@@ -755,7 +755,7 @@ class TkinterWeb(Widget):
         "Fetch stylesheets and parse the CSS code they contain"
         thread = self._begin_download()
 
-        if url and self.unstoppable:
+        if url and thread.isrunning:
             self.post_message(f"Fetching stylesheet from {shorten(url)}")
             try:
                 data = sub(r"url\((.*?)\)", 
@@ -765,8 +765,8 @@ class TkinterWeb(Widget):
             except Exception as error:
                 self.post_message(f"ERROR: could not load stylesheet {url}: {error}")
                 self.on_resource_setup(url, "stylesheet", False)
-
-        if data and self.unstoppable:
+                
+        if data and thread.isrunning:
             self.style_count += 1
             sheetid = "user." + str(self.style_count).zfill(4)
 
@@ -840,7 +840,7 @@ class TkinterWeb(Widget):
         else:
             try:
                 data, newurl, filetype, code = self._download_url(url)
-                if data and self.unstoppable:
+                if data and thread.isrunning:
                     # Thread safety
                     self.after(0, self.finish_fetching_images, node, data, name, filetype, url)
 

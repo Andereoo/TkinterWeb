@@ -79,6 +79,7 @@ class TkinterWeb(Widget):
         self.update_default_style()
 
         # Start the event queue
+        # The queue evaluates Tcl/Tk commands running in a thread
         self.queue = Queue()
         self._check_queue()
 
@@ -386,7 +387,9 @@ class TkinterWeb(Widget):
     
     def post_to_queue(self, callback):
         """Use this method to send a callback to TkinterWeb's thread-safety queue. The callback will be evaluated on the main thread.
-        Use this when running Tkinter commands from within a thread."""
+        Use this when running Tkinter commands from within a thread.
+        
+        New in version 4.9."""
         self.queue.put(callback)
 
     def post_event(self, event, thread_safe=False):
@@ -802,6 +805,9 @@ class TkinterWeb(Widget):
         return self.tk.call(self._w, "write", *arg+self._options(cnf, kw))
     
     def allocate_image_name(self):
+        """Get a unique image name. 
+        
+        New in version 4.9."""
         name = self.image_name_prefix + str(self.loaded_image_counter)
         self.loaded_image_counter += 1
         return name
@@ -884,23 +890,23 @@ class TkinterWeb(Widget):
             if data and filetype.startswith("image"):
                 name = self.allocate_image_name()
                 data, data_is_image = self.check_images(data, name, url, filetype)
-                self.queue.put(lambda node=node, data=data, name=name, url=url, filetype=filetype, data_is_image=data_is_image: self.finish_fetching_image_objects(node, data, name, url, filetype, data_is_image))
+                self.queue.put(lambda node=node, data=data, name=name, url=url, filetype=filetype, data_is_image=data_is_image: self._finish_fetching_image_objects(node, data, name, url, filetype, data_is_image))
             elif data and filetype == "text/html":
-                self.queue.put(lambda node=node, data=data, name=name, url=url, filetype=filetype: self.finish_fetching_HTML_objects(node, data, name, url, filetype))
+                self.queue.put(lambda node=node, data=data, name=name, url=url, filetype=filetype: self._finish_fetching_HTML_objects(node, data, name, url, filetype))
 
         except Exception as error:
             self.post_message(f"ERROR: could not load object element with data {url}: {error}", True)
         
         self._finish_download(thread)
 
-    def finish_fetching_image_objects(self, node, data, name, url, filetype, data_is_image):
+    def _finish_fetching_image_objects(self, node, data, name, url, filetype, data_is_image):
         # NOTE: this must run in the main thread
 
         image = self.finish_fetching_images(None, data, name, filetype, url, data_is_image)
         self.override_node_properties(node, "-tkhtml-replacement-image", f"url({image})")
         self._submit_element_js(node, "onload")
 
-    def finish_fetching_HTML_objects(self, node, data, url, filetype):
+    def _finish_fetching_HTML_objects(self, node, data, url, filetype):
         # NOTE: this must run in the main thread
 
         self._create_iframe(node, url, data)
@@ -967,7 +973,9 @@ class TkinterWeb(Widget):
         self._finish_download(thread)
 
     def check_images(self, data, name, url, filetype):
-        "Convert SVG images and invert them if needed."
+        """Convert SVG images and invert them if needed.
+        
+        New in version 4.9."""
         # NOTE: this method is thread-safe and is designed to run in a thread
 
         data_is_image = False
@@ -1873,8 +1881,6 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         # NOTE: this must run in the main thread
 
         del self.loaded_images[name]
-        # Python's garbage collector does this for us:
-        # self.tk.call("image", "delete", name)
 
     def _on_form(self, node):
         "Handle <form> elements."

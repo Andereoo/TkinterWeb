@@ -35,7 +35,7 @@ class HtmlFrame(Frame):
     :type on_script: function
     :param on_element_script: The function to be called when a JavaScript event attribute on an element is encountered. This can be used to connect a script handler, such as a JavaScript engine, or even to run your own Python code. The element's corresponding Tkhtml3 node, relevant attribute, and attribute contents will be passed as arguments. New in version 4.1.
     :type on_element_script: function
-    :param on_resource_setup: The function to be called when an image or stylesheet load finishes. The resource's url, type ("stylesheet" or "image"), and whether setup was successful or not (True or False) will be passed as arguments.
+    :param on_resource_setup: The function to be called when an image, stylesheet, or script load finishes. The resource's url, type ("image", "stylesheet", or "script"), and whether setup was successful or not (True or False) will be passed as arguments.
     :type on_resource_setup: function
     :param message_func: The function to be called when a debug message is issued. This only works if :attr:`messages_enabled` is set to True. The message will be passed as an argument. By default the message is printed.
     :type message_func: function

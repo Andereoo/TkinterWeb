@@ -3,8 +3,8 @@ Changelog
 
 **The API changed significantly in version 4.0.0**
 
-Summary of changes
-------------------
+Key changes
+-----------
 
 * Faster load speed
 * A more intuitive API
@@ -17,6 +17,7 @@ Summary of changes
 * SVG support on Windows and ``border-radius`` support on Windows and Linux (new in version 4.4)
 * Support for Tcl 9 (new in version 4.5)
 * Caret browsing functionality (new in version 4.8)
+* Improved thread safety (new in version 4.9)
 
 Removed
 -------
@@ -235,6 +236,11 @@ Version 4.8:
 
 * The new configuration option ``caret_browsing_enabled`` can be used to enable or disable caret browsing mode.
 
+Version 4.9:
+* :class:`.TkinterWeb.post_to_queue`
+* :class:`.TkinterWeb.allocate_image_name`
+* :class:`.TkinterWeb.check_images`
+
 Changed/Fixed
 -------------
 
@@ -299,3 +305,8 @@ Version 4.8:
 
 * All HTML widgets now bind to ``<Up>``, ``<Down>``, ``<Left>``, ``<Right>``, ``<Prior>``, ``<Next>``, ``<Home>``, and ``<End>`` by default.
 * Fixed :meth:`.HTMLElement.parentElement`.
+
+Version 4.9:
+
+* Fixed loading of data urls
+* TkinterWeb is now thread-safe when loading resources. All custom callbacks now run on the main thread.

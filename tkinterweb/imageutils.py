@@ -16,29 +16,36 @@ from tkinter import PhotoImage as TkPhotoImage
 # Additionally, CairoSVG will only detect TkinterWeb-Tkhtml's Cairo binary after Tkhtml is loaded 
 rsvg_type = None
 
-def check_Cairo():
-    global cairo, rsvg, rsvg_type
+
+def load_cairo():
+    global rsvg_type
     if rsvg_type == None:
         try:
             import cairo
+            globals()['cairo'] = cairo
             import rsvg
+            globals()['rsvg'] = rsvg
             rsvg_type = 1
         except ImportError:
             try:
                 import cairosvg as cairo
+                globals()['cairo'] = cairo
                 rsvg_type = 2
             except (ImportError, FileNotFoundError, OSError,):
                 try:
                     import gi
                     gi.require_version('Rsvg', '2.0')
                     from gi.repository import Rsvg as rsvg
+                    globals()['rsvg'] = rsvg
                     # Don't import PyGobject's Cairo if PyCairo has already been imported
                     if not cairo:
                         gi.require_version('cairo', '1.0')
                         from gi.repository import cairo
+                        globals()['cairo'] = cairo
                     rsvg_type = 3
                 except (ValueError, ImportError,):
                     rsvg_type = 0
+
 
 def text_to_image(name, alt, nodebox, font_type, font_size, threshold):
     from PIL import Image
@@ -107,75 +114,46 @@ def invert_image(image, limit):
             image = ImageOps.invert(image)
         return image
 
-def load_cairo():
-    global rsvg_type
-    if rsvg_type == None:
-        try:
-            import cairo
-            globals()['cairo'] = cairo
-            import rsvg
-            globals()['rsvg'] = rsvg
-            rsvg_type = 1
-        except ImportError:
-            try:
-                import cairosvg as cairo
-                globals()['cairo'] = cairo
-                rsvg_type = 2
-            except (ImportError, FileNotFoundError, OSError,):
-                try:
-                    import gi
-                    gi.require_version('Rsvg', '2.0')
-                    from gi.repository import Rsvg as rsvg
-                    globals()['rsvg'] = rsvg
-                    # Don't import PyGobject's Cairo if PyCairo has already been imported
-                    if not cairo:
-                        gi.require_version('cairo', '1.0')
-                        from gi.repository import cairo
-                        globals()['cairo'] = cairo
-                    rsvg_type = 3
-                except (ValueError, ImportError,):
-                    rsvg_type = 0
 
-def data_to_image(data, name, imagetype, invert, limit):
-    image = None
-    if "svg" in imagetype:
-        load_cairo()
-        if rsvg_type == 1 or rsvg_type == 3:
-            from io import BytesIO
-            if rsvg_type == 1:
-                svg = rsvg.Handle(data=data)
-                img = cairo.ImageSurface(
-                    cairo.FORMAT_ARGB32, svg.props.width, svg.props.height)
-            else:
-                handle = rsvg.Handle()
-                svg = handle.new_from_data(data.encode("utf-8"))
-                dim = svg.get_dimensions()
-                img = cairo.ImageSurface(
-                    cairo.FORMAT_ARGB32, dim.width, dim.height)
-            ctx = cairo.Context(img)
-            svg.render_cairo(ctx)
-            png_io = BytesIO()
-            img.write_to_png(png_io)
-            svg.close()
-            photoimage = TkPhotoImage(data=png_io.getvalue(), name=name)
-        elif rsvg_type == 2:
-            image_data = cairo.svg2png(bytestring=data)
-            photoimage = TkPhotoImage(data=image_data, name=name)
+def svg_to_png(data):
+    load_cairo()
+    if rsvg_type == 1 or rsvg_type == 3:
+        from io import BytesIO
+        if rsvg_type == 1:
+            svg = rsvg.Handle(data=data)
+            img = cairo.ImageSurface(
+                cairo.FORMAT_ARGB32, svg.props.width, svg.props.height)
         else:
-            photoimage = None
-    elif invert:
+            handle = rsvg.Handle()
+            svg = handle.new_from_data(data.encode("utf-8"))
+            dim = svg.get_dimensions()
+            img = cairo.ImageSurface(
+                cairo.FORMAT_ARGB32, dim.width, dim.height)
+        ctx = cairo.Context(img)
+        svg.render_cairo(ctx)
+        png_io = BytesIO()
+        img.write_to_png(png_io)
+        svg.close()
+        return png_io.getvalue()
+    elif rsvg_type == 2:
+        return cairo.svg2png(bytestring=data)
+    else:
+        return None
+
+
+def data_to_image(data, name, imagetype, data_is_image):
+    if data_is_image:
+        from PIL import Image
         from PIL.ImageTk import PhotoImage
-        image = invert_image(data, limit)
-        photoimage = PhotoImage(image=image, name=name)
+        return PhotoImage(image=data, name=name)
     elif imagetype in ("image/png", "image/gif", "image/ppm", "image/pgm",):
         # tkinter.PhotoImage has less overhead, so use it when possible
-        photoimage = TkPhotoImage(name=name, data=data)
+        return TkPhotoImage(data=data, name=name)
     else:
         from PIL import Image
         from PIL.ImageTk import PhotoImage
-        photoimage = PhotoImage(data=data, name=name)
+        return PhotoImage(data=data, name=name)
 
-    return photoimage
 
 def blank_image(name):
     #if "PIL" in modules:

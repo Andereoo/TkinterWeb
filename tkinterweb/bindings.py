@@ -8,6 +8,8 @@ from re import IGNORECASE, MULTILINE, split, sub, finditer
 
 from urllib.parse import urlencode, urljoin
 
+from queue import Queue, Empty
+
 from tkinter import Widget, Frame, TclError
 
 from .imageutils import *
@@ -76,6 +78,10 @@ class TkinterWeb(Widget):
         self._setup_handlers()
         self.update_default_style()
 
+        # Start the event queue
+        self.queue = Queue()
+        self._check_queue()
+
     def _setup_settings(self):
         "Widget settings."
         try:
@@ -143,6 +149,9 @@ class TkinterWeb(Widget):
         self.scrollable_node_tag = f"tkinterweb.{id(self)}.scrollablenodes"
         self.widget_container_attr = "-tkinterweb-widget-container"
 
+        self.queue_delay = 50
+        self.queue_after = None
+
     def _setup_status_variables(self):
         "Widget status variables."
         self.base_url = ""
@@ -152,7 +161,8 @@ class TkinterWeb(Widget):
         self.fragment = ""
         self.style_count = 0
         self.active_threads = []
-        self.loaded_images = set()
+        self.loaded_images = {}
+        self.loaded_image_counter = 0
         self.image_directory = {}
         self.image_name_prefix = f"_tkinterweb_img_{id(self)}_"
         self.is_selecting = False
@@ -192,7 +202,7 @@ class TkinterWeb(Widget):
         self.bind("<Button-3>", self._on_right_click, True)
         self.bind("<Double-Button-1>", self._on_double_click, True)
         self.bind("<ButtonRelease-1>", self._on_click_release, True)
-        self.bind("<Destroy>", lambda event: self.stop())
+        self.bind("<Destroy>", self._on_destroy)
 
         for i in {"<Left>", "Control-Left>", "Control-Shift-Left>", "<KP_Left>", "<Control-KP_Left>", "<Control-Shift-KP_Left>", 
                 "<Right>", "Control-Right>", "Control-Shift-Right>", "<KP_Right>", "<Control-KP_Right>", "<Control-Shift-KP_Right>",
@@ -204,6 +214,10 @@ class TkinterWeb(Widget):
     
         self.bind_class(self.node_tag, "<Motion>", self._on_mouse_motion, True)
         self.bind_class(self.node_tag, "<FocusIn>", self._on_focusout, True)
+
+    def _on_destroy(self, event):
+        self.after_cancel(self.queue_after)
+        self.stop()
 
     def _setup_handlers(self):
         "Register node handlers."
@@ -235,6 +249,15 @@ class TkinterWeb(Widget):
         self.register_handler("attribute", "object", self._on_object_value_change)
         self.register_handler("attribute", "iframe", self._on_iframe_value_change)
         self.register_handler("attribute", "img", self._on_image_value_change)
+
+    def _check_queue(self):
+        try:
+            while True:
+                msg = self.queue.get_nowait()
+                msg()
+        except Empty:
+            pass
+        self.queue_after = self.after(self.queue_delay, self._check_queue)
 
     @property
     def caret_manager(self):
@@ -360,26 +383,65 @@ class TkinterWeb(Widget):
     @property
     def tkhtml_default_style(self):
         return self.tk.call("::tkhtml::htmlstyle")
+    
+    def post_to_queue(self, callback):
+        """Use this method to send a callback to TkinterWeb's thread-safety queue. The callback will be evaluated on the main thread.
+        Use this when running Tkinter commands from within a thread."""
+        self.queue.put(callback)
 
-    def post_event(self, event):
+    def post_event(self, event, thread_safe=False):
+        "Generate a virtual event."
+        # NOTE: when thread_safe=True, this method is thread-safe
+
+        if thread_safe:
+            self.queue.put(lambda event=event: self._post_event(event))
+        else:
+            self._post_event(event)
+
+    def _post_event(self, event):
         "Generate a virtual event."
         if self.events_enabled: # and self.unstoppable
-            # Thread safety
-            self.after(0, lambda event=event: self._finish_posting_event(event))
+            try:
+                self.event_generate(event)
+            except TclError:
+                # The widget doesn't exist anymore
+                pass
 
-    def post_message(self, message):
+    def post_message(self, message, thread_safe=False):
+        "Post a message."
+        # NOTE: when thread_safe=True, this method is thread-safe
+
+        if thread_safe:
+            self.queue.put(lambda message=message: self._post_message(message))
+        else:
+            self._post_message(message)
+
+    def _post_message(self, message):
         "Post a message."
         if self.overflow_scroll_frame:
             message = "[EMBEDDED DOCUMENT] " + message
         if self.messages_enabled:
             self.message_func(message)
 
-    def parse(self, html):
+    def parse(self, html, thread_safe=False):
         "Parse HTML code."
+        # NOTE: when thread_safe=True, this method is thread-safe
+
         self.downloads_have_occured = False
         self.unstoppable = True
         html = self._crash_prevention(html)
         html = self._dark_mode(html)
+
+        # Send the HTML code to the queue if needed
+        # Otherwise, evaluate directly so that the document can be manipulated as soon as parse() returns
+        if thread_safe:
+            self.queue.put(lambda html=html: self._parse(html))
+        else:
+            self._parse(html)
+    
+    def _parse(self, html):
+        # NOTE: this must run in the main thread
+
         self.tk.call(self._w, "parse", html)
         self.post_event(DOM_CONTENT_LOADED_EVENT)
 
@@ -445,10 +507,11 @@ class TkinterWeb(Widget):
             # The widget doesn't exist anymore
             pass
 
-    def reset(self):
+    def reset(self, thread_safe=False):
         "Reset the widget."
+        # NOTE: when thread_safe=True, this method is thread-safe
+
         self.stop()
-        self.loaded_images = set()
         self.image_directory = {}
         self.form_get_commands = {}
         self.form_nodes = {}
@@ -466,8 +529,18 @@ class TkinterWeb(Widget):
         self.title = ""
         self.icon = ""
         self.fragment = ""
+
+        if thread_safe:
+            self.queue.put(self._reset)
+        else:
+            self._reset()
+
+    def _reset(self):
+        # NOTE: this must run in the main thread
+        
         self.vsb_type = self.manage_vsb_func()
         self.manage_hsb_func()
+
         self._set_cursor("default")
         self.tk.call(self._w, "reset")
         if self._caret_browsing_enabled:
@@ -727,84 +800,119 @@ class TkinterWeb(Widget):
         
         New in version 4.4."""
         return self.tk.call(self._w, "write", *arg+self._options(cnf, kw))
+    
+    def allocate_image_name(self):
+        name = self.image_name_prefix + str(self.loaded_image_counter)
+        self.loaded_image_counter += 1
+        return name
 
     def fetch_scripts(self, attributes, url=None, data=None):
         "Fetch and run scripts"
+        # NOTE: this method is thread-safe and is designed to run in a thread
+
         thread = self._begin_download()
 
-        if url and self.unstoppable:
-            self.post_message(f"Fetching script from {shorten(url)}")
+        if url and thread.isrunning:
+            self.post_message(f"Fetching script from {shorten(url)}", True)
             try:
                 data = self._download_url(url)[0]
             except Exception as error:
-                self.post_message(f"ERROR: could not load script {url}: {error}")
-                self.on_resource_setup(url, "script", False)
+                self.queue.put(lambda message=f"ERROR: could not load script {url}: {error}",
+                               url=url: self._finish_resource_load(message, url, "script", False))
 
-        if data and self.unstoppable:
+        if data and thread.isrunning:
             if "defer" in attributes:
                 self.pending_scripts.append((attributes, data))
             else:
-                self.after(0, self.on_script, attributes, data) # Thread safety
+                self.queue.put(lambda attributes=attributes, data=data: self.on_script(attributes, data))
                 
             if url:
-                self.post_message(f"Successfully loaded {shorten(url)}")
-                self.on_resource_setup(url, "script", True)
+                self.queue.put(lambda message=f"Successfully loaded {shorten(url)}", 
+                               url=url: self._finish_resource_load(message, url, "script", True))
+
         self._finish_download(thread)
 
     def fetch_styles(self, node=None, url=None, data=None):
         "Fetch stylesheets and parse the CSS code they contain"
+        # NOTE: this method is thread-safe and is designed to run in a thread
+
         thread = self._begin_download()
 
         if url and thread.isrunning:
-            self.post_message(f"Fetching stylesheet from {shorten(url)}")
+            self.post_message(f"Fetching stylesheet from {shorten(url)}", True)
             try:
                 data = sub(r"url\((.*?)\)", 
                            lambda match, url=url: self._fix_css_urls(match, url), 
                            self._download_url(url)[0]
                            )
             except Exception as error:
-                self.post_message(f"ERROR: could not load stylesheet {url}: {error}")
-                self.on_resource_setup(url, "stylesheet", False)
-                
-        if data and thread.isrunning:
-            self.style_count += 1
-            sheetid = "user." + str(self.style_count).zfill(4)
+                self.queue.put(lambda message=f"ERROR: could not load stylesheet {url}: {error}",
+                    url=url: self._finish_resource_load(message, url, "stylesheet", False))
 
-            self.parse_css(f"{sheetid}.9999", data, url)
-            if node:
-                # Thread safety
-                self.after(0, self._submit_element_js, node, "onload")
-            if url:
-                self.post_message(f"Successfully loaded {shorten(url)}")
-                self.on_resource_setup(url, "stylesheet", True)
+        if data and thread.isrunning:
+            self.queue.put(lambda node=node, url=url, data=data: self._finish_fetching_styles(node, url, data))
+                    
         self._finish_download(thread)
 
+    def _finish_fetching_styles(self, node, url, data):
+        # NOTE: this must run in the main thread
+
+        self.style_count += 1
+        sheetid = "user." + str(self.style_count).zfill(4)
+
+        self.parse_css(f"{sheetid}.9999", data, url)
+        if node:
+            self._submit_element_js(node, "onload")
+        if url:
+            self.post_message(f"Successfully loaded {shorten(url)}")
+            self.on_resource_setup(url, "stylesheet", True)
+    
+    def _finish_resource_load(self, message, url, resource, success):
+        # NOTE: this must run in the main thread
+
+        self.post_message(message)
+        self.on_resource_setup(url, resource, success)
+
     def fetch_objects(self, node, url):
+        # NOTE: this method is thread-safe and is designed to run in a thread
+
         thread = self._begin_download()
 
         try:
-            data, newurl, filetype, code = self._download_url(url)
+            data, url, filetype, code = self._download_url(url)
 
             if data and filetype.startswith("image"):
-                name = self.image_name_prefix + str(len(self.loaded_images))
-                image = data_to_image(data, name, filetype, self._image_inversion_enabled, self.dark_theme_limit)
-                self.loaded_images.add(image) 
-                self.override_node_properties(node, "-tkhtml-replacement-image", f"url(replace:{image})")
+                name = self.allocate_image_name()
+                data, data_is_image = self.check_images(data, name, url, filetype)
+                self.queue.put(lambda node=node, data=data, name=name, url=url, filetype=filetype, data_is_image=data_is_image: self.finish_fetching_image_objects(node, data, name, url, filetype, data_is_image))
             elif data and filetype == "text/html":
-                self.after(0, self._create_iframe, node, newurl, data)
+                self.queue.put(lambda node=node, data=data, name=name, url=url, filetype=filetype: self.finish_fetching_HTML_objects(node, data, name, url, filetype))
 
-            self.after(0, self._submit_element_js, node, "onload")
         except Exception as error:
-            self.post_message(f"ERROR: could not load object element: {error}")
+            self.post_message(f"ERROR: could not load object element with data {url}: {error}", True)
         
         self._finish_download(thread)
 
+    def finish_fetching_image_objects(self, node, data, name, url, filetype, data_is_image):
+        # NOTE: this must run in the main thread
+
+        image = self.finish_fetching_images(None, data, name, filetype, url, data_is_image)
+        self.override_node_properties(node, "-tkhtml-replacement-image", f"url({image})")
+        self._submit_element_js(node, "onload")
+
+    def finish_fetching_HTML_objects(self, node, data, url, filetype):
+        # NOTE: this must run in the main thread
+
+        self._create_iframe(node, url, data)
+        self._submit_element_js(node, "onload")
+
     def load_alt_text(self, url, name):
+        # NOTE: this must run in the main thread
+
         if (url in self.image_directory):
             node = self.image_directory[url]
             if not self.ignore_invalid_images:
                 image = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
-                self.loaded_images.add(image)
             elif self.image_alternate_text_enabled:
                 try:  # Ensure thread safety when closing
                     alt = self.get_node_attribute(node, "alt")
@@ -822,58 +930,90 @@ class TkinterWeb(Widget):
                             self.image_alternate_text_size,
                             self.image_alternate_text_threshold,
                         )
-                        self.loaded_images.add(image)
-                except (RuntimeError, TclError): pass  # Widget no longer exists
+                    else:
+                        return
+                except (RuntimeError, TclError): 
+                    return  # Widget no longer exists
         elif not self.ignore_invalid_images:
             image = data_to_image(BROKEN_IMAGE, name, "image/png", self._image_inversion_enabled, self.dark_theme_limit)
-            self.loaded_images.add(image)
+        else:
+            return
+        
+        if name in self.loaded_images:
+            self.loaded_images[name] = (self.loaded_images[name], image)
+        else:
+            self.loaded_images[name] = image
 
     def fetch_images(self, node, url, name):
         "Fetch images and display them in the document."
+        # NOTE: this method is thread-safe and is designed to run in a thread
+
         thread = self._begin_download()
 
-        self.post_message(f"Fetching image from {shorten(url)}")
+        self.post_message(f"Fetching image from {shorten(url)}", True)
 
         if url == self.base_url:
-            self.load_alt_text(url, name)
-            self.post_message(f"ERROR: image url not specified")
+            self.queue.put(lambda url=url, name=name, error="ERROR: image url not specified": self._on_image_error(url, name, error))
         else:
             try:
-                data, newurl, filetype, code = self._download_url(url)
-                if data and thread.isrunning:
-                    # Thread safety
-                    self.after(0, self.finish_fetching_images, node, data, name, filetype, url)
-
+                data, url, filetype, code = self._download_url(url)
+                data, data_is_image = self.check_images(data, name, url, filetype)                
+                    
+                if thread.isrunning:
+                    self.queue.put(lambda node=node, data=data, name=name, url=url, filetype=filetype, data_is_image=data_is_image: self.finish_fetching_images(node, data, name, url, filetype, data_is_image))
             except Exception as error:
-                self.load_alt_text(url, name)
-                self.post_message(f"ERROR: could not load image {url}: {error}")
-                self.on_resource_setup(url, "image", False)
+                self.queue.put(lambda url=url, name=name, error=f"ERROR: {error}": self._on_image_error(url, name, error))
+
         self._finish_download(thread)
 
-    def finish_fetching_images(self, node, data, name, filetype, url):
-        try:
-            image = data_to_image(data, name, filetype, self._image_inversion_enabled, self.dark_theme_limit)
+    def check_images(self, data, name, url, filetype):
+        "Convert SVG images and invert them if needed."
+        # NOTE: this method is thread-safe and is designed to run in a thread
+
+        data_is_image = False
+        if "svg" in filetype:
+            data = svg_to_png(data)
+            if not data:
+                error = f"ERROR: the image {url} could not be shown: either PyGObject, CairoSVG, or both PyCairo and Rsvg must be installed to parse .svg files"
+                self.queue.put(lambda url=url, name=name, error=error: self._on_image_error(url, name, error))
+                raise RuntimeError("no SVG parser found")
             
-            if image:
-                self.loaded_images.add(image)
-                self.post_message(f"Successfully loaded {shorten(url)}")
-                self.on_resource_setup(url, "image", True)
-                if node:
-                    # Thread safety
-                    self.after(0, self._submit_element_js, node, "onload")
-                #if self.experimental:
-                #    node = self.search(f'img[src="{url}"]')
-                #    if node:
-                #        if self.get_node_children(node): self.delete_node(self.get_node_children(node))
+        if self._image_inversion_enabled:
+            data = invert_image(data, self.dark_theme_limit)
+            data_is_image = True
+            
+        return data, data_is_image
+
+    def finish_fetching_images(self, node, data, name, url, filetype, data_is_image=False):
+        # NOTE: this must run in the main thread
+
+        try:
+            image = data_to_image(data, name, filetype, data_is_image)
+            
+            self.post_message(f"Successfully loaded {shorten(url)}")
+            self.on_resource_setup(url, "image", True)
+            if node:
+                self._submit_element_js(node, "onload")
+            #if self.experimental:
+            #    node = self.search(f'img[src="{url}"]')
+            #    if node:
+            #        if self.get_node_children(node): self.delete_node(self.get_node_children(node))
+            if name in self.loaded_images:
+                self.loaded_images[name] = (self.loaded_images[name], image)
             else:
-                self.load_alt_text(url, name)
-                self.post_message(f"ERROR: the image {url} could not be shown: either PyGObject, CairoSVG, or both PyCairo and Rsvg must be installed to parse .svg files")
-                self.on_resource_setup(url, "image", False)
+                self.loaded_images[name] = image
+
+            return image
 
         except Exception as error:
-            self.load_alt_text(url, name)
-            self.post_message(f"ERROR: could not load image {url}: {error}")
-            self.on_resource_setup(url, "image", False)
+            self._on_image_error(url, name, f"ERROR: could not load image {url}: {error}")
+
+    def _on_image_error(self, url, name, error):
+        # NOTE: this must run in the main thread
+
+        self.load_alt_text(url, name)
+        self.post_message(error)
+        self.on_resource_setup(url, "image", False)
 
     def handle_node_replacement(self, node, widgetid, deletecmd, stylecmd=None, allowscrolling=True, handledelete=True):
         "Replace a Tkhtml3 node with a Tkinter widget."
@@ -1266,6 +1406,8 @@ class TkinterWeb(Widget):
 
     def safe_tk_eval(self, expr):
         """Always evaluate the given expression on the main thread.
+
+        Since version 4.9 all callbacks are evaluated on the main thread. Except for niche cases this command should not need to be used.
         
         New in version 4.4."""
         if threading.current_thread() is threading.main_thread():
@@ -1396,13 +1538,6 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                 tkinterweb_tkhtml.load_tkhtml(self.master)
                 loaded_version = tkinterweb_tkhtml.get_loaded_tkhtml_version(self.master)
                 self.post_message(f"Tkhtml {loaded_version} successfully loaded")
-
-    def _finish_posting_event(self, event):
-        try:
-            self.event_generate(event)
-        except TclError:
-            # The widget doesn't exist anymore
-            pass
 
     def _handle_load_finish(self, post_event=True):
         if self.fragment:
@@ -1700,33 +1835,46 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         if not self.images_enabled or not self.unstoppable:
             return
 
-        name = self.image_name_prefix + str(len(self.loaded_images))
+        name = self.allocate_image_name()
 
-        image = blank_image(name)
-        self.loaded_images.add(image)
-
-        if url.startswith("replace:"):
-            name = url.replace("replace:", "")
-        elif any({
-                url.startswith("linear-gradient("),
-                url.startswith("radial-gradient("),
-                url.startswith("repeating-linear-gradient("),
-                url.startswith("repeating-radial-gradient("),
-            }):
-            self.post_message(f"Fetching image: {shorten(url)}")
-            self.load_alt_text(url, name)
-            for image in url.split(","):
-                self.post_message(f"ERROR: the image {shorten(url)} could not be shown because it is not supported yet")
-            self.on_resource_setup(url, "image", False)
+        if url.startswith(self.image_name_prefix):
+            name = url
         else:
-            url = url.split("), url(", 1)[0].replace("'", "").replace('"', "")
-            url = self.resolve_url(url)
-            if url in self.image_directory:
-                node = self.image_directory[url]
+            image = blank_image(name)
+            self.loaded_images[name] = image
+
+            if any({
+                    url.startswith("linear-gradient("),
+                    url.startswith("radial-gradient("),
+                    url.startswith("repeating-linear-gradient("),
+                    url.startswith("repeating-radial-gradient("),
+                }):
+                self.post_message(f"Fetching image: {shorten(url)}")
+                self.load_alt_text(url, name)
+                for image in url.split(","):
+                    self.post_message(f"ERROR: the image {shorten(url)} could not be shown because it is not supported yet")
+                self.on_resource_setup(url, "image", False)
             else:
-                node = None
-            self._thread_check(self.fetch_images, node, url, name)
-        return name
+                url = url.split("), url(", 1)[0].replace("'", "").replace('"', "")
+                url = self.resolve_url(url)
+                if url in self.image_directory:
+                    node = self.image_directory[url]
+                else:
+                    node = None
+                self._thread_check(self.fetch_images, node, url, name)
+
+        return list((name, self.register(self._on_image_delete)))
+    
+    def _on_image_delete(self, name):
+        # Remove the reference to the image in the main thread
+        self.queue.put(lambda name=name: self._finish_image_delete(name))
+
+    def _finish_image_delete(self, name):
+        # NOTE: this must run in the main thread
+
+        del self.loaded_images[name]
+        # Python's garbage collector does this for us:
+        # self.tk.call("image", "delete", name)
 
     def _on_form(self, node):
         "Handle <form> elements."
@@ -1984,23 +2132,26 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         return data
 
     def _begin_download(self):
+        # NOTE: this method is thread-safe and is designed to run in a thread
+
         thread = get_current_thread()
         self.active_threads.append(thread)
-        self.post_event(DOWNLOADING_RESOURCE_EVENT)
+        self.post_event(DOWNLOADING_RESOURCE_EVENT, True)
         return thread
 
     def _finish_download(self, thread):
+        # NOTE: this method is thread-safe and is designed to run in a thread
+
         self.active_threads.remove(thread)
         if len(self.active_threads) == 0:
-            self._handle_load_finish()
+            self.queue.put(self._handle_load_finish)
         else:
-            self._handle_load_finish(False)
+            self.queue.put(lambda: self._handle_load_finish(False))
 
     def _submit_deferred_scripts(self):
         if self.pending_scripts:
             for index, script in enumerate(self.pending_scripts):
-                # Thread safety
-                self.after(0, self.on_script, *script)
+                self.on_script(*script)
             self.pending_scripts = []
            
     def _fix_css_urls(self, match, url):

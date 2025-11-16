@@ -387,7 +387,7 @@ If you benefited from using this package, please consider supporting its develop
     def __setitem__(self, key, value):
         self.configure(**{key: value})
 
-    def load_html(self, html_source, base_url=None, fragment=None):
+    def load_html(self, html_source, base_url=None, fragment=None, _thread_safe=False):
         """Clear the current page and parse the given HTML code.
         
         :param html_source: The HTML code to render.
@@ -396,7 +396,7 @@ If you benefited from using this package, please consider supporting its develop
         :type base_url: str, optional
         :param fragment: The url fragment to scroll to after the document loads.
         :type fragment: str, optional"""
-        self._html.reset()
+        self._html.reset(_thread_safe)
 
         if fragment: fragment = "".join(char for char in fragment if char.isalnum() or char in ("-", "_", ".")).replace(".", r"\.")
 
@@ -407,8 +407,16 @@ If you benefited from using this package, please consider supporting its develop
             base_url = f"file://{path}/"
         self._html.base_url = self._current_url = base_url
         self._html.fragment = fragment
-        self._html.parse(html_source)
+        self._html.parse(html_source, _thread_safe)
 
+        if _thread_safe:
+            self._html.queue.put(self._load_html)
+        else:
+            self._load_html()
+    
+    def _load_html(self):
+        # NOTE: must be run from main thread
+        
         self._finish_css()
         self._handle_resize(force=True)
 
@@ -1116,10 +1124,12 @@ If you benefited from using this package, please consider supporting its develop
 
     def _continue_loading(self, url, data="", method="GET", decode=None, force=False):
         "Finish loading urls and handle URI fragments."
+        # NOTE: this method is thread-safe and is designed to run in a thread
+
         code = 404
         self._current_url = url
 
-        self._html.post_event(DOWNLOADING_RESOURCE_EVENT)
+        self._html.post_event(DOWNLOADING_RESOURCE_EVENT, True)
         
         try:
             method = method.upper()
@@ -1137,22 +1147,23 @@ If you benefited from using this package, please consider supporting its develop
                     view_source = True
                     url = url.replace("view-source:", "")
                     parsed = urlparse(url)
-                self._html.post_message(f"Connecting to {parsed.netloc}")
+                self._html.post_message(f"Connecting to {parsed.netloc}", True)
                 if self._html.insecure_https:
-                    self._html.post_message("WARNING: Using insecure HTTPS session")
+                    self._html.post_message("WARNING: Using insecure HTTPS session", True)
                 if (parsed.scheme == "file") or (not self._html.caches_enabled):
                     data, newurl, filetype, code = download(
                         url, data, method, decode, self._html.insecure_https, self._html.ssl_cafile, tuple(self._html.headers.items()), self._html.request_timeout)
                 else:
                     data, newurl, filetype, code = cache_download(
                         url, data, method, decode, self._html.insecure_https, self._html.ssl_cafile, tuple(self._html.headers.items()), self._html.request_timeout)
-                self._html.post_message(f"Successfully connected to {parsed.netloc}")
+                self._html.post_message(f"Successfully connected to {parsed.netloc}", True)
+
                 if get_current_thread().isrunning():
                     if view_source:
                         newurl = "view-source:"+newurl
                         if self._current_url != newurl:
                             self._current_url = newurl
-                            self._html.post_event(URL_CHANGED_EVENT)
+                            self._html.post_event(URL_CHANGED_EVENT, True)
                         data = str(data).replace("<","&lt;").replace(">", "&gt;")
                         data = data.splitlines()
                         length = int(len(str(len(data))))
@@ -1162,34 +1173,53 @@ If you benefited from using this package, please consider supporting its develop
                             data = data.split("</code><br>", 1)[1]
                         else:
                             data = "".join(data)
-                        self.load_html(BUILTIN_PAGES["about:view-source"].format(bg=self.about_page_background, fg=self.about_page_foreground, i1=length*9, i2=data), newurl)
+                        text = BUILTIN_PAGES["about:view-source"].format(bg=self.about_page_background, fg=self.about_page_foreground, i1=length*9, i2=data)
+                        self.load_html(text, newurl, _thread_safe=True)
                     elif "image" in filetype:
-                        self.load_html("", newurl)
-                        if self._current_url != newurl:
-                            self._html.post_event(URL_CHANGED_EVENT)
-                        name = self._html.image_name_prefix + str(len(self._html.loaded_images))
-                        self._html.finish_fetching_images(None, data, name, filetype, newurl)
-                        self.add_html(BUILTIN_PAGES["about:image"].format(bg=self.about_page_background, fg=self.about_page_foreground, i1=name, i2=""))
+                        name = self._html.allocate_image_name()
+                        data, data_is_image = self._html.check_images(data, name, url, filetype)
+                        self._html.queue.put(lambda data=data, name=name, url=url, filetype=filetype, data_is_image=data_is_image: self._finish_loading_image(data, name, url, filetype, data_is_image))
                     else:
                         if self._current_url != newurl:
                             self._current_url = newurl
-                            self._html.post_event(URL_CHANGED_EVENT)
-                        self.load_html(data, newurl, fragment)
+                            self._html.post_event(URL_CHANGED_EVENT, True)
+                        self.load_html(data, newurl, fragment, _thread_safe=True)
             else:
-                # If no requests need to be made, we can signal that the page is done loading
+                # If no requests need to be made, we can signal that the page is done loading, handle fragments, etc.
                 self._html.fragment = fragment
-                self._html._handle_load_finish()
-                self._finish_css()
+                self._html.queue.put(self._finish_loading_nothing)
         except Exception as error:
-            self._html.post_message(f"ERROR: could not load {url}: {error}")
-            if "CERTIFICATE_VERIFY_FAILED" in str(error):
-                self._html.post_message(f"Check that you are using the right url scheme. Some websites only support http.\n\
+            self._html.queue.put(lambda url=url, error=error, code=code: self._finish_loading_error(url, error, code))
+
+        self._thread_in_progress = None
+
+    def _finish_loading_image(self, data, name, url, filetype, data_is_image):
+        # NOTE: must be run in main thread
+        # Inject the image into the webpage, as it has already been downloaded
+
+        if self._current_url != url:
+            self._html.post_event(URL_CHANGED_EVENT)
+        text = BUILTIN_PAGES["about:image"].format(bg=self.about_page_background, fg=self.about_page_foreground, i1=name, i2="")
+        self._html.finish_fetching_images(None, data, name, filetype, url, data_is_image)
+        self.load_html(text, url)
+    
+    def _finish_loading_nothing(self):
+        # NOTE: must be run in main thread
+
+        self._html._handle_load_finish()
+        self._finish_css()
+    
+    def _finish_loading_error(self, url, error, code):
+        # NOTE: must be run in main thread
+
+        self._html.post_message(f"ERROR: could not load {url}: {error}")
+        if "CERTIFICATE_VERIFY_FAILED" in str(error):
+            self._html.post_message(f"Check that you are using the right url scheme. Some websites only support http.\n\
 This might also happen if your Python distribution does not come installed with website certificates.\n\
 This is a known Python bug on older MacOS systems. \
 Running something along the lines of \"/Applications/Python {'.'.join(PYTHON_VERSION[:2])}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
 Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certificates or 'HtmlFrame(master, ssl_cafile=[path_to_your_cafile])' to specify the path to your CA file if you know where it is.")
-            self.on_navigate_fail(url, error, code)
-        self._thread_in_progress = None
+        self.on_navigate_fail(url, error, code)
 
     def _finish_css(self):        
         if self._waiting_for_reset:

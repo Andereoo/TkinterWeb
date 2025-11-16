@@ -29,11 +29,11 @@ from functools import update_wrapper, _make_key
 
 
 # We need this information here so the built-in pages can access it
-__title__ = 'TkinterWeb'
+__title__ = "TkinterWeb"
 __author__ = "Andrew Clarke"
 __copyright__ = "(c) 2021-2025 Andrew Clarke"
 __license__ = "MIT"
-__version__ = '4.8.1'
+__version__ = "4.9.0"
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
@@ -539,7 +539,7 @@ class BuiltinPageGenerator():
         <p>Loading...</p>\
         </td></tr></table></body></html>{i1}{i2}",
     "about:image": "<html><head><style>html,body,table,tr {{background-color:{bg};color:{fg};width:100%;height:100%;margin:0}}</style></head><body>\
-        <table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle;padding:4px 4px 0px 4px'><img style='max-width:100%;max-height:100%' src='replace:{i1}'><h3 style='margin:0;padding:0;font-weight:normal'></td></tr></table></body></html>{i2}",
+        <table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle;padding:4px 4px 0px 4px'><img style='max-width:100%;max-height:100%' src='{i1}'><h3 style='margin:0;padding:0;font-weight:normal'></td></tr></table></body></html>{i2}",
     "about:view-source": "<html tkinterweb-overflow-x=auto><head><style>\
         html,body{{background-color:{bg};color:{fg};}}\
         pre::before{{counter-reset:listing}}\
@@ -745,7 +745,7 @@ def download(url, data=None, method="GET", decode=None, insecure=False, cafile=N
         info = res.info()
         code = res.getcode()
 
-        if not url.startswith("file://"):
+        if not url.startswith("file://") and not url.startswith("data:"):
             enc = res.getheader("Content-Encoding", "").lower()
             if enc == "gzip":
                 data = gzip.decompress(data)

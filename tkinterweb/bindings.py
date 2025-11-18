@@ -973,7 +973,7 @@ class TkinterWeb(Widget):
         self._finish_download(thread)
 
     def check_images(self, data, name, url, filetype):
-        """Convert SVG images and invert them if needed.
+        """Invert images if needed and convert SVG images to PNGs.
         
         New in version 4.9."""
         # NOTE: this method is thread-safe and is designed to run in a thread

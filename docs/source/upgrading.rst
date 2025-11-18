@@ -309,7 +309,7 @@ Version 4.8:
 
 Version 4.9:
 
-* Fixed loading of data urls
 * TkinterWeb is now thread-safe when loading resources. All callbacks now will run on the main thread.
+* Fixed loading of data urls.
 * Local files will now load regardless of the number of slashes before the path.
 * Fixed some dark mode and image inversion bugs.

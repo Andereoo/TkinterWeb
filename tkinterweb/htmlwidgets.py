@@ -431,10 +431,7 @@ If you benefited from using this package, please consider supporting its develop
         :type force: bool, optional"""
         self._previous_url = self._current_url
         if not file_url.startswith("file://"):
-            if PLATFORM.system == "Windows" and not file_url.startswith("/"):
-                file_url = "file:///" + str(file_url)
-            else:
-                file_url = "file://" + str(file_url)
+            file_url = "file://" + str(file_url)
             self._current_url = file_url
             self._html.post_event(URL_CHANGED_EVENT)
         self.load_url(file_url, decode, force)
@@ -477,14 +474,6 @@ If you benefited from using this package, please consider supporting its develop
             return
 
         self._waiting_for_reset = True
-
-        # Ugly workaround for Bug #40, where urllib.urljoin constructs improperly formatted urls on Linux when url starts with file:///
-        if not url.startswith("file://///"):
-            newurl = url.replace("file:////", "file:///")
-            if newurl != url:
-                url = newurl
-                self._current_url = url
-                self._html.post_event(URL_CHANGED_EVENT)
 
         if self._thread_in_progress:
             self._thread_in_progress.stop()
@@ -1140,6 +1129,18 @@ If you benefited from using this package, please consider supporting its develop
 
             fragment = parsed.fragment
 
+            # Workaround for Bug #40, where urllib.urljoin constructs improperly formatted urls on Linux when url starts with file:///
+            # As a side effect, this also makes it possible to load files even when given the wrong number of slashes
+            if parsed.scheme == "file":
+                path = parsed.path.lstrip("/\\")
+                netloc = parsed.netloc.lstrip("/\\")
+                if netloc:
+                    url = urlunparse(("file", "/" + netloc, path, "", "", ""))
+                else:
+                    url = urlunparse(("file", "", "/" + path, "", "", ""))
+                self._current_url = url
+                self._html.post_event(URL_CHANGED_EVENT)
+
             # If url is different than the current one, load the new site
             if force or (method == "POST") or ((urldefrag(url)[0]).replace("/", "") != (urldefrag(self._previous_url)[0]).replace("/", "")):
                 view_source = False
@@ -1200,7 +1201,7 @@ If you benefited from using this package, please consider supporting its develop
         if self._current_url != url:
             self._html.post_event(URL_CHANGED_EVENT)
         text = BUILTIN_PAGES["about:image"].format(bg=self.about_page_background, fg=self.about_page_foreground, i1=name, i2="")
-        self._html.finish_fetching_images(None, data, name, filetype, url, data_is_image)
+        self._html.finish_fetching_images(None, data, name, url, filetype, data_is_image)
         self.load_html(text, url)
     
     def _finish_loading_nothing(self):

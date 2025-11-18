@@ -91,15 +91,14 @@ def invert_image(image, limit):
         similar_count = sum(1 for p in pixels if is_similar(p, dominant_color))
         ratio = similar_count / len(pixels)
         return ratio, dominant_color
-
     image = Image.open(BytesIO(image))
 
-    if image.mode in {'RGBA', 'LA', 'P'}:
+    if image.mode not in {'RGBA', 'LA', 'P'} or "transparent" in image.info or "transparency" in image.info:
         image = image.convert("RGBA")
         white_bg = Image.new("RGB", image.size, (255, 255, 255))
         white_bg.paste(image, mask=image.split()[3])
         ratio, dominant_color = is_mostly_one_color(white_bg)
-        if ratio >= 0.5 and all(i > limit for i in dominant_color):
+        if ratio >= 0.5 and sum(dominant_color) > limit:
             r, g, b, a = image.split()
             rgb_image = Image.merge('RGB', (r, g, b))
             ratio, dominant_color = is_mostly_one_color(rgb_image)
@@ -110,7 +109,7 @@ def invert_image(image, limit):
     else:
         image = image.convert("RGB")
         ratio, dominant_color = is_mostly_one_color(image)
-        if ratio >= 0.5 and all(i > limit for i in dominant_color):
+        if ratio >= 0.5 and sum(dominant_color) > limit:
             image = ImageOps.invert(image)
         return image
 

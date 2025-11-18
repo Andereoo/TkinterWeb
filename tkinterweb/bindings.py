@@ -140,7 +140,7 @@ class TkinterWeb(Widget):
         self.ssl_cafile = None
         self.request_timeout = 15
         self.headers = {}
-        self.dark_theme_limit = 160
+        self.dark_theme_limit = 280
         self.style_dark_theme_regex = r"([^:;\s{]+)\s?:\s?([^;{!]+)(?=!|;|})"
         self.general_dark_theme_regexes = [r'(<[^>]+bgcolor=")([^"]*)',r'(<[^>]+text=")([^"]*)',r'(<[^>]+link=")([^"]*)']
         self.inline_dark_theme_regexes = [r'(<[^>]+style=")([^"]*)', r'([a-zA-Z-]+:)([^;]*)']
@@ -1588,8 +1588,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                     )
                     changed = True
                 elif color.startswith("rgb(") or color.startswith("rgba("):
-                    colors[count] = invert_color(
-                        list(
+                    colors_list = (list(
                             map(
                                 int,
                                 color.lstrip("rgba(")
@@ -1598,10 +1597,13 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                                 .strip(" ")
                                 .split(","),
                             )
-                        ),
-                        match.group(1), self.dark_theme_limit
-                    )
-                    changed = True
+                        ),)
+                    if len(colors_list) == 3:
+                        colors[count] = invert_color(
+                            colors_list,
+                            match.group(1), self.dark_theme_limit
+                        )
+                        changed = True
                 else:
                     try:
                         color = list(self.winfo_rgb(color))
@@ -1611,7 +1613,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                         pass
             except ValueError as error:
                 pass
-        
+
         if changed:
             if matchtype:
                 return match.group(1) + " ".join(colors)

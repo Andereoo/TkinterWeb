@@ -237,6 +237,7 @@ Version 4.8:
 * The new configuration option ``caret_browsing_enabled`` can be used to enable or disable caret browsing mode.
 
 Version 4.9:
+
 * :class:`.TkinterWeb.post_to_queue`
 * :class:`.TkinterWeb.allocate_image_name`
 * :class:`.TkinterWeb.check_images`

@@ -19,7 +19,7 @@ To use TkinterWeb, first install it using pip:
 
     .. code-block:: console
 
-        $ pip install tkinterweb[html, images, svg, javascript, requests]
+        $ pip install tkinterweb[html,images,svg,javascript,requests]
     
     Run ``pip install tkinterweb[full]`` to install all optional dependencies or ``pip install tkinterweb`` to install the bare minimum.
 

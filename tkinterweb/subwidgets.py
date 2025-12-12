@@ -73,12 +73,12 @@ class Combobox(tk.Widget):
 
 class AutoScrollbar(ttk.Scrollbar):
     "Scrollbar that hides itself when not needed"
-    def __init__(self, *args, scroll=2, **kwargs):
+    def __init__(self, *args, **kwargs):
         ttk.Scrollbar.__init__(self, *args, **kwargs)
-        self.scroll = scroll
+        self.scroll = None
         self.visible = True
 
-    def set(self, lo, hi):
+    def set(self, low, high):
         if self.visible and (self.scroll == 0):
             self.tk.call("grid", "remove", self)
             self.visible = False
@@ -86,19 +86,19 @@ class AutoScrollbar(ttk.Scrollbar):
             self.grid()
             self.visible = True
         elif self.scroll == 2:
-            if float(lo) <= 0.0 and float(hi) >= 1.0:
+            if float(low) <= 0.0 and float(high) >= 1.0:
                 self.tk.call("grid", "remove", self)
                 self.visible = False
             else:
                 self.grid()
                 self.visible = True
-        ttk.Scrollbar.set(self, lo, hi)
+        ttk.Scrollbar.set(self, low, high)
     
     def set_type(self, scroll):
         if self.scroll != scroll:
             self.scroll = scroll
-            lo, hi = self.get()
-            self.set(lo, hi)
+            low, high = self.get()
+            self.set(low, high)
 
     def pack(self, **kwargs):
         raise tk.TclError("cannot use pack with this widget")
@@ -133,6 +133,7 @@ class ScrolledTextBox(tk.Frame):
         self.vsb = vsb = AutoScrollbar(self, command=tbox.yview)
         vsb.grid(row=0, column=1, sticky="nsew")
         tbox.configure(yscrollcommand=vsb.set)
+        vsb.set_type(2)
 
         tbox.bind("<MouseWheel>", self.scroll)
         tbox.bind("<Button-4>", self.scroll_x11)
@@ -688,44 +689,3 @@ class Notebook(ttk.Frame):
     def tabs(self):
         "Returns a list of widgets managed by the notebook."
         return self.pages
-    
-class BlinkyFrame(tk.Frame):
-    "A blinking caret-style frame"
-    def __init__(self, master, *args, blink_delay=600, **kwargs):
-        tk.Frame.__init__(self, master, *args, **kwargs)
-        self.blink_delay = blink_delay
-
-        self._is_placed = False
-        self._x = 0
-        self._y = 0
-        self.pending = None
-
-    def place(self, x, y, *args, _internal=False, **kwargs):
-        if _internal:
-            super().place(*args, x=x, y=y, **kwargs)
-        else:
-            if self.pending:
-                self.after_cancel(self.pending)
-            self._is_placed = True
-            self._x = x
-            self._y = y
-            super().place(*args, x=x, y=y, **kwargs)
-            self.pending = self.after(self.blink_delay, self._blink)
-
-    def place_forget(self, _internal=False):
-        if not _internal:
-            if self.pending:
-                self.after_cancel(self.pending)
-            self.pending = None
-            self._is_placed = False
-        super().place_forget()
-
-    def _blink(self):
-        if self._is_placed:
-            self.place_forget(True)
-        else:
-            self.place(self._x, self._y, _internal=True)
-        
-        self.update()
-        self._is_placed = not(self._is_placed)
-        self.pending = self.after(self.blink_delay, self._blink)

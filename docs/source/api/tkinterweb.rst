@@ -12,8 +12,6 @@ The :class:`~tkinterweb.TkinterWeb` class also includes dozens of variables that
 
 Please see the source code for more details.
 
-.. autoclass:: tkinterweb.bindings.CaretManager
-   :members:
 
 .. autoclass:: tkinterweb.TkHtmlParsedURI
    :members:

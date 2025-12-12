@@ -4,15 +4,9 @@ from setuptools import setup, find_namespace_packages
 HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
 
-extras = dict()
-extras["javascript"] = ["pythonmonkey"]
-extras["svg"] = ["cairosvg"]
-extras["requests"] = ["brotli"]
-extras["full"] = extras["javascript"] + extras["svg"] + extras["requests"]
-
 setup(
     name="tkinterweb",
-    version="4.9.0",
+    version="4.10.0",
     python_requires=">=3.2",
     description="HTML/CSS viewer, editor, and app builder for Tkinter",
     long_description=README,
@@ -31,6 +25,15 @@ setup(
     keywords="tkinter, Tkinter, tkhtml, Tkhtml, Tk, HTML, CSS, webbrowser",
     packages=find_namespace_packages(include=["tkinterweb", "tkinterweb.*"]),
     include_package_data=True,
-    install_requires=["tkinterweb-tkhtml>=2.0.0", "pillow"],
-    extras_require = extras,
+    install_requires=["tkinterweb-tkhtml>=2.1.0"],
+    extras_require = {
+          "html": ["tkinterweb-tkhtml-extras"],
+          "images": ["pillow"],
+          "svg": ["tkinterweb-tkhtml-extras", "pillow", "cairosvg"],
+          "javascript": ["pythonmonkey"],
+          "requests": ["brotli"],
+
+          "recommended": ["tkinterweb-tkhtml-extras", "pillow"],
+          "full": ["tkinterweb-tkhtml-extras", "pillow", "cairosvg", "pythonmonkey", "brotli"],
+    },
 )

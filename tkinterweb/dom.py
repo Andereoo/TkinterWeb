@@ -70,6 +70,9 @@ class HTMLDocument:
         self.html.tk.createcommand("parse_fragment", self.html.parse_fragment)
         self.html.tk.createcommand("node_to_html", self._node_to_html)
 
+    def __repr__(self):
+        return f"{self.html._w}::{self.__class__.__name__.lower()}"
+
     @property
     def body(self):  # Taken from hv3_dom_html.tcl line 161
         """The document body element.
@@ -239,7 +242,24 @@ class HTMLElement:
         # We need this here or crashes happen if multiple Tkhtml instances exist (depending on the Tkhtml version)
         # No idea why, but hey, it works
         self.html.tk.createcommand("parse_fragment", self.html.parse_fragment)
+
+    def __repr__(self):
+        return f"{self.html._w}{self.node}"
         
+    # def __str__(self):
+    #     tag = self.tagName
+        
+    #     if tag:
+    #         attributes = ""
+    #         for attribute in self.attributes:
+    #             attributes += f"{attribute}=\"{self.attributes[attribute]}\""
+    #         return f"<{tag} {attributes}>{self.innerHTML}</{tag}>"
+    #     else:
+    #         return self.textContent
+
+
+    # --- JavaScript-style commands -------------------------------------------
+
     @property
     def style(self):
         """Manage the element's styling. For instance, to make the element have a blue background, use ``yourhtmlelement.style.backgroundColor = "blue"``.
@@ -374,7 +394,7 @@ class HTMLElement:
     def attributes(self):
         """Return the element's attributes.
         
-        :rtype: str"""
+        :rtype: dict"""
         return self.html.get_node_attributes(self.node)
 
     @property
@@ -423,6 +443,8 @@ class HTMLElement:
         """Get and set the element's widget. 
         
         Prior to version 4.2 this only applies to ``<object>`` elements and a widget must be specified.
+
+        Since version 4.10 this can also be used to get the widget representing ``<input>``, ``<textarea>``, and ``<select>`` elements.
         
         If the widget already exists in the document, it will first be removed from its previous element.
 
@@ -730,7 +752,7 @@ class HTMLElement:
         """Return the first element that is a child of the current element and matches the given CSS selector.
         
         :param query: The CSS selector to be searched for.
-        :type query: strvalue
+        :type query: str
         :rtype: :class:`HTMLElement`
         :raises: :py:class:`tkinter.TclError`"""
         return self.document.querySelector(query, self.node)
@@ -779,6 +801,44 @@ class HTMLElement:
                 if extract_nested(i) == self.node and len(siblings) > e + 1:
                     return HTMLElement(self.document, siblings[e+1])
         return None
+    
+    # --- Tkinter-style commands ----------------------------------------------
+
+    def bind(self, sequence, func, add=None):
+        """Tkinter-style method to add a binding to this element.
+
+        The following virtual events are supported:
+
+        * ``<<ElementLoaded>>``/:py:attr:`utilities.ELEMENT_LOADED_EVENT`: Generated whenever an element loads after the page finishes.
+        * ``<<Modified>>```/:py:attr:`utilities.FIELD_CHANGED_EVENT`: Generated whenever the content of any ``<input>`` element changes.
+
+        The following Tkinter events are supported:
+        
+        * ``<Enter>``
+        * ``<Leave>``
+        * ``<MouseWheel>``
+        * All Tkinter button and motion events
+
+        :param sequence: The Tkinter event to bind to.
+        :type sequence: str
+        :param func: The callback to evaluate when the binding fires.
+        :type func: callable
+        :param add: If set to "+", add this binding onto existing ones. Otherwise, existing bindings will be overwritten.
+        :type add: str or None
+        
+        New in version 4.10."""
+        self.html.event_manager.bind(self.node, sequence, func, add)
+
+    def unbind(self, sequence, funcid=None):
+        """Tkinter-style method to remove a binding to this element.
+
+        :param sequence: The Tkinter event to unbind.
+        :type sequence: str
+        :param funcid: If specified, only the specified function will be removed from the list of bindings.
+        :type funcid: callable or None
+        
+        New in version 4.10."""
+        self.html.event_manager.unbind(self.node, sequence, funcid)
 
 
 class HTMLCollection:
@@ -800,6 +860,11 @@ class HTMLCollection:
         self.search_string = search_string
         self.node = root
 
+    def __repr__(self):
+        if self.node: node = self.node
+        else: node = "::document"
+        return f"{self.html._w}{node}::{self.__class__.__name__.lower()} {self.search_string}"
+
     def __iter__(self):
         nodes = self.html.search(self.search_string, root=self.node)
         return iter(HTMLElement(self.document, node) for node in nodes)
@@ -818,7 +883,7 @@ class HTMLCollection:
     def item(self, index):
         """Returns the element at the given index into the list.
 
-        param index: The index of the element to get.
+        :param index: The index of the element to get.
         :type index: int
         :rtype: :class:`HTMLElement`"""
         return HTMLElement(self.document, self.html.search(self.search_string, index=index, root=self.node))
@@ -826,7 +891,7 @@ class HTMLCollection:
     def namedItem(self, key):
         """Returns the element whose id or name matches key.
 
-        param key: The id or name to search for.
+        :param key: The id or name to search for.
         :type key: str
         :rtype: :class:`HTMLElement` or None"""
         for i in self.html.search(self.search_string, root=self.node):
@@ -854,6 +919,10 @@ class DOMRect:
         self.width = x2 - self.x
         self.height = y2 - self.y
 
+    def __repr__(self):
+        return f"{self.html._w}{self.node}::{self.__class__.__name__.lower()}"
+
+
 
 class CSSStyleDeclaration:
     """Access this class via the :attr:`~tkinterweb.dom.HTMLElement.style` property of the :attr:`~tkinterweb.dom.HTMLElement` class.
@@ -865,6 +934,9 @@ class CSSStyleDeclaration:
     def __init__(self, element_manager):
         self.html = element_manager.html
         self.node = element_manager.node
+
+    def __repr__(self):
+        return f"{self.html._w}{self.node}::{self.__class__.__name__.lower()}"
 
     def __getitem__(self, property):
         # Get value from Tkhtml if it is a real and existing property
@@ -1012,7 +1084,7 @@ class CSSStyleDeclaration:
         
         :param property: The CSS property to remove.
         :type property: str
-        :returns: the old value of the given property, or "" if the property did not exist.
+        :returns: The old value of the given property, or "" if the property did not exist.
         :rtype: str
 
         New in version 4.1."""
@@ -1025,7 +1097,7 @@ class CSSStyleDeclaration:
         
         :param property: The CSS property to set.
         :type property: str
-        :returns: the old value of the given property, or "" if the property did not exist.
+        :returns: The old value of the given property, or "" if the property did not exist.
         :rtype: str
         
         New in version 4.1."""

@@ -12,17 +12,15 @@ import platform
 import sys
 import threading
 
-import tkinterweb_tkhtml
-
 import ssl, gzip, zlib
 from urllib.request import Request, urlopen
 from urllib.parse import urlunparse, urlparse
 
 try:
     import brotli
-    has_brotli = True
+    brotli_installed = True
 except ImportError:
-    has_brotli = False
+    brotli_installed = False
 
 from _thread import RLock
 from functools import update_wrapper, _make_key
@@ -33,7 +31,7 @@ __title__ = "TkinterWeb"
 __author__ = "Andrew Clarke"
 __copyright__ = "(c) 2021-2025 Andrew Clarke"
 __license__ = "MIT"
-__version__ = "4.9.0"
+__version__ = "4.10.0"
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
@@ -44,7 +42,7 @@ PYTHON_VERSION = platform.python_version_tuple()
 
 HEADERS = {
     "User-Agent": "Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha",
-    "Accept-Encoding": ("gzip, deflate, br" if has_brotli else "gzip, deflate"),
+    "Accept-Encoding": ("gzip, deflate, br" if brotli_installed else "gzip, deflate"),
 }
 DEFAULT_PARSE_MODE = "xml"
 DEFAULT_ENGINE_MODE = "standards"
@@ -420,7 +418,7 @@ IFRAME[frameborder]{
 }
 """
 
-DARK_STYLE = DEFAULT_STYLE + """
+DARK_STYLE = """
 /* Additional stylesheet to be loaded whenever dark mode is enabled. */
 /* Display properties document body. */
 HTML, BODY {
@@ -470,7 +468,8 @@ class BuiltinPageGenerator():
             <code>Python version: {python_version}</code><code>Tcl version: {tcl_version}</code><code>Tk version: {tk_version}</code>\
             <code class='header'>Resource loading</code>\
             <code>Use prebuilt Tkhtml: {use_prebuilt_tkhtml}</code>\
-            <code>Resource directories: {root}{tkhtml_root}</code><code>Working directory: {working_dir}</code>\
+            <code>Available Tkhtml binaries: {tkhtml_binaries}</code>\
+            <code>Resource directories: {root}{tkhtml_root}{tkhtml_extras_root}</code><code>Working directory: {working_dir}</code>\
             <code>Tcl paths: {tcl_path}</code>\
             <code>System dependency paths: {path}</code>\
             <code class='header'>System specs</code>\
@@ -549,6 +548,8 @@ class BuiltinPageGenerator():
 }
     
     def __getitem__(self, key):
+        import tkinterweb_tkhtml
+
         if key == "about:tkinterweb":
             return self._pages[key].format(bg="{bg}", fg="{fg}", i1="{i1}", i2="{i2}", 
                 title=__title__, license=__license__, copyright=__copyright__, __version__=__version__, 
@@ -558,8 +559,10 @@ class BuiltinPageGenerator():
                 inline_dark_theme_regexes=("".join(f"<br><code class='indented'>{i.replace('{', '{{').replace('}', '}}')}</code>" for i in self._html.inline_dark_theme_regexes)),
                 style_dark_theme_regex=f"<code class='indented'>{self._html.style_dark_theme_regex.replace('{', '{{').replace('}', '}}')}</code>", 
                 visited_links=(("".join(f"<code class='indented'>{i}</code>" for i in self._html.visited_links)) if self._html.visited_links else None),
+                tkhtml_binaries=("".join(f"<code class='indented'>{os.path.join(i, e)}</code>" for i, e in tkinterweb_tkhtml.TKHTML_BINARIES)),
                 root=f"<code class='indented'>{ROOT_DIR}</code>", 
                 tkhtml_root=f"<code class='indented'>{tkinterweb_tkhtml.TKHTML_ROOT_DIR}</code>", 
+                tkhtml_extras_root=f"<code class='indented'>{tkinterweb_tkhtml.TKHTML_EXTRAS_ROOT_DIR}</code>" if tkinterweb_tkhtml.TKHTML_EXTRAS_ROOT_DIR else "", 
                 working_dir=f"<code class='indented'>{WORKING_DIR}</code>", 
                 tcl_path=("".join(f"<code class='indented'>{i}</code>" for i in self._html.tk.getvar("auto_path"))),
                 path=("".join(f"<code class='indented'>{i}</code>" for i in os.environ["PATH"].split(os.pathsep))),
@@ -612,17 +615,61 @@ BUILTIN_ATTRIBUTES = {
     "vertical-align": "tkinterweb-full-page"
 }
 
-
 DOWNLOADING_RESOURCE_EVENT = "<<DownloadingResource>>"
 DONE_LOADING_EVENT = "<<DoneLoading>>"
 DOM_CONTENT_LOADED_EVENT = "<<DOMContentLoaded>>"
 URL_CHANGED_EVENT = "<<UrlChanged>>"
 ICON_CHANGED_EVENT = "<<IconChanged>>"
 TITLE_CHANGED_EVENT = "<<TitleChanged>>"
+FIELD_CHANGED_EVENT = "<<Modified>>"
+ELEMENT_LOADED_EVENT = "<<ElementLoaded>>"
 
 tkhtml_loaded = False
 combobox_loaded = False
 
+# These events are handled through the JS event system
+EVENT_MAP = {
+    "<Button-1>": "onmousedown",
+    "<ButtonPress-1>": "onmousedown",
+    "<B1-Press>": "onmousedown",
+    "<ButtonRelease-1>": "onmouseup",
+    "<B1-Release>": "onmouseup",
+    "<Double-Button-1>": "ondblclick",
+
+    "<Button-2>": "onmiddlemouse",
+    "<ButtonPress-2>": "onmiddlemouse",
+    "<B2-Press>": "onmiddlemouse",
+
+    "<Button-3>": "oncontextmenu",
+    "<ButtonPress-3>": "oncontextmenu",
+    "<B3-Press>": "oncontextmenu",
+
+    "<Button-4>": "onscrollup",
+    "<Button-5>": "onscrolldown",
+    "<MouseWheel>": "onscroll",
+
+    "<Enter>": "onmouseover",
+    "<Leave>": "onmouseout",
+
+    "<Motion>": "onmousemove",
+    "<B1-Motion>": "onmouseb1move",
+
+    ELEMENT_LOADED_EVENT: "onload",
+    FIELD_CHANGED_EVENT: "onchange"
+}
+
+# Events with the following words are allowed to be handled independently
+UNHANDLED_EVENT_WHITELIST = [
+    "Button", "B1", "B2", "B3", "B4", "B5"
+]
+
+# These JS events don't exist but are used internally. Translate them when needed.
+JS_EVENT_MAP = {
+    "onscrollup": "onscroll",
+    "onscrolldown": "onscrollup",
+    "onmiddlemouse": "onmousedown",
+    "onmouseb1move": None,
+}
 
 class StoppableThread(threading.Thread):
     "A thread that stores a state flag that can be set and used to check if the thread is supposed to be running"
@@ -754,7 +801,7 @@ def download(url, data=None, method="GET", decode=None, insecure=False, cafile=N
                     data = zlib.decompress(data)
                 except zlib.error:
                     data = zlib.decompressobj(-zlib.MAX_WBITS).decompress(data)
-            elif enc == "br" and has_brotli:
+            elif enc == "br" and brotli_installed:
                 data = brotli.decompress(data)
 
         try:
@@ -848,3 +895,20 @@ def TclOpt(options):
 def placeholder(*args, **kwargs):
     """Blank placeholder function. The only purpose of this is to
     improve readability by avoiding `lambda a, b, c, d: None` statements."""
+
+
+def safe_tk_eval(html, expr):
+    """Always evaluate the given expression on the main thread."""
+    if threading.current_thread() is threading.main_thread():
+        return html.tk.eval(expr)
+    else:
+        result = [None]
+        event = threading.Event()
+
+        def wrapper():
+            result[0] = html.tk.eval(expr)
+            event.set()
+
+        html.after(0, wrapper)
+        event.wait()
+        return result[0]

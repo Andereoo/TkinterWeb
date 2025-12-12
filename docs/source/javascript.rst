@@ -63,8 +63,6 @@ To register new JavaScript object, use :meth:`.HtmlFrame.register_JS_object`. Th
     yourhtmlframe.register_JS_object("alert", open_alert_window)
     yourhtmlframe.load_html("<script>alert('Hello, world!')</script><p>Hello, world!</p>")
 
-.. _using-your-own-interpreter:
-
 Using your own interpreter
 --------------------------
 

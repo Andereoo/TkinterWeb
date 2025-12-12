@@ -10,7 +10,7 @@ How do I manage clicks and use custom bindings?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * The :attr:`on_link_click` configuration option can be used to assign a custom function to link clicks. Likewise :attr:`on_form_submit` can be used to handle form submissions. See the :doc:`api/htmlframe` for more information.
-* Like any other Tkinter widget, mouse and keyboard events can be bound to the :class:`~tkinterweb.HtmlFrame` widget. See the :doc:`usage` page for examples of binding navigation keys and opening menus on right-clicks.
+* Like any other Tkinter widget, mouse and keyboard events can be bound to the :class:`~tkinterweb.HtmlFrame` widget and associated HTML elements. See the :doc:`usage` page for more information.
  
 TkinterWeb is crashing
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -35,3 +35,7 @@ I get a ModuleNotFoundError after compiling my code
 * This occurs when your Python script bundler isn't finding all the files nessessary for running TkinterWeb. You need to force it to get all of TkinterWeb's files and dependencies.
 * On PyInstaller: make sure you are using the latest version of PyInstaller by running ``pip install --upgrade pyinstaller pyinstaller-hooks-contrib``. Otherwise, you can also add the flags ``--collect-all tkinterweb --collect-all tkinterweb_tkhtml`` when bundling your app.
 * On py2app / py2exe: Add ``'packages': ['tkinterweb', 'tkinterweb_tkhtml']`` to the ``OPTIONS`` variable in your setup file.
+
+-------------------
+
+Please report bugs or request new features on the `issues page <https://github.com/Andereoo/TkinterWeb/issues>`_.

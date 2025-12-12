@@ -22,12 +22,20 @@ To place a Tkinter widget inside an HTML document, add the ``data=[yourwidget]``
     yourbutton = tkinter.Button(yourframe, text="Hello, world!")
     source_html = f"<i>This is some text</i><br><object data={yourbutton}></object>"
     yourframe.load_html(source_html) # or use add_html to add onto the existing document
-  
-* Add the :attr:`allowscrolling` attribute to allow scrolling the document when the mouse is over the button. 
-* Add the :attr:`handledelete` attribute to automatically call :meth:`~tkinter.Widget.destroy` on the widget when it is removed from the page (i.e. if another webpage is loaded).
-* Add the :attr:`allowstyling` attribute to automatically change the widget's background color, text color, and font to match the containing HTML element.
+
+.. tip::
+
+    Add the ``allowstyling`` attribute to automatically change the widget's background color, text color, and font to match the containing HTML element. Use ``allowstyling="deep"`` to also style subwidgets (new in version 4.9).
+
+    Add the ``handledelete`` attribute to automatically call :meth:`~tkinter.Widget.destroy` on the widget when it is removed from the page (i.e. if another webpage is loaded).
+
+.. note::
+    
+    By default, scrolling over an embedded widget will scroll the page if the widget or subwidgets do not handle scrolling themselves (new in version 4.9). You can override this behaviour by adding the ``allowscrolling`` or ``allowscrolling=false`` attribute. 
 
 Widget position and sizing can be modified using CSS styling on the widget's associated ``<object>`` element.
+
+See :doc:`dom` (new in version 3.25) for more details.
 
 To get the element containing your widget, either use :meth:`.HtmlFrame.widget_to_element`.
 
@@ -46,7 +54,5 @@ You can also set, remove, or change the widget in any element later (new in vers
 The widget can be removed from the element via ``yourelement.widget = None``.
 
 -------------------
-
-See :doc:`dom` (new in version 3.25) for more details.
 
 Please report bugs or request new features on the `issues page <https://github.com/Andereoo/TkinterWeb/issues>`_.

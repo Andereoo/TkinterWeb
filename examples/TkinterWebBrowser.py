@@ -45,8 +45,10 @@ for letter in __version__.split("."):
 if tuple(version) < (4, 8, 0):
     raise RuntimeError("This demo needs TkinterWeb version 4.8.0 or higher.")
 
-
-NEW_TAB = "about:tkinterweb"
+if len(sys.argv) > 1:
+    NEW_TAB = sys.argv[1]
+else:
+    NEW_TAB = "about:tkinterweb"
 
 
 class Page(tk.Frame):

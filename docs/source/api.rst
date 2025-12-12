@@ -12,3 +12,4 @@ API Reference
    api/htmldocument
    api/notebook
    api/tkinterweb
+   api/extensions

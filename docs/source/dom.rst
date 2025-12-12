@@ -1,5 +1,5 @@
-DOM Manipulation
-================
+Manipulating the Page
+=====================
 
 .. note::
     The API changed significantly in version 4. See :doc:`the changelog <upgrading>` for details.
@@ -25,9 +25,26 @@ To manipulate the Document Object Model, use the :attr:`~tkinterweb.HtmlFrame.do
     new_header.style.color = "blue"
     container.appendChild(new_header)
 
+
+.. _binding-to-an-element:
+
+Binding to an element
+---------------------
+
+To manage bindings on HTML elements, simply use :meth:`~tkinterweb.dom.HTMLElement.bind` and :meth:`~tkinterweb.dom.HTMLElement.unbind` (new in version 4.9):
+
+.. code-block:: python
+
+    container = yourhtmlframe.document.getElementById("container")
+
+    def callback(event):
+        print("Woah this is cool!")
+
+    container.bind("<Button-3>", callback)
+
 -------------------
 
-See the :doc:`api/htmldocument` for an exhaustive list of supported commands.
+See the :doc:`api/htmldocument` for a complete list of supported commands.
 
 See :doc:`javascript` for information on manipulating the DOM through JavaScript.
 

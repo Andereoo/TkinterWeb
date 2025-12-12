@@ -12,12 +12,14 @@ Key changes
 * Widget behaviour and API is now more closely aligned with standard Tkinter widgets
 * Many DOM improvements. The DOM API now more closely mirrors its JavaScript counterpart.
 * Dozens of new configuration options, including access to more settings and the ability to link a JavaScript interpreter
+
 * Basic JavaScript support (new in version 4.1)
 * Improved embedded widget handling (new in version 4.2)
 * SVG support on Windows and ``border-radius`` support on Windows and Linux (new in version 4.4)
 * Support for Tcl 9 (new in version 4.5)
 * Caret browsing functionality (new in version 4.8)
 * Improved thread safety (new in version 4.9)
+* Ability to bind to HTML elements (new in version 4.10)
 
 Removed
 -------
@@ -229,18 +231,31 @@ Version 4.8:
 * :attr:`.HTMLElement.previousSibling`
 * :attr:`.HTMLElement.nextSibling`
 
+* :attr:`.TkinterWeb.caret_manager`
+
 * :meth:`.TkinterWeb.update_selection`
 * :meth:`.TkinterWeb.tkhtml_offset_to_text_index`
 
-* :class:`~tkinterweb.bindings.CaretManager`
+* :class:`~tkinterweb.extensions.CaretManager`
 
 * The new configuration option ``caret_browsing_enabled`` can be used to enable or disable caret browsing mode.
 
 Version 4.9:
 
-* :class:`.TkinterWeb.post_to_queue`
-* :class:`.TkinterWeb.allocate_image_name`
-* :class:`.TkinterWeb.check_images`
+* :meth:`.TkinterWeb.post_to_queue`
+* :meth:`.TkinterWeb.allocate_image_name`
+* :meth:`.TkinterWeb.check_images`
+
+Version 4.10:
+
+* :meth:`.HTMLElement.bind`
+* :meth:`.HTMLElement.unbind`
+
+* :attr:`.TkinterWeb.event_manager`
+
+* :class:`~tkinterweb.extensions.EventManager`
+
+* You can now set ``allowstyling="deep"`` on elements with embedded widgets to also style their subwidgets.
 
 Changed/Fixed
 -------------
@@ -279,9 +294,7 @@ Version 4.3:
 Version 4.4:
 
 * :meth:`.HtmlFrame.add_html` is now accepts the additional parameter ``return_element``. 
-
 * It is now only possible to enable experimental mode if an experimental Tkhtml release is detected.
-
 * Some experimental HTML features were enabled in Windows and Linux. ``border-radius`` is now supported!
 
 Version 4.5:
@@ -313,3 +326,21 @@ Version 4.9:
 * Fixed loading of data urls.
 * Local files will now load regardless of the number of slashes before the path.
 * Fixed some dark mode and image inversion bugs.
+
+Version 4.10:
+
+* Binding button presses and motion events to the widget no longer removes internal bindings.
+* Setting ``html.maximum_thread_count = 0`` no longer disables threading. Use ``html.threading_enabled = False``.
+* :py:mod:`PIL` is now an optional dependency. I also recommend installing the new :py:mod:`tkinterweb-tkhtml-extras` package.
+* The :attr:`.HTMLElement.widget` property now returns a Tk widget when used on ``<input>``, ``<textarea>``, and ``<select>`` elements.
+* Fixed scrollbar flashes when the widget opens.
+* DOM objects now provide more useful information when printed.
+* By default, scrolling on embedded widgets now scrolls the page if the embedded widget or subwidgets do not bind to the mousewheel.
+* If dark theme is enabled, HTML code passed to the configuration option ``dark_style`` will now be automatically appended onto the code set by ``default_style``.
+* Plain text is no longer rendered as a blank page.
+* The event queue now only runs when threading is enabled.
+* Many internal changes were made in this release. If you notice any bugs, please report them.
+
+-------------------
+
+Please report bugs or request new features on the `issues page <https://github.com/Andereoo/TkinterWeb/issues>`_.

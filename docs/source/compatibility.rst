@@ -26,7 +26,7 @@ Webpage compatibility
 
 * TkinterWeb supports HTML 4.01 and CSS 2.1. A full list of supported CSS declarations can be found at `http://tkhtml.tcl.tk/support.html <https://web.archive.org/web/20250325123206/http://tkhtml.tcl.tk/support.html>`_.  ``overflow-x`` is also supported on ``body`` and ``html`` elements.
 * Most CSS pseudo-elements, such as ``:hover`` and ``:active`` are also supported.
-* On 64-bit Windows and Linux, ``border-radius`` and more cursor options are also supported. 
+* On 64-bit Windows and Linux, if the TkinterWeb-Tkhtml-Extras package is installed, ``border-radius`` and more cursor options are also supported. 
 
 **JavaScript:**
 
@@ -41,3 +41,7 @@ Webpage compatibility
 * TkinterWeb supports nearly 50 different image types through :py:mod:`PIL`.
 
 * In order to load Scalable Vector Graphic images, :py:mod:`CairoSVG`, both :py:mod:`PyCairo` and :py:mod:`PyGObject`, or both :py:mod:`PyCairo` and :py:mod:`Rsvg` must also be installed. 
+
+-------------------
+
+Please report bugs or request new features on the `issues page <https://github.com/Andereoo/TkinterWeb/issues>`_.

@@ -44,22 +44,26 @@ root.mainloop()
 See [Getting Started](https://tkinterweb.readthedocs.io/en/latest/usage.html) for more tips and tricks.
 
 ## Installation
-To install TkinterWeb, simply type `pip install tkinterweb` in the command prompt or terminal. That's it!
+To install TkinterWeb, simply type `pip install tkinterweb[recommended]` in the command prompt or terminal. That's it!
 
-Or, you can also choose to install optional dependencies: 
-* Use `pip install tkinterweb[javascript]` to also install JavaScript dependencies.
-* Use `pip install tkinterweb[svg]` to also install Scalable Vector Graphics dependencies.
-* Use `pip install tkinterweb[requests]` to also install Brotli compression support for faster page loads on some sites.
-* Use `pip install tkinterweb[full]` to install all optional dependencies.
+Or, you can also choose from the following extras: `pip install tkinterweb[html, images, svg, javascript, requests]`. You can also use `pip install tkinterweb[full]` to install all optional dependencies or ``pip install tkinterweb`` to install the bare minimum.
 
 ## Dependencies
 **In order to load webpages and show images, TkinterWeb requires the following packages:**
-* Tkinter (which is automatically packaged with most Python installations)
-* TkinterWeb-Tkhtml (can be installed via `pip install tkinterweb-tkhtml`)
-* PIL (can be installed via `pip install pillow`)
-* PIL.ImageTk (may be automatically installed with PIL on some systems, otherwise needs to be installed in order to load most image types)
+* Tkinter
+* TkinterWeb-Tkhtml
 
-Pip will automatically install PIL and TkinterWeb-Tkhtml when installing TkinterWeb.
+I also **strongly** recommended installing the following:
+* TkinterWeb-Tkhtml-Extras
+* PIL
+* PIL.ImageTk
+
+You can also choose from the following list for extra functionality:
+* Brotli (for faster page loads on some sites)
+* PythonMonkey (for basic JavaScript support)
+* CairoSVG or PyGObject (for SVG support)
+
+Pip will automatically install dependencies when installing TkinterWeb. PIL.ImageTk should be automatically installed with PIL but might need to installed separately on some systems.
 
 ## API Documentation
 
@@ -81,7 +85,7 @@ See [Frequently Asked Questions](https://tkinterweb.readthedocs.io/en/latest/faq
 **HTML/CSS:**
 * TkinterWeb supports HTML 4.01 and CSS 2.1. A full list of supported CSS declarations can be found at [http://tkhtml.tcl.tk/support.html](https://web.archive.org/web/20250325123206/http://tkhtml.tcl.tk/support.html).
 * Most CSS pseudo-elements, such as `:hover` and `:active` are also supported. 
-* On 64-bit Windows and Linux, ``border-radius`` and more cursor options are also supported.
+* On 64-bit Windows and Linux, if the TkinterWeb-Tkhtml-Extras package is installed, ``border-radius`` and more cursor options are also supported.
 
 **JavaScript:**
 * Javascript only partly supported at the moment.

@@ -11,18 +11,19 @@ To use TkinterWeb, first install it using pip:
 
 .. code-block:: console
 
-   $ pip install tkinterweb
+   $ pip install tkinterweb[recommended]
 
-Or, you can choose to install optional dependencies as well:
+.. tip::
+    
+    You can also choose from the following extras:
 
-.. code-block:: console
+    .. code-block:: console
 
-   $ pip install tkinterweb[javascript] # to also install JavaScript support
-   $ pip install tkinterweb[svg] # to also install Scalable Vector Graphics support.
-   $ pip install tkinterweb[requests] # to also install Brotli compression support for faster page loads on some sites.
-   $ pip install tkinterweb[full] # to install all optional dependencies
+        $ pip install tkinterweb[html, images, svg, javascript, requests]
+    
+    Run ``pip install tkinterweb[full]`` to install all optional dependencies or ``pip install tkinterweb`` to install the bare minimum.
 
-You can run the TkinterWeb demo to see if it worked!
+Run the TkinterWeb demo to see if it worked!
 
 >>> from tkinterweb import Demo
 >>> Demo()
@@ -91,10 +92,10 @@ The following is an example of the usage of bingings to show a menu:
 
 This will make a popup open when the user right-clicks on a link. Clicking the link shown in the popup would load the website.
 
-.. note::
-    Some events are already internally bound by the widget. If you notice unexpected behaviours after adding a binding, consider using ``bind(event, callback, add="+")`` to prevent overriding the default binding.
+Note that some keypress events are automatically bound to the widget. If you notice a feature unintentionally stops working after adding a binding, consider using ``bind(event, callback, add="+")`` to add your binding instead of replacing the default one.
 
-Alternatively, you can also use the :attr:`on_element_script` parameter of the :class:`~tkinterweb.HtmlFrame` widget to set a callback for events emitted by individual HTML elements (i.e. handle an element's ``onclick`` attribute). See :ref:`using-your-own-interpreter` for more details and the `HTMLElement documentation <api/htmldocument.html#tkinterweb.dom.HTMLElement.onchange>`_ for a full list of supported events.
+.. tip::
+    Since version 4.10, you can also bind to a specific HTML element! See :ref:`binding-to-an-element` for more details.
 
 Changing the title
 ~~~~~~~~~~~~~~~~~~
@@ -141,7 +142,11 @@ Or, to select the second match found:
 
     number_of_matches = yourhtmlframe.find_text("python", 2)
 
-Refer to the API reference for more information and `bug 18 <https://github.com/Andereoo/TkinterWeb/issues/18#issuecomment-881649007>`_ or the `sample web browser <https://github.com/Andereoo/TkinterWeb/blob/main/examples/TkinterWebBrowser.py>`_ for a sample find bar.
+Refer to the API reference for more information.
+
+.. tip::
+    
+    Check out `bug 18 <https://github.com/Andereoo/TkinterWeb/issues/18#issuecomment-881649007>`_ or the `sample web browser <https://github.com/Andereoo/TkinterWeb/blob/main/examples/TkinterWebBrowser.py>`_ for a sample find bar!
 
 Done loading?
 ~~~~~~~~~~~~~

@@ -8,21 +8,20 @@ Copyright (c) 2021-2025 Andrew Clarke
 
 
 try:
-    from .htmlwidgets import HtmlFrame, HtmlLabel, HtmlParse, Notebook, TkHtmlParsedURI, TkinterWeb
-    # We keep this stuff in utilities.py so that about:tkinterweb can access it
+    from .htmlwidgets import HtmlFrame, HtmlLabel, HtmlParse
+    from .subwidgets import Notebook
+    from .bindings import TkHtmlParsedURI, TkinterWeb
     from .utilities import __title__, __author__, __copyright__, __license__, __version__
-except (ImportError, ModuleNotFoundError):
-    import traceback, sys
+except (ImportError, ModuleNotFoundError) as error:
+    import sys
     import tkinter as tk
     from tkinter import messagebox
     # Give useful troubleshooting information as a popup, as most bundled applications don't have a visible console
     # Also print the message in case something is also wrong with the Tkinter installation
-    error_message = "Error: The files required to run TkinterWeb could not be found. \
-This typically occurs when bundling TkinterWeb into an app without forcing the application maker to include all nessessary files or when some of TkinterWeb's dependencies are not installed or bundled. \
-See https://tkinterweb.readthedocs.io/en/latest/faq.html for more information. \n\n\
-{}".format(traceback.format_exc())
+    error_message = f"Error: {error} \n\n\
+This may occur when bundling TkinterWeb into an app without forcing the application maker to include all nessessary files or when some of TkinterWeb's dependencies are not installed or bundled.\n\n\
+See https://tkinterweb.readthedocs.io/en/latest/faq.html for more information."
     sys.stdout.write(error_message)
-
     root = tk.Tk()
     root.withdraw()
     # For older versions of pyinstaller, windowed app may crash without any message of any kind

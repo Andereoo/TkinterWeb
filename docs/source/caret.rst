@@ -119,6 +119,6 @@ You can use :meth:`.HtmlFrame.set_selection_position` to set the selection if ne
 
 -------------------
 
-See the `HtmlFrame documentation <api/htmlframe.html#tkinterweb.HtmlFrame.get_caret_position>`_ for a detailed list of supported methods.
+See the `HtmlFrame documentation <api/htmlframe.html#tkinterweb.HtmlFrame.get_caret_position>`_ for a complete list of supported methods.
 
 Please report bugs or request new features on the `issues page <https://github.com/Andereoo/TkinterWeb/issues>`_.

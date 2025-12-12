@@ -32,19 +32,17 @@ def load_cairo():
                 globals()['cairo'] = cairo
                 rsvg_type = 2
             except (ImportError, FileNotFoundError, OSError,):
-                try:
-                    import gi
-                    gi.require_version('Rsvg', '2.0')
-                    from gi.repository import Rsvg as rsvg
-                    globals()['rsvg'] = rsvg
-                    # Don't import PyGobject's Cairo if PyCairo has already been imported
-                    if not cairo:
-                        gi.require_version('cairo', '1.0')
-                        from gi.repository import cairo
-                        globals()['cairo'] = cairo
-                    rsvg_type = 3
-                except (ValueError, ImportError,):
-                    rsvg_type = 0
+                import gi
+                gi.require_version('Rsvg', '2.0')
+                from gi.repository import Rsvg as rsvg
+                globals()['rsvg'] = rsvg
+                # Don't import PyGobject's Cairo if PyCairo has already been imported
+                if not cairo:
+                    gi.require_version('cairo', '1.0')
+                    from gi.repository import cairo
+                    globals()['cairo'] = cairo
+                rsvg_type = 3
+
 
 
 def text_to_image(name, alt, nodebox, font_type, font_size, threshold):
@@ -134,10 +132,8 @@ def svg_to_png(data):
         img.write_to_png(png_io)
         svg.close()
         return png_io.getvalue()
-    elif rsvg_type == 2:
-        return cairo.svg2png(bytestring=data)
     else:
-        return None
+        return cairo.svg2png(bytestring=data)
 
 
 def data_to_image(data, name, imagetype, data_is_image):

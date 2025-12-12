@@ -5,11 +5,11 @@ by adding scrolling, file loading, and many other convenience functions
 Copyright (c) 2021-2025 Andrew Clarke
 """
 
-from .bindings import *
-from .dom import HTMLDocument, HTMLElement, extract_nested
+from . import bindings, dom, utilities, subwidgets, imageutils
 
-from urllib.parse import urldefrag
+from urllib.parse import urldefrag, urlparse, urlunparse
 
+import tkinter as tk
 from tkinter.ttk import Frame, Style
 
 # JavaScript is experimental and not used by everyone
@@ -110,7 +110,7 @@ class HtmlFrame(Frame):
     :type selected_text_color: str
     :param default_style: The stylesheet used to set the default appearance of HTML elements. It is generally best to leave this setting alone.
     :type default_style: str
-    :param dark_style: The stylesheet used to set the default appearance of HTML elements when dark mode is enabled. It is generally best to leave this setting alone.
+    :param dark_style: The additional stylesheet used to set the default appearance of HTML elements when dark mode is enabled. It is generally best to leave this setting alone.
     :type dark_style: str
 
     Download behaviour:
@@ -137,14 +137,12 @@ class HtmlFrame(Frame):
     :param mode: The rendering engine mode. It is usually best to leave this setting alone.
     :type mode: "standards", "almost standards", or "quirks"
 
-    Optional ttk.Frame arguments are also supported but not listed.
+    Other ttk.Frame arguments are also supported.
     
     :raise TypeError: If the value type is wrong and cannot be converted to the correct type."""
 
     def __init__(self, master, **kwargs):
         # State and settings variables
-        style = Style()
-
         self._current_url = ""
         self._previous_url = ""
         self._accumulated_styles = []
@@ -153,21 +151,23 @@ class HtmlFrame(Frame):
         self._prev_height = 0
         self._button = None
         self._DOM_cache = None
+        self._style = None
 
+        ### TODO: switch to a TypedDict or something
         self._htmlframe_options = {
             "on_navigate_fail": self.show_error_page,
             "vertical_scrollbar": "auto",
             "horizontal_scrollbar": False,
-            "about_page_background": style.lookup('TFrame', 'background'),
-            "about_page_foreground": style.lookup('TLabel', 'foreground'),
+            "about_page_background": "",
+            "about_page_foreground": "",
         }
-        self.tkinterweb_options = {
+        self._tkinterweb_options = {
             "on_link_click": self.load_url,
             "on_form_submit": self.load_form_data,
             "on_script": self._on_script,
             "on_element_script": self._on_element_script,
-            "on_resource_setup": placeholder,
-            "message_func": notifier,
+            "on_resource_setup": utilities.placeholder,
+            "message_func": utilities.notifier,
             "messages_enabled": True,
             "caret_browsing_enabled": False,
             "selection_enabled": True,
@@ -191,12 +191,12 @@ class HtmlFrame(Frame):
             "find_current_text_color": "#000",
             "selected_text_highlight_color": "#9bc6fa",
             "selected_text_color": "#000",
-            "default_style": DEFAULT_STYLE,
-            "dark_style": DARK_STYLE,
+            "default_style": utilities.DEFAULT_STYLE,
+            "dark_style": utilities.DARK_STYLE,
             "insecure_https": False,
             "ssl_cafile": None,
             "request_timeout": 15,
-            "headers": HEADERS,
+            "headers": utilities.HEADERS,
             "experimental": False,
             # No impact after loading
             "use_prebuilt_tkhtml": True,
@@ -207,12 +207,12 @@ class HtmlFrame(Frame):
             "manage_vsb_func": self._manage_vsb,
             "manage_hsb_func": self._manage_hsb,
         }
-        self.tkhtml_options = {
+        self._tkhtml_options = {
             "zoom": 1.0,
             "fontscale": 1.0,
-            "parsemode": DEFAULT_PARSE_MODE,
+            "parsemode": utilities.DEFAULT_PARSE_MODE,
             "shrink": False,
-            "mode": DEFAULT_ENGINE_MODE,
+            "mode": utilities.DEFAULT_ENGINE_MODE,
         }
                             
         for key, value in self._htmlframe_options.items():
@@ -222,18 +222,18 @@ class HtmlFrame(Frame):
             setattr(self, key, value)
 
         for key in list(kwargs.keys()):
-            if key in self.tkinterweb_options:
-                value = self._check_value(self.tkinterweb_options[key], kwargs.pop(key))
-                self.tkinterweb_options[key] = value
-            elif key in self.tkhtml_options:
-                self.tkhtml_options[key] = kwargs.pop(key)
+            if key in self._tkinterweb_options:
+                value = self._check_value(self._tkinterweb_options[key], kwargs.pop(key))
+                self._tkinterweb_options[key] = value
+            elif key in self._tkhtml_options:
+                self._tkhtml_options[key] = kwargs.pop(key)
 
         super().__init__(master, **kwargs)
 
         # Setup sub-widgets
-        self._html = html = TkinterWeb(self, self.tkinterweb_options, **self.tkhtml_options)
-        self._hsb = hsb = AutoScrollbar(self, orient="horizontal", command=html.xview)
-        self._vsb = vsb = AutoScrollbar(self, orient="vertical", command=html.yview)
+        self._html = html = bindings.TkinterWeb(self, self._tkinterweb_options, **self._tkhtml_options)
+        self._hsb = hsb = subwidgets.AutoScrollbar(self, orient="horizontal", command=html.xview)
+        self._vsb = vsb = subwidgets.AutoScrollbar(self, orient="vertical", command=html.yview)
 
         html.configure(xscrollcommand=hsb.set, yscrollcommand=vsb.set)
 
@@ -267,17 +267,7 @@ class HtmlFrame(Frame):
         self.bind("<Leave>", html._on_leave)
         self.bind("<Enter>", html._on_mouse_motion)
         
-        html.bind("<Configure>", self._handle_resize)
-
-        self._html.post_message(f"""Welcome to TkinterWeb!
-                                
-The API changed in version 4. See https://tkinterweb.readthedocs.io/ for details.
-
-Debugging messages are enabled. Use the parameter `messages_enabled = False` when calling HtmlFrame() or HtmlLabel() to disable these messages.
-                                
-Load about:tkinterweb for debugging information.
-                                
-If you benefited from using this package, please consider supporting its development by donating at https://buymeacoffee.com/andereoo - any amount helps!""")
+        self.bind_class(html.tkinterweb_tag, "<Configure>", self._handle_resize)
 
     @property
     def title(self):
@@ -313,7 +303,7 @@ If you benefited from using this package, please consider supporting its develop
         
         :rtype: :class:`~tkinterweb.dom.HTMLDocument`"""
         if self._DOM_cache is None:  # Lazy loading of Document Object Model
-            self._DOM_cache = HTMLDocument(self._html)
+            self._DOM_cache = dom.HTMLDocument(self._html)
         return self._DOM_cache
     
     @property
@@ -335,13 +325,13 @@ If you benefited from using this package, please consider supporting its develop
                     self._manage_vsb(value)
                 elif key == "horizontal_scrollbar":
                     self._manage_hsb(value)
-            elif key in self.tkinterweb_options:
-                value = self._check_value(self.tkinterweb_options[key], kwargs.pop(key))
+            elif key in self._tkinterweb_options:
+                value = self._check_value(self._tkinterweb_options[key], kwargs.pop(key))
                 setattr(self._html, key, value)
                 if key in {"find_match_highlight_color", "find_match_text_color", "find_current_highlight_color",
                            "find_current_text_color", "selected_text_highlight_color", "selected_text_color"}:
                     self._html.update_tags()
-            elif key in self.tkhtml_options:
+            elif key in self._tkhtml_options:
                 self._html[key] = kwargs.pop(key)
                 if key == "zoom":
                     self._handle_resize(force=True)
@@ -368,9 +358,9 @@ If you benefited from using this package, please consider supporting its develop
         """
         if key in self._htmlframe_options:
             return getattr(self, key)
-        elif key in self.tkinterweb_options.keys():
+        elif key in self._tkinterweb_options.keys():
             return getattr(self._html, key)
-        elif key in self.tkhtml_options.keys():
+        elif key in self._tkhtml_options.keys():
             return self._html.cget(key)
         return super().cget(key)
     
@@ -401,7 +391,7 @@ If you benefited from using this package, please consider supporting its develop
         if fragment: fragment = "".join(char for char in fragment if char.isalnum() or char in ("-", "_", ".")).replace(".", r"\.")
 
         if base_url == None:
-            path = WORKING_DIR
+            path = utilities.WORKING_DIR
             if not path.startswith("/"):
                 path = f"/{path}"
             base_url = f"file://{path}/"
@@ -410,7 +400,7 @@ If you benefited from using this package, please consider supporting its develop
         self._html.parse(html_source, _thread_safe)
 
         if _thread_safe:
-            self._html.queue.put(self._load_html)
+            self._html.post_to_queue(self._load_html)
         else:
             self._load_html()
     
@@ -422,6 +412,8 @@ If you benefited from using this package, please consider supporting its develop
 
     def load_file(self, file_url, decode=None, force=False):
         """Convenience method to load a local HTML file.
+
+        This method will always load the file in the main thread. If you want to load the file in a seperate thread, use :meth:`HtmlFrame.load_url`.
         
         :param file_url: The HTML file to render.
         :type file_url: str
@@ -433,8 +425,8 @@ If you benefited from using this package, please consider supporting its develop
         if not file_url.startswith("file://"):
             file_url = "file://" + str(file_url)
             self._current_url = file_url
-            self._html.post_event(URL_CHANGED_EVENT)
-        self.load_url(file_url, decode, force)
+            self._html.post_event(utilities.URL_CHANGED_EVENT)
+        self._continue_loading(file_url, decode=decode, force=force)
 
     def load_website(self, website_url, decode=None, force=False):
         """Convenience method to load a website.
@@ -449,7 +441,7 @@ If you benefited from using this package, please consider supporting its develop
         if (not website_url.startswith("https://")) and (not website_url.startswith("http://")) and (not website_url.startswith("about:")):
             website_url = "http://" + str(website_url)
             self._current_url = website_url
-            self._html.post_event(URL_CHANGED_EVENT)
+            self._html.post_event(utilities.URL_CHANGED_EVENT)
         self.load_url(website_url, decode, force)
 
     def load_url(self, url, decode=None, force=False):
@@ -468,18 +460,20 @@ If you benefited from using this package, please consider supporting its develop
         :type force: bool, optional"""
         if not self._current_url == url:
             self._previous_url = self._current_url
-        if url in BUILTIN_PAGES:
-            BUILTIN_PAGES._html = self._html
-            self.load_html(BUILTIN_PAGES[url].format(bg=self.about_page_background, fg=self.about_page_foreground, i1="", i2=""), url)
-            return
+        if url in utilities.BUILTIN_PAGES:
+            utilities.BUILTIN_PAGES._html = self._html
+            return self.load_html(self._get_about_page(url), url)
 
         self._waiting_for_reset = True
 
+        # Set the base url now in case it takes a while for the website to download
+        self._html.base_url = url
+
         if self._thread_in_progress:
             self._thread_in_progress.stop()
-        if self._html.maximum_thread_count >= 1:
-            thread = StoppableThread(target=self._continue_loading, args=(
-                url,), kwargs={"decode": decode, "force": force})
+        if self._html._threading_enabled:
+            thread = utilities.StoppableThread(target=self._continue_loading, args=(
+                url,), kwargs={"decode": decode, "force": force, "thread_safe": True})
             self._thread_in_progress = thread
             thread.start()
         else:
@@ -499,9 +493,9 @@ If you benefited from using this package, please consider supporting its develop
         self._previous_url = self._current_url
         if self._thread_in_progress:
             self._thread_in_progress.stop()
-        if self._html.maximum_thread_count >= 1:
-            thread = StoppableThread(
-                target=self._continue_loading, args=(url, data, method, decode))
+        if self._html._threading_enabled:
+            thread = utilities.StoppableThread(
+                target=self._continue_loading, args=(url, data, method, decode, True))
             self._thread_in_progress = thread
             thread.start()
         else:
@@ -517,18 +511,18 @@ If you benefited from using this package, please consider supporting its develop
         :return: :class:`~tkinterweb.dom.HTMLElement` or None"""
 
         self._previous_url = ""
-        if not self._html.base_url:
-            path = WORKING_DIR
-            if not path.startswith("/"):
-                path = f"/{path}"
-            base_url = f"file://{path}/"
-            self._html.base_url = self._current_url = base_url
+        #if not self._html.base_url:
+        #    path = WORKING_DIR
+        #    if not path.startswith("/"):
+        #        path = f"/{path}"
+        #    base_url = f"file://{path}/"
+        #    self._html.base_url = self._current_url = base_url
 
         if return_element:
             node = self._html.parse_fragment(html_source)
             body = self.document.body.node
             self.html.insert_node(body, node)
-            node = HTMLElement(self.document, node)
+            node = dom.HTMLElement(self.document, node)
         else:
             self._html.parse(html_source)
             node = None
@@ -552,12 +546,12 @@ If you benefited from using this package, please consider supporting its develop
         New in version 4.4."""
 
         self._previous_url = ""
-        if not self._html.base_url:
-            path = WORKING_DIR
-            if not path.startswith("/"):
-                path = f"/{path}"
-            base_url = f"file://{path}/"
-            self._html.base_url = self._current_url = base_url
+        #if not self._html.base_url:
+        #    path = WORKING_DIR
+        #    if not path.startswith("/"):
+        #        path = f"/{path}"
+        #    base_url = f"file://{path}/"
+        #    self._html.base_url = self._current_url = base_url
 
         node = self._html.parse_fragment(html_source)
         body = self.document.body.node
@@ -568,7 +562,7 @@ If you benefited from using this package, please consider supporting its develop
         self._handle_resize(force=True)
 
         if return_element:
-            return HTMLElement(self.document, node)
+            return dom.HTMLElement(self.document, node)
     
     def add_css(self, css_source):
         """Send CSS stylesheets to the parser. This can be used to alter the appearance of already-loaded documents.
@@ -586,8 +580,8 @@ If you benefited from using this package, please consider supporting its develop
             self._thread_in_progress.stop()
         self._html.stop()
         self._current_url = self._previous_url
-        self._html.post_event(URL_CHANGED_EVENT)
-        self._html.post_event(DONE_LOADING_EVENT)
+        self._html.post_event(utilities.URL_CHANGED_EVENT)
+        self._html.post_event(utilities.DONE_LOADING_EVENT)
 
     def find_text(self, text, select=1, ignore_case=True, highlight_all=True, detailed=False):
         """Search the document for text and highlight matches. 
@@ -617,13 +611,13 @@ If you benefited from using this package, please consider supporting its develop
         :type widget: :py:class:`tkinter.Widget`
         :return: The element containing the given widget.
         :rtype: :class:`~tkinterweb.dom.HTMLElement`
-        :raises: :py:class:`tkinter.TclError` if the given widget is not in the document.
+        :raise KeyError: If the given widget is not in the document.
         
         New in version 4.2."""
         for node in self._html.search(f"[{self._html.widget_container_attr}]"):
             if self._html.get_node_attribute(node, self._html.widget_container_attr) == str(widget):
-                return HTMLElement(self.document, node)
-        raise tk.TclError("the specified widget is not in the document")
+                return dom.HTMLElement(self.document, node)
+        raise KeyError("the specified widget is not in the document")
 
     def screenshot_page(self, filename=None, full=False, show=False):
         """Take a screenshot. 
@@ -640,13 +634,13 @@ If you benefited from using this package, please consider supporting its develop
         :type show: bool, optional
         :return: A PIL Image containing the rendered document.
         :rtype: :py:class:`PIL.Image`
-        :raises: NotImplementedError if experimental mode is not enabled, :attr:`full` is set to True, and TkinterWeb is running on Windows."""
-        if self._html.experimental or PLATFORM.system != "Windows":
+        :raise NotImplementedError: If experimental mode is not enabled, :attr:`full` is set to True, and TkinterWeb is running on Windows."""
+        if self._html.experimental or utilities.PLATFORM.system != "Windows":
             self._html.post_message(f"Taking a screenshot of {self._current_url}...")
             data = self._html.image(full=full)
             height = len(data)
             width = len(data[0].split())
-            image = create_RGB_image(data, width, height)
+            image = imageutils.create_RGB_image(data, width, height)
         elif not full:
             # Vanilla Tkhtml image does not work on Windows
             # We use PIL's ImageGrab instead for visible content
@@ -681,7 +675,7 @@ If you benefited from using this package, please consider supporting its develop
         :param kwargs: Other valid options are colormap, colormode, file, fontmap, height, pageanchor, pageheight, pagesize (can be A3, A4, A5, LEGAL, and LETTER), pagewidth, pagex, pagey, nobg, noimages, rotate, width, x, and y.
         :return: A string containing the PostScript code.
         :rtype: str
-        :raises: NotImplementedError if experimental mode is not enabled."""
+        :raise NotImplementedError: If experimental mode is not enabled."""
         if self._html.experimental:
             cnf |= kwargs
             self._html.post_message(f"Printing {self._current_url}...")
@@ -782,7 +776,7 @@ If you benefited from using this package, please consider supporting its develop
             if not self._button:
                 self._button = tk.Button(self, text="Try Again")
             self._button.configure(command=lambda url=self._current_url: self.load_url(url, None, True))
-            self.load_html(BUILTIN_PAGES["about:error"].format(bg=self.about_page_background, fg=self.about_page_foreground, i1=code, i2=self._button), url)
+            self.load_html(self._get_about_page("about:error", code, self._button), url)
 
     def resolve_url(self, url):
         """Generate a full url from the specified url. This can be used to generate full urls when given a relative url.
@@ -824,7 +818,7 @@ If you benefited from using this package, please consider supporting its develop
         :type name: str
         :param obj: The Python object to pass.
         :type obj: anything
-        :raises: :py:class:`RuntimeError` if JavaScript is not enabled."""
+        :raise RuntimeError: If JavaScript is not enabled."""
         if self._html.javascript_enabled:
             if not pythonmonkey:
                 self._initialize_javascript()
@@ -839,11 +833,11 @@ If you benefited from using this package, please consider supporting its develop
         :type ignore_text_nodes: bool, optional
         :return: The element under the mouse.
         :rtype: :class:`~tkinterweb.dom.HTMLElement`"""
-        node = self._html.current_node
+        node = self._html.current_hovered_node
         if ignore_text_nodes:
-            if not self._html.get_node_tag(self._html.current_node):
-                node = self._html.get_node_parent(self._html.current_node)
-        return HTMLElement(self.document, node)
+            if not self._html.get_node_tag(self._html.current_hovered_node):
+                node = self._html.get_node_parent(self._html.current_hovered_node)
+        return dom.HTMLElement(self.document, node)
     
     def get_caret_position(self):
         """Get the position of the caret. This can be used to modify the document's text when the user types. 
@@ -856,7 +850,7 @@ If you benefited from using this package, please consider supporting its develop
         New in version 4.8."""
         if self._html.caret_manager.node:
             _, pre_text, index = self._html.tkhtml_offset_to_text_index(self._html.caret_manager.node, self._html.caret_manager.offset)
-            return HTMLElement(self.document, self._html.caret_manager.node), pre_text, index
+            return dom.HTMLElement(self.document, self._html.caret_manager.node), pre_text, index
         else:
             return None
         
@@ -882,7 +876,7 @@ If you benefited from using this package, please consider supporting its develop
         :param index: The index in the element's text content to place the caret at.
         :type index: int
 
-        :raises: :py:class:`RuntimeError` if the given element is empty or has been removed.
+        :raise RuntimeError: If the given element is empty or has been removed.
         
         New in version 4.8."""
         text, pre_text, offset = self._html.tkhtml_offset_to_text_index(element.node, index, True)
@@ -955,20 +949,20 @@ If you benefited from using this package, please consider supporting its develop
                 _, pre_text2, index2 = self._html.tkhtml_offset_to_text_index(end_node, end_offset)
 
                 contained_nodes = []
-                excluded_nodes = {extract_nested(start_node), extract_nested(end_node)}
+                excluded_nodes = {dom.extract_nested(start_node), dom.extract_nested(end_node)}
                 page_index = true_start_index
                 for page_index in range(true_start_index, true_end_index + 1):
                     node, offset = self._html.text("index", page_index)
-                    if node not in contained_nodes and extract_nested(node) not in excluded_nodes:
+                    if node not in contained_nodes and dom.extract_nested(node) not in excluded_nodes:
                         contained_nodes.append(node)
 
                 return (
-                    (HTMLElement(self.document, start_node), pre_text, index),
-                    (HTMLElement(self.document, end_node), pre_text2, index2),
-                    list(HTMLElement(self.document, node) for node in contained_nodes),
+                    (dom.HTMLElement(self.document, start_node), pre_text, index),
+                    (dom.HTMLElement(self.document, end_node), pre_text2, index2),
+                    list(dom.HTMLElement(self.document, node) for node in contained_nodes),
                 )
             else:
-                element = HTMLElement(self.document, self._html.selection_start_node)
+                element = dom.HTMLElement(self.document, self._html.selection_start_node)
                 start_offset, end_offset = sorted([self._html.selection_start_offset, self._html.selection_end_offset])
                 _, pre_text, index = self._html.tkhtml_offset_to_text_index(self._html.selection_start_node, start_offset)
                 _, pre_text2, index2 = self._html.tkhtml_offset_to_text_index(self._html.selection_start_node, end_offset)
@@ -1007,7 +1001,7 @@ If you benefited from using this package, please consider supporting its develop
         :param end_index: The index in the element's text content to end the selection at.
         :type end_index: int
 
-        :raises: :py:class:`RuntimeError` if the given elements are empty or have been removed.
+        :raise RuntimeError: If the given elements are empty or have been removed.
         
         New in version 4.8."""
         text, _, start_offset = self._html.tkhtml_offset_to_text_index(start_element.node, start_index, True)
@@ -1086,7 +1080,7 @@ If you benefited from using this package, please consider supporting its develop
         else:
             height = self._html.winfo_height()
         if self._prev_height != height or force:
-            resizeable_elements = self.document.querySelectorAll(f"[{BUILTIN_ATTRIBUTES['vertical-align']}]")
+            resizeable_elements = self.document.querySelectorAll(f"[{utilities.BUILTIN_ATTRIBUTES['vertical-align']}]")
             for element in resizeable_elements:
                 element.style.height = f"{height/self['zoom']}px"
         self._prev_height = height
@@ -1111,14 +1105,24 @@ If you benefited from using this package, please consider supporting its develop
         self._hsb.set_type(allow)
         return allow
 
-    def _continue_loading(self, url, data="", method="GET", decode=None, force=False):
+    def _get_about_page(self, url, i1="", i2=""):
+        if not self.about_page_background: 
+            if not self._style: self._style = Style()
+            self.about_page_background = self._style.lookup('TFrame', 'background')
+        if not self.about_page_foreground: 
+            if not self._style: self._style = Style()
+            self.about_page_foreground = self._style.lookup('TFrame', 'foreground')
+
+        return utilities.BUILTIN_PAGES[url].format(bg=self.about_page_background, fg=self.about_page_foreground, i1=i1, i2=i2)
+
+    def _continue_loading(self, url, data="", method="GET", decode=None, force=False, thread_safe=False):
         "Finish loading urls and handle URI fragments."
         # NOTE: this method is thread-safe and is designed to run in a thread
 
         code = 404
         self._current_url = url
 
-        self._html.post_event(DOWNLOADING_RESOURCE_EVENT, True)
+        self._html.post_event(utilities.DOWNLOADING_RESOURCE_EVENT, True)
         
         try:
             method = method.upper()
@@ -1139,7 +1143,7 @@ If you benefited from using this package, please consider supporting its develop
                 else:
                     url = urlunparse(("file", "", "/" + path, "", "", ""))
                 self._current_url = url
-                self._html.post_event(URL_CHANGED_EVENT)
+                self._html.post_event(utilities.URL_CHANGED_EVENT)
 
             # If url is different than the current one, load the new site
             if force or (method == "POST") or ((urldefrag(url)[0]).replace("/", "") != (urldefrag(self._previous_url)[0]).replace("/", "")):
@@ -1148,23 +1152,24 @@ If you benefited from using this package, please consider supporting its develop
                     view_source = True
                     url = url.replace("view-source:", "")
                     parsed = urlparse(url)
-                self._html.post_message(f"Connecting to {parsed.netloc}", True)
+                location = parsed.netloc if parsed.netloc else parsed.path
+                self._html.post_message(f"Connecting to {location}", True)
                 if self._html.insecure_https:
                     self._html.post_message("WARNING: Using insecure HTTPS session", True)
                 if (parsed.scheme == "file") or (not self._html.caches_enabled):
-                    data, newurl, filetype, code = download(
+                    data, newurl, filetype, code = utilities.download(
                         url, data, method, decode, self._html.insecure_https, self._html.ssl_cafile, tuple(self._html.headers.items()), self._html.request_timeout)
                 else:
-                    data, newurl, filetype, code = cache_download(
+                    data, newurl, filetype, code = utilities.cache_download(
                         url, data, method, decode, self._html.insecure_https, self._html.ssl_cafile, tuple(self._html.headers.items()), self._html.request_timeout)
-                self._html.post_message(f"Successfully connected to {parsed.netloc}", True)
+                self._html.post_message(f"Successfully connected to {location}", True)
 
-                if get_current_thread().isrunning():
+                if utilities.get_current_thread().isrunning():
                     if view_source:
                         newurl = "view-source:"+newurl
                         if self._current_url != newurl:
                             self._current_url = newurl
-                            self._html.post_event(URL_CHANGED_EVENT, True)
+                            self._html.post_event(utilities.URL_CHANGED_EVENT, True)
                         data = str(data).replace("<","&lt;").replace(">", "&gt;")
                         data = data.splitlines()
                         length = int(len(str(len(data))))
@@ -1174,23 +1179,23 @@ If you benefited from using this package, please consider supporting its develop
                             data = data.split("</code><br>", 1)[1]
                         else:
                             data = "".join(data)
-                        text = BUILTIN_PAGES["about:view-source"].format(bg=self.about_page_background, fg=self.about_page_foreground, i1=length*9, i2=data)
-                        self.load_html(text, newurl, _thread_safe=True)
+                        text = self._get_about_page("about:view-source", length*9, data)
+                        self.load_html(text, newurl, _thread_safe=thread_safe)
                     elif "image" in filetype:
                         name = self._html.allocate_image_name()
                         data, data_is_image = self._html.check_images(data, name, url, filetype)
-                        self._html.queue.put(lambda data=data, name=name, url=url, filetype=filetype, data_is_image=data_is_image: self._finish_loading_image(data, name, url, filetype, data_is_image))
+                        self._html.post_to_queue(lambda data=data, name=name, url=url, filetype=filetype, data_is_image=data_is_image: self._finish_loading_image(data, name, url, filetype, data_is_image))
                     else:
                         if self._current_url != newurl:
                             self._current_url = newurl
-                            self._html.post_event(URL_CHANGED_EVENT, True)
-                        self.load_html(data, newurl, fragment, _thread_safe=True)
+                            self._html.post_event(utilities.URL_CHANGED_EVENT, True)
+                        self.load_html(data, newurl, fragment, _thread_safe=thread_safe)
             else:
                 # If no requests need to be made, we can signal that the page is done loading, handle fragments, etc.
                 self._html.fragment = fragment
-                self._html.queue.put(self._finish_loading_nothing)
+                self._html.post_to_queue(self._finish_loading_nothing)
         except Exception as error:
-            self._html.queue.put(lambda url=url, error=error, code=code: self._finish_loading_error(url, error, code))
+            self._html.post_to_queue(lambda url=url, error=error, code=code: self._finish_loading_error(url, error, code))
 
         self._thread_in_progress = None
 
@@ -1199,8 +1204,8 @@ If you benefited from using this package, please consider supporting its develop
         # Inject the image into the webpage, as it has already been downloaded
 
         if self._current_url != url:
-            self._html.post_event(URL_CHANGED_EVENT)
-        text = BUILTIN_PAGES["about:image"].format(bg=self.about_page_background, fg=self.about_page_foreground, i1=name, i2="")
+            self._html.post_event(utilities.URL_CHANGED_EVENT)
+        text = self._get_about_page("about:image", name)
         self._html.finish_fetching_images(None, data, name, url, filetype, data_is_image)
         self.load_html(text, url)
     
@@ -1218,7 +1223,7 @@ If you benefited from using this package, please consider supporting its develop
             self._html.post_message(f"Check that you are using the right url scheme. Some websites only support http.\n\
 This might also happen if your Python distribution does not come installed with website certificates.\n\
 This is a known Python bug on older MacOS systems. \
-Running something along the lines of \"/Applications/Python {'.'.join(PYTHON_VERSION[:2])}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
+Running something along the lines of \"/Applications/Python {'.'.join(utilities.PYTHON_VERSION[:2])}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
 Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certificates or 'HtmlFrame(master, ssl_cafile=[path_to_your_cafile])' to specify the path to your CA file if you know where it is.")
         self.on_navigate_fail(url, error, code)
 
@@ -1253,7 +1258,7 @@ Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certif
         if self._html.javascript_enabled and not pythonmonkey:
             self._initialize_javascript()
         try:
-            element = HTMLElement(self.document, node_handle)
+            element = dom.HTMLElement(self.document, node_handle)
             pythonmonkey.eval(f"(element) => {{function run() {{ {attr_contents} }}; run.bind(element)()}}")(element)
         except Exception as error:
             self._html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running an {attribute} script: {error}")

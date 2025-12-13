@@ -527,7 +527,7 @@ If you benefited from using this package, please consider supporting its develop
         We keep this a seperate command so that it can be run after inserting elements or changing the innerHTML.
         
         New in version 4.1."""
-        # Don't bother worring about bindings...they can't be set if the element doesn't exist
+        # Don't bother worring about element bindings...they can't be set if the element doesn't exist
         if not self._javascript_enabled:
             return
         if children:
@@ -571,7 +571,7 @@ If you benefited from using this package, please consider supporting its develop
 
     def reset(self, thread_safe=False):
         "Reset the widget."
-        # NOTE: when thread_safe=True, this method is thread-safe
+        # NOTE: when thread_safe=True, this method is thread-safe. Imagine that!
 
         self.stop()
         self.image_directory = {}
@@ -583,9 +583,6 @@ If you benefited from using this package, please consider supporting its develop
         self.radio_buttons = {}
         self.loaded_iframes = {}
         self.loaded_elements = []
-        self.on_embedded_node = None
-        self.selection_start_node = None
-        self.selection_end_node = None
         self.title = ""
         self.icon = ""
         self.fragment = ""
@@ -604,6 +601,12 @@ If you benefited from using this package, please consider supporting its develop
         self.vsb_type = self.manage_vsb_func()
         self.manage_hsb_func()
 
+        # Note to self: these need to be here
+        # Or very strange errors will magically appear,
+        # Usually when switching between pages quickly
+        self.selection_start_node = None
+        self.selection_end_node = None
+        self.on_embedded_node = None
         self.hovered_nodes = []
         self.current_hovered_node = None
 
@@ -1991,7 +1994,10 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
     def _finish_image_delete(self, name):
         # NOTE: this must run in the main thread
-        del self.loaded_images[name]
+        try:
+            del self.loaded_images[name]
+        except AttributeError:
+            pass
 
     def _on_form(self, node):
         "Handle <form> elements."

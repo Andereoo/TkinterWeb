@@ -876,9 +876,15 @@ class HtmlFrame(Frame):
         :param index: The index in the element's text content to place the caret at.
         :type index: int
 
-        :raise RuntimeError: If the given element is empty or has been removed.
+        :raise RuntimeError: If caret browsing is disabled or the given element is empty or has been removed.
         
         New in version 4.8."""
+        if not self._html.caret_browsing_enabled:
+            # This is here not because things break when caret browsing is disabled,
+            # But because I bet someone somewhere it trying to set the caret's position
+            # With caret browsing disabled and pulling their hair out over it
+            raise RuntimeError("cannot modify the caret when caret browsing is disabled")
+
         text, pre_text, offset = self._html.tkhtml_offset_to_text_index(element.node, index, True)
         if not self._html.bbox(element.node):
             raise RuntimeError(f"the element {element} is not visible.")
@@ -891,23 +897,38 @@ class HtmlFrame(Frame):
 
         :param index: The index in the page's text content to place the caret at.
         :type index: int
+
+        :raise RuntimeError: If caret browsing is disabled.
         
         New in version 4.8."""
+        if not self._html.caret_browsing_enabled:
+            raise RuntimeError("cannot modify the caret when caret browsing is disabled")
+
         if self._html.caret_manager.node:
             self._html.caret_manager.set(None, index, recalculate=True)
 
     def shift_caret_left(self):
         """Shift the caret left. 
         If the caret is at the beginning of a node, this method will move the caret to the end of the previous text node.
+
+        :raise RuntimeError: If caret browsing is disabled.
         
         New in version 4.8."""
+        if not self._html.caret_browsing_enabled:
+            raise RuntimeError("cannot shift the caret when caret browsing is disabled")
+        
         self._html.caret_manager.shift_left()
 
     def shift_caret_right(self):
         """Shift the caret right. 
         If the caret is at the end of a node, this method will move the caret to the beginning of the next text node.
+
+        :raise RuntimeError: If caret browsing is disabled.
         
         New in version 4.8."""
+        if not self._html.caret_browsing_enabled:
+            raise RuntimeError("cannot shift the caret when caret browsing is disabled")
+        
         self._html.caret_manager.shift_right()
 
     def get_selection_position(self):
@@ -1001,9 +1022,12 @@ class HtmlFrame(Frame):
         :param end_index: The index in the element's text content to end the selection at.
         :type end_index: int
 
-        :raise RuntimeError: If the given elements are empty or have been removed.
+        :raise RuntimeError: If selection is disabled or the given elements are empty or have been removed.
         
         New in version 4.8."""
+        if not self._html.selection_enabled:
+            raise RuntimeError("cannot modify the selection when selection is disabled")
+
         text, _, start_offset = self._html.tkhtml_offset_to_text_index(start_element.node, start_index, True)
         text2, _, end_offset = self._html.tkhtml_offset_to_text_index(end_element.node, end_index, True)
 
@@ -1028,8 +1052,13 @@ class HtmlFrame(Frame):
         :type start_index: int
         :param end_index: The index in the page's text content to end the selection at.
         :type end_index: int
+
+        :raise RuntimeError: If selection is disabled.
         
         New in version 4.8."""
+        if not self._html.selection_enabled:
+            raise RuntimeError("cannot modify the selection when selection is disabled")
+
         start_node, start_offset = self._html.text("index", start_index)
         end_node, end_offset = self._html.text("index", end_index)
         self.html.selection_start_node = start_node
@@ -1051,6 +1080,9 @@ class HtmlFrame(Frame):
 
     def select_all(self):
         """Select all text in the document."""
+        if not self._html.selection_enabled:
+            raise RuntimeError("cannot set the selection when selection is disabled")
+
         self._html.select_all()
 
     def _check_value(self, old, new):

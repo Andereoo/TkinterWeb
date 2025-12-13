@@ -825,8 +825,16 @@ class HTMLElement:
         :type func: callable
         :param add: If set to "+", add this binding onto existing ones. Otherwise, existing bindings will be overwritten.
         :type add: str or None
+
+        :raise RuntimeError: If events are disabled.
         
         New in version 4.10."""
+
+        if not self.html.events_enabled: 
+            # should this be here, or in CaretManager?
+            # does it really matter?
+            raise RuntimeError("cannot add a binding when events are disabled")
+        
         self.html.event_manager.bind(self.node, sequence, func, add)
 
     def unbind(self, sequence, funcid=None):

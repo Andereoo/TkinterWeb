@@ -141,123 +141,131 @@ class CaretManager:
 
     def shift_up(self, event=None):     
         "Shift the caret up."   
-        if self.node:
-            index = self.html.text("offset", self.node, self.offset)
-            text = self.html.text("text")
+        if not self.node:
+            return
+        
+        index = self.html.text("offset", self.node, self.offset)
+        text = self.html.text("text")
 
-            if type(index) == str: index = self.index
+        if type(index) == str: index = self.index
 
-            # Get the previous newline
-            index = text.rfind("\n", 0, index)
+        # Get the previous newline
+        index = text.rfind("\n", 0, index)
 
-            if index == -1:
-                index = 0
-            else:
-                # Ensure that the index we land on is not blank or a newline
-                while index > 0 and text[index] in {" ", "\n"}:
-                    index -= 1
+        if index == -1:
+            index = 0
+        else:
+            # Ensure that the index we land on is not blank or a newline
+            while index > 0 and text[index] in {" ", "\n"}:
+                index -= 1
 
-                # Get the beginning of the line
-                beginning_index = text.rfind("\n", 0, index)
-                if beginning_index != -1:
-                    index += 1
-                    # Attempt to go to the offset in that line corresponding to self.target_offset
-                    # If the line is too short, go to the end of the line
-                    ideal_index = beginning_index + self.target_offset + 1
+            # Get the beginning of the line
+            beginning_index = text.rfind("\n", 0, index)
+            if beginning_index != -1:
+                index += 1
+                # Attempt to go to the offset in that line corresponding to self.target_offset
+                # If the line is too short, go to the end of the line
+                ideal_index = beginning_index + self.target_offset + 1
 
-                    if ideal_index < index:
-                        index = ideal_index
+                if ideal_index < index:
+                    index = ideal_index
 
-            self.register_nodes_from_index(event, index)
-            self.update(event)
+        self.register_nodes_from_index(event, index)
+        self.update(event)
 
     def shift_down(self, event=None):
         "Shift the caret down."
-        if self.node:
-            index = self.html.text("offset", self.node, self.offset)
-            text = self.html.text("text").rstrip("\n") + "\n"
-            text_length = len(text) - 1
+        if not self.node:
+            return
+    
+        index = self.html.text("offset", self.node, self.offset)
+        text = self.html.text("text").rstrip("\n") + "\n"
+        text_length = len(text) - 1
 
-            if type(index) == str: index = self.index
+        if type(index) == str: index = self.index
 
-            # Get the next newline
-            index = text.find("\n", index)
-            if index == -1:
-                index = text_length
-            else:
-                # Ensure that the index we land on is not blank or a newline
-                while index < text_length and text[index] in {" ", "\n"}:
-                    index += 1
+        # Get the next newline
+        index = text.find("\n", index)
+        if index == -1:
+            index = text_length
+        else:
+            # Ensure that the index we land on is not blank or a newline
+            while index < text_length and text[index] in {" ", "\n"}:
+                index += 1
 
-                # Attempt to go to the offset in that line corresponding to self.target_offset
-                # If the line is too short, go to the end of the line
-                ideal_index = index + self.target_offset
+            # Attempt to go to the offset in that line corresponding to self.target_offset
+            # If the line is too short, go to the end of the line
+            ideal_index = index + self.target_offset
 
-                if ideal_index < text_length:
-                    newline_pos = text.find("\n", index, ideal_index)
-                    if newline_pos != -1:
-                        index = newline_pos
-                    else:
-                        index = ideal_index
+            if ideal_index < text_length:
+                newline_pos = text.find("\n", index, ideal_index)
+                if newline_pos != -1:
+                    index = newline_pos
+                else:
+                    index = ideal_index
 
-            self.register_nodes_from_index(event, index)
-            self.update(event)
+        self.register_nodes_from_index(event, index)
+        self.update(event)
 
     def shift_left(self, event=None, update_caret_start=True):
         "Shift the caret left."
-        if self.node:
-            index = self.html.text("offset", self.node, self.offset)
-            text = self.html.text("text")
-            if type(index) == str: index = self.index
-            if index > len(text): index = len(text)
-            
-            # Shift left one letter
-            index -= 1
+        if not self.node:
+            return
+        
+        index = self.html.text("offset", self.node, self.offset)
+        text = self.html.text("text")
+        if type(index) == str: index = self.index
+        if index > len(text): index = len(text)
+        
+        # Shift left one letter
+        index -= 1
 
-            # If Ctrl is pressed, shift to the end of the previous space or newline
-            if event and ((event.state & 0x4) != 0):
-                index = max(text.rfind(" ", 0, index), text.rfind("\n", 0, index))
-                if index == -1: 
-                    index = 0
-                else:
-                    index += 1
+        # If Ctrl is pressed, shift to the end of the previous space or newline
+        if event and ((event.state & 0x4) != 0):
+            index = max(text.rfind(" ", 0, index), text.rfind("\n", 0, index))
+            if index == -1: 
+                index = 0
             else:
-                # Ensure that the index we land on is not a newline
-                changed = False
-                while index > 0 and text[index] == "\n":
-                    index -= 1
-                    changed = True
-                if changed:
-                    index += 1
-            
-            self.register_nodes_from_index(event, index, update_caret_start)
-            self.update(event)
+                index += 1
+        else:
+            # Ensure that the index we land on is not a newline
+            changed = False
+            while index > 0 and text[index] == "\n":
+                index -= 1
+                changed = True
+            if changed:
+                index += 1
+        
+        self.register_nodes_from_index(event, index, update_caret_start)
+        self.update(event)
 
     def shift_right(self, event=None, update_caret_start=True):
         "Shift the caret right."
-        if self.node:
-            index = self.html.text("offset", self.node, self.offset)
-            text = self.html.text("text").rstrip("\n") + "\n"
-            text_length = len(text) - 1
+        if not self.node:
+            return
+        
+        index = self.html.text("offset", self.node, self.offset)
+        text = self.html.text("text").rstrip("\n") + "\n"
+        text_length = len(text) - 1
 
-            if type(index) == str: index = self.index
+        if type(index) == str: index = self.index
 
-            if event and ((event.state & 0x4) != 0):
-                # If Ctrl is pressed, shift to the start of the next space or newline
-                next_positions = [i for i in (text.find(" ", index + 1), text.find("\n", index + 1)) if i != -1]
-                index = min(next_positions) if next_positions else text_length
-            else:
-                # Ensure that the index we land on is not a newline
-                changed = False
-                while index < text_length and text[index] == "\n":
-                    index += 1
-                    changed = True
-                # Otherwise, shift right one letter
-                if not changed and index < text_length:
-                    index += 1
+        if event and ((event.state & 0x4) != 0):
+            # If Ctrl is pressed, shift to the start of the next space or newline
+            next_positions = [i for i in (text.find(" ", index + 1), text.find("\n", index + 1)) if i != -1]
+            index = min(next_positions) if next_positions else text_length
+        else:
+            # Ensure that the index we land on is not a newline
+            changed = False
+            while index < text_length and text[index] == "\n":
+                index += 1
+                changed = True
+            # Otherwise, shift right one letter
+            if not changed and index < text_length:
+                index += 1
 
-            self.register_nodes_from_index(event, index, update_caret_start)
-            self.update(event, fallback=self.shift_right)
+        self.register_nodes_from_index(event, index, update_caret_start)
+        self.update(event, fallback=self.shift_right)
 
     def update(self, event=None, auto_scroll=True, fallback=None):
         "Refresh the caret or update its position."
@@ -461,7 +469,7 @@ class EventManager:
         raise KeyError(f"the event {event} is either unsupported or invalid")
 
     def bind(self, node, event, callback, add=None):
-        "Add a binding."
+        "Add a binding."        
         if self._check_binding_name(event):
             if event not in self.bindings:
                 self.html.bind_class(self.html.tkinterweb_tag, event, lambda event, name=event: self._on_demand_binding_callback(event, name))

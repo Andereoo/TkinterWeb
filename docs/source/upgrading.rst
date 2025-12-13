@@ -339,6 +339,8 @@ Version 4.10:
 * If dark theme is enabled, HTML code passed to the configuration option ``dark_style`` will now be automatically appended onto the code set by ``default_style``.
 * Plain text is no longer rendered as a blank page.
 * The event queue now only runs when threading is enabled.
+* Modifying the selection when selection is disabled now raises an error.
+* Modifying the caret position when caret browsing is disabled now raises an error.
 * Many internal changes were made in this release. If you notice any bugs, please report them.
 
 -------------------

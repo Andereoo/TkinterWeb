@@ -33,8 +33,8 @@ I get a ModuleNotFoundError after compiling my code
 * When compiling your code, you might get an error popup saying ``ModuleNotFoundError: The files required to run TkinterWeb could not be found``
 * Your app might also fail quietly if TkinterWeb's dependencies are not installed
 * This occurs when your Python script bundler isn't finding all the files nessessary for running TkinterWeb. You need to force it to get all of TkinterWeb's files and dependencies.
-* On PyInstaller: make sure you are using the latest version of PyInstaller by running ``pip install --upgrade pyinstaller pyinstaller-hooks-contrib``. Otherwise, you can also add the flags ``--collect-all tkinterweb --collect-all tkinterweb_tkhtml`` when bundling your app.
-* On py2app / py2exe: Add ``'packages': ['tkinterweb', 'tkinterweb_tkhtml']`` to the ``OPTIONS`` variable in your setup file.
+* On PyInstaller: make sure you are using the latest version of PyInstaller by running ``pip install --upgrade pyinstaller pyinstaller-hooks-contrib``. Otherwise, you can also add the flags ``--collect-all tkinterweb --collect-all tkinterweb_tkhtml --collect-all tkinterweb_tkhtml_extras`` when bundling your app.
+* On py2app / py2exe: Add ``'packages': ['tkinterweb', 'tkinterweb_tkhtml', 'tkinterweb_tkhtml_extras']`` to the ``OPTIONS`` variable in your setup file.
 
 -------------------
 

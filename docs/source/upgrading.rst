@@ -341,6 +341,7 @@ Version 4.10:
 * The event queue now only runs when threading is enabled.
 * Modifying the selection when selection is disabled now raises an error.
 * Modifying the caret position when caret browsing is disabled now raises an error.
+* Local file loading now happens on the main thread.
 * Many internal changes were made in this release. If you notice any bugs, please report them.
 
 -------------------

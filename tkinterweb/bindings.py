@@ -1734,6 +1734,11 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         return self.event_manager.send_onload(root, children)
 
 
+    @property
+    def images(self):  # Debuging
+        NAMES = ("name", "pixmap", "w", "h", "alpha", "ref",)
+        return {i[0]:dict(zip(NAMES, i[1:])) for i in self.tk.call(self._w, "_images")}
+
     def tkhtml_uri_decode(self, uri, base64=False):
         "This command is designed to help scripts process data: URIs. It is completely separate from the html widget"
         c = ("::tkhtml::decode", "-base64", uri) if base64 else ("::tkhtml::decode", uri)

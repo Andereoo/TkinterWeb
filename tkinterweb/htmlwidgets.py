@@ -7,7 +7,7 @@ Copyright (c) 2021-2025 Andrew Clarke
 
 from . import bindings, dom, js, utilities, subwidgets, imageutils
 
-from urllib.parse import urldefrag, urlparse, urlunparse
+from urllib.parse import urldefrag, urlparse, urlunparse, urljoin
 
 import tkinter as tk
 from tkinter.ttk import Frame, Style
@@ -592,6 +592,15 @@ class HtmlFrame(Frame):
             self._accumulated_styles.append(css_source)
         else:
             self._html.parse_css(data=css_source, fallback_priority=priority)
+
+    def import_css(self, url):
+        try:
+            new_url = urljoin(self._html.base_url, url)
+            self._html.post_message(f"Loading stylesheet from {new_url}")
+            self._html._thread_check(self._html.fetch_styles, url=new_url)
+
+        except Exception as error:
+            self._html.post_message(f"ERROR: could not load stylesheet {url}: {error}")
 
     def stop(self):
         """Stop loading this page and abandon all pending requests."""

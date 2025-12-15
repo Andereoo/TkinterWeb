@@ -253,7 +253,11 @@ If you benefited from using this package, please consider supporting its develop
                 "<Prior>", "<KP_Prior>", "<Next>", "<KP_Next>", "<Home>", "<KP_Home>", "<End>", "<KP_End>", "<FocusOut>", "<FocusIn>"}:
             method = "_on_" + i.strip("<>").split("-")[-1].split("_")[-1].lower()
             # We use bind and not bind_class here because users may want to override these bindings
-            self.bind(i, getattr(self, method))
+            try:
+                self.bind(i, getattr(self, method))
+            except tk.TclError:
+                # KP_ bindings don't work on MacOS
+                pass
 
     def _on_destroy(self, event):
         self._end_queue()

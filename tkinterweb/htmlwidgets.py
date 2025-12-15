@@ -1125,7 +1125,7 @@ class HtmlFrame(Frame):
             allow = self.vertical_scrollbar
         if allow == "auto":
             allow = 2
-        self._vsb.set_type(allow)
+        self._vsb.set_type(allow, *self._html.yview())
         return allow
     
     def _manage_hsb(self, allow=None):
@@ -1134,7 +1134,7 @@ class HtmlFrame(Frame):
             allow = self.horizontal_scrollbar
         if allow == "auto":
             allow = 2
-        self._hsb.set_type(allow)
+        self._hsb.set_type(allow, *self._html.xview())
         return allow
 
     def _get_about_page(self, url, i1="", i2=""):

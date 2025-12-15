@@ -94,10 +94,9 @@ class AutoScrollbar(ttk.Scrollbar):
                 self.visible = True
         ttk.Scrollbar.set(self, low, high)
     
-    def set_type(self, scroll):
+    def set_type(self, scroll, low, high):
         if self.scroll != scroll:
             self.scroll = scroll
-            low, high = self.get()
             self.set(low, high)
 
     def pack(self, **kwargs):

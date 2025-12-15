@@ -342,6 +342,8 @@ Version 4.10:
 * Modifying the selection when selection is disabled now raises an error.
 * Modifying the caret position when caret browsing is disabled now raises an error.
 * Local file loading now happens on the main thread.
+* Fixed a fatal scrollbar error when loading TkinterWeb on Tk 8.5 on MacOS.
+* Fixed a fatal binding error when loading TkinterWeb on MacOS.
 * Many internal changes were made in this release. If you notice any bugs, please report them.
 
 -------------------

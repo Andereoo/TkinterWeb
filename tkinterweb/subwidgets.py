@@ -132,7 +132,7 @@ class ScrolledTextBox(tk.Frame):
         self.vsb = vsb = AutoScrollbar(self, command=tbox.yview)
         vsb.grid(row=0, column=1, sticky="nsew")
         tbox.configure(yscrollcommand=vsb.set)
-        vsb.set_type(2)
+        vsb.set_type(2, *tbox.yview())
 
         tbox.bind("<MouseWheel>", self.scroll)
         tbox.bind("<Button-4>", self.scroll_x11)

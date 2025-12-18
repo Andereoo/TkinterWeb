@@ -6,7 +6,7 @@ HTML Widgets Documentation
 
 The :class:`~tkinterweb.HtmlFrame` widget is a Tkinter frame that provides additional functionality to the :class:`~tkinterweb.TkinterWeb` widget by adding automatic scrollbars, error handling, and many convenience methods into one embeddable and easy to use widget.
 
-The :class:`~tkinterweb.HtmlFrame` widget is also capable managing other Tkinter widgets, which enables combining Tkinter widgets and HTML elements.
+The :class:`~tkinterweb.HtmlFrame` widget is also capable managing other Tkinter widgets, making it easy to combine Tkinter widgets and HTML elements.
 
 
 .. autoclass:: tkinterweb.HtmlFrame
@@ -23,6 +23,9 @@ This widget also emits the following Tkinter virtual events that can be bound to
 * ``<<Modified>>```/:py:attr:`utilities.FIELD_CHANGED_EVENT`: Generated whenever the content of any ``<input>`` element changes.
 
 .. autoclass:: tkinterweb.HtmlLabel
+   :members:
+
+.. autoclass:: tkinterweb.HtmlText
    :members:
 
 .. autoclass:: tkinterweb.HtmlParse

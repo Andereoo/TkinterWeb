@@ -44,11 +44,23 @@ def load_cairo():
                 rsvg_type = 3
 
 
+def photoimage_del(image):
+    "Monkey-patch to quiet Photoimage error messages. I think it's a PIL bug."
+    try:
+        name = image.__photo.name
+        image.__photo.name = None
+        image.__photo.tk.call("image", "delete", name)
+    except AttributeError:
+        pass
+
 
 def text_to_image(name, alt, nodebox, font_type, font_size, threshold):
     from PIL import Image
     from PIL.ImageTk import PhotoImage
     from PIL import ImageFont, ImageDraw
+
+    if PhotoImage.__del__ is not photoimage_del:
+        PhotoImage.__del__ = photoimage_del
 
     font = ImageFont.truetype(font_type, font_size)
     if len(nodebox) == 4:
@@ -140,6 +152,10 @@ def data_to_image(data, name, imagetype, data_is_image):
     if data_is_image:
         from PIL import Image
         from PIL.ImageTk import PhotoImage
+        
+        if PhotoImage.__del__ is not photoimage_del:
+            PhotoImage.__del__ = photoimage_del
+
         return PhotoImage(image=data, name=name)
     elif imagetype in ("image/png", "image/gif", "image/ppm", "image/pgm",):
         # tkinter.PhotoImage has less overhead, so use it when possible
@@ -147,14 +163,14 @@ def data_to_image(data, name, imagetype, data_is_image):
     else:
         from PIL import Image
         from PIL.ImageTk import PhotoImage
+
+        if PhotoImage.__del__ is not photoimage_del:
+            PhotoImage.__del__ = photoimage_del
+        
         return PhotoImage(data=data, name=name)
 
 
-def blank_image(name):
-    #if "PIL" in modules:
-    #    from PIL import Image, ImageTk
-    #    return ImageTk.PhotoImage(Image.new("RGBA", (1, 1)), name=name)
-    #else: 
+def blank_image(name): 
     return TkPhotoImage(name=name)
 
 

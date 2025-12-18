@@ -292,7 +292,7 @@ class HTMLElement:
         # Tkhtml crashes if a node containing a widget is destroyed
         self.widget = None
         for node in self.html.search(f"[{self.html.widget_container_attr}]", root=self.node):
-            self.html.replace_node_contents(node, None)
+            self.html.widget_manager.set_widget(node, None)
         self.html.update()
 
         self.html.safe_tk_eval("""
@@ -318,7 +318,7 @@ class HTMLElement:
             update  ;# This must be done to see changes on-screen
             """ % (self.html, extract_nested(self.node), escape_Tcl(contents))
         )
-        self.html.send_onload(root=self.node)
+        self.html.event_manager.send_onload(root=self.node)
 
     @property
     def textContent(self):  # Original for this project
@@ -342,8 +342,8 @@ class HTMLElement:
     def textContent(self, contents):  # Ditto
         # Tkhtml crashes if a node containing a widget is destroyed
         self.widget = None
-        for node in self.html.search(f"[{self.html.widget_container_attr}]", root=self.node):
-            self.html.replace_node_contents(node, None)
+        for node in self.html.search(f"[{self.html.widget_manager.widget_container_attr}]", root=self.node):
+            self.html.set_node_widget(node, None)
         self.html.update()
 
         if self.tagName:
@@ -444,18 +444,16 @@ class HTMLElement:
         
         Prior to version 4.2 this only applies to ``<object>`` elements and a widget must be specified.
 
-        Since version 4.10 this can also be used to get the widget representing ``<input>``, ``<textarea>``, and ``<select>`` elements.
+        Since version 4.10 this can also be used to get the widget representing ``<input>``, ``<textarea>``, ``<select>`` , ``<iframe>``, and some ``<object>`` elements.
         
         If the widget already exists in the document, it will first be removed from its previous element.
+
+        Ensure your HtmlFrame widget was created before the widget you are embedding, or else the widget might not be visible.
 
         :rtype: :py:class:`tkinter.Widget` or None
         
         New in version 4.1."""
-        attr = self.getAttribute(self.html.widget_container_attr)
-        if attr != "":
-            return self.html.nametowidget(attr)
-        else:
-            return None
+        return self.html.widget_manager.get_node_widget(self.node)
         
     @widget.setter
     def widget(self, widget): # Not a real JS property, but still useful
@@ -469,7 +467,7 @@ class HTMLElement:
             else:
                 self.setAttribute("data", widget)
         else:
-            self.html.replace_node_with_widget(self.node, widget)
+            self.html.widget_manager.set_node_widget(self.node, widget)
     
     @property
     def value(self):
@@ -478,14 +476,16 @@ class HTMLElement:
         :rtype: str
         
         New in version 4.1."""
-        if self.node in self.html.form_widgets:
-            return self.html.form_widgets[self.node].get()
+        node = str(self.node)
+        if node in self.html.form_manager.form_widgets:
+            return self.html.form_manager.form_widgets[node].get()
         return None
         
     @value.setter
     def value(self, value):
-        if self.node in self.html.form_widgets:
-            self.html.form_widgets[self.node].set(value)
+        node = str(self.node)
+        if node in self.html.form_manager.form_widgets:
+            self.html.form_manager.form_widgets[node].set(value)
 
     @property
     def checked(self):
@@ -494,7 +494,7 @@ class HTMLElement:
         :rtype: bool
         
         New in version 4.1."""
-        if self.node in self.html.form_widgets:
+        if str(self.node) in self.html.form_manager.form_widgets:
             if self.html.get_node_attribute(self.node, "checked", "false") != "false":
                 return True
             else:
@@ -503,7 +503,7 @@ class HTMLElement:
         
     @checked.setter
     def checked(self, value):
-        if self.node in self.html.form_widgets:
+        if str(self.node) in self.html.form_manager.form_widgets:
             self.html.set_node_attribute(self.node, "checked", value)
 
     @property
@@ -788,7 +788,7 @@ class HTMLElement:
         else:
             self.html.insert_node(self.node, tkhtml_child_nodes)
 
-        self.html.send_onload(children=[child.node for child in children])
+        self.html.event_manager.send_onload(children=[child.node for child in children])
     
     def _find_siblings(self, reverse=False):
         "Helper method to find node children"
@@ -931,7 +931,6 @@ class DOMRect:
         return f"{self.html._w}{self.node}::{self.__class__.__name__.lower()}"
 
 
-
 class CSSStyleDeclaration:
     """Access this class via the :attr:`~tkinterweb.dom.HTMLElement.style` property of the :attr:`~tkinterweb.dom.HTMLElement` class.
     
@@ -982,10 +981,7 @@ class CSSStyleDeclaration:
         return value
 
     def __setitem__(self, property, value):
-        current = self.html.get_node_properties(self.node, "-inline")
-        current[property] = value
-        style = " ".join(f"{p}: {v};" for p, v in current.items())
-        self.html.set_node_attribute(self.node, "style", style)
+        self.html.set_node_property(self.node, property, value)
 
     def __delitem__(self, property):
         value = self.__getitem__(property)

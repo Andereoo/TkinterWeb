@@ -72,6 +72,23 @@ Version 4.8
 * ``HtmlFrame.replace_element()`` (deprecated in version 4.0) - use :attr:`.HTMLElement.widget`
 * ``HtmlFrame.remove_widget()`` (deprecated in version 4.0) - use :meth:`.HTMLElement.remove`
 
+Deprecated
+----------
+
+Version 4.11:
+
+* ``TkinterWeb.update_tags()`` - use :meth:`.SelectionManager.update_tags`
+* ``TkinterWeb.select_all()`` - use :meth:`.SelectionManager.select_all`
+* ``TkinterWeb.clear_selection()`` - use :meth:`.SelectionManager.clear_selection`
+* ``TkinterWeb.update_selection()`` - use :meth:`.SelectionManager.update_selection`
+* ``TkinterWeb.get_selection()`` - use :meth:`.SelectionManager.get_selection`
+* ``TkinterWeb.copy_selection()`` - use :meth:`.SelectionManager.copy_selection`
+* ``TkinterWeb.allocate_image_name()`` - use :meth:`.ImageManager.allocate_image_name`
+* ``TkinterWeb.handle_node_replacement()`` - use :meth:`.WidgetManager.handle_node_replacement`
+* ``TkinterWeb.map_node()`` - use :meth:`.WidgetManager.map_node`
+* ``TkinterWeb.find_text()`` - use :meth:`.SearchManager.find_text`
+* ``TkinterWeb.send_onload()`` - use :meth:`.EventManager.send_onload`
+
 Renamed
 -------
 
@@ -236,7 +253,7 @@ Version 4.8:
 * :meth:`.TkinterWeb.update_selection`
 * :meth:`.TkinterWeb.tkhtml_offset_to_text_index`
 
-* :class:`~tkinterweb.extensions.CaretManager`
+* :class:`.CaretManager`
 
 * The new configuration option ``caret_browsing_enabled`` can be used to enable or disable caret browsing mode.
 
@@ -253,9 +270,28 @@ Version 4.10:
 
 * :attr:`.TkinterWeb.event_manager`
 
-* :class:`~tkinterweb.extensions.EventManager`
+* :class:`.EventManager`
 
 * You can now set ``allowstyling="deep"`` on elements with embedded widgets to also style their subwidgets.
+
+Version 4.11:
+
+* :meth:`.HtmlFrame.unbind`
+
+* :class:`.HtmlText`
+
+* :attr:`.TkinterWeb.selection_manager`
+* :attr:`.TkinterWeb.widget_manager`
+* :attr:`.TkinterWeb.search_manager`
+* :attr:`.TkinterWeb.script_manager`
+* :attr:`.TkinterWeb.style_manager`
+* :attr:`.TkinterWeb.image_manager`
+* :attr:`.TkinterWeb.object_manager`
+* :attr:`.TkinterWeb.form_manager`
+* :attr:`.TkinterWeb.node_manager`
+
+* :class:`.SelectionManager`
+* :class:`.WidgetManager`
 
 Changed/Fixed
 -------------
@@ -332,7 +368,7 @@ Version 4.10:
 * Binding button presses and motion events to the widget no longer removes internal bindings.
 * Setting ``html.maximum_thread_count = 0`` no longer disables threading. Use ``html.threading_enabled = False``.
 * :py:mod:`PIL` is now an optional dependency. I also recommend installing the new :py:mod:`tkinterweb-tkhtml-extras` package.
-* The :attr:`.HTMLElement.widget` property now returns a Tk widget when used on ``<input>``, ``<textarea>``, and ``<select>`` elements.
+* The :attr:`.HTMLElement.widget` property now returns a Tk widget when used on ``<input>``, ``<textarea>``, ``<select>``, ``<iframe>``, and some ``<object>`` elements.
 * Fixed scrollbar flashes when the widget opens.
 * DOM objects now provide more useful information when printed.
 * By default, scrolling on embedded widgets now scrolls the page if the embedded widget or subwidgets do not bind to the mousewheel.
@@ -345,6 +381,12 @@ Version 4.10:
 * Fixed a fatal scrollbar error when loading TkinterWeb on Tk 8.5 on MacOS.
 * Fixed a fatal binding error when loading TkinterWeb on MacOS.
 * Many internal changes were made in this release. If you notice any bugs, please report them.
+
+Version 4.11:
+
+* Fixed some minor bugs.
+* JavaScript events no longer fire when events are disabled.
+* The :class:`.TkinterWeb` widget was restructured in this release. If you notice any bugs, please report them.
 
 -------------------
 

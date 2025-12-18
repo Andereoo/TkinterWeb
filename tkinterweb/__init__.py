@@ -8,7 +8,7 @@ Copyright (c) 2021-2025 Andrew Clarke
 
 
 try:
-    from .htmlwidgets import HtmlFrame, HtmlLabel, HtmlParse
+    from .htmlwidgets import HtmlFrame, HtmlLabel, HtmlText, HtmlParse
     from .subwidgets import Notebook
     from .bindings import TkHtmlParsedURI, TkinterWeb
     from .utilities import __title__, __author__, __copyright__, __license__, __version__
@@ -29,7 +29,7 @@ See https://tkinterweb.readthedocs.io/en/latest/faq.html for more information."
     sys.exit()
 
 
-__all__ = ['Demo' 'HtmlParse', 'HtmlFrame', 'HtmlLabel', 'Notebook', 'TkHtmlParsedURI', 'TkinterWeb']
+__all__ = ['Demo', 'HtmlFrame', 'HtmlLabel', 'HtmlText', 'HtmlParse', 'Notebook', 'TkHtmlParsedURI', 'TkinterWeb']
 
 
 class Demo():

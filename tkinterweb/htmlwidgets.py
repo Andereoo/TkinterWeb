@@ -17,6 +17,9 @@ from tkinter.ttk import Frame, Style
 pythonmonkey = None
 
 
+### TODO: consider better matching the parameters used in stock Tkinter widgets
+### And add better support for others (i.e. we could do more with the background/bg keyword)
+
 class HtmlFrame(Frame):
     """TkinterWeb's flagship HTML widget.
 
@@ -150,7 +153,6 @@ class HtmlFrame(Frame):
         self._thread_in_progress = None
         self._prev_height = 0
         self._button = None
-        self._DOM_cache = None
         self._style = None
 
         ### TODO: switch to a TypedDict or something
@@ -246,6 +248,8 @@ class HtmlFrame(Frame):
         self._manage_hsb(self.horizontal_scrollbar)
         self._manage_vsb(self.vertical_scrollbar)
 
+        ### TODO: bind horizontal scrolling
+
         # html.document only applies to the document it is bound to (which makes things easy)
         # For some reason, binding to Html only works on Linux and binding to html.document only works on Windows
         # Html fires on all documents (i.e. <iframe> elements), so it has to be handled slightly differently
@@ -297,18 +301,16 @@ class HtmlFrame(Frame):
         :rtype: str"""
         return self._html.base_url
     
-    @property
+    @utilities.lazy_manager(None)
     def document(self):
         """The DOM manager. Use this to access :class:`~tkinterweb.dom.HTMLDocument` methods to manupulate the DOM.
         
         :rtype: :class:`~tkinterweb.dom.HTMLDocument`"""
-        if self._DOM_cache is None:  # Lazy loading of Document Object Model
-            self._DOM_cache = dom.HTMLDocument(self._html)
-        return self._DOM_cache
+        return dom.HTMLDocument(self._html)
     
     @property
     def html(self):
-        """The underlying html widget. Use this to access underlying :class:`~tkinterweb.TkinterWeb` methods.
+        """The underlying html widget. Use this to access internal :class:`~tkinterweb.TkinterWeb` methods.
         
         :rtype: :class:`~tkinterweb.TkinterWeb`"""
         return self._html
@@ -330,7 +332,7 @@ class HtmlFrame(Frame):
                 setattr(self._html, key, value)
                 if key in {"find_match_highlight_color", "find_match_text_color", "find_current_highlight_color",
                            "find_current_text_color", "selected_text_highlight_color", "selected_text_color"}:
-                    self._html.update_tags()
+                    self._html.selection_manager.update_tags()
             elif key in self._tkhtml_options:
                 self._html[key] = kwargs.pop(key)
                 if key == "zoom":
@@ -370,6 +372,13 @@ class HtmlFrame(Frame):
             super().bind(sequence, *args, **kwargs)
         else:
             self._html.bind(sequence, *args, **kwargs)
+
+    def unbind(self, sequence, *args, **kwargs):
+        ""
+        if sequence in {"<Leave>", "<Enter>"}:
+            super().unbind(sequence, *args, **kwargs)
+        else:
+            self._html.unbind(sequence, *args, **kwargs)
     
     def __getitem__(self, key):
         return self.cget(key)
@@ -471,7 +480,7 @@ class HtmlFrame(Frame):
 
         if self._thread_in_progress:
             self._thread_in_progress.stop()
-        if self._html._threading_enabled:
+        if self._html.threading_enabled:
             thread = utilities.StoppableThread(target=self._continue_loading, args=(
                 url,), kwargs={"decode": decode, "force": force, "thread_safe": True})
             self._thread_in_progress = thread
@@ -493,7 +502,7 @@ class HtmlFrame(Frame):
         self._previous_url = self._current_url
         if self._thread_in_progress:
             self._thread_in_progress.stop()
-        if self._html._threading_enabled:
+        if self._html.threading_enabled:
             thread = utilities.StoppableThread(
                 target=self._continue_loading, args=(url, data, method, decode, True))
             self._thread_in_progress = thread
@@ -521,7 +530,7 @@ class HtmlFrame(Frame):
         if return_element:
             node = self._html.parse_fragment(html_source)
             body = self.document.body.node
-            self.html.insert_node(body, node)
+            self._html.insert_node(body, node)
             node = dom.HTMLElement(self.document, node)
         else:
             self._html.parse(html_source)
@@ -556,7 +565,7 @@ class HtmlFrame(Frame):
         node = self._html.parse_fragment(html_source)
         body = self.document.body.node
         child = self._html.get_node_children(body)[index]
-        self.html.insert_node_before(body, node, child)
+        self._html.insert_node_before(body, node, child)
  
         self._finish_css()
         self._handle_resize(force=True)
@@ -572,7 +581,7 @@ class HtmlFrame(Frame):
         if self._waiting_for_reset:
             self._accumulated_styles.append(css_source)
         else:
-            self._html.parse_css(data=css_source, override=True)
+            self._html.parse_css(data=css_source)
 
     def stop(self):
         """Stop loading this page and abandon all pending requests."""
@@ -598,7 +607,7 @@ class HtmlFrame(Frame):
         :type detailed: bool, optional
         :return: The number of matches. If `detailed` is True, also returns selected match's Tkhtml3 node and a list of matching Tkhtml3 nodes.
         :rtype: int | int, Tkhtml3 node, list(Tkhtml3 node)"""
-        nmatches, selected, matches = self._html.find_text(text, select, ignore_case, highlight_all)
+        nmatches, selected, matches = self._html.search_manager.find_text(text, select, ignore_case, highlight_all)
         if detailed:
             return nmatches, selected, matches
         else:
@@ -614,8 +623,8 @@ class HtmlFrame(Frame):
         :raise KeyError: If the given widget is not in the document.
         
         New in version 4.2."""
-        for node in self._html.search(f"[{self._html.widget_container_attr}]"):
-            if self._html.get_node_attribute(node, self._html.widget_container_attr) == str(widget):
+        for node in self._html.search(f"[{self._html.widget_manager.widget_container_attr}]"):
+            if self._html.get_node_attribute(node, self._html.widget_manager.widget_container_attr) == str(widget):
                 return dom.HTMLElement(self.document, node)
         raise KeyError("the specified widget is not in the document")
 
@@ -881,7 +890,7 @@ class HtmlFrame(Frame):
         New in version 4.8."""
         if not self._html.caret_browsing_enabled:
             # This is here not because things break when caret browsing is disabled,
-            # But because I bet someone somewhere it trying to set the caret's position
+            # But because I bet someone somewhere is trying to set the caret's position
             # With caret browsing disabled and pulling their hair out over it
             raise RuntimeError("cannot modify the caret when caret browsing is disabled")
 
@@ -953,18 +962,18 @@ class HtmlFrame(Frame):
         
         New in version 4.8."""
 
-        if self._html.selection_start_node and self._html.selection_end_node:
-            if self._html.selection_start_node != self._html.selection_end_node:
-                start_index = self._html.text("offset", self._html.selection_start_node, self._html.selection_start_offset)
-                end_index = self._html.text("offset", self._html.selection_end_node, self._html.selection_end_offset)
+        if self._html.selection_manager.selection_start_node and self._html.selection_manager.selection_end_node:
+            if self._html.selection_manager.selection_start_node != self._html.selection_manager.selection_end_node:
+                start_index = self._html.text("offset", self._html.selection_manager.selection_start_node, self._html.selection_manager.selection_start_offset)
+                end_index = self._html.text("offset", self._html.selection_manager.selection_end_node, self._html.selection_manager.selection_end_offset)
                 true_start_index, true_end_index = sorted([start_index, end_index])
 
                 if start_index == true_start_index: # ensure that the output is independent of selection direction
-                    start_node, end_node = self._html.selection_start_node, self._html.selection_end_node
-                    start_offset, end_offset = self._html.selection_start_offset, self._html.selection_end_offset
+                    start_node, end_node = self._html.selection_manager.selection_start_node, self._html.selection_manager.selection_end_node
+                    start_offset, end_offset = self._html.selection_manager.selection_start_offset, self._html.selection_manager.selection_end_offset
                 else:
-                    start_node, end_node = self._html.selection_end_node, self._html.selection_start_node
-                    start_offset, end_offset = self._html.selection_end_offset, self._html.selection_start_offset
+                    start_node, end_node = self._html.selection_manager.selection_end_node, self._html.selection_manager.selection_start_node
+                    start_offset, end_offset = self._html.selection_manager.selection_end_offset, self._html.selection_manager.selection_start_offset
                 
                 _, pre_text, index = self._html.tkhtml_offset_to_text_index(start_node, start_offset)
                 _, pre_text2, index2 = self._html.tkhtml_offset_to_text_index(end_node, end_offset)
@@ -983,10 +992,10 @@ class HtmlFrame(Frame):
                     list(dom.HTMLElement(self.document, node) for node in contained_nodes),
                 )
             else:
-                element = dom.HTMLElement(self.document, self._html.selection_start_node)
-                start_offset, end_offset = sorted([self._html.selection_start_offset, self._html.selection_end_offset])
-                _, pre_text, index = self._html.tkhtml_offset_to_text_index(self._html.selection_start_node, start_offset)
-                _, pre_text2, index2 = self._html.tkhtml_offset_to_text_index(self._html.selection_start_node, end_offset)
+                element = dom.HTMLElement(self.document, self._html.selection_manager.selection_start_node)
+                start_offset, end_offset = sorted([self._html.selection_manager.selection_start_offset, self._html.selection_manager.selection_end_offset])
+                _, pre_text, index = self._html.tkhtml_offset_to_text_index(self._html.selection_manager.selection_start_node, start_offset)
+                _, pre_text2, index2 = self._html.tkhtml_offset_to_text_index(self._html.selection_manager.selection_start_node, end_offset)
                 return (
                     (element, pre_text, index),
                     (element, pre_text2, index2),
@@ -1002,9 +1011,9 @@ class HtmlFrame(Frame):
         :rtype: int, int or None
         
         New in version 4.8."""
-        if self._html.selection_start_node and self._html.selection_end_node:
-            start_index = self._html.text("offset", self._html.selection_start_node, self._html.selection_start_offset)
-            end_index = self._html.text("offset", self._html.selection_end_node, self._html.selection_end_offset)
+        if self._html.selection_manager.selection_start_node and self._html.selection_manager.selection_end_node:
+            start_index = self._html.text("offset", self._html.selection_manager.selection_start_node, self._html.selection_manager.selection_start_offset)
+            end_index = self._html.text("offset", self._html.selection_manager.selection_end_node, self._html.selection_manager.selection_end_offset)
             start_index, end_index = tuple(sorted([start_index, end_index]))
             return start_index, end_index
         else:
@@ -1039,11 +1048,9 @@ class HtmlFrame(Frame):
             if texts[element] == "":
                 raise RuntimeError(f"the element {element} is empty. Either provide a different element or set the selection using set_selection_page_position.")
 
-        self.html.selection_start_node = start_element.node
-        self.html.selection_start_offset = start_offset
-        self.html.selection_end_node = end_element.node
-        self.html.selection_end_offset = end_offset
-        self._html.update_selection()
+        self._html.selection_manager.reset_selection_type()
+        self._html.selection_manager.begin_selection(start_element.node, start_offset)
+        self._html.selection_manager.extend_selection(end_element.node, end_offset)
 
     def set_selection_page_position(self, start_index, end_index):
         """Set the current selection, given two text indexes. This can be useful if specific HTML elements are not known (i.e. if known HTML elements have been removed).
@@ -1061,29 +1068,29 @@ class HtmlFrame(Frame):
 
         start_node, start_offset = self._html.text("index", start_index)
         end_node, end_offset = self._html.text("index", end_index)
-        self.html.selection_start_node = start_node
-        self.html.selection_start_offset = start_offset
-        self.html.selection_end_node = end_node
-        self.html.selection_end_offset = end_offset
-        self._html.update_selection()
+        self._html.selection_manager.reset_selection_type()
+        self._html.selection_manager.begin_selection(start_node, start_offset)
+        self._html.selection_manager.extend_selection(end_node, end_offset)
 
     def get_selection(self):
         """Return any selected text.
 
         :return: The current selection.
         :rtype: str"""
-        self._html.get_selection()
+        return self._html.selection_manager.get_selection()
 
     def clear_selection(self):
         """Clear the current selection."""
-        self._html.clear_selection()
+        self._html.selection_manager.clear_selection()
 
     def select_all(self):
         """Select all text in the document."""
         if not self._html.selection_enabled:
             raise RuntimeError("cannot set the selection when selection is disabled")
 
-        self._html.select_all()
+        self._html.selection_manager.select_all()
+
+    # --- Internals -----------------------------------------------------------
 
     def _check_value(self, old, new):
         """Ensure new configuration option values are a valid type."""
@@ -1112,12 +1119,13 @@ class HtmlFrame(Frame):
         else:
             height = self._html.winfo_height()
         if self._prev_height != height or force:
-            resizeable_elements = self.document.querySelectorAll(f"[{utilities.BUILTIN_ATTRIBUTES['vertical-align']}]")
-            for element in resizeable_elements:
-                element.style.height = f"{height/self['zoom']}px"
+            resizeable_elements = self._html.search(f"[{utilities.BUILTIN_ATTRIBUTES['vertical-align']}]")
+            for node in resizeable_elements:
+                self._html.set_node_property(node, "height", f"{height/self['zoom']}px")
         self._prev_height = height
 
-        self._html.caret_manager.update()
+        if self._html.caret_browsing_enabled:
+            self._html.caret_manager.update()
 
     def _manage_vsb(self, allow=None):
         "Show or hide the scrollbars."
@@ -1184,16 +1192,12 @@ class HtmlFrame(Frame):
                     view_source = True
                     url = url.replace("view-source:", "")
                     parsed = urlparse(url)
+
                 location = parsed.netloc if parsed.netloc else parsed.path
                 self._html.post_message(f"Connecting to {location}", True)
-                if self._html.insecure_https:
-                    self._html.post_message("WARNING: Using insecure HTTPS session", True)
-                if (parsed.scheme == "file") or (not self._html.caches_enabled):
-                    data, newurl, filetype, code = utilities.download(
-                        url, data, method, decode, self._html.insecure_https, self._html.ssl_cafile, tuple(self._html.headers.items()), self._html.request_timeout)
-                else:
-                    data, newurl, filetype, code = utilities.cache_download(
-                        url, data, method, decode, self._html.insecure_https, self._html.ssl_cafile, tuple(self._html.headers.items()), self._html.request_timeout)
+                if self._html.insecure_https: self._html.post_message("WARNING: Using insecure HTTPS session", True)
+                
+                data, newurl, filetype, code = self._html.download_url(url, data, method, decode)
                 self._html.post_message(f"Successfully connected to {location}", True)
 
                 if utilities.get_current_thread().isrunning():
@@ -1214,9 +1218,12 @@ class HtmlFrame(Frame):
                         text = self._get_about_page("about:view-source", length*9, data)
                         self.load_html(text, newurl, _thread_safe=thread_safe)
                     elif "image" in filetype:
-                        name = self._html.allocate_image_name()
-                        data, data_is_image = self._html.check_images(data, name, url, filetype)
-                        self._html.post_to_queue(lambda data=data, name=name, url=url, filetype=filetype, data_is_image=data_is_image: self._finish_loading_image(data, name, url, filetype, data_is_image))
+                        name = self._html.image_manager.allocate_image_name()
+                        if name:
+                            data, data_is_image = self._html.image_manager.check_images(data, name, url, filetype)
+                            self._html.post_to_queue(lambda data=data, name=name, url=url, filetype=filetype, data_is_image=data_is_image: self._finish_loading_image(data, name, url, filetype, data_is_image))
+                        else:
+                            self.load_html(self._get_about_page("about:image", name), newurl, _thread_safe=thread_safe)
                     else:
                         if self._current_url != newurl:
                             self._current_url = newurl
@@ -1238,7 +1245,7 @@ class HtmlFrame(Frame):
         if self._current_url != url:
             self._html.post_event(utilities.URL_CHANGED_EVENT)
         text = self._get_about_page("about:image", name)
-        self._html.finish_fetching_images(None, data, name, url, filetype, data_is_image)
+        self._html.image_manager.finish_fetching_images(None, data, name, url, filetype, data_is_image)
         self.load_html(text, url)
     
     def _finish_loading_nothing(self):
@@ -1259,7 +1266,8 @@ Running something along the lines of \"/Applications/Python {'.'.join(utilities.
 Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certificates or 'HtmlFrame(master, ssl_cafile=[path_to_your_cafile])' to specify the path to your CA file if you know where it is.")
         self.on_navigate_fail(url, error, code)
 
-    def _finish_css(self):        
+    def _finish_css(self):     
+        ## TODO: consider handling add_html/insert_html this way too   
         if self._waiting_for_reset:
             self._waiting_for_reset = False
             for style in self._accumulated_styles:
@@ -1301,7 +1309,7 @@ class HtmlLabel(HtmlFrame):
     
     For a complete list of avaliable methods, properties, configuration options, and generated events, see the :class:`HtmlFrame` docs.
     
-    This class also accepts two additional parameters:
+    This widget also accepts two additional parameters:
 
     :param text: The HTML content of the widget
     :type text: str
@@ -1338,13 +1346,97 @@ class HtmlLabel(HtmlFrame):
         ""
         if "text" == key:
             return "".join(self._html.serialize_node(0).splitlines())
-        if "style" == key:
+        elif "style" == key:
            return "".join(self._html.serialize_node_style(0).splitlines())
         return super().cget(key)
 
     def config(self, **kwargs):
         ""
         self.configure(**kwargs)
+
+class HtmlText(HtmlFrame):
+    """The :class:`HtmlText` widget is a text-like HTML widget. It inherits from the :class:`HtmlFrame` class. 
+    
+    For a complete list of avaliable methods, properties, configuration options, and generated events, see the :class:`HtmlFrame` docs.
+
+    The intent of this class is to eventually mimic the Tkinter Text widget API. 
+
+    This widget accepts the following :py:class:`tk.Text` parameters:
+
+    :param selectbackground:
+    :type selectbackground: str
+    :param selectforeground:
+    :type selectforeground: str
+    :param insertontime:
+    :type insertontime: int
+    :param insertofftime:
+    :type insertofftime: int
+    :param insertwidth:
+    :type insertwidth: int
+    :param insertbackground:
+    :type insertbackground: str
+    """
+
+    def __init__(self, master, selectbackground="#9bc6fa", selectforeground="#000", insertontime=600, insertofftime=300, insertwidth=1, insertbackground=None, **kwargs):
+        if "caret_browsing_enabled" in kwargs:
+            raise RuntimeError("caret browsing is always enabled in this widget")
+
+        HtmlFrame.__init__(self, master, caret_browsing_enabled=True, **kwargs)
+        
+        insertontime = self._check_value(self._html.caret_manager.blink_delays[0], insertontime)
+        insertofftime = self._check_value(self._html.caret_manager.blink_delays[1], insertofftime)
+        insertwidth = self._check_value(self._html.caret_manager.caret_width, insertwidth)
+
+        self._html.caret_manager.blink_delays = [insertontime, insertofftime]
+        self._html.caret_manager.caret_width = insertwidth
+        self._html.caret_manager.caret_colour = insertbackground
+        self._html.selected_text_highlight_color = selectbackground
+        self._html.selected_text_color = selectforeground
+
+    def configure(self, **kwargs):
+        ""
+        if "caret_browsing_enabled" in kwargs:
+            raise RuntimeError("caret browsing is always enabled in this widget")
+        if "selectbackground" in kwargs:
+            self._html.selected_text_highlight_color = kwargs.pop("selectbackground")
+            self._html.selection_manager.update_tags()
+        if "selectforeground" in kwargs:
+            self._html.selected_text_color = kwargs.pop("selectforeground")
+            self._html.selection_manager.update_tags()
+        if "insertontime" in kwargs:
+            value = self._check_value(self._html.caret_manager.blink_delays[0], kwargs.pop("insertontime"))
+            self._html.caret_manager.blink_delays[0] = value
+        if "insertofftime" in kwargs:
+            value = self._check_value(self._html.caret_manager.blink_delays[1], kwargs.pop("insertofftime"))
+            self._html.caret_manager.blink_delays[1] = value
+        if "insertwidth" in kwargs:
+            value = self._check_value(self._html.caret_manager.caret_width, kwargs.pop("insertwidth"))
+            self._html.caret_manager.caret_width = value
+        if "insertbackground" in kwargs:
+            self._html.caret_manager.caret_colour = kwargs.pop("insertbackground")
+        if kwargs: super().configure(**kwargs)
+
+    def cget(self, key):
+        ""
+        if "selectbackground" == key:
+            return self._html.selected_text_highlight_color
+        elif "selectforeground" == key:
+            return self._html.selected_text_color
+        elif "insertontime" == key:
+            return self._html.caret_manager.blink_delays[0]
+        elif "insertofftime" == key:
+            return self._html.caret_manager.blink_delays[1]
+        elif "insertwidth" == key:
+            return self._html.caret_manager.caret_width
+        elif "insertbackground" == key:
+            return self._html.caret_manager.caret_colour
+        return super().cget(key)
+
+    def config(self, **kwargs):
+        ""
+        self.configure(**kwargs)
+
+    ### TODO: add more methods
 
 class HtmlParse(HtmlFrame):
     """The :class:`HtmlParse` class parses HTML but does not spawn a widget. It inherits from the :class:`HtmlFrame` class. 

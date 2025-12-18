@@ -4,6 +4,8 @@ Document Object Model Documentation
 .. note::
     The API changed significantly in version 4. See :doc:`the changelog <../upgrading>` for details.
 
+The methods described in this page make it easy to modify the appearance and content of a loaded document and manage interaction with the document. For the most part, this page mirrors the core JavaScript DOM API.
+
 .. autoclass:: tkinterweb.dom.HTMLDocument
    :members:
 

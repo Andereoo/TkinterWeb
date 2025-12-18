@@ -23,6 +23,8 @@ To place a Tkinter widget inside an HTML document, add the ``data=[yourwidget]``
     source_html = f"<i>This is some text</i><br><object data={yourbutton}></object>"
     yourframe.load_html(source_html) # or use add_html to add onto the existing document
 
+**Ensure your HtmlFrame widget was created before the widget you are embedding, or else the widget might not be visible.**
+
 .. tip::
 
     Add the ``allowstyling`` attribute to automatically change the widget's background color, text color, and font to match the containing HTML element. Use ``allowstyling="deep"`` to also style subwidgets (new in version 4.9).

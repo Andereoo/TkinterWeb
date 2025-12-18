@@ -12,6 +12,8 @@ import platform
 import sys
 import threading
 
+from functools import wraps
+
 import ssl, gzip, zlib
 from urllib.request import Request, urlopen
 from urllib.parse import urlunparse, urlparse
@@ -31,7 +33,7 @@ __title__ = "TkinterWeb"
 __author__ = "Andrew Clarke"
 __copyright__ = "(c) 2021-2025 Andrew Clarke"
 __license__ = "MIT"
-__version__ = "4.10.2"
+__version__ = "4.11.0"
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
@@ -586,8 +588,8 @@ class BuiltinPageGenerator():
                 find_current_highlight_color=self._html.find_current_highlight_color, find_current_text_color=self._html.find_current_text_color,
                 selected_text_highlight_color=self._html.selected_text_highlight_color, selected_text_color=self._html.selected_text_color,
                 maximum_thread_count=self._html.maximum_thread_count, experimental=self._html.experimental, caret_mode=self._html.caret_browsing_enabled,
-                dark_theme_limit=self._html.dark_theme_limit, image_alternate_text_threshold=self._html.image_alternate_text_threshold,
-                image_alternate_text_size=self._html.image_alternate_text_size, tkhtml_version=tkinterweb_tkhtml.get_loaded_tkhtml_version(self._html)
+                dark_theme_limit=self._html.dark_theme_limit, image_alternate_text_threshold=self._html.image_manager.image_alternate_text_threshold,
+                image_alternate_text_size=self._html.image_manager.image_alternate_text_size, tkhtml_version=tkinterweb_tkhtml.get_loaded_tkhtml_version(self._html)
             )
         else:
             return self._pages[key]
@@ -696,6 +698,77 @@ class PlaceholderThread:
     def isrunning(self):
         return True
 
+class Empty:
+    __slots__ = ()
+    def __init__(self, *args, **kwargs):
+        pass
+    def __call__(self, *args, **kwargs):
+        return None
+    def __getattr__(self, name):
+        return self
+    def __getitem__(self, key):
+        return self
+    def __bool__(self):
+        return False
+    def __repr__(self):
+        return "None"
+
+empty = Empty()
+
+class PlaceholderClass:
+    def __getattr__(self, name):
+        return empty
+    
+    def __getitem__(self, key):
+        return empty
+
+class BaseManager:
+    def __init__(self, html):
+        self.html = html
+        html._managers.add(self)
+
+    def reset(self):
+        pass
+
+placebo = PlaceholderClass()
+
+def lazy_manager(setting):
+    def decorator(func):
+        attr_name = f"_{func.__name__}"
+
+        @property
+        @wraps(func)
+        def wrapper(self):
+            if setting is not None and not getattr(self, setting, False):
+                return placebo
+
+            if attr_name not in self.__dict__:
+                manager = func(self)
+                self.__dict__[attr_name] = manager
+
+            return self.__dict__[attr_name]
+    
+        return wrapper
+    
+    return decorator
+
+
+def special_setting(default=None):
+    def decorator(func):
+        attr_name = f"_{func.__name__}"
+
+        @property
+        def prop(self):
+            return getattr(self, attr_name, default)
+
+        @prop.setter
+        def prop(self, value):
+            old = getattr(self, attr_name, default)
+            setattr(self, attr_name, value)
+            func(self, old, value)
+
+        return prop
+    return decorator
 
 def _lru_cache_wrapper(user_function):
     """This function is a modified version of the one that comes built-in with functools.
@@ -842,11 +915,6 @@ def get_current_thread():
     return thread
 
 
-def strip_css_url(url):
-    "Extract the address from a css url"
-    return url[4:-1].replace("'", "").replace('"', "")
-
-
 def rgb_to_hex(red, green, blue, *args):
     "Convert RGB colour code to HEX"
     return f"#{red:02x}{green:02x}{blue:02x}"
@@ -885,6 +953,12 @@ def tkhtml_notifier(name, text, *args):
     except Exception:
         """sys.stdout.write doesn't work in .pyw files.
         Since .pyw files have no console, we won't bother printing messages."""
+
+
+def deprecate(name, manager):
+    import warnings
+    warnings.simplefilter("always", DeprecationWarning)
+    warnings.warn(f"{name} is deprecated. Please use {manager}.{name}.", DeprecationWarning, stacklevel=3)
 
 
 def TclOpt(options):

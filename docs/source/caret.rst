@@ -18,6 +18,9 @@ Setup
 
 To enable caret browsing mode in TkinterWeb, add ``yourhtmlframe.configure(caret_browsing_enabled=True)`` to your script or add the parameter ``caret_browsing_enabled=True`` when creating your :class:`~tkinterweb.HtmlFrame` or :class:`~tkinterweb.HtmlLabel` widget.
 
+.. tip ::
+    Since version 4.11, you can instead use the new :class:`~tkinterweb.HtmlText` widget!
+
 When caret browsing mode is enabled, a caret will appear once the user clicks on text in the document. Unless the default keybindings are overridden, this caret can be moved by clicking elsewhere or by using the arrow keys.
 
 How-to

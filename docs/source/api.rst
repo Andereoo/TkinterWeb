@@ -11,5 +11,10 @@ API Reference
    api/htmlframe
    api/htmldocument
    api/notebook
+
+-------------------
+
+.. toctree::
+   :maxdepth: 3
+
    api/tkinterweb
-   api/extensions

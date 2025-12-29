@@ -61,9 +61,6 @@ def camel_case_to_property(string):
 class HTMLDocument:
     """Access this class via the :attr:`~tkinterweb.HtmlFrame.document` property of the :class:`~tkinterweb.HtmlFrame` and :class:`~tkinterweb.HtmlLabel` widgets.
     
-    :param html: The :class:`~tkinterweb.TkinterWeb` instance this class is tied to.
-    :type html: :class:`~tkinterweb.TkinterWeb`
-    
     :ivar html: The associated :class:`~tkinterweb.TkinterWeb` instance."""
     def __init__(self, html):
         self.html = html
@@ -291,9 +288,9 @@ class HTMLElement:
     def innerHTML(self, contents):  # Taken from hv3_dom2.tcl line 88
         # Tkhtml crashes if a node containing a widget is destroyed
         self.widget = None
-        for node in self.html.search(f"[{self.html.widget_container_attr}]", root=self.node):
-            self.html.widget_manager.set_widget(node, None)
-        self.html.update()
+        for node in self.html.search(f"[{self.html.widget_manager.widget_container_attr}]", root=self.node):
+            self.html.widget_manager.set_node_widget(node, None)
+        #self.html.update()
 
         self.html.safe_tk_eval("""
             set html %s
@@ -343,8 +340,8 @@ class HTMLElement:
         # Tkhtml crashes if a node containing a widget is destroyed
         self.widget = None
         for node in self.html.search(f"[{self.html.widget_manager.widget_container_attr}]", root=self.node):
-            self.html.set_node_widget(node, None)
-        self.html.update()
+            self.html.widget_manager.set_node_widget(node, None)
+        #self.html.update()
 
         if self.tagName:
             self.html.safe_tk_eval("""
@@ -893,8 +890,12 @@ class HTMLCollection:
 
         :param index: The index of the element to get.
         :type index: int
-        :rtype: :class:`HTMLElement`"""
-        return HTMLElement(self.document, self.html.search(self.search_string, index=index, root=self.node))
+        :rtype: :class:`HTMLElement`
+        :raise: KeyError"""
+        result = self.html.search(self.search_string, index=index, root=self.node)
+        if not result:
+            raise IndexError("index out of range")
+        return HTMLElement(self.document, result)
     
     def namedItem(self, key):
         """Returns the element whose id or name matches key.

@@ -5,16 +5,12 @@ by adding scrolling, file loading, and many other convenience functions
 Copyright (c) 2021-2025 Andrew Clarke
 """
 
-from . import bindings, dom, utilities, subwidgets, imageutils
+from . import bindings, dom, js, utilities, subwidgets, imageutils
 
 from urllib.parse import urldefrag, urlparse, urlunparse
 
 import tkinter as tk
 from tkinter.ttk import Frame, Style
-
-# JavaScript is experimental and not used by everyone
-# We only import PythonMonkey if/when needed
-pythonmonkey = None
 
 
 ### TODO: consider better matching the parameters used in stock Tkinter widgets
@@ -245,32 +241,43 @@ class HtmlFrame(Frame):
         hsb.grid(row=1, column=0, sticky="nsew")
         vsb.grid(row=0, column=1, sticky="nsew")
 
-        self._manage_hsb(self.horizontal_scrollbar)
-        self._manage_vsb(self.vertical_scrollbar)
-
-        ### TODO: bind horizontal scrolling
+        self._manage_hsb()
+        self._manage_vsb()
 
         # html.document only applies to the document it is bound to (which makes things easy)
-        # For some reason, binding to Html only works on Linux and binding to html.document only works on Windows
+        # Html applies to all html widgets
+        # For some reason, binding to Html only works on Linux/Unix and binding to html.document only works on Windows
         # Html fires on all documents (i.e. <iframe> elements), so it has to be handled slightly differently
         if not self._html.overflow_scroll_frame:
             self.bind_class("Html", "<Button-4>", html.scroll_x11)
             self.bind_class("Html", "<Button-5>", html.scroll_x11)
-        self.bind_class(f"{html}.document", "<MouseWheel>", html.scroll)
+            self.bind_class("Html", "<Shift-Button-4>", html.xscroll_x11)
+            self.bind_class("Html", "<Shift-Button-5>", html.xscroll_x11)
+
+        for i in (f"{html}.document", html.scrollable_node_tag):
+            self.bind_class(i, "<MouseWheel>", html.scroll)
+            self.bind_class(i, "<Shift-MouseWheel>", html.xscroll)
 
         self.bind_class(html.scrollable_node_tag, "<Button-4>", lambda event, widget=html: html.scroll_x11(event, widget))
         self.bind_class(html.scrollable_node_tag, "<Button-5>", lambda event, widget=html: html.scroll_x11(event, widget))
-        self.bind_class(html.scrollable_node_tag, "<MouseWheel>", html.scroll)
+        self.bind_class(html.scrollable_node_tag, "<Shift-Button-4>", lambda event, widget=html: html.xscroll_x11(event, widget))
+        self.bind_class(html.scrollable_node_tag, "<Shift-Button-5>", lambda event, widget=html: html.xscroll_x11(event, widget))
 
-        vsb.bind("<Button-4>", lambda event, widget=html: html.scroll_x11(event, widget))
-        vsb.bind("<Button-5>", lambda event, widget=html: html.scroll_x11(event, widget))
-        vsb.bind("<MouseWheel>", html.scroll)
+        # Overwrite the default bindings for scrollbars so that:
+        # A) scrolling on the page while loading stops it from tracking the fragment
+        # B) scrolling horizontally on a vertical scrollbar scrolls horizontally (the default is to scroll vertically)
+        # C) scrolling vertically on a horizontal scrollbar scrolls vertically (the default is to block scrolling)
+        for i in (vsb, hsb):
+            i.bind("<Button-4>", lambda event, widget=html: html.scroll_x11(event, widget))
+            i.bind("<Button-5>", lambda event, widget=html: html.scroll_x11(event, widget))
+            i.bind("<MouseWheel>", html.scroll)
+            i.bind("<Shift-Button-4>", lambda event, widget=html: html.xscroll_x11(event, widget))
+            i.bind("<Shift-Button-5>", lambda event, widget=html: html.xscroll_x11(event, widget))
+            i.bind("<Shift-MouseWheel>", html.xscroll)
+            i.bind("<Enter>", html._on_leave)
 
-        hsb.bind("<Enter>", html._on_leave)
-        vsb.bind("<Enter>", html._on_leave)
         self.bind("<Leave>", html._on_leave)
         self.bind("<Enter>", html._on_mouse_motion)
-        
         self.bind_class(html.tkinterweb_tag, "<Configure>", self._handle_resize)
 
     @property
@@ -307,7 +314,14 @@ class HtmlFrame(Frame):
         
         :rtype: :class:`~tkinterweb.dom.HTMLDocument`"""
         return dom.HTMLDocument(self._html)
-    
+
+    @utilities.lazy_manager(None)
+    def javascript(self):
+        """The JavaScript manager. Use this to access :class:`~tkinterweb.js.JSEngine` methods.
+        
+        :rtype: :class:`~tkinterweb.js.JSEngine`"""
+        return js.JSEngine(self._html, self.document)
+
     @property
     def html(self):
         """The underlying html widget. Use this to access internal :class:`~tkinterweb.TkinterWeb` methods.
@@ -817,24 +831,7 @@ class HtmlFrame(Frame):
         :param what: Either "units" or "pages"
         :type what: str"""
         self._html.yview_scroll(number, what)
-
-    def register_JS_object(self, name, obj):
-        """Register new JavaScript object. This can be used to access Python variables, functions, and classes from JavaScript (eg. to add a callback for the JavaScript ``alert()`` function). 
         
-        JavaScript must be enabled. New in version 4.1.
-        
-        :param name: The name of the new JavaScript object.
-        :type name: str
-        :param obj: The Python object to pass.
-        :type obj: anything
-        :raise RuntimeError: If JavaScript is not enabled."""
-        if self._html.javascript_enabled:
-            if not pythonmonkey:
-                self._initialize_javascript()
-            pythonmonkey.eval(f"(function(pyObj) {{globalThis.{name} = pyObj}})")(obj)
-        else:
-            raise RuntimeError("JavaScript support must be enabled to register a JavaScript object")
-
     def get_currently_hovered_element(self, ignore_text_nodes=True):
         """Get the element under the mouse. Particularly useful for creating right-click menus or displaying hints when the mouse moves.
         
@@ -1127,8 +1124,11 @@ class HtmlFrame(Frame):
         if self._html.caret_browsing_enabled:
             self._html.caret_manager.update()
 
-    def _manage_vsb(self, allow=None):
+    def _manage_vsb(self, allow=None, check=False):
         "Show or hide the scrollbars."
+        if check:
+            return self._vsb.scroll
+        
         if allow == None:
             allow = self.vertical_scrollbar
         if allow == "auto":
@@ -1136,8 +1136,11 @@ class HtmlFrame(Frame):
         self._vsb.set_type(allow, *self._html.yview())
         return allow
     
-    def _manage_hsb(self, allow=None):
+    def _manage_hsb(self, allow=None, check=False):
         "Show or hide the scrollbars."
+        if check:
+            return self._hsb.scroll
+
         if allow == None:
             allow = self.horizontal_scrollbar
         if allow == "auto":
@@ -1274,34 +1277,15 @@ Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certif
                 self.add_css(style)
             self._accumulated_styles = []
 
-    def _initialize_javascript(self):
-        # Lazy loading of JS engine
-        global pythonmonkey
-        try:
-            import pythonmonkey
-            self.register_JS_object("document", self.document)
-        except ModuleNotFoundError:
-            raise ModuleNotFoundError("PythonMonkey is required to run JavaScript files but is not installed.")
-
+    def register_JS_object(self, name, obj):
+        utilities.deprecate("register_JS_object", "javascript", "register")
+        return self.javascript.register(name, obj)
+    
     def _on_script(self, attributes, tag_contents):
-        if self._html.javascript_enabled and not pythonmonkey:
-            self._initialize_javascript()
-        try:
-            pythonmonkey.eval(tag_contents)
-        except Exception as error:
-            if "src" in attributes:
-                self._html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running the script from {attributes['src']}: {error}")
-            else:
-                self._html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running a script: {error}")
+        self.javascript._on_script(attributes, tag_contents)
 
     def _on_element_script(self, node_handle, attribute, attr_contents):
-        if self._html.javascript_enabled and not pythonmonkey:
-            self._initialize_javascript()
-        try:
-            element = dom.HTMLElement(self.document, node_handle)
-            pythonmonkey.eval(f"(element) => {{function run() {{ {attr_contents} }}; run.bind(element)()}}")(element)
-        except Exception as error:
-            self._html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running an {attribute} script: {error}")
+        self.javascript._on_element_script(node_handle, attribute, attr_contents)
 
 
 class HtmlLabel(HtmlFrame):

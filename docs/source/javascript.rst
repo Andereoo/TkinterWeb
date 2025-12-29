@@ -24,7 +24,7 @@ Or when installing TkinterWeb, use:
 
    $ pip install tkinterweb[javascript]
 
-Then add ``yourhtmlframe.configure(caret_browsing_enabled=True)`` to your script or add the parameter ``javascript_enabled=True`` when creating your :class:`~tkinterweb.HtmlFrame` or :class:`~tkinterweb.HtmlLabel` widget.
+Then add ``yourhtmlframe.configure(javascript_enabled=True)`` to your script or add the parameter ``javascript_enabled=True`` when creating your :class:`~tkinterweb.HtmlFrame` or :class:`~tkinterweb.HtmlLabel` widget.
 
 **Only enable JavaScript on documents with code you know and trust.**
 
@@ -53,14 +53,14 @@ The following JavaScript event attributes are supported: ``onchange`` (``<input>
 Registering new JavaScript objects
 ----------------------------------
 
-To register new JavaScript object, use :meth:`.HtmlFrame.register_JS_object`. This can be used to access Python variables, functions, and classes from JavaScript. This, for instance, can be used to implement a ``window`` API or to add a callback for the JavaScript ``alert()`` function:
+To register new JavaScript object, use :meth:`.JSEngine.register`. This can be used to access Python variables, functions, and classes from JavaScript. This, for instance, can be used to implement a ``window`` API or to add a callback for the JavaScript ``alert()`` function:
 
 .. code-block:: python
 
     yourhtmlframe = tkinterweb.HtmlFrame(root, javascript_enabled=True)
     def open_alert_window(text):
         ## Do stuff
-    yourhtmlframe.register_JS_object("alert", open_alert_window)
+    yourhtmlframe.javascript.register("alert", open_alert_window)
     yourhtmlframe.load_html("<script>alert('Hello, world!')</script><p>Hello, world!</p>")
 
 Using your own interpreter

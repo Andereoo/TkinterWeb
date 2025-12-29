@@ -33,7 +33,7 @@ __title__ = "TkinterWeb"
 __author__ = "Andrew Clarke"
 __copyright__ = "(c) 2021-2025 Andrew Clarke"
 __license__ = "MIT"
-__version__ = "4.11.0"
+__version__ = "4.12.0"
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
@@ -955,10 +955,11 @@ def tkhtml_notifier(name, text, *args):
         Since .pyw files have no console, we won't bother printing messages."""
 
 
-def deprecate(name, manager):
+def deprecate(name, manager, new_name=None):
     import warnings
     warnings.simplefilter("always", DeprecationWarning)
-    warnings.warn(f"{name} is deprecated. Please use {manager}.{name}.", DeprecationWarning, stacklevel=3)
+    if not new_name: new_name = name
+    warnings.warn(f"{name} is deprecated. Please use {manager}.{new_name}.", DeprecationWarning, stacklevel=3)
 
 
 def TclOpt(options):

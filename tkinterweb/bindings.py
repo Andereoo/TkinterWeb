@@ -182,7 +182,6 @@ If you benefited from using this package, please consider supporting its develop
         self.current_hovered_node = None
         self.hovered_nodes = []
         self.current_cursor = ""
-        self.vsb_type = 2
 
         self._managers = set()
 
@@ -654,7 +653,8 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     def _reset(self):
         # NOTE: this must run in the main thread
         
-        self.vsb_type = self.manage_vsb_func()
+        # Reset the scrollbars to the default setting
+        self.manage_vsb_func()
         self.manage_hsb_func()
 
         # Note to self: these need to be here
@@ -1245,21 +1245,43 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         if event.num == 4:
             for node_handle in widget.hovered_nodes:
                 widget.event_manager.post_element_event(node_handle, "onscrollup", event)
-            if widget.overflow_scroll_frame and (yview[0] == 0 or widget.vsb_type == 0):
+            if widget.overflow_scroll_frame and (yview[0] == 0 or widget.manage_vsb_func(check=True) == 0):
                 widget.overflow_scroll_frame.scroll_x11(event, widget.overflow_scroll_frame)
             else:
-                if widget.vsb_type == 0:
+                if widget.manage_vsb_func(check=True) == 0:
                     return
                 widget.yview_scroll(-4, "units")
         else:
             for node_handle in widget.hovered_nodes:
                 widget.event_manager.post_element_event(node_handle, "onscrolldown", event)
-            if widget.overflow_scroll_frame and (yview[1] == 1 or widget.vsb_type == 0):
+            if widget.overflow_scroll_frame and (yview[1] == 1 or widget.manage_vsb_func(check=True) == 0):
                 widget.overflow_scroll_frame.scroll_x11(event, widget.overflow_scroll_frame)
             else:
-                if widget.vsb_type == 0:
+                if widget.manage_vsb_func(check=True) == 0:
                     return
                 widget.yview_scroll(4, "units")
+
+    def xscroll_x11(self, event, widget=None):
+        "Manage scrolling on Linux."
+        if not widget:
+            widget = event.widget
+
+        xview = widget.xview()
+
+        if event.num == 4:
+            if widget.overflow_scroll_frame and (xview[0] == 0 or widget.manage_hsb_func(check=True) == 0):
+                widget.overflow_scroll_frame.xscroll_x11(event, widget.overflow_scroll_frame)
+            else:
+                if widget.manage_hsb_func(check=True) == 0:
+                    return
+                widget.xview_scroll(-4, "units")
+        else:
+            if widget.overflow_scroll_frame and (xview[1] == 1 or widget.manage_hsb_func(check=True) == 0):
+                widget.overflow_scroll_frame.xscroll_x11(event, widget.overflow_scroll_frame)
+            else:
+                if widget.manage_hsb_func(check=True) == 0:
+                    return
+                widget.xview_scroll(4, "units")
 
     def scroll(self, event):
         "Manage scrolling on Windows/MacOS."
@@ -1273,18 +1295,36 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         for node_handle in self.hovered_nodes:
             self.event_manager.post_element_event(node_handle, "onscroll", event)     
 
-        if self.overflow_scroll_frame and event.delta > 0 and (yview[0] == 0 or self.vsb_type == 0):
+        if self.overflow_scroll_frame and event.delta > 0 and (yview[0] == 0 or self.manage_vsb_func(check=True)  == 0):
             self.overflow_scroll_frame.scroll(event)
-        elif self.overflow_scroll_frame and event.delta < 0 and (yview[1] == 1 or self.vsb_type == 0):
+        elif self.overflow_scroll_frame and event.delta < 0 and (yview[1] == 1 or self.manage_vsb_func(check=True) == 0):
             self.overflow_scroll_frame.scroll(event)
         elif utilities.PLATFORM.system == "Darwin":
-            if self.vsb_type == 0:
+            if self.manage_vsb_func(check=True) == 0:
                 return
             self.yview_scroll(int(-1*event.delta), "units")
         else:
-            if self.vsb_type == 0:
+            if self.manage_vsb_func(check=True) == 0:
                 return
-            self.yview_scroll(int(-1*event.delta/30), "units")
+            self.yview_scroll(int(-1*event.delta/30), "units")      
+          
+    def xscroll(self, event):
+        "Manage scrolling on Windows/MacOS."
+
+        xview = self.xview() 
+
+        if self.overflow_scroll_frame and event.delta > 0 and (xview[0] == 0 or self.manage_hsb_func(check=True) == 0):
+            self.overflow_scroll_frame.xscroll(event)
+        elif self.overflow_scroll_frame and event.delta < 0 and (xview[1] == 1 or self.manage_hsb_func(check=True) == 0):
+            self.overflow_scroll_frame.xscroll(event)
+        elif utilities.PLATFORM.system == "Darwin":
+            if self.manage_hsb_func(check=True) == 0:
+                return
+            self.xview_scroll(int(-1*event.delta), "units")
+        else:
+            if self.manage_hsb_func(check=True) == 0:
+                return
+            self.xview_scroll(int(-1*event.delta/30), "units")      
 
     def _on_right_click(self, event):
         for node_handle in self.hovered_nodes:

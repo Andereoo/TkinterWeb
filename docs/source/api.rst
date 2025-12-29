@@ -10,6 +10,7 @@ API Reference
 
    api/htmlframe
    api/htmldocument
+   api/jsengine
    api/notebook
 
 -------------------

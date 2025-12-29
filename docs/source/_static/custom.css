@@ -1,4 +1,4 @@
-/* This file is used to make tweak the documentation colours and make it CSS2 compatible.*/
+/* This file is used to make tweak the documentation and make it CSS2 compatible.*/
 
 .wy-nav-side {
   overflow: hidden !important;
@@ -178,4 +178,44 @@ dd .sig-paren {
 .wy-side-nav-search > a img.logo {
   max-width: 250px !important;
   margin: 0 !important;
+}
+
+.sd-card-header {
+  display: block;
+}
+
+details.sd-dropdown .sd-summary-content p {
+  cursor: text;
+}
+
+details.sd-dropdown summary.sd-summary-title{
+  padding: 0 !important;
+}
+
+.sd-card-header, .sd-card {
+  border-color: transparent;
+}
+
+.sd-card-body {
+  padding: 0px 17px !important;
+}
+
+.rst-content .section ul, .rst-content .toctree-wrapper ul, .rst-content section ul, .wy-plain-list-disc, article ul {
+  margin: 12px 0px !important;
+}
+
+.sd-card-body > p {
+  margin: 12px 0px !important;
+}
+
+@media {
+  .sd-card-header, .sd-card {
+    border-color: var(--sd-color-card-border);
+  }
+  details.sd-dropdown summary.sd-summary-title{
+    padding: .5em .6em .5em 1em !important;
+  }
+  .sd-bg-primary {
+    background-color: rgb(77, 122, 77) !important;
+  }
 }

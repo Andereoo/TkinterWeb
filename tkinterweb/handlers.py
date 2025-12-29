@@ -94,17 +94,13 @@ class NodeManager(utilities.BaseManager):
         # But for now it's its own thing and the only one of the three that is actually respected by Tkhtml in rendering
         if self.html.experimental: 
             overflow_options = ("overflow", "overflow-y")
-            overflow = self.html.get_node_property(node, "overflow-x") 
-            self._handle_overflow_property(overflow, self.html.manage_hsb_func)
+            self._handle_overflow_property(self.html.get_node_property(node, "overflow-x") , self.html.manage_hsb_func)
         else:
             overflow_options = ("overflow",)
             
         for overflow_type in overflow_options:
             overflow = self.html.get_node_property(node, overflow_type) 
             overflow = self._handle_overflow_property(overflow, self.html.manage_vsb_func)
-            if overflow != None:
-                self.html.vsb_type = overflow
-                break
         
         overflow = self.html.get_node_attribute(node, utilities.BUILTIN_ATTRIBUTES["overflow-x"]) # Tkhtml doesn't support overflow-x
         overflow = self._handle_overflow_property(overflow, self.html.manage_hsb_func)
@@ -873,7 +869,7 @@ class ObjectManager(utilities.BaseManager):
             self.loaded_iframes[node] = widgetid
 
             self.html.widget_manager.handle_node_replacement(
-                node, widgetid, lambda widgetid=widgetid: self.html.widget_manager._handle_node_removal(widgetid)
+                node, widgetid, lambda widgetid=widgetid: self.html.widget_manager._handle_node_removal(widgetid), allowscrolling=False,
             )
         else:
             self.html.post_message(f"WARNING: the embedded page {url} could not be shown because no embed widget was provided.")

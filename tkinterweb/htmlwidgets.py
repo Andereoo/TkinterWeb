@@ -251,31 +251,31 @@ class HtmlFrame(Frame):
         # For some reason, binding to Html only works on Linux/Unix and binding to html.document only works on Windows
         # Html fires on all documents (i.e. <iframe> elements), so it has to be handled slightly differently
         if not self._html.overflow_scroll_frame:
-            self.bind_class("Html", "<Button-4>", html.scroll_x11)
-            self.bind_class("Html", "<Button-5>", html.scroll_x11)
-            self.bind_class("Html", "<Shift-Button-4>", html.xscroll_x11)
-            self.bind_class("Html", "<Shift-Button-5>", html.xscroll_x11)
+            self.bind_class("Html", "<Button-4>", html._scroll_x11)
+            self.bind_class("Html", "<Button-5>", html._scroll_x11)
+            self.bind_class("Html", "<Shift-Button-4>", html._xscroll_x11)
+            self.bind_class("Html", "<Shift-Button-5>", html._xscroll_x11)
 
         for i in (f"{html}.document", html.scrollable_node_tag):
-            self.bind_class(i, "<MouseWheel>", html.scroll)
-            self.bind_class(i, "<Shift-MouseWheel>", html.xscroll)
+            self.bind_class(i, "<MouseWheel>", html._scroll)
+            self.bind_class(i, "<Shift-MouseWheel>", html._xscroll)
 
-        self.bind_class(html.scrollable_node_tag, "<Button-4>", lambda event, widget=html: html.scroll_x11(event, widget))
-        self.bind_class(html.scrollable_node_tag, "<Button-5>", lambda event, widget=html: html.scroll_x11(event, widget))
-        self.bind_class(html.scrollable_node_tag, "<Shift-Button-4>", lambda event, widget=html: html.xscroll_x11(event, widget))
-        self.bind_class(html.scrollable_node_tag, "<Shift-Button-5>", lambda event, widget=html: html.xscroll_x11(event, widget))
+        self.bind_class(html.scrollable_node_tag, "<Button-4>", lambda event, widget=html: html._scroll_x11(event, widget))
+        self.bind_class(html.scrollable_node_tag, "<Button-5>", lambda event, widget=html: html._scroll_x11(event, widget))
+        self.bind_class(html.scrollable_node_tag, "<Shift-Button-4>", lambda event, widget=html: html._xscroll_x11(event, widget))
+        self.bind_class(html.scrollable_node_tag, "<Shift-Button-5>", lambda event, widget=html: html._xscroll_x11(event, widget))
 
         # Overwrite the default bindings for scrollbars so that:
         # A) scrolling on the page while loading stops it from tracking the fragment
         # B) scrolling horizontally on a vertical scrollbar scrolls horizontally (the default is to scroll vertically)
         # C) scrolling vertically on a horizontal scrollbar scrolls vertically (the default is to block scrolling)
         for i in (vsb, hsb):
-            i.bind("<Button-4>", lambda event, widget=html: html.scroll_x11(event, widget))
-            i.bind("<Button-5>", lambda event, widget=html: html.scroll_x11(event, widget))
-            i.bind("<MouseWheel>", html.scroll)
-            i.bind("<Shift-Button-4>", lambda event, widget=html: html.xscroll_x11(event, widget))
-            i.bind("<Shift-Button-5>", lambda event, widget=html: html.xscroll_x11(event, widget))
-            i.bind("<Shift-MouseWheel>", html.xscroll)
+            i.bind("<Button-4>", lambda event, widget=html: html._scroll_x11(event, widget))
+            i.bind("<Button-5>", lambda event, widget=html: html._scroll_x11(event, widget))
+            i.bind("<MouseWheel>", html._scroll)
+            i.bind("<Shift-Button-4>", lambda event, widget=html: html._xscroll_x11(event, widget))
+            i.bind("<Shift-Button-5>", lambda event, widget=html: html._xscroll_x11(event, widget))
+            i.bind("<Shift-MouseWheel>", html._xscroll)
             i.bind("<Enter>", html._on_leave)
 
         self.bind("<Leave>", html._on_leave)

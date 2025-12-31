@@ -1240,7 +1240,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
     # --- Widget-user interaction ---------------------------------------------
 
-    def scroll_x11(self, event, widget=None):
+    def _scroll_x11(self, event, widget=None):
         "Manage scrolling on Linux."
         if not widget:
             widget = event.widget
@@ -1255,7 +1255,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             for node_handle in widget.hovered_nodes:
                 widget.event_manager.post_element_event(node_handle, "onscrollup", event)
             if widget.overflow_scroll_frame and (yview[0] == 0 or widget.manage_vsb_func(check=True) == 0):
-                widget.overflow_scroll_frame.scroll_x11(event, widget.overflow_scroll_frame)
+                widget.overflow_scroll_frame._scroll_x11(event, widget.overflow_scroll_frame)
             else:
                 if widget.manage_vsb_func(check=True) == 0:
                     return
@@ -1264,13 +1264,13 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             for node_handle in widget.hovered_nodes:
                 widget.event_manager.post_element_event(node_handle, "onscrolldown", event)
             if widget.overflow_scroll_frame and (yview[1] == 1 or widget.manage_vsb_func(check=True) == 0):
-                widget.overflow_scroll_frame.scroll_x11(event, widget.overflow_scroll_frame)
+                widget.overflow_scroll_frame._scroll_x11(event, widget.overflow_scroll_frame)
             else:
                 if widget.manage_vsb_func(check=True) == 0:
                     return
                 widget.yview_scroll(4, "units")
 
-    def xscroll_x11(self, event, widget=None):
+    def _xscroll_x11(self, event, widget=None):
         "Manage scrolling on Linux."
         if not widget:
             widget = event.widget
@@ -1279,20 +1279,20 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
         if event.num == 4:
             if widget.overflow_scroll_frame and (xview[0] == 0 or widget.manage_hsb_func(check=True) == 0):
-                widget.overflow_scroll_frame.xscroll_x11(event, widget.overflow_scroll_frame)
+                widget.overflow_scroll_frame._xscroll_x11(event, widget.overflow_scroll_frame)
             else:
                 if widget.manage_hsb_func(check=True) == 0:
                     return
                 widget.xview_scroll(-4, "units")
         else:
             if widget.overflow_scroll_frame and (xview[1] == 1 or widget.manage_hsb_func(check=True) == 0):
-                widget.overflow_scroll_frame.xscroll_x11(event, widget.overflow_scroll_frame)
+                widget.overflow_scroll_frame._xscroll_x11(event, widget.overflow_scroll_frame)
             else:
                 if widget.manage_hsb_func(check=True) == 0:
                     return
                 widget.xview_scroll(4, "units")
 
-    def scroll(self, event):
+    def _scroll(self, event):
         "Manage scrolling on Windows/MacOS."
 
         # If the user scrolls on the page while it is loading, stop scrolling to the fragment
@@ -1305,9 +1305,9 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             self.event_manager.post_element_event(node_handle, "onscroll", event)     
 
         if self.overflow_scroll_frame and event.delta > 0 and (yview[0] == 0 or self.manage_vsb_func(check=True)  == 0):
-            self.overflow_scroll_frame.scroll(event)
+            self.overflow_scroll_frame._scroll(event)
         elif self.overflow_scroll_frame and event.delta < 0 and (yview[1] == 1 or self.manage_vsb_func(check=True) == 0):
-            self.overflow_scroll_frame.scroll(event)
+            self.overflow_scroll_frame._scroll(event)
         elif utilities.PLATFORM.system == "Darwin":
             if self.manage_vsb_func(check=True) == 0:
                 return
@@ -1317,15 +1317,15 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                 return
             self.yview_scroll(int(-1*event.delta/30), "units")      
           
-    def xscroll(self, event):
+    def _xscroll(self, event):
         "Manage scrolling on Windows/MacOS."
 
         xview = self.xview() 
 
         if self.overflow_scroll_frame and event.delta > 0 and (xview[0] == 0 or self.manage_hsb_func(check=True) == 0):
-            self.overflow_scroll_frame.xscroll(event)
+            self.overflow_scroll_frame._xscroll(event)
         elif self.overflow_scroll_frame and event.delta < 0 and (xview[1] == 1 or self.manage_hsb_func(check=True) == 0):
-            self.overflow_scroll_frame.xscroll(event)
+            self.overflow_scroll_frame._xscroll(event)
         elif utilities.PLATFORM.system == "Darwin":
             if self.manage_hsb_func(check=True) == 0:
                 return

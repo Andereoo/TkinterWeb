@@ -392,7 +392,10 @@ class HTMLElement:
         """Return the element's attributes.
         
         :rtype: dict"""
-        return self.html.get_node_attributes(self.node)
+        attributes = self.html.get_node_attributes(self.node)
+        if self.html.widget_manager.widget_container_attr in attributes:
+            del attributes[self.html.widget_manager.widget_container_attr]
+        return attributes
 
     @property
     def tagName(self):

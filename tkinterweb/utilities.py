@@ -33,7 +33,7 @@ __title__ = "TkinterWeb"
 __author__ = "Andrew Clarke"
 __copyright__ = "(c) 2021-2025 Andrew Clarke"
 __license__ = "MIT"
-__version__ = "4.12.0"
+__version__ = "4.13.0"
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
@@ -142,7 +142,6 @@ IMG[align="right"]        { float:right }
 [align="left"]               { text-align: -tkhtml-left  }
 CENTER, [align="center"]     { text-align: -tkhtml-center }
 /* Rules for unordered-lists */
-/* Todo! */
 TD, TH {
   padding: 1px;
   border-bottom-color: grey60;
@@ -955,13 +954,15 @@ def tkhtml_notifier(name, text, *args):
         Since .pyw files have no console, we won't bother printing messages."""
 
 
-def deprecate(name, manager, new_name=None):
+def deprecate(name, manager, new_name=None, message=None):
     import warnings
-    warnings.simplefilter("always", DeprecationWarning)
     if not new_name: new_name = name
-    warnings.warn(f"{name} is deprecated. Please use {manager}.{new_name}.", DeprecationWarning, stacklevel=3)
+    warnings.warn(f"{name} is deprecated. Please use {manager}.{new_name}.", FutureWarning, stacklevel=3)
 
-
+def warn(message):
+    import warnings
+    return warnings.warn(message, UserWarning, stacklevel=3)
+    
 def TclOpt(options):
     "Format string into Tcl option command-line names"
     return tuple(o if o.startswith("-") else "-"+o for o in options)

@@ -96,7 +96,6 @@ class Page(tk.Frame):
         self.frame = frame = HtmlFrame(self, message_func=self.add_message, on_link_click=self.link_click, on_form_submit=self.form_submit)
         
         self.sidebar = sidebar = HtmlFrame(frame, width=250, fontscale=0.8, selection_enabled=False, messages_enabled=False, javascript_enabled=True, on_element_script=self.run_script)
-        sidebar.grid_propagate(False)
 
         self.images_var = images_var = tk.IntVar(value=self.frame["images_enabled"])
         images_enabled = ttk.Checkbutton(sidebar, text="Enable images", variable=images_var, command=self.toggle_images)
@@ -529,7 +528,6 @@ class Page(tk.Frame):
         self.frame.configure(caret_browsing_enabled = self.caret_browsing_var.get())
 
     def open_sidebar(self, keep_open=False):
-        self.sidebar.grid_propagate(False)
         if self.sidebar.winfo_ismapped() and not keep_open:
             self.close_sidebar()
         else:

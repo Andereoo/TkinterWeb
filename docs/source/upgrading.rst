@@ -299,6 +299,10 @@ Changelog
 
     * :class:`.JSEngine`
 
+    Version 4.13:
+
+    * :meth:`.TkinterWeb.get_node_replacement`
+
 .. dropdown:: Changed/Fixed
 
     Version 4.0:
@@ -397,6 +401,11 @@ Changelog
 
     * Fixed more bugs.
     * Side-scrolling is now supported.
+
+    Version 4.13:
+
+    * Fixed a segfault when inserting a widget into the page's root element.
+    * ``grid_propagate(0)``and ``pack_propagate(0)`` no longer have any effect on the widget. Requested width and height will now always be respected. 
 
 -------------------
 

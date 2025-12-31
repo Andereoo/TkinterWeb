@@ -211,6 +211,8 @@ class HtmlFrame(Frame):
             "parsemode": utilities.DEFAULT_PARSE_MODE,
             "shrink": False,
             "mode": utilities.DEFAULT_ENGINE_MODE,
+            "height": None,
+            "width": None,
         }
                             
         for key, value in self._htmlframe_options.items():
@@ -328,6 +330,14 @@ class HtmlFrame(Frame):
         
         :rtype: :class:`~tkinterweb.TkinterWeb`"""
         return self._html
+    
+    def grid_propagate(self, *args, **kwargs):
+        utilities.warn("grid_propagate is being ignored, because since version 4.13 widget geometry is always respected by default. If this is a problem, please file a bug report.")
+        pass
+
+    def pack_propagate(self, *args, **kwargs):
+        utilities.warn("pack_propagate is being ignored, because since version 4.13 widget geometry is always respected by default. If this is a problem, please file a bug report.")
+        pass
 
     def configure(self, **kwargs):
         """

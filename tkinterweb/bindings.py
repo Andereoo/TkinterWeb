@@ -882,10 +882,19 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         """Fill a node with either a Tk widget or with Tkhtml nodes.
         
         New in version 4.2."""
+        if (node_handle != contents) and not self.get_node_parent(node_handle):
+            raise RuntimeError(f"root elements cannot be replaced")
+
         if not contents:
             # Calling replace with empty text causes Tkhtml to segfault
             contents = self.tk.call(self._w, "fragment", " ")
         return self.tk.call(node_handle, "replace", contents, *args)
+    
+    def get_node_replacement(self, node_handle):
+        """Return the Tk widget contained by the given node.
+        
+        New in version 4.13."""
+        return self.tk.call(node_handle, "replace")
 
     def delete_node(self, node_handle):
         "Delete the given node."
@@ -1562,9 +1571,6 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     def _extend_selection(self, event):
         "Alter selection and HTML element states based on mouse movement."
         if self.selection_manager.selection_start_node is None:
-            # TODO: Don't remember why this is here
-            # But there probably was a reason once
-            self.tag("delete", "selection")
             return
 
         try:

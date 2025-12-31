@@ -800,6 +800,7 @@ class WidgetManager(utilities.BaseManager):
     def __init__(self, html):
         super().__init__(html)
 
+        ### TODO: see if there's a way we can avoid setting an attribute on replaced nodes
         self.widget_container_attr = "-tkinterweb-widget-container"
         self.hovered_embedded_node = None
 
@@ -811,11 +812,12 @@ class WidgetManager(utilities.BaseManager):
 
     def get_node_widget(self, node):
         "Get the widget associated with the given node."
-        attr = self.html.get_node_attribute(node, self.widget_container_attr)
-        if attr != "":
-            return self.html.nametowidget(attr)
-        else:
+        widget = self.html.get_node_replacement(node)
+        
+        if widget == node or not widget:
             return None
+        
+        return self.html.nametowidget(widget)
 
     def handle_node_replacement(self, node, widgetid, deletecmd, stylecmd=None, allowscrolling=True, handledelete=True):
         """Replace a Tkhtml3 node with a Tkinter widget. 
@@ -916,8 +918,7 @@ class WidgetManager(utilities.BaseManager):
 
     def map_node(self, node, force=False):
         "Redraw a node if it currently contains a Tk widget."
-        if force or (self.html.get_node_attribute(node, self.widget_container_attr) != ""):
-            self.html.set_node_attribute(node, self.widget_container_attr, "")
+        if force or (self.get_node_widget(node)):
             self.html.replace_node_contents(node, node)
 
     def set_node_widget(self, node, widgetid=None):

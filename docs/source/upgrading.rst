@@ -72,8 +72,7 @@ Changelog
     * ``HtmlFrame.replace_element()`` (deprecated in version 4.0) - use :attr:`.HTMLElement.widget`
     * ``HtmlFrame.remove_widget()`` (deprecated in version 4.0) - use :meth:`.HTMLElement.remove`
 
-    Deprecated
-    ----------
+.. dropdown:: Deprecated
 
     Version 4.11:
 
@@ -93,7 +92,7 @@ Changelog
 
     * ``Htmlframe.register_JS_object()`` - use :meth:`.JSEngine.register`
 
-.. dropdown:: Deprecated
+.. dropdown:: Renamed
 
     Version 4.0:
 

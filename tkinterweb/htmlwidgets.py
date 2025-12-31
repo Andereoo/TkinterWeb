@@ -471,6 +471,7 @@ class HtmlFrame(Frame):
         :type decode: str or None, optional
         :param force: Force the page to reload all elements.
         :type force: bool, optional"""
+        if url.startswith("mailto"): return  # Don't try to load emails!
         if not self._current_url == url:
             self._previous_url = self._current_url
         if url in utilities.BUILTIN_PAGES:
@@ -481,8 +482,6 @@ class HtmlFrame(Frame):
 
         # Set the base url now in case it takes a while for the website to download
         self._html.base_url = url
-
-        if url.startswith("mailto"): return  # Don't try to load emails!
 
         if self._thread_in_progress:
             self._thread_in_progress.stop()

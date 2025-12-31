@@ -1779,17 +1779,15 @@ class TkHtmlParsedURI:
 
     def tkhtml_uri_decode(self, uri, base64=False):
         "This command is designed to help scripts process data: URIs. It is completely separate from the html widget"
-        c = ("::tkhtml::decode", "-base64", uri) if base64 else ("::tkhtml::decode", uri)
-        return self._html.tk.call(*c).strip(b"}")
+        return self._html.tkhtml_uri_decode(uri, base64)
 
     def tkhtml_uri_encode(self, uri):
         "Encodes the uri."
-        return self._html.tk.call("::tkhtml::encode", uri)
+        return self._html.tkhtml_uri_encode(uri)
 
     def tkhtml_uri_escape(self, uri, query=False):
         "Returns the decoded data."
-        a = "-query" if query else ""
-        return self._html.tk.call("::tkhtml::escape_uri", a, uri)
+        return self._html.tkhtml_uri_escape(uri, query)
 
     def uri_resolve(self, uri):
         "Resolve a uri."

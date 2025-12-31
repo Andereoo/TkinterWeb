@@ -460,8 +460,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     @utilities.special_setting(True)
     def caches_enabled(self, prev_enabled, enabled):
         "Disable the Tkhtml image cache when disabling caches."
-        if prev_enabled != enabled:
-            self._enable_imagecache(enabled)
+        if prev_enabled != enabled: self.imagecache = enabled
     
     @utilities.special_setting(False)
     def javascript_enabled(self, prev_enabled, enabled):
@@ -863,10 +862,16 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             self.post_event(utilities.DONE_LOADING_EVENT)
         self.script_manager._submit_deferred_scripts()
         return fragment
-    
-    def _enable_imagecache(self, enabled):
+
+    @property
+    def imagecache(self):
+        "Tell if the Tkhtml image cache is enabled or disabled"
+        return bool(self.tk.call(self._w, "cget", "-imagecache"))
+
+    @imagecache.setter
+    def imagecache(self, toggle):
         "Enable or disable the Tkhtml image cache."
-        self.tk.call(self._w, "configure", "-imagecache", enabled)
+        self.tk.call(self._w, "configure", "-imagecache", toggle)
 
     def get_node_text(self, node_handle, *args):
         "Get the text content of the given node."

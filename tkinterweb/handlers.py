@@ -618,6 +618,8 @@ class ImageManager(utilities.BaseManager):
                         del self.image_directory[k]
                         break
             self.image_directory[url] = node
+            # If the image previously had alt text, we need to set the replacement image
+            self.html.set_node_property(node, "-tkhtml-replacement-image", value)
 
     def load_alt_text(self, url, name):
         # NOTE: this must run in the main thread
@@ -636,13 +638,18 @@ class ImageManager(utilities.BaseManager):
             try:  # Ensure thread safety when closing
                 alt = self.html.get_node_attribute(node, "alt")
                 if alt:
-                    self.html.set_node_property(node, "-tkhtml-replacement-image", "None")
-                    self.html.insert_node(node, self.html.parse_fragment_simple(alt))
+                    self.html.set_node_property(node, "-tkhtml-replacement-image", None)
+                    # Update the alt text property to signal to Tkhtml that the node should be displayed
+                    # For some reason without the after() the text won't always show when being changed from a binding
+                    self.html.after(0, lambda node=node, alt=alt: self.html.set_node_attribute(node, "alt", alt))
             except (RuntimeError, tk.TclError): 
                 return  # Widget no longer exists
 
     def _on_image_cmd(self, url):
         "Handle images."
+        ### TODO: the Tkhtml image cache prevents this from being called when an image is reloaded
+        ### This could be an issue when images have alt text
+
         name = self.allocate_image_name()
 
         if url.startswith(self.image_name_prefix):

@@ -342,6 +342,7 @@ BR[clear="all"]    { clear: both; }
 /* Standard html <img> tags - replace the node with the image at url $src */
 IMG[src]              { -tkhtml-replacement-image: attr(src) }
 IMG                   { -tkhtml-replacement-image: "" }
+IMG[alt]:before        { content: attr(alt) }
 /*
  * Properties of table cells (th, td):
  *

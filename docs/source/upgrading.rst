@@ -403,8 +403,9 @@ Changelog
 
     Version 4.13:
 
-    * Fixed a segfault when inserting a widget into the page's root element.
-    * ``grid_propagate(0)``and ``pack_propagate(0)`` no longer have any effect on the widget. Requested width and height will now always be respected. 
+    * Fixed more bugs, including a segfault when inserting a widget into the page's root element.
+    * ``grid_propagate(0)``and ``pack_propagate(0)`` no longer have any effect on the widget. Requested width and height will now always be respected.
+    * Alternate text for broken images is now displayed natively through Tkhtml.
 
 -------------------
 

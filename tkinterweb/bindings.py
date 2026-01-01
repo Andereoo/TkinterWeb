@@ -783,6 +783,9 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     def bbox(self, node=None):
         "Get the bounding box of the viewport or a specified node."
         return self.tk.call(self._w, "bbox", node)
+    
+    def parse_fragment_simple(self, html):
+        return self.tk.call(self._w, "fragment", html)
 
     def parse_fragment(self, html):
         """Parse a document fragment.

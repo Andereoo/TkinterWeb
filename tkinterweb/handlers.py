@@ -598,9 +598,6 @@ class ImageManager(utilities.BaseManager):
         self.image_directory = {}
         self.loaded_image_counter = 0
         self.image_name_prefix = f"_tkinterweb_img_{id(self.html)}_"
-        self.image_alternate_text_font = utilities.get_alt_font()
-        self.image_alternate_text_size = 14
-        self.image_alternate_text_threshold = 10
 
     def __repr__(self):
         return f"{self.html._w}::{self.__class__.__name__.lower()}"
@@ -621,51 +618,28 @@ class ImageManager(utilities.BaseManager):
                         del self.image_directory[k]
                         break
             self.image_directory[url] = node
-            # if self.html.experimental:
-            #     c = self.html.get_node_children(node)
-            #     if c: self.html.destroy_node(c)
 
     def load_alt_text(self, url, name):
         # NOTE: this must run in the main thread
-
-        if (url in self.image_directory):
-            node = self.image_directory[url]
-            if not self.html.ignore_invalid_images:
-                image = imageutils.data_to_image(utilities.BROKEN_IMAGE, name, "image/png", self.html.image_inversion_enabled, self.html.dark_theme_limit)
-            elif self.html.image_alternate_text_enabled:
-                try:  # Ensure thread safety when closing
-                    alt = self.html.get_node_attribute(node, "alt")
-                    if alt:
-                        ### Should work, but doesn't
-                        #if self.html.experimental: 
-                        #    # Insert the parsed fragment directly if in experimental mode
-                        #    self.html.insert_node(node, self.html.parse_fragment(alt))
-                        #else:
-
-                        # Generate an image with alternate text if not in experimental mode
-                        try:
-                            image = imageutils.text_to_image(
-                                name, alt, self.html.bbox(node),
-                                self.image_alternate_text_font,
-                                self.image_alternate_text_size,
-                                self.image_alternate_text_threshold,
-                            )
-                        except (ImportError, ModuleNotFoundError,):
-                            self.html.post_message(f"ERROR: could not display alternate text for the image {url}: PIL and PIL.ImageTk must be installed")
-                            return
-                    else:
-                        return
-                except (RuntimeError, tk.TclError): 
-                    return  # Widget no longer exists
-        elif not self.html.ignore_invalid_images:
-            image = imageutils.data_to_image(utilities.BROKEN_IMAGE, name, "image/png", self.html.image_inversion_enabled, self.html.dark_theme_limit)
-        else:
-            return
         
-        if name in self.loaded_images:
-            self.loaded_images[name] = (self.loaded_images[name], image)
-        else:
-            self.loaded_images[name] = image
+        if not self.html.ignore_invalid_images:
+            image, data_is_image = self.check_images(utilities.BROKEN_IMAGE, name, url, "image/png")
+            image = imageutils.data_to_image(image, name, "image/png", data_is_image)
+
+            if name in self.loaded_images:
+                self.loaded_images[name] = (self.loaded_images[name], image)
+            else:
+                self.loaded_images[name] = image
+
+        elif self.html.image_alternate_text_enabled and (url in self.image_directory):
+            node = self.image_directory[url]
+            try:  # Ensure thread safety when closing
+                alt = self.html.get_node_attribute(node, "alt")
+                if alt:
+                    self.html.set_node_property(node, "-tkhtml-replacement-image", "None")
+                    self.html.insert_node(node, self.html.parse_fragment_simple(alt))
+            except (RuntimeError, tk.TclError): 
+                return  # Widget no longer exists
 
     def _on_image_cmd(self, url):
         "Handle images."
@@ -752,10 +726,7 @@ class ImageManager(utilities.BaseManager):
             self.html.on_resource_setup(url, "image", True)
             if node:
                 self.html.event_manager.post_element_event(node, "onload", None, utilities.ELEMENT_LOADED_EVENT)
-            #if self.html.experimental:
-            #    node = self.html.search(f'img[src="{url}"]')
-            #    if node:
-            #        if self.html.get_node_children(node): self.html.delete_node(self.html.get_node_children(node))
+
             if name in self.loaded_images:
                 self.loaded_images[name] = (self.loaded_images[name], image)
             else:

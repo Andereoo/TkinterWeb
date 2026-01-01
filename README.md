@@ -111,6 +111,6 @@ Special thanks to [Christopher Chavez](https://github.com/chrstphrchvz), [Zamy84
 
 Special thanks to [Christopher Chavez](https://github.com/chrstphrchvz), Jan Nijtmans, and everyone else in the tcl-core mailing list for the help making border rounding work on Windows and MacOSX, and to [Zamy846692](https://github.com/Zamy846692) for spearheading experimental Tkhtml development.
 
-Thanks to the [TkinterHtml package](https://bitbucket.org/aivarannamaa/tkinterhtml) for providing the bindings on which this project is based, the [BRL-CAD project](https://github.com/BRL-CAD/brlcad) for providing modifications for Tkhtml on 64-bit Windows, and [Google Fonts](https://github.com/google/fonts) for providing the font used for generating alternative text when images fail to load.
+Thanks to the [TkinterHtml package](https://bitbucket.org/aivarannamaa/tkinterhtml) for providing the bindings on which this project is based and the [BRL-CAD project](https://github.com/BRL-CAD/brlcad) for providing modifications for Tkhtml on 64-bit Windows.
 
 A huge thanks to everyone else who supported this project by reporting bugs and providing suggestions!

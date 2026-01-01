@@ -33,7 +33,7 @@ __title__ = "TkinterWeb"
 __author__ = "Andrew Clarke"
 __copyright__ = "(c) 2021-2025 Andrew Clarke"
 __license__ = "MIT"
-__version__ = "4.13.0"
+__version__ = "4.13.1"
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
@@ -66,7 +66,7 @@ CURSOR_MAP = {
     "sw-resize": "bottom_left_corner",
     "s-resize": "bottom_side",
     "w-resize": "left_side",
-    # The following cursors only work with experimental Tkhtml
+    # The following cursors only work with Tkhtml 3.1+
     "context-menu": "",
     "cell": "cross",
     "vertical-text": "xterm",
@@ -587,8 +587,7 @@ class BuiltinPageGenerator():
                 find_current_highlight_color=self._html.find_current_highlight_color, find_current_text_color=self._html.find_current_text_color,
                 selected_text_highlight_color=self._html.selected_text_highlight_color, selected_text_color=self._html.selected_text_color,
                 maximum_thread_count=self._html.maximum_thread_count, experimental=self._html.experimental, caret_mode=self._html.caret_browsing_enabled,
-                dark_theme_limit=self._html.dark_theme_limit, image_alternate_text_threshold=self._html.image_manager.image_alternate_text_threshold,
-                image_alternate_text_size=self._html.image_manager.image_alternate_text_size, tkhtml_version=tkinterweb_tkhtml.get_loaded_tkhtml_version(self._html)
+                dark_theme_limit=self._html.dark_theme_limit, tkhtml_version=tkinterweb_tkhtml.get_loaded_tkhtml_version(self._html)
             )
         else:
             return self._pages[key]
@@ -929,11 +928,6 @@ def invert_color(rgb, match, limit):
         rgb[1] = max(1, min(255, 240 - rgb[1]))
         rgb[2] = max(1, min(255, 240 - rgb[2]))
         return rgb_to_hex(*rgb)
-
-
-def get_alt_font():
-    "Get the location of the truetype file to be used for image alternate text"
-    return os.path.join(ROOT_DIR, "opensans.ttf")
 
 
 def notifier(text):

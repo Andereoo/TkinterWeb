@@ -183,6 +183,8 @@ If you benefited from using this package, please consider supporting its develop
         self.hovered_nodes = []
         self.current_cursor = ""
 
+        # This set is used when resetting the widget and contains a reference to all loaded managers
+        # Managers automatically add themselves to this set as they are created
         self._managers = set()
 
     def _setup_bindings(self):
@@ -236,7 +238,7 @@ If you benefited from using this package, please consider supporting its develop
     def _setup_handlers(self):
         "Setup node handlers"
         # Node handlers don't work on body and html elements. 
-        # These elements also cannot be removed without causing a segfault in vanilla Tkhtml. 
+        # Body and html elements also cannot be removed without causing a segfault in vanilla Tkhtml. 
         # Weird.
         self.register_lazy_handler("parse", "body", "node_manager")
         self.register_lazy_handler("parse", "html", "node_manager")
@@ -267,7 +269,6 @@ If you benefited from using this package, please consider supporting its develop
         self.register_lazy_handler("attribute", "iframe", "object_manager")
         self.register_lazy_handler("node", "object", "object_manager")
         self.register_lazy_handler("attribute", "object", "object_manager")
-
 
     def _load_tkhtml(self):
         "Load Tkhtml"
@@ -413,7 +414,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     def caches_enabled(self, prev_enabled, enabled):
         "Disable the Tkhtml image cache when disabling caches."
         if prev_enabled != enabled:
-            self.enable_imagecache(enabled)
+            self._enable_imagecache(enabled)
     
     @utilities.special_setting(False)
     def javascript_enabled(self, prev_enabled, enabled):
@@ -660,7 +661,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         # Note to self: these need to be here
         # Or very strange errors will magically appear,
         # Usually when switching between pages quickly
-        self.hovered_nodes = []
+        self.hovered_nodes.clear()
         self.current_hovered_node = None
 
         self._set_cursor("default")
@@ -802,7 +803,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         self.script_manager._submit_deferred_scripts()
         return fragment
     
-    def enable_imagecache(self, enabled):
+    def _enable_imagecache(self, enabled):
         "Enable or disable the Tkhtml image cache."
         self.tk.call(self._w, "configure", "-imagecache", enabled)
 

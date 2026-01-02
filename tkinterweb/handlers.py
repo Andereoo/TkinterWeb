@@ -117,17 +117,21 @@ class FormManager(utilities.BaseManager):
         super().__init__(html)
         self.radiobutton_token = "TKWtsvLKac1"
 
-        self.reset()
+        self.waiting_forms = 0
+        self.form_nodes = {}
+        self.form_widgets = {}
+        self.loaded_forms = {}
+        self.radio_buttons = {}
 
     def __repr__(self):
         return f"{self.html._w}::{self.__class__.__name__.lower()}"
     
     def reset(self):
         self.waiting_forms = 0
-        self.form_nodes = {}
-        self.form_widgets = {}
-        self.loaded_forms = {}
-        self.radio_buttons = {}
+        self.form_nodes.clear()
+        self.form_widgets.clear()
+        self.loaded_forms.clear()
+        self.radio_buttons.clear()
 
     def _handle_form_reset(self, node):
         "Reset HTML forms."
@@ -596,6 +600,7 @@ class ImageManager(utilities.BaseManager):
 
         self.loaded_images = {}
         self.image_directory = {}
+        self.bad_paths = set()
         self.loaded_image_counter = 0
         self.image_name_prefix = f"_tkinterweb_img_{id(self.html)}_"
 
@@ -603,60 +608,69 @@ class ImageManager(utilities.BaseManager):
         return f"{self.html._w}::{self.__class__.__name__.lower()}"
     
     def reset(self):
-        self.image_directory = {}
+        self.image_directory.clear()
+        self.bad_paths.clear()
 
     def _on_img(self, node):
+        # Remember the node and it's url, so that when -imagecmd sends the url for loading we know where it came from
         url = self.html.resolve_url(self.html.get_node_attribute(node, "src"))
-        self.image_directory[url] = node
+        self.image_directory.setdefault(url, set()).add(node)
     
     def _on_img_value_change(self, node, attribute, value):
         if attribute == "src":
             url = self.html.resolve_url(value)
-            if node in self.image_directory.values():
-                for k, v in frozenset(self.image_directory.items()):
-                    if v == node:
-                        del self.image_directory[k]
-                        break
-            self.image_directory[url] = node
-            # If the image previously had alt text, we need to set the replacement image
-            self.html.set_node_property(node, "-tkhtml-replacement-image", value)
+
+            # Update the image directory
+            for saved_url, node_set in list(self.image_directory.items()):
+                if node in node_set:
+                    node_set.remove(node)
+                    if not node_set:
+                        del self.image_directory[saved_url]
+                    break
+
+            self.image_directory.setdefault(url, set()).add(node)
+
+            # Tkhtml won't call -imagecmd twice on the same url after the document loads
+            # This can prevent alt text from showing
+            # Disabling the image cache doesn't seem to change that
+            # So we clear the image here if needed
+            if url in self.bad_paths and self.html.ignore_invalid_images and self.html.image_alternate_text_enabled:
+                self.html.set_node_property(node, "-tkhtml-replacement-image", None)
+            else:
+                # Force the replacement image in case the image had alt text
+                self.html.set_node_property(node, "-tkhtml-replacement-image", value)
 
     def load_alt_text(self, url, name):
         # NOTE: this must run in the main thread
+        self.bad_paths.add(url)
         
         if not self.html.ignore_invalid_images:
             image, data_is_image = self.check_images(utilities.BROKEN_IMAGE, name, url, "image/png")
             image = imageutils.data_to_image(image, name, "image/png", data_is_image)
 
-            if name in self.loaded_images:
-                self.loaded_images[name] = (self.loaded_images[name], image)
-            else:
-                self.loaded_images[name] = image
+            self.loaded_images.setdefault(name, set()).add(image)
 
         elif self.html.image_alternate_text_enabled and (url in self.image_directory):
-            node = self.image_directory[url]
-            try:  # Ensure thread safety when closing
-                alt = self.html.get_node_attribute(node, "alt")
-                if alt:
-                    self.html.set_node_property(node, "-tkhtml-replacement-image", None)
-                    # Update the alt text property to signal to Tkhtml that the node should be displayed
-                    # For some reason without the after() the text won't always show when being changed from a binding
-                    self.html.after(0, lambda node=node, alt=alt: self.html.set_node_attribute(node, "alt", alt))
-            except (RuntimeError, tk.TclError): 
-                return  # Widget no longer exists
+            for node in self.image_directory[url]:
+                try:  # Ensure thread safety when closing
+                    alt = self.html.get_node_attribute(node, "alt")
+                    if alt:
+                        self.html.set_node_property(node, "-tkhtml-replacement-image", None)
+                        # Update the alt text property to force Tkhtml to update/display the node
+                        # For some reason without the after() the text won't always show when being changed from a binding
+                        self.html.after(0, lambda node=node, alt=alt: self.html.set_node_attribute(node, "alt", alt))
+                except (RuntimeError, tk.TclError): 
+                    return  # Widget no longer exists
 
     def _on_image_cmd(self, url):
         "Handle images."
-        ### TODO: the Tkhtml image cache prevents this from being called when an image is reloaded
-        ### This could be an issue when images have alt text
-
         name = self.allocate_image_name()
 
         if url.startswith(self.image_name_prefix):
             name = url
         else:
             image = imageutils.blank_image(name)
-            self.loaded_images[name] = image
+            self.loaded_images[name] = {image}
 
             if any({
                     url.startswith("linear-gradient("),
@@ -672,15 +686,11 @@ class ImageManager(utilities.BaseManager):
             else:
                 url = url.split("), url(", 1)[0].replace("'", "").replace('"', "")
                 url = self.html.resolve_url(url)
-                if url in self.image_directory:
-                    node = self.image_directory[url]
-                else:
-                    node = None
-                self.html._thread_check(self.fetch_images, node, url, name)
+                self.html._thread_check(self.fetch_images, url, name)
 
         return list((name, self.html.register(self._on_image_delete)))
 
-    def fetch_images(self, node, url, name):
+    def fetch_images(self, url, name):
         "Fetch images and display them in the document."
         # NOTE: this method is thread-safe and is designed to run in a thread
 
@@ -696,7 +706,7 @@ class ImageManager(utilities.BaseManager):
                     data, data_is_image = self.check_images(data, name, url, filetype)                
                         
                     if thread.isrunning():
-                        self.html.post_to_queue(lambda node=node, data=data, name=name, url=url, filetype=filetype, data_is_image=data_is_image: self.finish_fetching_images(node, data, name, url, filetype, data_is_image))
+                        self.html.post_to_queue(lambda data=data, name=name, url=url, filetype=filetype, data_is_image=data_is_image: self.finish_fetching_images(data, name, url, filetype, data_is_image))
                 except Exception as error:
                     self.html.post_to_queue(lambda url=url, name=name, error=f"ERROR: could not load image {url}: {error}": self._on_image_error(url, name, error))
 
@@ -723,7 +733,7 @@ class ImageManager(utilities.BaseManager):
             
         return data, data_is_image
 
-    def finish_fetching_images(self, node, data, name, url, filetype, data_is_image=False):
+    def finish_fetching_images(self, data, name, url, filetype, data_is_image=False):
         # NOTE: this must run in the main thread
 
         try:
@@ -731,13 +741,11 @@ class ImageManager(utilities.BaseManager):
             
             self.html.post_message(f"Successfully loaded {utilities.shorten(url)}")
             self.html.on_resource_setup(url, "image", True)
-            if node:
-                self.html.event_manager.post_element_event(node, "onload", None, utilities.ELEMENT_LOADED_EVENT)
+            if url in self.image_directory:
+                for node in self.image_directory[url]:
+                    self.html.event_manager.post_element_event(node, "onload", None, utilities.ELEMENT_LOADED_EVENT)
 
-            if name in self.loaded_images:
-                self.loaded_images[name] = (self.loaded_images[name], image)
-            else:
-                self.loaded_images[name] = image
+            self.loaded_images.setdefault(name, set()).add(image)
 
             return image
         except (ImportError, ModuleNotFoundError,):
@@ -777,7 +785,7 @@ class ObjectManager(utilities.BaseManager):
         return f"{self.html._w}::{self.__class__.__name__.lower()}"
     
     def reset(self):
-        self.loaded_iframes = {}
+        self.loaded_iframes.clear()
     
     # --- Handle iframes ------------------------------------------------------
 

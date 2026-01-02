@@ -618,8 +618,8 @@ class EventManager(utilities.BaseManager):
             if event not in utilities.EVENT_MAP:
                 self.html.unbind_class(self.html.tkinterweb_tag, event)
             
-        self.bindings = {}
-        self.loaded_elements = []
+        self.bindings.clear()
+        self.loaded_elements.clear()
 
     def post_event(self, node, JS_event_name, event=None, Tk_event_name=None):
         """Given a CSS node and JavaScript event name, trigger any related bindings.

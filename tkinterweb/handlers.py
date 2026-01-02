@@ -483,7 +483,7 @@ class ScriptManager(utilities.BaseManager):
         if url and thread.isrunning():
             self.html.post_message(f"Fetching script from {utilities.shorten(url)}", True)
             try:
-                data = self.html.download_url(url)[0]
+                data = self.html.download_url(url)[1]
             except Exception as error:
                 self.html.post_to_queue(lambda message=f"ERROR: could not load script {url}: {error}",
                             url=url: self.html._finish_resource_load(message, url, "script", False))
@@ -569,7 +569,7 @@ class StyleManager(utilities.BaseManager):
         if url and thread.isrunning():
             self.html.post_message(f"Fetching stylesheet from {utilities.shorten(url)}", True)
             try:
-                data = self.html.download_url(url)[0]
+                data = self.html.download_url(url)[1]
             except Exception as error:
                 self.html.post_to_queue(lambda message=f"ERROR: could not load stylesheet {url}: {error}",
                     url=url: self.html._finish_resource_load(message, url, "stylesheet", False))
@@ -702,7 +702,7 @@ class ImageManager(utilities.BaseManager):
                 self.html.post_to_queue(lambda url=url, name=name, error="ERROR: image url not specified": self._on_image_error(url, name, error))
             else:
                 try:
-                    data, url, filetype, code = self.html.download_url(url)
+                    url, data, filetype, code = self.html.download_url(url)
                     data, data_is_image = self.check_images(data, name, url, filetype)                
                         
                     if thread.isrunning():
@@ -898,7 +898,7 @@ class ObjectManager(utilities.BaseManager):
         thread = self.html._begin_download()
         if thread.isrunning():
             try:
-                data, url, filetype, code = self.html.download_url(url)
+                url, data, filetype, code = self.html.download_url(url)
 
                 if data and thread.isrunning():
                     if filetype.startswith("image"):

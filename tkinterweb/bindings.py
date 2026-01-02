@@ -142,6 +142,7 @@ If you benefited from using this package, please consider supporting its develop
             "on_element_script": utilities.placeholder,
             "on_resource_setup": utilities.placeholder,
 
+            "request_func": None,
             "insecure_https": False,
             "ssl_cafile": None,
             "request_timeout": 15,
@@ -683,6 +684,9 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     # --- Resource loading ----------------------------------------------------
 
     def download_url(self, url, *args):
+        if self.request_func:
+            return self.request_func(url, *args)
+        
         if url.startswith("file://") or (not self.caches_enabled):
             return utilities.download(url, *args, insecure=self.insecure_https, cafile=self.ssl_cafile, headers=tuple(self.headers.items()), timeout=self.request_timeout)
         else:

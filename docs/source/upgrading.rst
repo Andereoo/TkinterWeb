@@ -92,6 +92,11 @@ Changelog
 
     * ``Htmlframe.register_JS_object()`` - use :meth:`.JSEngine.register`
 
+    Version 4.14:
+
+    * The configuration option ``default_style`` - use ``tkinterweb.utilities.DEFAULT_STYLE``.
+    * The configuration option ``dark_style`` - use ``tkinterweb.utilities.DARK_STYLE``.
+
 .. dropdown:: Renamed
 
     Version 4.0:
@@ -302,6 +307,10 @@ Changelog
 
     * :meth:`.TkinterWeb.get_node_replacement`
 
+    Version 4.14:
+
+    * The new configuration option ``on_request`` can be used to set a custom script to use when downloading resources.
+
 .. dropdown:: Changed/Fixed
 
     Version 4.0:
@@ -404,7 +413,10 @@ Changelog
     Version 4.13:
 
     * Fixed more bugs, including a segfault when inserting a widget into the page's root element.
-    * ``grid_propagate(0)``and ``pack_propagate(0)`` no longer have any effect on the widget. Requested width and height will now always be respected.
+    * ``grid_propagate(0)`` and ``pack_propagate(0)`` no longer have any effect on the widget. Requested width and height will now always be respected.
+
+    Version 4.14:
+
     * Alternate text for broken images is now displayed natively through Tkhtml.
 
 -------------------

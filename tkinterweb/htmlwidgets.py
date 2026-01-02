@@ -13,9 +13,6 @@ import tkinter as tk
 from tkinter.ttk import Frame, Style
 
 
-### TODO: consider better matching the parameters used in stock Tkinter widgets
-### And add better support for others (i.e. we could do more with the background/bg keyword)
-
 class HtmlFrame(Frame):
     """TkinterWeb's flagship HTML widget.
 
@@ -36,8 +33,6 @@ class HtmlFrame(Frame):
     :type on_element_script: function
     :param on_resource_setup: The function to be called when an image, stylesheet, or script load finishes. The resource's url, type ("image", "stylesheet", or "script"), and whether setup was successful or not (True or False) will be passed as arguments.
     :type on_resource_setup: function
-    :param message_func: The function to be called when a debug message is issued. This only works if :attr:`messages_enabled` is set to True. The message will be passed as an argument. By default the message is printed.
-    :type message_func: function
 
     Widget appearance:
 
@@ -53,11 +48,16 @@ class HtmlFrame(Frame):
     :type horizontal_scrollbar: bool or "auto"
     :param shrink: If False, the widget's width and height are set by the width and height options as per usual. You may still need to call ``grid_propagate(0)`` or ``pack_propagate(0)`` for Tkinter to respect the set width and height. If this option is set to True, the widget's requested width and height are determined by the current document.
     :type shrink: bool
-
-    Features:
+    
+    Debugging:
 
     :param messages_enabled: Enable/disable messages. This is enabled by default.
     :type messages_enabled: bool
+    :param message_func: The function to be called when a debug message is issued. This only works if :attr:`messages_enabled` is set to True. The message will be passed as an argument. By default the message is printed.
+    :type message_func: function
+
+    Features:
+
     :param selection_enabled: Enable/disable selection. This is enabled by default.
     :type selection_enabled: bool
     :param caret_browsing_enabled: Enable/disable caret browsing. This is disabled by default. New in version 4.8.
@@ -107,10 +107,6 @@ class HtmlFrame(Frame):
     :type selected_text_highlight_color: str
     :param selected_text_color: The text color of selected text. 
     :type selected_text_color: str
-    :param default_style: The stylesheet used to set the default appearance of HTML elements. It is generally best to leave this setting alone.
-    :type default_style: str
-    :param dark_style: The additional stylesheet used to set the default appearance of HTML elements when dark mode is enabled. It is generally best to leave this setting alone.
-    :type dark_style: str
 
     Download behaviour:
 
@@ -122,6 +118,8 @@ class HtmlFrame(Frame):
     :type headers: dict
     :param request_timeout: The number of seconds to wait when fetching a resource before timing out. New in version 4.6.
     :type request_timeout: int
+    :param request_func: The function to be called when a resource is requested. This overrides all other download settings. The callback must accept the following arguments: the resource's url, data, method ("GET" or "POST"), and encoding. The callback must return the following: url, data, file type, and HTTP code.
+    :type request_func: function
 
     HTML rendering behaviour:
 
@@ -151,7 +149,19 @@ class HtmlFrame(Frame):
         self._button = None
         self._style = None
 
+        # Deprecations
+        if "default_style" in kwargs:
+            utilities.deprecate_param("default_style", "utilities.DEFAULT_STYLE")
+        if "dark_style" in kwargs:
+            utilities.deprecate_param("dark_style", "utilities.DARK_STYLE")
+
         ### TODO: switch to a TypedDict or something
+                
+        ### TODO: it would be really nice to better match the parameters, function names, and events used in stock Tkinter widgets
+        ### Not too sure if that's really reasonable at this point
+
+        ### TODO: continue adding better support for other common Tkinter parameters
+
         self._htmlframe_options = {
             "on_navigate_fail": self.show_error_page,
             "vertical_scrollbar": "auto",
@@ -189,8 +199,9 @@ class HtmlFrame(Frame):
             "find_current_text_color": "#000",
             "selected_text_highlight_color": "#9bc6fa",
             "selected_text_color": "#000",
-            "default_style": utilities.DEFAULT_STYLE,
-            "dark_style": utilities.DARK_STYLE,
+            "default_style": utilities.DEFAULT_STYLE, # will be removed
+            "dark_style": utilities.DARK_STYLE, # will be removed
+            "request_func": None,
             "insecure_https": False,
             "ssl_cafile": None,
             "request_timeout": 15,
@@ -343,6 +354,13 @@ class HtmlFrame(Frame):
         """
         Change the widget's configuration options. See above for options.
         """
+        # Deprecations
+        if "default_style" in kwargs:
+            utilities.deprecate_param("default_style", "utilities.DEFAULT_STYLE")
+        if "dark_style" in kwargs:
+            utilities.deprecate_param("dark_style", "utilities.DARK_STYLE")
+
+        # 
         for key in list(kwargs.keys()):
             if key in self._htmlframe_options:
                 value = self._check_value(self._htmlframe_options[key], kwargs.pop(key))
@@ -1210,7 +1228,7 @@ class HtmlFrame(Frame):
                 self._html.post_message(f"Connecting to {location}", True)
                 if self._html.insecure_https: self._html.post_message("WARNING: Using insecure HTTPS session", True)
                 
-                data, newurl, filetype, code = self._html.download_url(url, data, method, decode)
+                newurl, data, filetype, code = self._html.download_url(url, data, method, decode)
                 self._html.post_message(f"Successfully connected to {location}", True)
 
                 if utilities.get_current_thread().isrunning():

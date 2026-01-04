@@ -309,7 +309,7 @@ Changelog
 
     Version 4.14:
 
-    * The new configuration option ``on_request`` can be used to set a custom script to use when downloading resources.
+    * The new configuration option ``request_func`` can be used to set a custom script to use to download resources.
 
 .. dropdown:: Changed/Fixed
 
@@ -417,6 +417,7 @@ Changelog
 
     Version 4.14:
 
+    * Fixed more bugs.
     * Alternate text for broken images is now displayed natively through Tkhtml.
 
 -------------------

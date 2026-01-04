@@ -630,7 +630,8 @@ class HtmlFrame(Frame):
         if self._thread_in_progress:
             self._thread_in_progress.stop()
         self._html.stop()
-        self._current_url = self._previous_url
+        if self._thread_in_progress:
+            self._current_url = self._previous_url
         self._html.post_event(utilities.URL_CHANGED_EVENT)
         self._html.post_event(utilities.DONE_LOADING_EVENT)
 

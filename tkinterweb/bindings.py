@@ -100,7 +100,7 @@ If you benefited from using this package, please consider supporting its develop
     def _setup_settings(self, options):
         """Widget settings. 
         Some settings have extra logic that needs to run when changing them, so they're defined elsewhere as properties.
-        They are set when needed. If the settings are set through the options attribute, they will be evaluated here."""
+        They are set when needed. If the settings are set through the options attribute, they will be added here."""
         settings = {
             "messages_enabled": True,
             "stylesheets_enabled": True,

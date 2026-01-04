@@ -96,6 +96,8 @@ Changelog
 
     * The configuration option ``default_style`` - use ``tkinterweb.utilities.DEFAULT_STYLE``.
     * The configuration option ``dark_style`` - use ``tkinterweb.utilities.DARK_STYLE``.
+    * The configuration option ``about_page_background`` - use the configuration option ``background``.
+    * The configuration option ``about_page_foreground`` - use the configuration option ``foreground``.
 
 .. dropdown:: Renamed
 
@@ -310,6 +312,7 @@ Changelog
     Version 4.14:
 
     * The new configuration option ``request_func`` can be used to set a custom script to use to download resources.
+    * Added support for the ``background`` and ``foreground`` widget options.
 
 .. dropdown:: Changed/Fixed
 

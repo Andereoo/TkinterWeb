@@ -30,13 +30,9 @@ class TkinterWeb(tk.Widget):
         # Setup most variables
         self._setup_status_variables()
 
-        # These settings require the widget to be loaded, so we handle them later
-        dark_theme_enabled = tkinterweb_options.pop("dark_theme_enabled", None)
-        caches_enabled = tkinterweb_options.pop("caches_enabled", None)
-        threading_enabled = tkinterweb_options.pop("threading_enabled", None)
-
         # Setup the settings variables
-        self._setup_settings(tkinterweb_options)
+        _delayed_options = {"dark_theme_enabled", "caches_enabled", "threading_enabled"}
+        tkinterweb_options = self._setup_settings(tkinterweb_options, _delayed_options)
 
         # Register image loading infrastructure
         if "imagecmd" not in kwargs:
@@ -69,9 +65,8 @@ class TkinterWeb(tk.Widget):
             self.allow_threading = True
 
         # Set remaining settings
-        if dark_theme_enabled is not None: self.dark_theme_enabled = dark_theme_enabled
-        if caches_enabled is not None: self.caches_enabled = caches_enabled
-        if threading_enabled is not None: self.threading_enabled = threading_enabled
+        for key in _delayed_options:
+            setattr(self, key, tkinterweb_options[key])
 
         # Create a tiny, blank frame for cursor updating
         self.motion_frame_bg = "white"
@@ -97,7 +92,7 @@ If you benefited from using this package, please consider supporting its develop
 
     # --- Widget setup --------------------------------------------------------
 
-    def _setup_settings(self, options):
+    def _setup_settings(self, options, delayed_options):
         """Widget settings. 
         Some settings have extra logic that needs to run when changing them, so they're defined elsewhere as properties.
         They are set when needed. If the settings are set through the options attribute, they will be added here."""
@@ -166,7 +161,10 @@ If you benefited from using this package, please consider supporting its develop
         }
         settings.update(options)
         for key, value in settings.items():
-            setattr(self, key, value)
+            if key not in delayed_options:
+                setattr(self, key, value)
+
+        return settings
 
     def _setup_status_variables(self):
         "Widget status variables."

@@ -158,16 +158,16 @@ class ScrolledTextBox(tk.Frame):
     def scroll(self, event):
         yview = self.tbox.yview()
         if yview[0] == 0 and event.delta > 0:
-            self.parent.scroll(event)
+            self.parent._scroll(event)
         elif yview[1] == 1 and event.delta < 0:
-            self.parent.scroll(event)
+            self.parent._scroll(event)
 
     def scroll_x11(self, event):
         yview = self.tbox.yview()
         if event.num == 4 and yview[0] == 0:
-            self.parent.scroll_x11(event, self.parent)
+            self.parent._scroll_x11(event, self.parent)
         elif event.num == 5 and yview[1] == 1:
-            self.parent.scroll_x11(event, self.parent)
+            self.parent._scroll_x11(event, self.parent)
 
     def configure(self, *args, **kwargs):
         self.tbox.configure(*args, **kwargs)

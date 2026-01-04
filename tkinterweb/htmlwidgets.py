@@ -134,7 +134,7 @@ class HtmlFrame(Frame):
     :param mode: The rendering engine mode. It is usually best to leave this setting alone.
     :type mode: "standards", "almost standards", or "quirks"
 
-    Other ttk.Frame arguments are also supported.
+    Other tk.Frame arguments, such as ``width``, ``height``, ``background``, and ``foreground`` are also supported.
     
     :raise TypeError: If the value type is wrong and cannot be converted to the correct type."""
 
@@ -150,24 +150,27 @@ class HtmlFrame(Frame):
         self._style = None
 
         # Deprecations
-        if "default_style" in kwargs:
-            utilities.deprecate_param("default_style", "utilities.DEFAULT_STYLE")
-        if "dark_style" in kwargs:
-            utilities.deprecate_param("dark_style", "utilities.DARK_STYLE")
+        self._check_deprecations(**kwargs)
 
         ### TODO: switch to a TypedDict or something
                 
         ### TODO: it would be really nice to better match the parameters, function names, and events used in stock Tkinter widgets
         ### Not too sure if that's really reasonable at this point
 
-        ### TODO: continue adding better support for other common Tkinter parameters
+        # These options require the widget to be loaded
+        _delayed_options = {"background", "foreground", "bg", "fg"}
+        self._options_map = {"bg": "background", "fg": "foreground"}
 
         self._htmlframe_options = {
             "on_navigate_fail": self.show_error_page,
             "vertical_scrollbar": "auto",
             "horizontal_scrollbar": False,
-            "about_page_background": "",
-            "about_page_foreground": "",
+            "about_page_background": "", # will be removed
+            "about_page_foreground": "", # will be removed
+            "background": "",
+            "foreground": "",
+            "bg": "",
+            "fg": "",
         }
         self._tkinterweb_options = {
             "on_link_click": self.load_url,
@@ -230,7 +233,8 @@ class HtmlFrame(Frame):
             if key in kwargs:
                 value = self._check_value(self._htmlframe_options[key], kwargs.pop(key))
                 self._htmlframe_options[key] = value
-            setattr(self, key, value)
+            if key not in _delayed_options:
+                setattr(self, key, value)
 
         for key in list(kwargs.keys()):
             if key in self._tkinterweb_options:
@@ -256,6 +260,17 @@ class HtmlFrame(Frame):
 
         self._manage_hsb()
         self._manage_vsb()
+
+        changed = False
+        for key in _delayed_options:
+            if self._htmlframe_options[key]:
+                if key in self._options_map:
+                    setattr(self, self._options_map[key], self._htmlframe_options[key])
+                else:
+                    setattr(self, key, self._htmlframe_options[key])
+                changed = True
+        if changed:
+            self.load_html("<body></body>")
 
         # html.document only applies to the document it is bound to (which makes things easy)
         # Html applies to all html widgets
@@ -292,6 +307,33 @@ class HtmlFrame(Frame):
         self.bind("<Leave>", html._on_leave)
         self.bind("<Enter>", html._on_mouse_motion)
         self.bind_class(html.tkinterweb_tag, "<Configure>", self._handle_resize)
+
+    @property
+    def background(self):
+        pass
+
+    @background.setter
+    def background(self, value):
+        # Rudimentary support for the 'background' keyword. 
+        self.about_page_background = value
+        self._html.default_style += f"BODY, HTML {{ background-color: {value} }}"
+        if self._html.dark_theme_enabled and self._html.dark_style:
+            self._html.config(defaultstyle=self._html.default_style + self._html.dark_style)
+        else:
+            self._html.config(defaultstyle=self._html.default_style)
+
+    @property
+    def foreground(self):
+        pass
+
+    @foreground.setter
+    def foreground(self, value):
+        self.about_page_foreground = value
+        self.html.default_style += f"HTML {{ color: {value} }}"
+        if self._html.dark_theme_enabled and self._html.dark_style:
+            self._html.config(defaultstyle=self._html.default_style + self._html.dark_style)
+        else:
+            self._html.config(defaultstyle=self._html.default_style)
 
     @property
     def title(self):
@@ -350,20 +392,29 @@ class HtmlFrame(Frame):
         utilities.warn("pack_propagate is being ignored, because since version 4.13 widget geometry is always respected by default. If this is a problem, please file a bug report.")
         pass
 
+    def _check_deprecations(self, **kwargs):
+        if "default_style" in kwargs:
+            utilities.deprecate_param("default_style", "utilities.DEFAULT_STYLE")
+        if "dark_style" in kwargs:
+            utilities.deprecate_param("dark_style", "utilities.DARK_STYLE")
+        if "about_page_background" in kwargs:
+            utilities.deprecate_param("about_page_background", "background")
+        if "about_page_foreground" in kwargs:
+            utilities.deprecate_param("about_page_foreground", "foreground")
+
     def configure(self, **kwargs):
         """
         Change the widget's configuration options. See above for options.
         """
         # Deprecations
-        if "default_style" in kwargs:
-            utilities.deprecate_param("default_style", "utilities.DEFAULT_STYLE")
-        if "dark_style" in kwargs:
-            utilities.deprecate_param("dark_style", "utilities.DARK_STYLE")
+        self._check_deprecations(**kwargs)
 
         # 
         for key in list(kwargs.keys()):
             if key in self._htmlframe_options:
                 value = self._check_value(self._htmlframe_options[key], kwargs.pop(key))
+                if key in self._options_map:
+                    key = self._options_map[key]
                 setattr(self, key, value)
                 if key == "vertical_scrollbar":
                     self._manage_vsb(value)

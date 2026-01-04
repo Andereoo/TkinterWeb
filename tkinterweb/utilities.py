@@ -957,12 +957,13 @@ def deprecate(name, manager, new_name=None, message=None):
 def deprecate_param(name, new_name):
     import warnings
     if not new_name: new_name = name
-    warnings.warn(f"{name} is deprecated. Please set {new_name}.", FutureWarning, stacklevel=3)
+    warnings.warn(f"{name} is deprecated. Please set {new_name}.", FutureWarning, stacklevel=4)
 
 def warn(message):
     import warnings
     return warnings.warn(message, UserWarning, stacklevel=3)
     
+
 def TclOpt(options):
     "Format string into Tcl option command-line names"
     return tuple(o if o.startswith("-") else "-"+o for o in options)

@@ -511,9 +511,9 @@ class Page(tk.Frame):
         else:
             self.apply_light_theme()
 
-        self.frame.configure(dark_theme_enabled = value, 
-                             about_page_background=self.style.lookup('TFrame', 'background'), 
-                             about_page_foreground=self.style.lookup('TLabel', 'foreground'))
+        self.frame.configure(dark_theme_enabled = value,
+                             background=self.style.lookup('TFrame', 'background'), 
+                             foreground=self.style.lookup('TLabel', 'foreground'))
         if update_page:
             self.reload()
 

@@ -865,11 +865,14 @@ class HtmlFrame(Frame):
         :param ignore_text_nodes: If True, text nodes (i.e. the contents of a ``<p>`` element) will be ignored and their parent node returned. It is generally best to leave leave this at the default.
         :type ignore_text_nodes: bool, optional
         :return: The element under the mouse.
-        :rtype: :class:`~tkinterweb.dom.HTMLElement`"""
-        node = self._html.current_hovered_node
+        :rtype: :class:`~tkinterweb.dom.HTMLElement` or None"""
+        if not self._html.current_hovered_node:
+            return None
+        
         if ignore_text_nodes:
-            if not self._html.get_node_tag(self._html.current_hovered_node):
-                node = self._html.get_node_parent(self._html.current_hovered_node)
+            node = self._html.hovered_nodes[0]
+        else:
+            node = self._html.current_hovered_node
         return dom.HTMLElement(self.document, node)
     
     def get_caret_position(self):

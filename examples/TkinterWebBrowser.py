@@ -51,7 +51,7 @@ else:
     NEW_TAB = "about:tkinterweb"
 
 
-class Page(tk.Frame):
+class Page(ttk.Frame):
     def __init__(self, master, *args, **kwargs):
         ttk.Frame.__init__(self, master, *args, **kwargs)
 
@@ -511,9 +511,7 @@ class Page(tk.Frame):
         else:
             self.apply_light_theme()
 
-        self.frame.configure(dark_theme_enabled = value,
-                             background=self.style.lookup('TFrame', 'background'), 
-                             foreground=self.style.lookup('TLabel', 'foreground'))
+        self.frame.configure(dark_theme_enabled = value)
         if update_page:
             self.reload()
 

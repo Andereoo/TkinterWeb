@@ -427,6 +427,12 @@ HTML, BODY {
   background-color: #0d0b1a;
   color: #ffffff;
 }
+
+/* Display properties for mark elements. */
+MARK {
+    background: #8c7c00;
+}
+
 /* Display properties for hyperlinks */
 :link    { color: #7768d9; }
 :visited { color: #5245a8; }

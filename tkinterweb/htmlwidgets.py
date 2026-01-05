@@ -91,10 +91,6 @@ class HtmlFrame(Frame):
 
     Widget colors and styling:
 
-    :param about_page_background: The default background color of built-in pages. By default this matches the :py:class:`ttk.Frame` background color to better integrate custom documents with Tkinter.
-    :type about_page_background: str
-    :param about_page_foreground: The default text color of built-in pages.
-    :type about_page_foreground: str
     :param find_match_highlight_color: The highlight color of matches found by :py:func:`find_text()`. 
     :type find_match_highlight_color: str
     :param find_match_text_color: The text color of matches found by :py:func:`find_text()`. 
@@ -134,7 +130,7 @@ class HtmlFrame(Frame):
     :param mode: The rendering engine mode. It is usually best to leave this setting alone.
     :type mode: "standards", "almost standards", or "quirks"
 
-    Other tk.Frame arguments, such as ``width``, ``height``, ``background``, and ``foreground`` are also supported.
+    Other ttk.Frame arguments, such as ``width`` and ``height`` are also supported.
     
     :raise TypeError: If the value type is wrong and cannot be converted to the correct type."""
 
@@ -157,20 +153,12 @@ class HtmlFrame(Frame):
         ### TODO: it would be really nice to better match the parameters, function names, and events used in stock Tkinter widgets
         ### Not too sure if that's really reasonable at this point
 
-        # These options require the widget to be loaded
-        _delayed_options = {"background", "foreground", "bg", "fg"}
-        self._options_map = {"bg": "background", "fg": "foreground"}
-
         self._htmlframe_options = {
             "on_navigate_fail": self.show_error_page,
             "vertical_scrollbar": "auto",
             "horizontal_scrollbar": False,
             "about_page_background": "", # will be removed
             "about_page_foreground": "", # will be removed
-            "background": "",
-            "foreground": "",
-            "bg": "",
-            "fg": "",
         }
         self._tkinterweb_options = {
             "on_link_click": self.load_url,
@@ -233,8 +221,7 @@ class HtmlFrame(Frame):
             if key in kwargs:
                 value = self._check_value(self._htmlframe_options[key], kwargs.pop(key))
                 self._htmlframe_options[key] = value
-            if key not in _delayed_options:
-                setattr(self, key, value)
+            setattr(self, key, value)
 
         for key in list(kwargs.keys()):
             if key in self._tkinterweb_options:
@@ -260,17 +247,6 @@ class HtmlFrame(Frame):
 
         self._manage_hsb()
         self._manage_vsb()
-
-        changed = False
-        for key in _delayed_options:
-            if self._htmlframe_options[key]:
-                if key in self._options_map:
-                    setattr(self, self._options_map[key], self._htmlframe_options[key])
-                else:
-                    setattr(self, key, self._htmlframe_options[key])
-                changed = True
-        if changed:
-            self.load_html("<body></body>")
 
         # html.document only applies to the document it is bound to (which makes things easy)
         # Html applies to all html widgets
@@ -307,33 +283,6 @@ class HtmlFrame(Frame):
         self.bind("<Leave>", html._on_leave)
         self.bind("<Enter>", html._on_mouse_motion)
         self.bind_class(html.tkinterweb_tag, "<Configure>", self._handle_resize)
-
-    @property
-    def background(self):
-        pass
-
-    @background.setter
-    def background(self, value):
-        # Rudimentary support for the 'background' keyword. 
-        self.about_page_background = value
-        self._html.default_style += f"BODY, HTML {{ background-color: {value} }}"
-        if self._html.dark_theme_enabled and self._html.dark_style:
-            self._html.config(defaultstyle=self._html.default_style + self._html.dark_style)
-        else:
-            self._html.config(defaultstyle=self._html.default_style)
-
-    @property
-    def foreground(self):
-        pass
-
-    @foreground.setter
-    def foreground(self, value):
-        self.about_page_foreground = value
-        self.html.default_style += f"HTML {{ color: {value} }}"
-        if self._html.dark_theme_enabled and self._html.dark_style:
-            self._html.config(defaultstyle=self._html.default_style + self._html.dark_style)
-        else:
-            self._html.config(defaultstyle=self._html.default_style)
 
     @property
     def title(self):
@@ -413,8 +362,6 @@ class HtmlFrame(Frame):
         for key in list(kwargs.keys()):
             if key in self._htmlframe_options:
                 value = self._check_value(self._htmlframe_options[key], kwargs.pop(key))
-                if key in self._options_map:
-                    key = self._options_map[key]
                 setattr(self, key, value)
                 if key == "vertical_scrollbar":
                     self._manage_vsb(value)
@@ -935,8 +882,8 @@ class HtmlFrame(Frame):
         
         New in version 4.8."""
         if self._html.caret_manager.node:
-            _, pre_text, index = self._html.tkhtml_offset_to_text_index(self._html.caret_manager.node, self._html.caret_manager.offset)
-            return dom.HTMLElement(self.document, self._html.caret_manager.node), pre_text, index
+            text, index = self._html.tkhtml_offset_to_text_index(self._html.caret_manager.node, self._html.caret_manager.offset)
+            return dom.HTMLElement(self.document, self._html.caret_manager.node), text, index
         else:
             return None
         
@@ -971,7 +918,7 @@ class HtmlFrame(Frame):
             # With caret browsing disabled and pulling their hair out over it
             raise RuntimeError("cannot modify the caret when caret browsing is disabled")
 
-        text, pre_text, offset = self._html.tkhtml_offset_to_text_index(element.node, index, True)
+        text, offset = self._html.tkhtml_offset_to_text_index(element.node, index, True)
         if not self._html.bbox(element.node):
             raise RuntimeError(f"the element {element} is not visible.")
         if text == "":
@@ -1052,8 +999,8 @@ class HtmlFrame(Frame):
                     start_node, end_node = self._html.selection_manager.selection_end_node, self._html.selection_manager.selection_start_node
                     start_offset, end_offset = self._html.selection_manager.selection_end_offset, self._html.selection_manager.selection_start_offset
                 
-                _, pre_text, index = self._html.tkhtml_offset_to_text_index(start_node, start_offset)
-                _, pre_text2, index2 = self._html.tkhtml_offset_to_text_index(end_node, end_offset)
+                text, index = self._html.tkhtml_offset_to_text_index(start_node, start_offset)
+                text2, index2 = self._html.tkhtml_offset_to_text_index(end_node, end_offset)
 
                 contained_nodes = []
                 excluded_nodes = {dom.extract_nested(start_node), dom.extract_nested(end_node)}
@@ -1064,18 +1011,18 @@ class HtmlFrame(Frame):
                         contained_nodes.append(node)
 
                 return (
-                    (dom.HTMLElement(self.document, start_node), pre_text, index),
-                    (dom.HTMLElement(self.document, end_node), pre_text2, index2),
+                    (dom.HTMLElement(self.document, start_node), text, index),
+                    (dom.HTMLElement(self.document, end_node), text2, index2),
                     list(dom.HTMLElement(self.document, node) for node in contained_nodes),
                 )
             else:
                 element = dom.HTMLElement(self.document, self._html.selection_manager.selection_start_node)
                 start_offset, end_offset = sorted([self._html.selection_manager.selection_start_offset, self._html.selection_manager.selection_end_offset])
-                _, pre_text, index = self._html.tkhtml_offset_to_text_index(self._html.selection_manager.selection_start_node, start_offset)
-                _, pre_text2, index2 = self._html.tkhtml_offset_to_text_index(self._html.selection_manager.selection_start_node, end_offset)
+                text, index = self._html.tkhtml_offset_to_text_index(self._html.selection_manager.selection_start_node, start_offset)
+                text2, index2 = self._html.tkhtml_offset_to_text_index(self._html.selection_manager.selection_start_node, end_offset)
                 return (
-                    (element, pre_text, index),
-                    (element, pre_text2, index2),
+                    (element, text, index),
+                    (element, text2, index2),
                     [],
                 ) 
         else:
@@ -1114,8 +1061,8 @@ class HtmlFrame(Frame):
         if not self._html.selection_enabled:
             raise RuntimeError("cannot modify the selection when selection is disabled")
 
-        text, _, start_offset = self._html.tkhtml_offset_to_text_index(start_element.node, start_index, True)
-        text2, _, end_offset = self._html.tkhtml_offset_to_text_index(end_element.node, end_index, True)
+        text, start_offset = self._html.tkhtml_offset_to_text_index(start_element.node, start_index, True)
+        text2, end_offset = self._html.tkhtml_offset_to_text_index(end_element.node, end_index, True)
 
         texts = {start_element: text, end_element: text2}
 
@@ -1377,33 +1324,48 @@ class HtmlLabel(HtmlFrame):
 
     :param text: The HTML content of the widget
     :type text: str
-    :param style: The CSS code of the widget
-    :type style: str
     """
 
-    def __init__(self, master, text="", style="", **kwargs):
-        HtmlFrame.__init__(self, master, vertical_scrollbar=False, shrink=True, **kwargs)
+    def __init__(self, master, text="", **kwargs):
+        HtmlFrame.__init__(self, master, vertical_scrollbar=False, horizontal_scrollbar=False, shrink=True, **kwargs)
 
         tags = list(self._html.bindtags())
         tags.remove("Html")
         self._html.bindtags(tags)
-
-        self.style = style
+        
+        self._style = Style()
 
         if text:
             self.load_html(text)
-        if style:
-            self.add_css(style)
+        else:
+            self.load_html("<body></body>")
+
+    def _handle_resize(self, *args, **kwargs):
+        # Overwrite HtmlFrame._handle_resize, which is not necessary when shrink is set to True
+        # HtmlFrame._handle_resize also causes weird behaviour when tables are present and shrink set to True
+        return
+    
+    def load_html(self, *args, **kwargs):
+        # Match the ttk theme
+        style_type = self.cget("style")
+        bg = self._style.lookup(style_type, 'background')
+        fg = self._style.lookup(style_type, 'foreground')
+        style = self._html.default_style + \
+            (self._html.dark_style if self._html.dark_theme_enabled else "") +\
+            f"BODY, HTML {{ background-color: {bg}; color: {fg}; }}"
+        self._html.configure(defaultstyle=style)
         
+        # Load the HTML
+        super().load_html(*args, **kwargs)
+
+        # This stops infinite flickering when tables are present
+        self.update_idletasks()
+        self._html.relayout()
+
     def configure(self, **kwargs):
         ""
         if "text" in kwargs:
             self.load_html(kwargs.pop("text"))
-            if "style" not in kwargs:
-                self.add_css(self.style)
-        if "style" in kwargs:
-            self.style = style = kwargs.pop("style")
-            self.add_css(style)
         if kwargs: super().configure(**kwargs)
 
     def cget(self, key):
@@ -1442,25 +1404,13 @@ class HtmlText(HtmlFrame):
     """
 
     def __init__(self, master, selectbackground="#9bc6fa", selectforeground="#000", insertontime=600, insertofftime=300, insertwidth=1, insertbackground=None, **kwargs):
-        if "caret_browsing_enabled" in kwargs:
-            raise RuntimeError("caret browsing is always enabled in this widget")
-
         HtmlFrame.__init__(self, master, caret_browsing_enabled=True, **kwargs)
-        
-        insertontime = self._check_value(self._html.caret_manager.blink_delays[0], insertontime)
-        insertofftime = self._check_value(self._html.caret_manager.blink_delays[1], insertofftime)
-        insertwidth = self._check_value(self._html.caret_manager.caret_width, insertwidth)
-
-        self._html.caret_manager.blink_delays = [insertontime, insertofftime]
-        self._html.caret_manager.caret_width = insertwidth
-        self._html.caret_manager.caret_colour = insertbackground
-        self._html.selected_text_highlight_color = selectbackground
-        self._html.selected_text_color = selectforeground
+        self.configure(selectbackground=selectbackground, selectforeground=selectforeground, 
+                       insertontime=insertontime, insertofftime=insertofftime, 
+                       insertwidth=insertwidth, insertbackground=insertbackground)
 
     def configure(self, **kwargs):
         ""
-        if "caret_browsing_enabled" in kwargs:
-            raise RuntimeError("caret browsing is always enabled in this widget")
         if "selectbackground" in kwargs:
             self._html.selected_text_highlight_color = kwargs.pop("selectbackground")
             self._html.selection_manager.update_tags()
@@ -1478,6 +1428,7 @@ class HtmlText(HtmlFrame):
             self._html.caret_manager.caret_width = value
         if "insertbackground" in kwargs:
             self._html.caret_manager.caret_colour = kwargs.pop("insertbackground")
+
         if kwargs: super().configure(**kwargs)
 
     def cget(self, key):
@@ -1494,6 +1445,7 @@ class HtmlText(HtmlFrame):
             return self._html.caret_manager.caret_width
         elif "insertbackground" == key:
             return self._html.caret_manager.caret_colour
+        
         return super().cget(key)
 
     def config(self, **kwargs):
@@ -1513,7 +1465,7 @@ class HtmlParse(HtmlFrame):
 
         self._is_destroying = False
 
-        for flag in ["events_enabled", "images_enabled", "forms_enabled"]:
+        for flag in {"events_enabled", "images_enabled", "forms_enabled"}:
             if flag not in kwargs:
                 kwargs[flag] = False
                 

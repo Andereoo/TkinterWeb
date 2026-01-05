@@ -72,6 +72,10 @@ Changelog
     * ``HtmlFrame.replace_element()`` (deprecated in version 4.0) - use :attr:`.HTMLElement.widget`
     * ``HtmlFrame.remove_widget()`` (deprecated in version 4.0) - use :meth:`.HTMLElement.remove`
 
+    Version 4.14:
+
+    * The ``style`` configuration option no longer sets the CSS style of :class:`.HtmlLabel` widgets. See `bug #145 <https://github.com/Andereoo/TkinterWeb/issues/145>`_.
+
 .. dropdown:: Deprecated
 
     Version 4.11:
@@ -96,8 +100,8 @@ Changelog
 
     * The configuration option ``default_style`` - use ``tkinterweb.utilities.DEFAULT_STYLE``.
     * The configuration option ``dark_style`` - use ``tkinterweb.utilities.DARK_STYLE``.
-    * The configuration option ``about_page_background`` - use the configuration option ``background``.
-    * The configuration option ``about_page_foreground`` - use the configuration option ``foreground``.
+    * The configuration option ``about_page_background`` - use ``ttk.Style().configure("TFrame", background=)``.
+    * The configuration option ``about_page_foreground`` - use ``ttk.Style().configure("TFrame", foreground=)``.
 
 .. dropdown:: Renamed
 
@@ -312,7 +316,6 @@ Changelog
     Version 4.14:
 
     * The new configuration option ``request_func`` can be used to set a custom script to use to download resources.
-    * Added support for the ``background`` and ``foreground`` widget options.
 
 .. dropdown:: Changed/Fixed
 
@@ -421,6 +424,7 @@ Changelog
     Version 4.14:
 
     * Fixed more bugs.
+    * :class:`.HtmlLabel` widgets are now automatically styled to match the ttk style.
     * Alternate text for broken images is now displayed natively through Tkhtml.
 
 -------------------

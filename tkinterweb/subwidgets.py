@@ -217,6 +217,11 @@ class FormEntry(tk.Entry):
         self.delete(0, "end")
         self.insert(0, value)
 
+    def configure(self, **kwargs):
+        kwargs.pop("borderwidth", None)
+        kwargs.pop("highlightthickness", None)
+        super().configure(**kwargs)
+
 class FormCheckbox(ttk.Checkbutton):
     def __init__(self, parent, value=0, onchangecommand=None, **kwargs):
         self.variable = variable = tk.IntVar(parent, value=value)

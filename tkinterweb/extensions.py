@@ -396,8 +396,12 @@ class CaretManager(utilities.BaseManager):
                 if ideal_index < index:
                     index = ideal_index
 
-        self.register_nodes_from_index(event, index)
-        self.update(event)
+        try:
+            # in case `node, offset = self.html.text("index", index)` fails
+            self.register_nodes_from_index(event, index)
+            self.update(event)
+        except TclError:
+            pass
 
     def shift_down(self, event=None):
         "Shift the caret down."
@@ -430,8 +434,11 @@ class CaretManager(utilities.BaseManager):
                 else:
                     index = ideal_index
 
-        self.register_nodes_from_index(event, index)
-        self.update(event)
+        try:
+            self.register_nodes_from_index(event, index)
+            self.update(event)
+        except TclError:
+            pass
 
     def shift_left(self, event=None, update_caret_start=True):
         "Shift the caret left."
@@ -462,8 +469,11 @@ class CaretManager(utilities.BaseManager):
             if changed:
                 index += 1
         
-        self.register_nodes_from_index(event, index, update_caret_start)
-        self.update(event)
+        try:
+            self.register_nodes_from_index(event, index, update_caret_start)
+            self.update(event)
+        except TclError:
+            pass
 
     def shift_right(self, event=None, update_caret_start=True):
         "Shift the caret right."
@@ -489,9 +499,12 @@ class CaretManager(utilities.BaseManager):
             # Otherwise, shift right one letter
             if not changed and index < text_length:
                 index += 1
-
-        self.register_nodes_from_index(event, index, update_caret_start)
-        self.update(event, fallback=self.shift_right)
+        
+        try:
+            self.register_nodes_from_index(event, index, update_caret_start)
+            self.update(event, fallback=self.shift_right)
+        except TclError:
+            pass
 
     def update(self, event=None, auto_scroll=True, fallback=None):
         "Refresh the caret or update its position."

@@ -559,7 +559,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
         # By default Tkhtml won't display plain text
         if "<" not in html and ">" not in html:
-            html = f"<p>{html}</p>"
+            html = f"<html><body><p>{html}</p></body></html>"
 
         # Send the HTML code to the queue if needed
         # Otherwise, evaluate directly so that the document can be manipulated as soon as parse() returns
@@ -816,7 +816,10 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     def set_node_text(self, node_handle, new):
         "Set the text content of the given node."
         self.tk.call(node_handle, "text", "set", new)
-        self.tk.call(self._w, "_relayout") # needed for pathName text text to return the updated string
+        self.relayout() # needed for pathName text text to return the updated string
+
+    def relayout(self):
+        self.tk.call(self._w, "_relayout")
 
     def get_child_text(self, node):
         """Get text of node and all its descendants recursively.
@@ -1202,30 +1205,15 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         # Ideally we would use the pathName text offset/index commands,
         # but for the end user I think it is more useful to get an index within a Tkhtml node rather than in the entire document
         text = self.get_node_text(node)
-        pre_text = self.get_node_text(node, "-pre")
 
         # Tkhtml offsets consider \xa0 as occupying two spaces, so we double each instance of \xa0
         doubles = text.replace("\xa0", "\xa0\xa0")[:offset].count("\xa0\xa0")
 
-        # Tkhtml offsets start from the first non-space character
-        # Tkhtml offsets also ignore multiple spaces when they are visually collapsed
-        # Meanwhile, textContent includes extra spaces
-        # So, we have to add/subtract the number of extra characters
         if invert:
-            offset += doubles
-            skew = 0
-            for index in range(offset):
-                while index < len(text) and pre_text[index + skew] != text[index]:
-                    skew += 1
-            return text, pre_text, offset - skew
+            return text, offset + doubles
         else:
-            offset -= doubles
-            skew = 0
-            for index, letter in enumerate(text[:offset]):
-                while pre_text[index + skew] != letter:
-                    skew += 1
-            return text, pre_text, offset + skew
-
+            return text, offset - doubles
+        
     def _set_cursor(self, cursor):
         "Set the document cursor."
         if self.current_cursor != cursor:
@@ -1484,7 +1472,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                  (self.clicked_node == useful_node_handle or not self.clicked_node)
                  )) and cursor in utilities.CURSOR_MAP: # if cursor is set
                 self._set_cursor(cursor)
-            elif useful_node_handle != node_handle: # if on a text node
+            elif (useful_node_handle != node_handle) and self.selection_enabled: # if on a text node
                 self._set_cursor("text")
             else:
                 self._set_cursor("default")
@@ -1593,10 +1581,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                 self.current_active_node = None
 
                 if self.selection_enabled:
-                    if self.get_node_tag(self.current_hovered_node):
-                        self._set_cursor("default")
-                    else:
-                        self._set_cursor("text")
+                    self._set_cursor("default")
 
             self.caret_manager.set(new_node, new_offset)
         except tk.TclError:

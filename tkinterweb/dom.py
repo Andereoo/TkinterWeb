@@ -286,11 +286,11 @@ class HTMLElement:
 
     @innerHTML.setter
     def innerHTML(self, contents):  # Taken from hv3_dom2.tcl line 88
-        # Tkhtml crashes if a node containing a widget is destroyed
-        self.widget = None
-        for node in self.html.search(f"[{self.html.widget_manager.widget_container_attr}]", root=self.node):
-            self.html.widget_manager.set_node_widget(node, None)
-        #self.html.update()
+        if self.tagName:
+            # Tkhtml crashes if a node containing a widget is destroyed
+            self.widget = None
+            for node in self.html.search(f"[{self.html.widget_manager.widget_container_attr}]", root=self.node):
+                self.html.widget_manager.set_node_widget(node, None)
 
         self.html.safe_tk_eval("""
             set html %s
@@ -318,6 +318,28 @@ class HTMLElement:
         self.html.event_manager.send_onload(root=self.node)
 
     @property
+    def innerText(self):  # Original for this project
+        """Get and set the text content of an element, as displayed. Cannot be used on ``<html>`` elements.
+        
+        :rtype: str
+        :raises: :py:class:`tkinter.TclError`"""
+        return self.html.safe_tk_eval("""
+            proc get_child_text {node} {
+                set txt [$node text]
+                foreach child [$node children] {
+                    append txt [get_child_text $child]
+                }
+                return $txt
+            }
+            return [get_child_text %s]
+            """ % extract_nested(self.node)
+        )
+
+    @innerText.setter
+    def innerText(self, contents):  # Ditto
+        self.textContent = contents
+
+    @property
     def textContent(self):  # Original for this project
         """Get and set the text content of an element. Cannot be used on ``<html>`` elements.
         
@@ -337,13 +359,12 @@ class HTMLElement:
 
     @textContent.setter
     def textContent(self, contents):  # Ditto
-        # Tkhtml crashes if a node containing a widget is destroyed
-        self.widget = None
-        for node in self.html.search(f"[{self.html.widget_manager.widget_container_attr}]", root=self.node):
-            self.html.widget_manager.set_node_widget(node, None)
-        #self.html.update()
-
         if self.tagName:
+            # Tkhtml crashes if a node containing a widget is destroyed
+            self.widget = None
+            for node in self.html.search(f"[{self.html.widget_manager.widget_container_attr}]", root=self.node):
+                self.html.widget_manager.set_node_widget(node, None)
+
             self.html.safe_tk_eval("""
                 set node %s
                 set textnode %s

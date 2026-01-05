@@ -347,9 +347,9 @@ class HtmlFrame(Frame):
         if "dark_style" in kwargs:
             utilities.deprecate_param("dark_style", "utilities.DARK_STYLE")
         if "about_page_background" in kwargs:
-            utilities.deprecate_param("about_page_background", "background")
+            utilities.deprecate_param("about_page_background", "ttk.Style().configure('TFrame', background=)")
         if "about_page_foreground" in kwargs:
-            utilities.deprecate_param("about_page_foreground", "foreground")
+            utilities.deprecate_param("about_page_foreground", "ttk.Style().configure('TFrame', foreground=)")
 
     def configure(self, **kwargs):
         """

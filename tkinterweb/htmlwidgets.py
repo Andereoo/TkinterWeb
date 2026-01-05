@@ -1332,6 +1332,9 @@ class HtmlLabel(HtmlFrame):
         tags = list(self._html.bindtags())
         tags.remove("Html")
         self._html.bindtags(tags)
+
+        if "style" in kwargs:
+            utilities.warn("Since version 4.14 the style keyword no longer sets the HtmlLabel's CSS code. Please use the add_css() method instead.")
         
         self._style = Style()
 
@@ -1366,6 +1369,10 @@ class HtmlLabel(HtmlFrame):
         ""
         if "text" in kwargs:
             self.load_html(kwargs.pop("text"))
+            
+        if "style" in kwargs:
+            utilities.warn("Since version 4.14 the style keyword no longer sets the HtmlLabel's CSS code. Please use the add_css() method instead.")
+
         if kwargs: super().configure(**kwargs)
 
     def cget(self, key):

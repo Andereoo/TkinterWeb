@@ -1564,26 +1564,29 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
     def _extend_selection(self, event):
         "Alter selection and HTML element states based on mouse movement."
-        if self.selection_manager.selection_start_node is None:
-            return
-
         try:
-            new_node, new_offset = self.node(True, event.x, event.y)
+            if self.selection_manager.selection_start_node:
+                new_node, new_offset = self.node(True, event.x, event.y)
 
-            if new_node is None:
-                return
+                if new_node is None:
+                    return
 
-            self.selection_manager.extend_selection(new_node, new_offset)
+                self.selection_manager.extend_selection(new_node, new_offset)
 
-            if self.current_active_node:
-                if self.stylesheets_enabled:
-                    self.remove_node_flags(self.current_active_node, "active")
-                self.current_active_node = None
-
-                if self.selection_enabled:
+                if self.selection_manager.get_selection() and self.current_active_node:
+                    if self.stylesheets_enabled:
+                        self.remove_node_flags(self.current_active_node, "active")
+                    self.current_active_node = None
                     self._set_cursor("default")
+                    
+                self.caret_manager.set(new_node, new_offset)
 
-            self.caret_manager.set(new_node, new_offset)
+            elif self.current_active_node:
+                if self.current_active_node not in self.hovered_nodes:
+                    if self.stylesheets_enabled:
+                        self.remove_node_flags(self.current_active_node, "active")
+                    self.current_active_node = None
+
         except tk.TclError:
             self._set_cursor("default")
 

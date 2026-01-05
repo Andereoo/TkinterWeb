@@ -477,7 +477,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     def selection_enabled(self, prev_enabled, enabled):
         "Enable or disable text selection."
         if getattr(self, "_selection_manager", False) and not enabled:
-            self.selection_manager.reset()
+            self.selection_manager.clear_selection()
 
     @property
     def tkhtml_default_style(self):
@@ -1382,7 +1382,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             self.selection_manager.reset_selection_type()
 
         self.focus_set()
-        self.tag("delete", "selection")
+        self.selection_manager.clear_selection()
 
         if self.javascript_enabled or self.events_enabled:
             for node_handle in self.hovered_nodes:

@@ -99,6 +99,7 @@ class SelectionManager(utilities.BaseManager):
         "Clear the current selection."
         self.html.tag("delete", "selection")
         self.selection_start_node = None
+        self.selection_end_node = None
 
     def update_tags(self):
         "Update selection and find tag colours."

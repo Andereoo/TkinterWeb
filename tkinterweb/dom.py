@@ -322,7 +322,9 @@ class HTMLElement:
         """Get and set the text content of an element, as displayed. Cannot be used on ``<html>`` elements.
         
         :rtype: str
-        :raises: :py:class:`tkinter.TclError`"""
+        :raises: :py:class:`tkinter.TclError`
+        
+        New in version 4.14."""
         return self.html.safe_tk_eval("""
             proc get_child_text {node} {
                 set txt [$node text]

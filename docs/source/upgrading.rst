@@ -315,6 +315,8 @@ Changelog
 
     Version 4.14:
 
+    * :attr:`.HTMLElement.innerText`
+
     * The new configuration option ``request_func`` can be used to set a custom script to use to download resources.
 
 .. dropdown:: Changed/Fixed
@@ -426,7 +428,8 @@ Changelog
     * Fixed more bugs.
     * :class:`.HtmlLabel` widgets are now automatically styled to match the ttk style.
     * Alternate text for broken images is now displayed natively through Tkhtml.
-
+    * Indexes used by :meth:`.HtmlFrame.get_caret_position`, :meth:`.HtmlFrame.set_caret_position`, :meth:`.HtmlFrame.get_selection_position`, and :meth:`.HtmlFrame.set_selection_position` are now based on :attr:`.HTMLElement.innerText` instead of :attr:`.HTMLElement.textContent`.
+    
 -------------------
 
 Please report bugs or request new features on the `issues page <https://github.com/Andereoo/TkinterWeb/issues>`_.

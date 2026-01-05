@@ -875,7 +875,7 @@ class HtmlFrame(Frame):
     def get_caret_position(self):
         """Get the position of the caret. This can be used to modify the document's text when the user types. 
         
-        :return: The :class:`~tkinterweb.dom.HTMLElement` under the caret, the text content of that element, and an index representing the position in that string that the caret is at. If the caret is not visible, this method will return None
+        :return: The :class:`~tkinterweb.dom.HTMLElement` under the caret, the text content of that element, and an index representing the position in that string that the caret is at. If the caret is not visible, this method will return None.
         :rtype: :class:`~tkinterweb.dom.HTMLElement`, str, int or None
         
         The element returned will always be a text node. If you need to change the style or HTML content of a text node you will first need to get its parent.
@@ -906,7 +906,7 @@ class HtmlFrame(Frame):
         
         :param element: Specifies the element to place the caret over.
         :type element: :class:`~tkinterweb.dom.HTMLElement`
-        :param index: The index in the element's text content to place the caret at.
+        :param index: The index in the element's innerText to place the caret at.
         :type index: int
 
         :raise RuntimeError: If caret browsing is disabled or the given element is empty or has been removed.
@@ -1048,11 +1048,11 @@ class HtmlFrame(Frame):
         
         :param start_element: Specifies the element to begin the selection in.
         :type start_element: :class:`~tkinterweb.dom.HTMLElement`
-        :param start_index: The index in the element's text content to begin the selection at.
+        :param start_index: The index in the element's innerText to begin the selection at.
         :type start_index: int
         :param end_element: Specifies the element to end the selection in.
         :type end_element: :class:`~tkinterweb.dom.HTMLElement`
-        :param end_index: The index in the element's text content to end the selection at.
+        :param end_index: The index in the element's innerText to end the selection at.
         :type end_index: int
 
         :raise RuntimeError: If selection is disabled or the given elements are empty or have been removed.

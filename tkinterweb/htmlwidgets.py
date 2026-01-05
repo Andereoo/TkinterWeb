@@ -213,8 +213,8 @@ class HtmlFrame(Frame):
             "parsemode": utilities.DEFAULT_PARSE_MODE,
             "shrink": False,
             "mode": utilities.DEFAULT_ENGINE_MODE,
-            "height": None,
-            "width": None,
+            "height": -1,
+            "width": -1,
         }
                             
         for key, value in self._htmlframe_options.items():
@@ -1358,13 +1358,14 @@ class HtmlLabel(HtmlFrame):
         fg = self._style.lookup(style_type, 'foreground')
         style = self._html.default_style + \
             (self._html.dark_style if self._html.dark_theme_enabled else "") +\
-            f"BODY, HTML {{ background-color: {bg}; color: {fg}; }}"
+            f"BODY {{ background-color: {bg}; color: {fg}; }}"
         self._html.configure(defaultstyle=style)
         
         # Load the HTML
         super().load_html(*args, **kwargs)
 
         # This stops infinite flickering when tables are present
+        # My computer was having this bug for a while but now I don't experience it
         self.update_idletasks()
         self._html.relayout()
 

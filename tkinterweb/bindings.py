@@ -51,6 +51,12 @@ class TkinterWeb(tk.Widget):
         if "defaultstyle" not in kwargs and self.default_style:
             kwargs["defaultstyle"] = self.default_style
 
+        # Unset width and height if -1
+        if kwargs.get("width") == -1: 
+            del kwargs["width"]
+        if kwargs.get("height") == -1: 
+            del kwargs["height"]
+
         # Provide OS information for troubleshooting
         self.post_message(f"Starting TkinterWeb for {utilities.PLATFORM.processor} {utilities.PLATFORM.system} with Python {'.'.join(utilities.PYTHON_VERSION)}")
 

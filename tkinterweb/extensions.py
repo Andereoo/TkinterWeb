@@ -909,11 +909,10 @@ class WidgetManager(utilities.BaseManager):
                 bg = "white"
             if fg == "transparent":
                 fg = "white"
-            widgetid.configure(background=bg)
             try:
-                widgetid.configure(foreground=fg, font=font)
-            except TclError:
-                pass
+                widgetid.configure(background=bg, foreground=fg, font=font)
+            except (TclError, ValueError, ):
+                widgetid.configure(background=bg)
         elif widgettype == "auto":
             bg = self.html.get_node_property(node, "background-color")
             fg = self.html.get_node_property(node, "color")
@@ -924,11 +923,10 @@ class WidgetManager(utilities.BaseManager):
                 fg = "white"
             widgets = [widgetid] + [widget for widget in widgetid.winfo_children()]
             for widget in widgets:
-                widget.configure(background=bg)
                 try:
-                    widget.configure(foreground=fg, font=font)
-                except TclError:
-                    pass
+                    widget.configure(background=bg, foreground=fg, font=font)
+                except (TclError, ValueError, ):
+                    widget.configure(background=bg)
 
     def map_node(self, node, force=False):
         "Redraw a node if it currently contains a Tk widget."

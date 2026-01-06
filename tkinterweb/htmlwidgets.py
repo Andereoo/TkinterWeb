@@ -1349,10 +1349,11 @@ class HtmlLabel(HtmlFrame):
 
         if text:
             self.load_html(text)
-        else:
-            # This seems to make the widget shrink with certain HTML pages
-            # It may need to be removed
-            self.load_html("<body></body>", _relayout=False)
+        #else:
+        #    # This seems to make the widget shrink with certain HTML pages
+        #    # See Bug 145, for instance
+        #    # Will need to look into a way to make this work
+        #    self.load_html("<body></body>", _relayout=False)
 
     def _handle_resize(self, *args, **kwargs):
         # Overwrite HtmlFrame._handle_resize, which is not necessary when shrink is set to True

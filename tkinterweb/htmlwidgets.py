@@ -46,8 +46,10 @@ class HtmlFrame(Frame):
     :type vertical_scrollbar: bool or "auto"
     :param horizontal_scrollbar: Show the horizontal scrollbar. It is usually best to leave this hidden. Consider adding the ``tkinterweb-overflow-x="scroll" | "auto" | "hidden"`` attribute on the ``<html>`` or ``<body>`` element instead.
     :type horizontal_scrollbar: bool or "auto"
-    :param shrink: If False, the widget's width and height are set by the width and height options as per usual. You may still need to call ``grid_propagate(0)`` or ``pack_propagate(0)`` for Tkinter to respect the set width and height. If this option is set to True, the widget's requested width and height are determined by the current document.
+    :param shrink: If False, the widget's width and height are set by the width and height options as per usual. If this option is set to True, the widget's requested width and height are determined by the current document.
     :type shrink: bool
+    :param defaultstyle: The default stylesheet to use when parsing HTML. It's usually best to leave this setting alone. The default is ``tkintereb.utilities.DEFAULT_STYLE``.
+    :type defaultstyle: str
     
     Debugging:
 
@@ -213,6 +215,7 @@ class HtmlFrame(Frame):
             "parsemode": utilities.DEFAULT_PARSE_MODE,
             "shrink": False,
             "mode": utilities.DEFAULT_ENGINE_MODE,
+            "defaultstyle": "",
             "height": -1,
             "width": -1,
         }
@@ -1179,12 +1182,15 @@ class HtmlFrame(Frame):
         return allow
 
     def _get_about_page(self, url, i1="", i2=""):
+        style_type = None
         if not self.about_page_background: 
             if not self._style: self._style = Style()
-            self.about_page_background = self._style.lookup('TFrame', 'background')
+            style_type = self.cget("style")
+            self.about_page_background = self._style.lookup(style_type, "background")
         if not self.about_page_foreground: 
             if not self._style: self._style = Style()
-            self.about_page_foreground = self._style.lookup('TFrame', 'foreground')
+            if not style_type: style_type = self.cget("style")
+            self.about_page_foreground = self._style.lookup(style_type, "foreground")
 
         return utilities.BUILTIN_PAGES[url].format(bg=self.about_page_background, fg=self.about_page_foreground, i1=i1, i2=i2)
 
@@ -1344,14 +1350,16 @@ class HtmlLabel(HtmlFrame):
         if text:
             self.load_html(text)
         else:
-            self.load_html("<body></body>")
+            # This seems to make the widget shrink with certain HTML pages
+            # It may need to be removed
+            self.load_html("<body></body>", _relayout=False)
 
     def _handle_resize(self, *args, **kwargs):
         # Overwrite HtmlFrame._handle_resize, which is not necessary when shrink is set to True
         # HtmlFrame._handle_resize also causes weird behaviour when tables are present and shrink set to True
         return
     
-    def load_html(self, *args, **kwargs):
+    def load_html(self, *args, _relayout=True, **kwargs):
         # Match the ttk theme
         style_type = self.cget("style")
         bg = self._style.lookup(style_type, 'background')
@@ -1366,8 +1374,10 @@ class HtmlLabel(HtmlFrame):
 
         # This stops infinite flickering when tables are present
         # My computer was having this bug for a while but now I don't experience it
-        self.update_idletasks()
-        self._html.relayout()
+        # But this doesn't seem to have any major side effects
+        if _relayout:
+            self.update_idletasks()
+            self._html.relayout()
 
     def configure(self, **kwargs):
         ""

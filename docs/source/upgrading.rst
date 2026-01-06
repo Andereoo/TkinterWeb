@@ -98,8 +98,8 @@ Changelog
 
     Version 4.14:
 
-    * The configuration option ``default_style`` - use ``tkinterweb.utilities.DEFAULT_STYLE``.
-    * The configuration option ``dark_style`` - use ``tkinterweb.utilities.DARK_STYLE``.
+    * The configuration option ``default_style`` - use ``tkinterweb.utilities.DEFAULT_STYLE`` or the ``defaultstyle`` configuration option.
+    * The configuration option ``dark_style`` - use ``tkinterweb.utilities.DARK_STYLE`` or the ``defaultstyle`` configuration option.
     * The configuration option ``about_page_background`` - use ``ttk.Style().configure("TFrame", background=)``.
     * The configuration option ``about_page_foreground`` - use ``ttk.Style().configure("TFrame", foreground=)``.
 
@@ -318,6 +318,7 @@ Changelog
     * :attr:`.HTMLElement.innerText`
 
     * The new configuration option ``request_func`` can be used to set a custom script to use to download resources.
+    * The new configuration option ``defaultstyle`` can be used to set the default stylesheet to use when parsing HTML.
 
 .. dropdown:: Changed/Fixed
 

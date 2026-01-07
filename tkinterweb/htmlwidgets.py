@@ -593,13 +593,10 @@ class HtmlFrame(Frame):
             self._html.parse_css(data=css_source, fallback_priority=priority)
 
     def import_css(self, url):
-        try:
-            new_url = urljoin(self._html.base_url, url)
-            self._html.post_message(f"Loading stylesheet from {new_url}")
-            self._html._thread_check(self._html.fetch_styles, url=new_url)
+        """Manually add a CSS stylesheet, like @import but in Python
 
-        except Exception as error:
-            self._html.post_message(f"ERROR: could not load stylesheet {url}: {error}")
+        :param url: The URL to the CSS stylesheet."""
+        self._html.style_manager._on_atimport(self._html.base_url, url)
 
     def stop(self):
         """Stop loading this page and abandon all pending requests."""

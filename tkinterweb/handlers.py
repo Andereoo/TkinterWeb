@@ -582,8 +582,8 @@ class StyleManager(utilities.BaseManager):
     def _finish_fetching_styles(self, node, url, data):
         # NOTE: this must run in the main thread
 
-        self.html.style_count += 1
-        sheetid = "user." + str(self.html.style_count).zfill(4)
+        self.html._style_count += 1
+        sheetid = "user." + str(self.html._style_count).zfill(4)
 
         self.html.parse_css(f"{sheetid}.9999", data, url)
         if node:

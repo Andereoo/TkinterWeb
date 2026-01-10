@@ -366,7 +366,7 @@ class CaretManager(utilities.BaseManager):
             #self.target_node = self.node
             self.target_offset = self.offset
 
-    def shift_up(self, event=None):     
+    def shift_up(self, event=None, update=True):     
         "Shift the caret up."   
         if not self.node:
             return
@@ -400,11 +400,11 @@ class CaretManager(utilities.BaseManager):
         try:
             # in case `node, offset = self.html.text("index", index)` fails
             self.register_nodes_from_index(event, index)
-            self.update(event)
-        except TclError:
-            pass
+            self.update(event, update=update)
+        except ValueError:
+            self.reset()
 
-    def shift_down(self, event=None):
+    def shift_down(self, event=None, update=True):
         "Shift the caret down."
         if not self.node:
             return
@@ -437,11 +437,11 @@ class CaretManager(utilities.BaseManager):
 
         try:
             self.register_nodes_from_index(event, index)
-            self.update(event)
-        except TclError:
-            pass
+            self.update(event, update=update)
+        except ValueError:
+            self.reset()
 
-    def shift_left(self, event=None, update_caret_start=True):
+    def shift_left(self, event=None, update_caret_start=True, update=True):
         "Shift the caret left."
         if not self.node:
             return
@@ -472,11 +472,11 @@ class CaretManager(utilities.BaseManager):
         
         try:
             self.register_nodes_from_index(event, index, update_caret_start)
-            self.update(event)
-        except TclError:
-            pass
+            self.update(event, update=update)
+        except ValueError:
+            self.reset()
 
-    def shift_right(self, event=None, update_caret_start=True):
+    def shift_right(self, event=None, update_caret_start=True, update=True):
         "Shift the caret right."
         if not self.node:
             return
@@ -486,6 +486,8 @@ class CaretManager(utilities.BaseManager):
         text_length = len(text) - 1
 
         if type(index) == str: index = self.index
+
+        old_index = index
 
         if event and ((event.state & 0x4) != 0):
             # If Ctrl is pressed, shift to the start of the next space or newline
@@ -501,13 +503,17 @@ class CaretManager(utilities.BaseManager):
             if not changed and index < text_length:
                 index += 1
         
+        if old_index == index:
+            # Prevents recursion errors when shifting right on pages with only newlines and non-breaking spaces
+            return
+
         try:
             self.register_nodes_from_index(event, index, update_caret_start)
-            self.update(event, fallback=self.shift_right)
-        except TclError:
-            pass
+            self.update(event, fallback=self.shift_right, update=update)
+        except ValueError:
+            self.reset()
 
-    def update(self, event=None, auto_scroll=True, fallback=None):
+    def update(self, event=None, auto_scroll=True, fallback=None, update=True):
         "Refresh the caret or update its position."
         if not fallback:
             fallback = self.shift_left
@@ -534,6 +540,9 @@ class CaretManager(utilities.BaseManager):
                 c = c2 + (c2-a2)
             except ValueError:
                 return fallback(event, update_caret_start=False)
+            
+        if not update:
+            return
                             
         x1, y1, x2, y2 = self.html.bbox()
         yoffset = self._scroll_if_needed(b, d, y1, y2, auto_scroll)

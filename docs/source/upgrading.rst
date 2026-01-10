@@ -320,6 +320,13 @@ Changelog
     * The new configuration option ``request_func`` can be used to set a custom script to use to download resources.
     * The new configuration option ``defaultstyle`` can be used to set the default stylesheet to use when parsing HTML.
 
+    Version 4.15:
+
+    * :meth:`.HtmlFrame.add_css` now accepts the additional parameter ``priority``. 
+    * :meth:`.CaretManager.shift_left`, :meth:`.CaretManager.shift_right`, :meth:`.CaretManager.shift_up`, :meth:`.CaretManager.shift_down`, and :meth:`.CaretManager.shift_update` now accept the additional parameter ``update``.
+
+    * The :class:`.HtmlText` widget now supports the ``background``, ``foreground``, ``bg``, and ``fg`` keywords.
+
 .. dropdown:: Changed/Fixed
 
     Version 4.0:
@@ -427,10 +434,19 @@ Changelog
     Version 4.14:
 
     * Fixed more bugs.
-    * :class:`.HtmlLabel` widgets are now automatically styled to match the ttk style.
+    * The :class:`.HtmlLabel` widget now automatically matches the ttk style.
     * Alternate text for broken images is now displayed natively through Tkhtml.
-    * Indexes used by :meth:`.HtmlFrame.get_caret_position`, :meth:`.HtmlFrame.set_caret_position`, :meth:`.HtmlFrame.get_selection_position`, and :meth:`.HtmlFrame.set_selection_position` are now based on :attr:`.HTMLElement.innerText` instead of :attr:`.HTMLElement.textContent`.
-    
+
+    Version 4.15:
+
+    * Fixed more bugs.
+    * Improved some error messages.
+    * Improved code autocompletion.
+    * All HTML widgets now bind to ``<Ctrl-A>`` by default.
+    * Equality checking between :class:`.HTMLElement` objects is now fully supported.
+    * The :class:`.HtmlText` widget is now editable out-of-the-box!
+    * The :class:`.HtmlLabel` widget now uses the ``TLabel`` style by default instead of ``TFrame``.
+
 -------------------
 
 Please report bugs or request new features on the `issues page <https://github.com/Andereoo/TkinterWeb/issues>`_.

@@ -59,6 +59,9 @@ TkinterWeb is very easy to use! Here is an example:
 
 The :class:`~tkinterweb.HtmlFrame` widget behaves like any other Tkinter widget and supports bindings. It also supports link clicks, form submittions, website title changes, and much, much more! Refer below for more tips and tricks!
 
+.. tip::
+    Use the :class:`~tkinterweb.HtmlLabel` widget for an HTML label widget and the :class:`~tkinterweb.HtmlText` widget for an HTML text widget.
+    
 Tips and tricks
 ---------------
 

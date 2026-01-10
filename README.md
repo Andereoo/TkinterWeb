@@ -24,9 +24,9 @@ All [major operating systems](https://tkinterweb.readthedocs.io/en/latest/compat
 ## Usage
 
 **TkinterWeb provides:**
-* A [frame](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html) widget to display and edit websites, help files, RSS feeds, and any other styled HTML in Tkinter.
-* A [label](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html#tkinterweb.HtmlLabel) widget that can display styled HTML.
-* A [geometry manager](https://tkinterweb.readthedocs.io/en/latest/geometry.html) to display Tkinter widgets *and HTML elements* together in a Tkinter application.
+* A [frame widget](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html) to display and edit websites, help files, RSS feeds, and any other styled HTML in Tkinter.
+* A [label widget](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html#tkinterweb.HtmlLabel) that can display styled HTML.
+* A [text widget](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html#tkinterweb.HtmlText) that allows the user to edit styled HTML.
 
 **TkinterWeb can be used in any Tkinter application to display and edit websites, help pages, documentation, and much more! Here is an example:**
 ```

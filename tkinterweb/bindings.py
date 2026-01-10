@@ -21,7 +21,9 @@ class TkinterWeb(tk.Widget):
 
     **Do not use this widget on its own unless absolutely nessessary.** Instead use the :class:`~tkinterweb.HtmlFrame` widget.
 
-    This widget can be accessed through the :attr:`~tkinterweb.HtmlFrame.html` property of the :class:`~tkinterweb.HtmlFrame` and :class:`~tkinterweb.HtmlLabel` widgets to access underlying settings and commands that are not a part of the :class:`~tkinterweb.HtmlFrame` API."""
+    This widget can be accessed through the :attr:`~tkinterweb.HtmlFrame.html` property of the :class:`~tkinterweb.HtmlFrame` and :class:`~tkinterweb.HtmlLabel` widgets to access underlying settings and commands that are not a part of the :class:`~tkinterweb.HtmlFrame` API.
+    
+    This widget stores many useful instance variables and configuration flags. Some are exposed through the main API, others are not. Please see the source code for more details."""
 
     def __init__(self, master, tkinterweb_options=None, **kwargs):
         self.master = master
@@ -51,10 +53,10 @@ class TkinterWeb(tk.Widget):
         if kwargs.get("defaultstyle", "") == "" and self.default_style:
             kwargs["defaultstyle"] = self.default_style
 
-        # Unset width and height if -1
-        if kwargs.get("width") == -1: 
+        # Unset width and height if -0
+        if kwargs.get("width") == 0: 
             del kwargs["width"]
-        if kwargs.get("height") == -1: 
+        if kwargs.get("height") == 0: 
             del kwargs["height"]
 
         # Provide OS information for troubleshooting
@@ -114,6 +116,7 @@ If you benefited from using this package, please consider supporting its develop
             "overflow_scroll_frame": None,
             "default_style": "",
             "dark_style": "",
+            "text_mode": False,
 
             "use_prebuilt_tkhtml": True,
             "tkhtml_version": "",
@@ -179,14 +182,15 @@ If you benefited from using this package, please consider supporting its develop
         self.icon = ""
 
         self.fragment = ""
-        self.style_count = 0
         self.active_threads = []
         self.downloads_have_occured = False
         self.current_active_node = None
         self.clicked_node = None
         self.current_hovered_node = None
         self.hovered_nodes = []
-        self.current_cursor = ""
+
+        self._style_count = 0
+        self._current_cursor = ""
 
         # This set is used when resetting the widget and contains a reference to all loaded managers
         # Managers automatically add themselves to this set as they are created
@@ -200,6 +204,7 @@ If you benefited from using this package, please consider supporting its develop
         self.bind_class(self.node_tag, "<FocusIn>", self._on_focusout, True)
 
         self.bind_class(self.tkinterweb_tag, "<<Copy>>", self._copy_selection, True)
+        self.bind_class(self.tkinterweb_tag, "<Control-a>", self._select_all, True)
         self.bind_class(self.tkinterweb_tag, "<B1-Motion>", self._extend_selection, True)
         self.bind_class(self.tkinterweb_tag, "<Button-1>", self._on_click, True)
         self.bind_class(self.tkinterweb_tag, "<Button-2>", self._on_middle_click, True)
@@ -565,7 +570,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
         # By default Tkhtml won't display plain text
         if "<" not in html and ">" not in html:
-            html = f"<html><body><p>{html}</p></body></html>"
+            html = f"<body><div>{html}</div></body>"
 
         # Send the HTML code to the queue if needed
         # Otherwise, evaluate directly so that the document can be manipulated as soon as parse() returns
@@ -609,7 +614,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         if post_event:
             self.post_event(utilities.DONE_LOADING_EVENT)
 
-    def parse_css(self, sheetid=None, data="", url=None):
+    def parse_css(self, sheetid=None, data="", url=None, fallback_priority="author"):
         "Parse CSS code."
         if not url:
             url = self.base_url
@@ -633,9 +638,9 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                     self._w, "style", "-id", sheetid, "-importcmd", importcmd, "-urlcmd", urlcmd, data
                 )
             else:
-                self.style_count += 1
+                self._style_count += 1
                 self.tk.call(
-                    self._w, "style", "-id", "author" + str(self.style_count).zfill(4), "-importcmd", importcmd, "-urlcmd", urlcmd, data
+                    self._w, "style", "-id", fallback_priority + str(self._style_count).zfill(4), "-importcmd", importcmd, "-urlcmd", urlcmd, data
                 )
         except tk.TclError:
             # The widget doesn't exist anymore
@@ -1208,27 +1213,31 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         """Translate a Tkhtml node offset to a node text index or back.
 
         New in version 4.8."""
-        # Ideally we would use the pathName text offset/index commands,
-        # but for the end user I think it is more useful to get an index within a Tkhtml node rather than in the entire document
-        text = self.get_node_text(node)
 
-        # Tkhtml offsets consider \xa0 as occupying two spaces, so we double each instance of \xa0
-        doubles = text.replace("\xa0", "\xa0\xa0")[:offset].count("\xa0\xa0")
+        text = self.get_node_text(node, "-pre")
+
+        ws = len(text) - len(text.lstrip())
 
         if invert:
-            return text, offset + doubles
+            #index = self.text("offset", node, 0) + offset
+            #node, offset = self.text("index", index)
+            return text, max(offset - ws, 0)
         else:
-            return text, offset - doubles
+            try:
+                offset = self.text("offset", node, offset + ws) - self.text("offset", node, 0)
+            except TypeError:
+                pass
+            return text, offset
         
     def _set_cursor(self, cursor):
         "Set the document cursor."
-        if self.current_cursor != cursor:
+        if self._current_cursor != cursor:
             cursor = utilities.CURSOR_MAP[cursor]
             try:
                 self.master.config(cursor=cursor, _override=True)
             except tk.TclError:
                 self.master.config(cursor=cursor)
-            self.current_cursor = cursor
+            self._current_cursor = cursor
             # I've noticed that the cursor won't always update when the binding is tied to a different widget than the one we are changing the cursor of
             # However, the html widget doesn't support the cursor property so there's not much we can do about this
             # update_idletasks() or update() have no effect, but updating the color or text of another widget does
@@ -1404,7 +1413,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
             self.caret_manager.set(node, offset)
 
-            if self.stylesheets_enabled:
+            if self.stylesheets_enabled and (not self.text_mode or (event.state & 0x4) != 0):
                 self.set_node_flags(self.hovered_nodes[0], "active")
                 self.current_active_node = self.hovered_nodes[0]
 
@@ -1445,8 +1454,14 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         node_handle = self.get_current_hovered_node(event)
 
         if not node_handle:
-            self._on_leave(None)
-            return
+            if self.text_mode:
+                try:
+                    node_handle, index = self.text("index", "-1")    
+                except ValueError:
+                    return
+            else:
+                self._on_leave(None)
+                return
 
         try:
             # If we are in the same node, sumbit motion events
@@ -1462,6 +1477,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             # If not we have some work to do
             if self.hovered_nodes:
                 self.event_manager.post_element_event(self.hovered_nodes[0], "onmouseleave")
+                
 
             prev_hovered_nodes = set(self.hovered_nodes)
             
@@ -1473,12 +1489,14 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             self._handle_recursive_hovering(event, useful_node_handle, prev_hovered_nodes)
 
             cursor = self.get_node_property(useful_node_handle, "cursor")
-            if (not (event.state & 0x0100) or event.type == "5" or 
+            if self.text_mode and not (event.state & 0x4):
+                self._set_cursor("text")
+            elif (not (event.state & 0x0100) or event.type == "5" or 
                 (not self.selection_enabled and 
                  (self.clicked_node == useful_node_handle or not self.clicked_node)
                  )) and cursor in utilities.CURSOR_MAP: # if cursor is set
                 self._set_cursor(cursor)
-            elif (useful_node_handle != node_handle) and self.selection_enabled: # if on a text node
+            elif ((useful_node_handle != node_handle) and self.selection_enabled) : # if on a text node
                 self._set_cursor("text")
             else:
                 self._set_cursor("default")
@@ -1533,6 +1551,10 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
             if self.current_active_node and self.stylesheets_enabled:
                 self.remove_node_flags(self.current_active_node, "active")
+
+            if self.text_mode and not (event.state & 0x4):
+                return
+            
             if node_tag == "input" and node_type == "reset":
                 self.form_manager._handle_form_reset(node_handle)
             elif node_tag == "input" and node_type in {"submit", "image"}:
@@ -1570,34 +1592,35 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
     def _extend_selection(self, event):
         "Alter selection and HTML element states based on mouse movement."
+        if self.selection_manager.selection_start_node is None:
+            return
+
         try:
-            if self.selection_manager.selection_start_node:
-                new_node, new_offset = self.node(True, event.x, event.y)
+            new_node, new_offset = self.node(True, event.x, event.y)
 
-                if new_node is None:
-                    return
+            if new_node is None:
+                return
 
-                self.selection_manager.extend_selection(new_node, new_offset)
+            self.selection_manager.extend_selection(new_node, new_offset)
 
-                if self.selection_manager.get_selection() and self.current_active_node:
-                    if self.stylesheets_enabled:
-                        self.remove_node_flags(self.current_active_node, "active")
-                    self.current_active_node = None
+            if self.current_active_node:
+                if self.stylesheets_enabled:
+                    self.remove_node_flags(self.current_active_node, "active")
+                self.current_active_node = None
+
+                if self.selection_enabled and not self.text_mode:
                     self._set_cursor("default")
-                    
-                self.caret_manager.set(new_node, new_offset)
 
-            elif self.current_active_node:
-                if self.current_active_node not in self.hovered_nodes:
-                    if self.stylesheets_enabled:
-                        self.remove_node_flags(self.current_active_node, "active")
-                    self.current_active_node = None
-
+            self.caret_manager.set(new_node, new_offset)
         except tk.TclError:
-            self._set_cursor("default")
+            if not self.text_mode:
+                self._set_cursor("default")
 
     def _copy_selection(self, event):
         self.selection_manager.copy_selection()
+
+    def _select_all(self, event):
+        self.selection_manager.select_all()
 
     # --- Backwards-compatibility ---------------------------------------------
 

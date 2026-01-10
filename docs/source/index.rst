@@ -25,7 +25,7 @@ It provides bindings and extensions for the Tkhtml3 widget from `http://tkhtml.t
 Top features
 ------------
 
-* Displaying websites, feeds, help files, and other styled HTML
+* Displaying and editing websites, feeds, help files, and other styled HTML
 * Displaying images, including SVG images
 * Creating a rich text or HTML editor
 * Designing apps using HTML templates

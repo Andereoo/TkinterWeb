@@ -225,6 +225,9 @@ class HTMLElement:
     :ivar document: The element's corresponding :class:`~tkinterweb.dom.HTMLDocument` instance.
     :ivar html: The element's corresponding :class:`~tkinterweb.TkinterWeb` instance.
     :ivar node: The element's corresponding Tkhtml node."""
+
+    ### TODO: consider caching or using a weakref for HTMLElements
+
     def __init__(self, document_manager, node):
         self.document = document_manager
         self.html = document_manager.html
@@ -242,6 +245,14 @@ class HTMLElement:
 
     def __repr__(self):
         return f"{self.html._w}{self.node}"
+    
+    def __eq__(self, other):
+        if not isinstance(other, HTMLElement):
+            return NotImplemented
+        return self.node == other.node
+    
+    def __hash__(self):
+        return hash(self.node)
         
     # def __str__(self):
     #     tag = self.tagName
@@ -439,7 +450,7 @@ class HTMLElement:
     def children(self):
         """Get the element's children elements.
         
-        :rtype: :class:`HTMLCollection`
+        :rtype: list
         :raises: :py:class:`tkinter.TclError`"""
         return [HTMLElement(self.document, i) for i in self.html.get_node_children(self.node)]
     

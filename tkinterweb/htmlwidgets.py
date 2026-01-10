@@ -72,13 +72,13 @@ class HtmlFrame(Frame):
     :type forms_enabled: bool
     :param objects_enabled: Enable/disable embedding of ``<object>`` and ``<iframe>`` elements. This is enabled by default.
     :type objects_enabled: bool
-    :param caches_enabled: Enable/disable caching. Disabling this option will conserve memory, but will also result in longer page and image reload times. This is enabled by default.
+    :param caches_enabled: Enable/disable caching. Disabling this option will conserve memory, but will also result in longer page and image reload times. This is enabled by default. Largely for debugging.
     :type caches_enabled: bool
     :param crash_prevention_enabled: Enable/disable crash prevention. Disabling this option may improve page load speed, but crashes will occur on some websites. This is enabled by default.
     :type crash_prevention_enabled: bool
     :param events_enabled: Enable/disable generation of Tk events. This is enabled by default.
     :type events_enabled: bool
-    :param threading_enabled: Enable/disable threading. Has no effect if the Tcl/Tk build does not support threading. This is enabled by default.
+    :param threading_enabled: Enable/disable threading. Has no effect if the Tcl/Tk build does not support threading. This is enabled by default. Largely for debugging.
     :type threading_enabled: bool
     :param javascript_enabled: Enable/disable JavaScript support. This is disabled by default. Highly experimental. New in version 4.1.
     :type javascript_enabled: bool
@@ -136,7 +136,18 @@ class HtmlFrame(Frame):
     
     :raise TypeError: If the value type is wrong and cannot be converted to the correct type."""
 
-    def __init__(self, master, **kwargs):
+    def __init__(self, master, *, zoom = 1.0, fontscale = 1.0, messages_enabled = True, vertical_scrollbar = "auto", horizontal_scrollbar = False, \
+                    on_navigate_fail = None, on_link_click = None, on_form_submit = None, on_script = None, on_element_script = None, on_resource_setup = None, \
+                    message_func = utilities.notifier, request_func = None, caret_browsing_enabled = False, selection_enabled = True, \
+                    stylesheets_enabled = True, images_enabled = True, forms_enabled = True, objects_enabled = True, caches_enabled = True, \
+                    dark_theme_enabled = False, image_inversion_enabled = False, javascript_enabled = False, events_enabled = True, \
+                    threading_enabled = True, crash_prevention_enabled = True, image_alternate_text_enabled = True, ignore_invalid_images = True, \
+                    visited_links = [], find_match_highlight_color = "#f1a1f7", find_match_text_color = "#000", find_current_highlight_color = "#8bf0b3", \
+                    find_current_text_color = "#000", selected_text_highlight_color = "#9bc6fa", selected_text_color = "#000", \
+                    insecure_https = False, ssl_cafile = None, request_timeout = 15, headers = utilities.HEADERS, experimental = False, \
+                    use_prebuilt_tkhtml = True, tkhtml_version = "", parsemode = utilities.DEFAULT_PARSE_MODE, \
+                    shrink = False, mode = utilities.DEFAULT_ENGINE_MODE, defaultstyle = "", height = 0, width = 0, **kwargs):
+        
         # State and settings variables
         self._current_url = ""
         self._previous_url = ""
@@ -150,74 +161,74 @@ class HtmlFrame(Frame):
         # Deprecations
         self._check_deprecations(**kwargs)
 
-        ### TODO: switch to a TypedDict or something
-                
         ### TODO: it would be really nice to better match the parameters, function names, and events used in stock Tkinter widgets
-        ### Not too sure if that's really reasonable at this point
+        ### Not really reasonable at this point
 
+        # Before I had kwargs mapped directly do these dicts, but then autocomplete didn't work
+        # Probably I just need fewer options.
         self._htmlframe_options = {
-            "on_navigate_fail": self.show_error_page,
-            "vertical_scrollbar": "auto",
-            "horizontal_scrollbar": False,
-            "about_page_background": "", # will be removed
-            "about_page_foreground": "", # will be removed
+            "on_navigate_fail": self.show_error_page if on_navigate_fail is None else on_navigate_fail,
+            "vertical_scrollbar": vertical_scrollbar,
+            "horizontal_scrollbar": horizontal_scrollbar,
+            "about_page_background": kwargs.pop("about_page_background", ""), # will be removed
+            "about_page_foreground": kwargs.pop("about_page_foreground", "") # will be removed
         }
         self._tkinterweb_options = {
-            "on_link_click": self.load_url,
-            "on_form_submit": self.load_form_data,
-            "on_script": self._on_script,
-            "on_element_script": self._on_element_script,
-            "on_resource_setup": utilities.placeholder,
-            "message_func": utilities.notifier,
-            "messages_enabled": True,
-            "caret_browsing_enabled": False,
-            "selection_enabled": True,
-            "stylesheets_enabled": True,
-            "images_enabled": True,
-            "forms_enabled": True,
-            "objects_enabled": True,
-            "caches_enabled": True,
-            "dark_theme_enabled": False,
-            "image_inversion_enabled": False,
-            "crash_prevention_enabled": True,
-            "events_enabled": True,
-            "threading_enabled": True,
-            "javascript_enabled": False,
-            "image_alternate_text_enabled": True,
-            "ignore_invalid_images": True,
-            "visited_links": [],
-            "find_match_highlight_color": "#f1a1f7",
-            "find_match_text_color": "#000",
-            "find_current_highlight_color": "#8bf0b3",
-            "find_current_text_color": "#000",
-            "selected_text_highlight_color": "#9bc6fa",
-            "selected_text_color": "#000",
-            "default_style": utilities.DEFAULT_STYLE, # will be removed
-            "dark_style": utilities.DARK_STYLE, # will be removed
-            "request_func": None,
-            "insecure_https": False,
-            "ssl_cafile": None,
-            "request_timeout": 15,
-            "headers": utilities.HEADERS,
-            "experimental": False,
+            "on_link_click": self.load_url if on_link_click is None else on_link_click,
+            "on_form_submit": self.load_form_data if on_form_submit is None else on_form_submit,
+            "on_script": self._on_script if on_script is None else on_script ,
+            "on_element_script": self._on_element_script if on_element_script is None else on_element_script,
+            "on_resource_setup": utilities.placeholder if on_resource_setup is None else on_resource_setup,
+            "message_func": message_func,
+            "messages_enabled": messages_enabled,
+            "caret_browsing_enabled": caret_browsing_enabled,
+            "selection_enabled": selection_enabled,
+            "stylesheets_enabled": stylesheets_enabled,
+            "images_enabled": images_enabled,
+            "forms_enabled": forms_enabled,
+            "objects_enabled": objects_enabled,
+            "caches_enabled": caches_enabled,
+            "dark_theme_enabled": dark_theme_enabled,
+            "image_inversion_enabled": image_inversion_enabled,
+            "crash_prevention_enabled": crash_prevention_enabled,
+            "events_enabled": events_enabled,
+            "threading_enabled": threading_enabled,
+            "javascript_enabled": javascript_enabled,
+            "image_alternate_text_enabled": image_alternate_text_enabled,
+            "ignore_invalid_images": ignore_invalid_images,
+            "visited_links": visited_links,
+            "find_match_highlight_color": find_match_highlight_color,
+            "find_match_text_color": find_match_text_color,
+            "find_current_highlight_color": find_current_highlight_color,
+            "find_current_text_color": find_current_text_color,
+            "selected_text_highlight_color": selected_text_highlight_color,
+            "selected_text_color": selected_text_color,
+            "default_style": kwargs.pop("default_style", utilities.DEFAULT_STYLE), # will be removed
+            "dark_style": kwargs.pop("dark_style", utilities.DARK_STYLE), # will be removed
+            "request_func": request_func,
+            "insecure_https": insecure_https,
+            "ssl_cafile": ssl_cafile,
+            "request_timeout": request_timeout,
+            "headers": headers,
+            "experimental": experimental,
             # No impact after loading
-            "use_prebuilt_tkhtml": True,
-            "tkhtml_version": "auto",
+            "use_prebuilt_tkhtml": use_prebuilt_tkhtml,
+            "tkhtml_version": tkhtml_version,
             # Internal
-            "overflow_scroll_frame": None,
-            "embed_obj": HtmlFrame,
-            "manage_vsb_func": self._manage_vsb,
-            "manage_hsb_func": self._manage_hsb,
+            "overflow_scroll_frame": kwargs.pop("overflow_scroll_frame", None),
+            "embed_obj": kwargs.pop("embed_obj", HtmlFrame),
+            "manage_vsb_func": kwargs.pop("manage_vsb_func", self._manage_vsb),
+            "manage_hsb_func": kwargs.pop("manage_hsb_func", self._manage_hsb),
         }
         self._tkhtml_options = {
-            "zoom": 1.0,
-            "fontscale": 1.0,
-            "parsemode": utilities.DEFAULT_PARSE_MODE,
-            "shrink": False,
-            "mode": utilities.DEFAULT_ENGINE_MODE,
-            "defaultstyle": "",
-            "height": -1,
-            "width": -1,
+            "zoom": zoom,
+            "fontscale": fontscale,
+            "parsemode": parsemode,
+            "shrink": shrink,
+            "mode": mode,
+            "defaultstyle": defaultstyle,
+            "height": height,
+            "width": width,
         }
                             
         for key, value in self._htmlframe_options.items():
@@ -315,19 +326,27 @@ class HtmlFrame(Frame):
         :rtype: str"""
         return self._html.base_url
     
-    @utilities.lazy_manager(None)
+    @property # could use utilities.lazy_manager(None) and save some work, but then autocomplete fails
     def document(self):
         """The DOM manager. Use this to access :class:`~tkinterweb.dom.HTMLDocument` methods to manupulate the DOM.
         
         :rtype: :class:`~tkinterweb.dom.HTMLDocument`"""
-        return dom.HTMLDocument(self._html)
+        try:
+            return self._document
+        except AttributeError:
+            self._document = dom.HTMLDocument(self._html)
+            return self._document
 
-    @utilities.lazy_manager(None)
+    @property
     def javascript(self):
         """The JavaScript manager. Use this to access :class:`~tkinterweb.js.JSEngine` methods.
         
         :rtype: :class:`~tkinterweb.js.JSEngine`"""
-        return js.JSEngine(self._html, self.document)
+        try:
+            return self._javascript
+        except AttributeError:
+            self._javascript = js.JSEngine(self._html, self.document)
+            return self._javascript
 
     @property
     def html(self):
@@ -616,15 +635,18 @@ class HtmlFrame(Frame):
         if return_element:
             return dom.HTMLElement(self.document, node)
     
-    def add_css(self, css_source):
+    def add_css(self, css_source, priority="author"):
         """Send CSS stylesheets to the parser. This can be used to alter the appearance of already-loaded documents.
         
         :param css_source: The CSS code to parse.
-        :type css_source: str"""
+        :type css_source: str
+        :param priority: The priority of the CSS code. CSS code loaded by webpages is "user" priority. "agent" is lower priority than "user" and "author" (the default) is higher .
+        :type priority: "agent", "user", or "author"
+        """
         if self._waiting_for_reset:
             self._accumulated_styles.append(css_source)
         else:
-            self._html.parse_css(data=css_source)
+            self._html.parse_css(data=css_source, fallback_priority=priority)
 
     def stop(self):
         """Stop loading this page and abandon all pending requests."""
@@ -906,7 +928,7 @@ class HtmlFrame(Frame):
             return None
         
     def set_caret_position(self, element, index):
-        """Set the position of the caret, given an HTML element and text index. The given element must contain text and be visible.
+        """Set the position of the caret, given an HTML element and text index. The given element must be a text node, must contain text, and must be visible.
         
         If the given index extends out of the bounds of the given element, the caret will be moved into the preceeding or following elements.
         
@@ -928,7 +950,7 @@ class HtmlFrame(Frame):
         if not self._html.bbox(element.node):
             raise RuntimeError(f"the element {element} is not visible.")
         if text == "":
-            raise RuntimeError(f"the element {element} is empty. Either provide a different element or set the caret's position using set_caret_page_position.")
+            raise RuntimeError(f"the element {element} either is empty or is not a text node. Either provide a different element or set the caret's position using set_caret_page_position.")
         self._html.caret_manager.set(element.node, offset, recalculate=True)
 
     def set_caret_page_position(self, index):
@@ -1013,7 +1035,7 @@ class HtmlFrame(Frame):
                 page_index = true_start_index
                 for page_index in range(true_start_index, true_end_index + 1):
                     node, offset = self._html.text("index", page_index)
-                    if node not in contained_nodes and dom.extract_nested(node) not in excluded_nodes:
+                    if node not in contained_nodes and str(dom.extract_nested(node)) not in excluded_nodes:
                         contained_nodes.append(node)
 
                 return (
@@ -1050,7 +1072,7 @@ class HtmlFrame(Frame):
             return None
         
     def set_selection_position(self, start_element, start_index, end_element, end_index):
-        """Set the current selection, given a starting and ending HTML element and text index. The given elements must contain text and be visible.
+        """Set the current selection, given a starting and ending HTML element and text index. The given elements must be text nodes, must contain text, and must be visible.
         
         :param start_element: Specifies the element to begin the selection in.
         :type start_element: :class:`~tkinterweb.dom.HTMLElement`
@@ -1076,7 +1098,7 @@ class HtmlFrame(Frame):
             if not self._html.bbox(element.node):
                 raise RuntimeError(f"the element {element} is not visible.")
             if texts[element] == "":
-                raise RuntimeError(f"the element {element} is empty. Either provide a different element or set the selection using set_selection_page_position.")
+                raise RuntimeError(f"the element {element} either is empty or is not a text node. Either provide a different element or set the selection using set_selection_page_position.")
 
         self._html.selection_manager.reset_selection_type()
         self._html.selection_manager.begin_selection(start_element.node, start_offset)
@@ -1335,16 +1357,18 @@ class HtmlLabel(HtmlFrame):
     :type text: str
     """
 
-    def __init__(self, master, text="", **kwargs):
+    def __init__(self, master, *, text="", **kwargs):
+        if "style" not in kwargs: 
+            kwargs["style"] = "TLabel"
+        else:
+            utilities.warn("Since version 4.14 the style keyword no longer sets the HtmlLabel's CSS code. Please use the add_css() method instead.")
+        
         HtmlFrame.__init__(self, master, vertical_scrollbar=False, horizontal_scrollbar=False, shrink=True, **kwargs)
 
         tags = list(self._html.bindtags())
         tags.remove("Html")
         self._html.bindtags(tags)
 
-        if "style" in kwargs:
-            utilities.warn("Since version 4.14 the style keyword no longer sets the HtmlLabel's CSS code. Please use the add_css() method instead.")
-        
         self._style = Style()
 
         if text:
@@ -1407,10 +1431,14 @@ class HtmlText(HtmlFrame):
     
     For a complete list of avaliable methods, properties, configuration options, and generated events, see the :class:`HtmlFrame` docs.
 
-    The intent of this class is to eventually mimic the Tkinter Text widget API. 
+    The intent of this widget is to mimic the Tkinter Text widget. 
 
     This widget accepts the following :py:class:`tk.Text` parameters:
 
+    :param background:
+    :type background: str
+    :param foreground:
+    :type foreground: str
     :param selectbackground:
     :type selectbackground: str
     :param selectforeground:
@@ -1423,16 +1451,263 @@ class HtmlText(HtmlFrame):
     :type insertwidth: int
     :param insertbackground:
     :type insertbackground: str
+
+    Changed in version 4.15.
     """
 
-    def __init__(self, master, selectbackground="#9bc6fa", selectforeground="#000", insertontime=600, insertofftime=300, insertwidth=1, insertbackground=None, **kwargs):
+    def __init__(self, master, *, background="#ffffff", foreground="#000000", selectbackground="#9bc6fa", selectforeground="#000", insertontime=600, insertofftime=300, insertwidth=1, insertbackground=None, **kwargs):
+        self._background = kwargs.pop("bg", background)
+        self._foreground = kwargs.pop("fg", foreground)
+
+        self.preserve_flow = True
+
         HtmlFrame.__init__(self, master, caret_browsing_enabled=True, **kwargs)
         self.configure(selectbackground=selectbackground, selectforeground=selectforeground, 
                        insertontime=insertontime, insertofftime=insertofftime, 
                        insertwidth=insertwidth, insertbackground=insertbackground)
+                
+        self._html.text_mode = True
+
+        self.load_html("<body><div>\xa0</div></body>")
+        self._html.bind("<Key>", self._on_key)
+
+    def load_html(self, *args, **kwargs):
+        # Match the set background and foreground
+        style = self._html.default_style + \
+            (self._html.dark_style if self._html.dark_theme_enabled else "") +\
+            f"BODY {{ background-color: {self._background}; color: {self._foreground}; }}"
+        self._html.configure(defaultstyle=style)
+        
+        # Load the HTML
+        super().load_html(*args, **kwargs)
+
+    def _duplicate(self, element):
+        "Duplicate an element."
+        parent = element.parentElement
+
+        new = self.document.createElement(parent.tagName)
+        new.className = parent.className
+        new.setAttribute("style", parent.getAttribute("style"))
+
+        sibling = parent.nextSibling
+        if sibling:
+            parent.parentElement.insertBefore(new, sibling)
+        else:
+            parent.parentElement.appendChild(new)
+
+        return new, element
+    
+    def _delete(self, element):
+        parent = element.parentElement
+        element.remove()
+        if len(parent.children) == 0:
+            self._delete(parent)
+    
+    def _check_text(self, text):
+        if not text.strip():
+            return "\xa0"
+        return text
+    
+    def _strip_text(self, text):
+        if text == "\xa0":
+            return ""
+        return text
+
+    def _next_in_document(self, node):
+        # Go to first child if exists
+        if node.children:
+            return node.children[0]
+        # Otherwise, next sibling
+        if node.nextSibling:
+            return node.nextSibling
+        # Otherwise, go up parents until we find a parent's nextSibling
+        while node.parentElement:
+            node = node.parentElement
+            if node.nextSibling:
+                return node.nextSibling
+        return None  # reached the end of the tree
+
+    def _descendants(self, node):
+        result = []
+        stack = list(node.children)
+
+        while stack:
+            current = stack.pop()
+            result.append(current)
+            stack.extend(current.children)
+
+        return result
+
+    def _remove_between(self, element1, element2):
+        current = self._next_in_document(element1)
+        to_remove = []
+        while current and current != element2:
+            to_remove.append(current)
+            current = self._next_in_document(current)
+          
+        for node in to_remove:
+            descendants = self._descendants(node)
+            if element1 in descendants or element2 in descendants:
+                continue
+
+            node.remove()
+
+    def _on_key_selection(self, event, selection):
+        "Handle key presses when text is selected."
+        self._html.selection_manager.clear_selection()
+
+        start, end, middle = selection
+        start_element, start_element_text, start_element_index = start
+        end_element, end_element_text, end_element_index = end
+
+        # We don't want to insert any characters when pressing Return, BackSpace, or Delete
+        if event.keysym in {"Return", "KP_Enter", "BackSpace", "Delete"}:
+            event.char = ""
+        # Map spaces to non-breaking spaces
+        elif event.char == " ": 
+            event.char = "\xa0"
+
+        # If the text to delete is within one element, cut out the section
+        # If the resulting text is empty, make it \xa0 to prevent the node from collapsing
+        if start_element == end_element:
+            # If pressing Return, split the node into two
+            if event.keysym in {"Return", "KP_Enter"}:
+                new, start_element = self._duplicate(start_element)
+                text1 = start_element_text[:start_element_index]
+                text2 = start_element_text[end_element_index:]
+                start_element.innerText = self._check_text(text1)
+                new.innerText = self._check_text(text2)
+                start_element = new.children[0]
+                start_element_index = 0
+            else:
+                start_element.innerText = self._check_text(self._strip_text(start_element_text[:start_element_index]) + event.char + start_element_text[end_element_index:])
+        else:
+            # Otherwise, first delete all nodes in between if self.preserve_flow
+            if self.preserve_flow:
+                self._remove_between(start_element, end_element)
+            else:
+                # Or, delete all text nodes in between
+                for element in middle:
+                    self._delete(element)
+
+            # If pressing Return, cut the end of the start node and the beginning of the end node
+            if event.keysym in {"Return", "KP_Enter"}:
+                start_element.innerText = self._check_text(start_element_text[:start_element_index] + event.char)
+                end_element.innerText = self._check_text(end_element_text[end_element_index:])
+                start_element = end_element
+                start_element_index = 0
+
+            # Otherwise, cut out the section and move the end node's text into the start node
+            # Delete the end node
+            else:
+                start_element.innerText = self._check_text(self._strip_text(start_element_text[:start_element_index]) + event.char + end_element_text[end_element_index:])
+                self._delete(end_element)
+
+        self.set_caret_position(start_element, start_element_index + len(event.char))
+
+    def _on_key(self, event):
+        "Handle key presses."
+        if not event.char:
+            return
+        
+        if event.state & 0x4:
+            if event.keysym == "v":
+                # Ctrl-V
+                event.char = self._html.clipboard_get()
+            elif event.keysym == "x":
+                # Ctrl-X
+                self._html.selection_manager.copy_selection()
+                event.keysym = "BackSpace"
+            elif event.keysym not in {"BackSpace", "Delete", "Return", "KP_Enter"}:
+                # Ctrl-[anything else that isn't Return, BackSpace, or Delete]
+                return
+
+        selection = self.get_selection_position()
+        if selection:
+            # Nodes can be technically marked as selected without actually being highlighted
+            if self._html.selection_manager.get_selection():
+                return self._on_key_selection(event, selection)
+        
+        caret_position = self.get_caret_position()
+        if not caret_position:
+            return
+        element, text, index = caret_position
+
+        if event.keysym == "BackSpace":
+            self._html.caret_manager.shift_left(event)
+            caret_position = self.get_caret_position()
+            element2, text2, index2 = caret_position
+
+            # If the text to delete is within one element, cut out the section
+            # If the resulting text is empty, make it \xa0 to prevent the node from collapsing
+            if element == element2:
+                newtext = self._check_text(text[:index2] + text[index:])
+                element.innerText = newtext
+            # Otherwise, cut out the section and move the start node's text into the end node
+            # Delete the start node
+            else:
+                element2.innerText = self._check_text(self._strip_text(text2[:index2]) + self._strip_text(text[index:]))
+                if self.preserve_flow:
+                    self._remove_between(element2, element)
+                self._delete(element)
+                self._html.caret_manager.update()
+            return
+
+        if event.keysym == "Delete":
+            self._html.caret_manager.shift_right(event, update=False)
+            caret_position = self.get_caret_position()
+            element2, text2, index2 = caret_position
+
+            # If the text to delete is within one element, cut out the section
+            # If the resulting text is empty, make it \xa0 to prevent the node from collapsing
+            if element == element2:
+                element.innerText = self._check_text(text[:index] + text[index2:])
+                self.set_caret_position(element, index)
+            # Otherwise, cut out the section but move the end node's text to the start node
+            # Delete the end node
+            # Strip the start node's text in case it is \xa0
+            else:
+                text = self._strip_text(text[:index])
+                element.textContent = self._check_text(text + text2[index2:])
+                if self.preserve_flow:
+                    self._remove_between(element, element2)
+                self._delete(element2)
+
+                self.set_caret_position(element, len(text))
+            return
+
+        # Create a new node with the same tag and class as the current node
+        # Move this node's text to the right of the caret into the new node
+        if event.keysym in {"Return", "KP_Enter"}:
+            element, new = self._duplicate(element)
+            element.innerText = self._check_text(text[index:])
+            new.innerText = self._check_text(text[:index])
+            self.shift_caret_right()
+            return
+        
+        # Map spaces to non-breaking spaces
+        if event.char == " ": event.char = "\xa0"
+
+        # Insert characters
+        text2 = self._strip_text(text[:index])
+        newtext = text2 + event.char + text[index:]
+        element.innerText = newtext
+        self.set_caret_position(element, len(text2) + len(event.char))
 
     def configure(self, **kwargs):
         ""
+        if "background" in kwargs:
+            self._background = kwargs.pop("background")
+            self.add_css(f"BODY {{ background-color: {self._background}; }}", "agent")
+        if "foreground" in kwargs:
+            self._foreground = kwargs.pop("foreground")
+            self.add_css(f"BODY {{ color: {self._foreground}; }}", "agent")
+        if "bg" in kwargs:
+            self._background = kwargs.pop("bg")
+            self.add_css(f"BODY {{ background-color: {self._background}; }}", "agent")
+        if "fg" in kwargs:
+            self._foreground = kwargs.pop("fg")
+            self.add_css(f"BODY {{ color: {self._foreground}; }}", "agent")
         if "selectbackground" in kwargs:
             self._html.selected_text_highlight_color = kwargs.pop("selectbackground")
             self._html.selection_manager.update_tags()
@@ -1455,7 +1730,15 @@ class HtmlText(HtmlFrame):
 
     def cget(self, key):
         ""
-        if "selectbackground" == key:
+        if "background" == key:
+            return self._background
+        elif "foreground" == key:
+            return self._foreground
+        elif "bg" == key:
+            return self._background
+        elif "fg" == key:
+            return self._foreground
+        elif "selectbackground" == key:
             return self._html.selected_text_highlight_color
         elif "selectforeground" == key:
             return self._html.selected_text_color
@@ -1474,7 +1757,7 @@ class HtmlText(HtmlFrame):
         ""
         self.configure(**kwargs)
 
-    ### TODO: add more methods
+    ### TODO: improve
 
 class HtmlParse(HtmlFrame):
     """The :class:`HtmlParse` class parses HTML but does not spawn a widget. It inherits from the :class:`HtmlFrame` class. 

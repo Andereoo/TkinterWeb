@@ -13,7 +13,7 @@
 **TkinterWeb offers bindings and extensions to a modified version of the Tkhtml3 widget from [http://tkhtml.tcl.tk](https://web.archive.org/web/20250219233338/http://tkhtml.tcl.tk/), which enables the display of HTML and CSS code in Tkinter applications.** 
 
 Some of TkinterWeb's uses include:
-* Displaying websites, feeds, help files, and other styled HTML
+* Displaying and editing websites, feeds, help files, and other styled HTML
 * Displaying images, including SVG images
 * Creating a rich text or HTML editor
 * Designing apps using HTML templates
@@ -74,6 +74,7 @@ Pip will automatically install dependencies when installing TkinterWeb. PIL.Imag
 * [`tkinterweb.Demo`](https://tkinterweb.readthedocs.io/en/latest/usage.html#installation)
 * [`tkinterweb.HtmlFrame`](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html)
 * [`tkinterweb.HtmlLabel`](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html#tkinterweb.HtmlLabel)
+* [`tkinterweb.HtmlText`](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html#tkinterweb.HtmlText)
 * [`tkinterweb.HtmlParse`](https://tkinterweb.readthedocs.io/en/latest/api/htmlframe.html#tkinterweb.HtmlParse)
 * [`tkinterweb.TkinterWeb`](https://tkinterweb.readthedocs.io/en/latest/api/tkinterweb.html)
 * [`tkinterweb.Notebook`](https://tkinterweb.readthedocs.io/en/latest/api/notebook.html) (a Tkhtml-compatible drop-in replacement for `ttk.Notebook`)

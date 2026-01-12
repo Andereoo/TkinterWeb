@@ -482,13 +482,13 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     def caret_browsing_enabled(self, prev_enabled, enabled):
         "Enable or disable caret browsing."
         if getattr(self, "_caret_manager", False) and not enabled:
-            self.caret_manager.reset()
+            self._caret_manager.reset()
 
     @utilities.special_setting(True)
     def selection_enabled(self, prev_enabled, enabled):
         "Enable or disable text selection."
         if getattr(self, "_selection_manager", False) and not enabled:
-            self.selection_manager.clear_selection()
+            self._selection_manager.clear_selection()
 
     @property
     def tkhtml_default_style(self):

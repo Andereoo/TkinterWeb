@@ -33,7 +33,7 @@ __title__ = "TkinterWeb"
 __author__ = "Andrew Clarke"
 __copyright__ = "(c) 2021-2025 Andrew Clarke"
 __license__ = "MIT"
-__version__ = "4.15.0"
+__version__ = "4.16.0"
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
@@ -963,7 +963,7 @@ def deprecate(name, manager, new_name=None, message=None):
 def deprecate_param(name, new_name):
     import warnings
     if not new_name: new_name = name
-    warnings.warn(f"{name} is deprecated. Please set {new_name}.", FutureWarning, stacklevel=4)
+    warnings.warn(f"{name} is deprecated. Please use {new_name}.", FutureWarning, stacklevel=4)
 
 def warn(message):
     import warnings

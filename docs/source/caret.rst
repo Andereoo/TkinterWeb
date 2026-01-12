@@ -52,6 +52,8 @@ It's that easy!
 
 You can insert and edit hyperlinks, images, and much more. Click on a hyperlink while pressing the Ctrl key to navigate to it. Like the :class:`~tkinterweb.HtmlFrame` widget, the :class:`~tkinterweb.HtmlText` widget is also scrollable out of the box!
 
+You can also use :meth:`.HtmlText.insert` and :meth:`.HtmlText.delete` to easily modify the document.
+
 Customization
 -------------
 
@@ -109,9 +111,9 @@ You may need to set the caret's position after modifying the document.
 .. tip::
     :meth:`.HtmlFrame.set_caret_position` will raise an error if the element provided has been removed or is empty. 
     
-    If you need to remove or empty the elements returned by :meth:`.HtmlFrame.get_selection_position` or :meth:`.HtmlFrame.get_caret_position`, you can also get the selection or caret's position relative to the page text content using :meth:`.HtmlFrame.get_selection_page_position` and :meth:`.HtmlFrame.get_caret_page_position`, respectively.
+    If you need to remove or empty the elements returned by :meth:`.HtmlFrame.get_selection_position` or :meth:`.HtmlFrame.get_caret_position`, you can also get the selection or caret's position relative to the page text content using :meth:`HtmlFrame.get_selection_position(return_elements=False) <.HtmlFrame.get_selection_position>` and :meth:`HtmlFrame.get_caret_position(return_element=False) <.HtmlFrame.get_caret_position>`, respectively.
 
-    You can then use :meth:`.HtmlFrame.set_selection_page_position` or :meth:`.HtmlFrame.set_caret_page_position` to set the selection or caret relative to the page text content. 
+    You can then set the selection or caret's position as usual, providing only indexes (i.e. ``yourhtmlframe.set_selection_position(start_index=5, end_index=10)``.
 
 
 The following code can be used as a starting point on handling backspaces when text is selected:

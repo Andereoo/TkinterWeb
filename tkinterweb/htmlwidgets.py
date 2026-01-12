@@ -132,7 +132,7 @@ class HtmlFrame(Frame):
     :param mode: The rendering engine mode. It is usually best to leave this setting alone.
     :type mode: "standards", "almost standards", or "quirks"
 
-    Other ttk.Frame arguments, such as ``width`` and ``height`` are also supported.
+    Other ttk.Frame arguments, such as ``width``, ``height``, and ``style`` are also supported.
     
     :raise TypeError: If the value type is wrong and cannot be converted to the correct type."""
 
@@ -900,73 +900,72 @@ class HtmlFrame(Frame):
             node = self._html.current_hovered_node
         return dom.HTMLElement(self.document, node)
     
-    def get_caret_position(self):
+    def get_caret_position(self, return_element=True):
         """Get the position of the caret. This can be used to modify the document's text when the user types. 
+
+        :param return_element: Determines whether the index returned should be relative to the start of an element or the document.
+        :type return_element: bool
+
+        If ``return_element=True``:
+
+            :return: The :class:`~tkinterweb.dom.HTMLElement` under the caret, the element's :class:`~tkinterweb.dom.HTMLElement.textContent`, and an index representing the position in that string that the caret is at. If the caret is not visible, this method will return None.
+            :rtype: :class:`~tkinterweb.dom.HTMLElement`, str, and int, or None
+
+            The element returned will always be a text node. If you need to change the style or HTML content of a text node you will first need to get its parent.
+
+        If ``return_element=False``:
+
+            :return: The text content of the page, and an index representing the position in that string that the caret is at. If the caret is not visible, this method will return None.
+            :rtype: str and int, or None 
         
-        :return: The :class:`~tkinterweb.dom.HTMLElement` under the caret, the text content of that element, and an index representing the position in that string that the caret is at. If the caret is not visible, this method will return None.
-        :rtype: :class:`~tkinterweb.dom.HTMLElement`, str, int or None
-        
-        The element returned will always be a text node. If you need to change the style or HTML content of a text node you will first need to get its parent.
-        
-        New in version 4.8."""
+        Changed in version 4.16."""
         if self._html.caret_manager.node:
-            text, index = self._html.tkhtml_offset_to_text_index(self._html.caret_manager.node, self._html.caret_manager.offset)
-            return dom.HTMLElement(self.document, self._html.caret_manager.node), text, index
+            if return_element:
+                text, index = self._html.tkhtml_offset_to_text_index(self._html.caret_manager.node, self._html.caret_manager.offset)
+                return dom.HTMLElement(self.document, self._html.caret_manager.node), text, index
+            else:
+                return self._html.text("text"), self._html.text("offset", self._html.caret_manager.node, self._html.caret_manager.offset)
         else:
             return None
         
     def get_caret_page_position(self):
-        """Get the position of the caret, as an index relative to the page text content. Get the page's text content via :meth:`HtmlFrame.get_page_text`.
+        utilities.deprecate_param("get_caret_page_position", "get_caret_position(return_element=False)")
+        pos = self.get_caret_position(False)
+        if pos: pos = pos[1]
+        return pos
+        
+    def set_caret_position(self, element=None, index=0):
+        """Set the position of the caret, given an index and, optionally, an HTML element.
 
-        :return: An index representing the position in the page’s text content that the caret is at. If the caret is not visible, this method will return None
-        :rtype: int or None
-        
-        New in version 4.8."""
-        if self._html.caret_manager.node:
-            return self._html.text("text"), self._html.text("offset", self._html.caret_manager.node, self._html.caret_manager.offset)
-        else:
-            return None
-        
-    def set_caret_position(self, element, index):
-        """Set the position of the caret, given an HTML element and text index. The given element must be a text node, must contain text, and must be visible.
-        
         If the given index extends out of the bounds of the given element, the caret will be moved into the preceeding or following elements.
         
-        :param element: Specifies the element to place the caret over.
+        :param element: Specifies the element to place the caret in. This element must be a text node, must contain text, and must be visible. Optional.
         :type element: :class:`~tkinterweb.dom.HTMLElement`
-        :param index: The index in the element's innerText to place the caret at.
+        :param index: The index in the element's :class:`~tkinterweb.dom.HTMLElement.textContent` to place the caret at. If ``element`` is None, the index will be used relative to the page's text content.
         :type index: int
 
         :raise RuntimeError: If caret browsing is disabled or the given element is empty or has been removed.
         
-        New in version 4.8."""
+        Changed in version 4.16."""
         if not self._html.caret_browsing_enabled:
             # This is here not because things break when caret browsing is disabled,
             # But because I bet someone somewhere is trying to set the caret's position
             # With caret browsing disabled and pulling their hair out over it
             raise RuntimeError("cannot modify the caret when caret browsing is disabled")
-
-        text, offset = self._html.tkhtml_offset_to_text_index(element.node, index, True)
-        if not self._html.bbox(element.node):
-            raise RuntimeError(f"the element {element} is not visible.")
-        if text == "":
-            raise RuntimeError(f"the element {element} either is empty or is not a text node. Either provide a different element or set the caret's position using set_caret_page_position.")
-        self._html.caret_manager.set(element.node, offset, recalculate=True)
+        
+        if element:
+            text, offset = self._html.tkhtml_offset_to_text_index(element.node, index, True)
+            if not self._html.bbox(element.node):
+                raise RuntimeError(f"the element {element} is not visible.")
+            if text == "":
+                raise RuntimeError(f"the element {element} either is empty or is not a text node. Either provide a different element or set the caret's position using set_caret_page_position.")
+            self._html.caret_manager.set(element.node, offset, recalculate=True)
+        else:
+            self._html.caret_manager.set(None, index, recalculate=True)
 
     def set_caret_page_position(self, index):
-        """Set the position of the caret given a text index. This can be useful if a specific HTML element is not known (i.e. if known HTML elements have been removed).
-
-        :param index: The index in the page's text content to place the caret at.
-        :type index: int
-
-        :raise RuntimeError: If caret browsing is disabled.
-        
-        New in version 4.8."""
-        if not self._html.caret_browsing_enabled:
-            raise RuntimeError("cannot modify the caret when caret browsing is disabled")
-
-        if self._html.caret_manager.node:
-            self._html.caret_manager.set(None, index, recalculate=True)
+        utilities.deprecate_param("set_caret_page_position", f"set_caret_position(index={index})")
+        self.set_caret_position(index=index)
 
     def shift_caret_left(self):
         """Shift the caret left. 
@@ -992,137 +991,137 @@ class HtmlFrame(Frame):
         
         self._html.caret_manager.shift_right()
 
-    def get_selection_position(self):
-        """Get the start position, end position, and contained elements of selected text.
+    def get_selection_position(self, return_elements=True):
+        """Get the start position, end position, and, optionally, contained elements of selected text.
         
-        :return: 
-            - A tuple containing:
-                - The :class:`~tkinterweb.dom.HTMLElement` containing the start of the selection
-                - The text content of that element
-                - An index representing the position in that string that the selection begins at
-            - A second tuple containing:
-                - The :class:`~tkinterweb.dom.HTMLElement` containing the end of the selection
-                - The text content of that element
-                - An index representing the position in that string that the selection ends at
-            - A list containing an :class:`~tkinterweb.dom.HTMLElement` for each other element under the selection, in sequencial order.
+        :param return_elements: Determines whether the indexes returned should be relative to the start of an element or the document.
+        :type return_elements: bool
 
-            If no selection is found, this method will return None
+        If ``return_elements=True``:
+
+            :return: 
+                - A tuple containing:
+                    - The :class:`~tkinterweb.dom.HTMLElement` containing the start of the selection
+                    - The text content of that element
+                    - An index representing the position in that string that the selection begins at
+                - A second tuple containing:
+                    - The :class:`~tkinterweb.dom.HTMLElement` containing the end of the selection
+                    - The text content of that element
+                    - An index representing the position in that string that the selection ends at
+                - A list containing an :class:`~tkinterweb.dom.HTMLElement` for each other element under the selection, in sequencial order.
+                
+            :rtype: A pair of (:class:`~tkinterweb.dom.HTMLElement`, str, int) tuples and a list of :class:`~tkinterweb.dom.HTMLElement` objects, or None
+
+            The elements returned will always be text nodes. If you need to change the style or HTML content of a text node you will first need to get its parent.
             
-        :rtype: A pair of (:class:`~tkinterweb.dom.HTMLElement`, str, int) tuples and a list of :class:`~tkinterweb.dom.HTMLElement` objects, or None
+        If ``return_elements=False``:
+            
+            :return: The document's text, and two indexes representing the selection's start and end positions in that string. 
+            :rtype: str, int, and int, or None
 
-        The elements returned will always be text nodes. If you need to change the style or HTML content of a text node you will first need to get its parent.
+        If no selection is found, this method will return None
         
-        New in version 4.8."""
+        Changed in version 4.16."""
 
         if self._html.selection_manager.selection_start_node and self._html.selection_manager.selection_end_node:
-            if self._html.selection_manager.selection_start_node != self._html.selection_manager.selection_end_node:
+            if return_elements:
+                if self._html.selection_manager.selection_start_node != self._html.selection_manager.selection_end_node:
+                    start_index = self._html.text("offset", self._html.selection_manager.selection_start_node, self._html.selection_manager.selection_start_offset)
+                    end_index = self._html.text("offset", self._html.selection_manager.selection_end_node, self._html.selection_manager.selection_end_offset)
+                    true_start_index, true_end_index = sorted([start_index, end_index])
+
+                    if start_index == true_start_index: # ensure that the output is independent of selection direction
+                        start_node, end_node = self._html.selection_manager.selection_start_node, self._html.selection_manager.selection_end_node
+                        start_offset, end_offset = self._html.selection_manager.selection_start_offset, self._html.selection_manager.selection_end_offset
+                    else:
+                        start_node, end_node = self._html.selection_manager.selection_end_node, self._html.selection_manager.selection_start_node
+                        start_offset, end_offset = self._html.selection_manager.selection_end_offset, self._html.selection_manager.selection_start_offset
+                    
+                    text, index = self._html.tkhtml_offset_to_text_index(start_node, start_offset)
+                    text2, index2 = self._html.tkhtml_offset_to_text_index(end_node, end_offset)
+
+                    contained_nodes = []
+                    excluded_nodes = {dom.extract_nested(start_node), dom.extract_nested(end_node)}
+                    page_index = true_start_index
+                    for page_index in range(true_start_index, true_end_index + 1):
+                        node, offset = self._html.text("index", page_index)
+                        if node not in contained_nodes and str(dom.extract_nested(node)) not in excluded_nodes:
+                            contained_nodes.append(node)
+
+                    return (
+                        (dom.HTMLElement(self.document, start_node), text, index),
+                        (dom.HTMLElement(self.document, end_node), text2, index2),
+                        list(dom.HTMLElement(self.document, node) for node in contained_nodes),
+                    )
+                else:
+                    element = dom.HTMLElement(self.document, self._html.selection_manager.selection_start_node)
+                    start_offset, end_offset = sorted([self._html.selection_manager.selection_start_offset, self._html.selection_manager.selection_end_offset])
+                    text, index = self._html.tkhtml_offset_to_text_index(self._html.selection_manager.selection_start_node, start_offset)
+                    text2, index2 = self._html.tkhtml_offset_to_text_index(self._html.selection_manager.selection_start_node, end_offset)
+                    return (
+                        (element, text, index),
+                        (element, text2, index2),
+                        [],
+                    ) 
+            else:
                 start_index = self._html.text("offset", self._html.selection_manager.selection_start_node, self._html.selection_manager.selection_start_offset)
                 end_index = self._html.text("offset", self._html.selection_manager.selection_end_node, self._html.selection_manager.selection_end_offset)
-                true_start_index, true_end_index = sorted([start_index, end_index])
-
-                if start_index == true_start_index: # ensure that the output is independent of selection direction
-                    start_node, end_node = self._html.selection_manager.selection_start_node, self._html.selection_manager.selection_end_node
-                    start_offset, end_offset = self._html.selection_manager.selection_start_offset, self._html.selection_manager.selection_end_offset
-                else:
-                    start_node, end_node = self._html.selection_manager.selection_end_node, self._html.selection_manager.selection_start_node
-                    start_offset, end_offset = self._html.selection_manager.selection_end_offset, self._html.selection_manager.selection_start_offset
-                
-                text, index = self._html.tkhtml_offset_to_text_index(start_node, start_offset)
-                text2, index2 = self._html.tkhtml_offset_to_text_index(end_node, end_offset)
-
-                contained_nodes = []
-                excluded_nodes = {dom.extract_nested(start_node), dom.extract_nested(end_node)}
-                page_index = true_start_index
-                for page_index in range(true_start_index, true_end_index + 1):
-                    node, offset = self._html.text("index", page_index)
-                    if node not in contained_nodes and str(dom.extract_nested(node)) not in excluded_nodes:
-                        contained_nodes.append(node)
-
-                return (
-                    (dom.HTMLElement(self.document, start_node), text, index),
-                    (dom.HTMLElement(self.document, end_node), text2, index2),
-                    list(dom.HTMLElement(self.document, node) for node in contained_nodes),
-                )
-            else:
-                element = dom.HTMLElement(self.document, self._html.selection_manager.selection_start_node)
-                start_offset, end_offset = sorted([self._html.selection_manager.selection_start_offset, self._html.selection_manager.selection_end_offset])
-                text, index = self._html.tkhtml_offset_to_text_index(self._html.selection_manager.selection_start_node, start_offset)
-                text2, index2 = self._html.tkhtml_offset_to_text_index(self._html.selection_manager.selection_start_node, end_offset)
-                return (
-                    (element, text, index),
-                    (element, text2, index2),
-                    [],
-                ) 
+                start_index, end_index = tuple(sorted([start_index, end_index]))
+                return self._html.text("text"), start_index, end_index
         else:
             return None
         
     def get_selection_page_position(self):
-        """Get the start and end position of selected text, as indexes relative to the page's text content.
-
-        :return: Two indexes representing the selection's start and end positions in that string. If no selection is found, this method will return None.
-        :rtype: int, int or None
+        utilities.deprecate_param("get_selection_page_position", f"get_selection_position(return_elements=False)")
+        pos = self.get_selection_position(return_elements=False)
+        if pos: pos = pos[1:]
+        return pos
         
-        New in version 4.8."""
-        if self._html.selection_manager.selection_start_node and self._html.selection_manager.selection_end_node:
-            start_index = self._html.text("offset", self._html.selection_manager.selection_start_node, self._html.selection_manager.selection_start_offset)
-            end_index = self._html.text("offset", self._html.selection_manager.selection_end_node, self._html.selection_manager.selection_end_offset)
-            start_index, end_index = tuple(sorted([start_index, end_index]))
-            return start_index, end_index
-        else:
-            return None
+    def set_selection_position(self, start_element=None, start_index=0, end_element=None, end_index=0):
+        """Set the current selection, given starting and ending text indexes and, optionally, HTML elements.
         
-    def set_selection_position(self, start_element, start_index, end_element, end_index):
-        """Set the current selection, given a starting and ending HTML element and text index. The given elements must be text nodes, must contain text, and must be visible.
-        
-        :param start_element: Specifies the element to begin the selection in.
+        :param start_element: Specifies the element to begin the selection in. This element must be text nodes, must contain text, and must be visible. Optional.
         :type start_element: :class:`~tkinterweb.dom.HTMLElement`
-        :param start_index: The index in the element's innerText to begin the selection at.
+        :param start_index: The index in the element's :class:`~tkinterweb.dom.HTMLElement.textContent` to begin the selection at. If ``start_element`` is None, this index instead is relative to the page's text content.
         :type start_index: int
-        :param end_element: Specifies the element to end the selection in.
+        :param end_element: Specifies the element to end the selection in. This element must be text nodes, must contain text, and must be visible. Optional.
         :type end_element: :class:`~tkinterweb.dom.HTMLElement`
-        :param end_index: The index in the element's innerText to end the selection at.
+        :param end_index: The index in the element's :class:`~tkinterweb.dom.HTMLElement.textContent` to end the selection at. If ``end_element`` is None, this index instead is relative to the page's text content.
         :type end_index: int
 
         :raise RuntimeError: If selection is disabled or the given elements are empty or have been removed.
         
-        New in version 4.8."""
+        Changed in version 4.16."""
         if not self._html.selection_enabled:
             raise RuntimeError("cannot modify the selection when selection is disabled")
 
-        text, start_offset = self._html.tkhtml_offset_to_text_index(start_element.node, start_index, True)
-        text2, end_offset = self._html.tkhtml_offset_to_text_index(end_element.node, end_index, True)
+        if start_element:
+            text, start_offset = self._html.tkhtml_offset_to_text_index(start_element.node, start_index, True)
+            if not self._html.bbox(start_element.node):
+                raise RuntimeError(f"the element {start_element} is not visible.")
+            if text == "":
+                raise RuntimeError(f"the element {start_element} either is empty or is not a text node. Either provide a different element or set the selection using set_selection_page_position.")
+            start_node = start_element.node
+        else:
+            start_node, start_offset = self._html.text("index", start_index)
 
-        texts = {start_element: text, end_element: text2}
+        if end_element:
+            text, end_offset = self._html.tkhtml_offset_to_text_index(end_element.node, end_index, True)
+            if not self._html.bbox(end_element.node):
+                raise RuntimeError(f"the element {end_element} is not visible.")
+            if text == "":
+                raise RuntimeError(f"the element {end_element} either is empty or is not a text node. Either provide a different element or set the selection using set_selection_page_position.")
+            end_node = end_element.node
+        else:
+            end_node, end_offset = self._html.text("index", end_index)
 
-        for element in {start_element, end_element}:
-            if not self._html.bbox(element.node):
-                raise RuntimeError(f"the element {element} is not visible.")
-            if texts[element] == "":
-                raise RuntimeError(f"the element {element} either is empty or is not a text node. Either provide a different element or set the selection using set_selection_page_position.")
-
-        self._html.selection_manager.reset_selection_type()
-        self._html.selection_manager.begin_selection(start_element.node, start_offset)
-        self._html.selection_manager.extend_selection(end_element.node, end_offset)
-
-    def set_selection_page_position(self, start_index, end_index):
-        """Set the current selection, given two text indexes. This can be useful if specific HTML elements are not known (i.e. if known HTML elements have been removed).
-        
-        :param start_index: The index in the pages's text content to begin the selection at.
-        :type start_index: int
-        :param end_index: The index in the page's text content to end the selection at.
-        :type end_index: int
-
-        :raise RuntimeError: If selection is disabled.
-        
-        New in version 4.8."""
-        if not self._html.selection_enabled:
-            raise RuntimeError("cannot modify the selection when selection is disabled")
-
-        start_node, start_offset = self._html.text("index", start_index)
-        end_node, end_offset = self._html.text("index", end_index)
         self._html.selection_manager.reset_selection_type()
         self._html.selection_manager.begin_selection(start_node, start_offset)
         self._html.selection_manager.extend_selection(end_node, end_offset)
+
+    def set_selection_page_position(self, start_index, end_index):
+        utilities.deprecate_param("set_selection_page_position", f"set_selection_position(start_index={start_index}, end_index={end_index})")
+        self.set_selection_position(start_index=start_index, end_index=end_index)
 
     def get_selection(self):
         """Return any selected text.
@@ -1351,7 +1350,7 @@ class HtmlLabel(HtmlFrame):
     
     For a complete list of avaliable methods, properties, configuration options, and generated events, see the :class:`HtmlFrame` docs.
     
-    This widget also accepts two additional parameters:
+    This widget also accepts one additional parameters:
 
     :param text: The HTML content of the widget
     :type text: str
@@ -1385,6 +1384,7 @@ class HtmlLabel(HtmlFrame):
         return
     
     def load_html(self, *args, _relayout=True, **kwargs):
+        ""
         # Match the ttk theme
         style_type = self.cget("style")
         bg = self._style.lookup(style_type, 'background')
@@ -1455,13 +1455,23 @@ class HtmlText(HtmlFrame):
     Changed in version 4.15.
     """
 
-    def __init__(self, master, *, background="#ffffff", foreground="#000000", selectbackground="#9bc6fa", selectforeground="#000", insertontime=600, insertofftime=300, insertwidth=1, insertbackground=None, **kwargs):
+    def __init__(self, master, *, background="#ffffff", foreground="#000000", selectbackground="#9bc6fa", selectforeground="#000", insertontime=600, insertofftime=300, insertwidth=1, insertbackground=None, state="enabled", **kwargs):
         self._background = kwargs.pop("bg", background)
         self._foreground = kwargs.pop("fg", foreground)
 
-        self.preserve_flow = True
+        self.preserve_flow = True # mostly for debugging
 
-        HtmlFrame.__init__(self, master, caret_browsing_enabled=True, **kwargs)
+        if "horizontal_scrollbar" not in kwargs:
+            kwargs["horizontal_scrollbar"] = "auto"
+        
+        if state == "enabled":
+            caret_browsing_enabled=True
+        elif state == "disabled":
+            caret_browsing_enabled=False
+        else:
+            raise ValueError("state must be 'enabled' or 'disabled'")
+
+        HtmlFrame.__init__(self, master, caret_browsing_enabled=caret_browsing_enabled, **kwargs)
         self.configure(selectbackground=selectbackground, selectforeground=selectforeground, 
                        insertontime=insertontime, insertofftime=insertofftime, 
                        insertwidth=insertwidth, insertbackground=insertbackground)
@@ -1469,9 +1479,12 @@ class HtmlText(HtmlFrame):
         self._html.text_mode = True
 
         self.load_html("<body><div>\xa0</div></body>")
-        self._html.bind("<Key>", self._on_key)
+
+        if state == "enabled":
+            self._html.bind("<Key>", self._on_key)
 
     def load_html(self, *args, **kwargs):
+        ""
         # Match the set background and foreground
         style = self._html.default_style + \
             (self._html.dark_style if self._html.dark_theme_enabled else "") +\
@@ -1552,6 +1565,153 @@ class HtmlText(HtmlFrame):
 
             node.remove()
 
+    def delete(self, start_index, end_index=None, start_element=None, end_element=None):
+        """Delete text between two points.
+        
+        :param start_index: The starting index to delete text from. Similar to the :py:class:`tk.Text` widget, if this is "sel.first", this will be the beginning of the selection.
+        :type start_index: int or "sel.first"
+        :param end_index: The ending index to delete text at. If this is "sel.last", this will be the end of the selection. If this is "end", this will be the end of the document or the end of the ending element if provided. If this is None, only the character at the start index will be deleted.
+        :type end_index: int, "sel.last", "end", or None
+        :param start_element: If provided, the start index will be used relative to this element's :class:`~tkinterweb.dom.HTMLElement.textContent`.
+        :type start_element: None or :class:`~tkinterweb.dom.HTMLElement`
+        :param end_element: If provided, the end index will be used relative to this element's :class:`~tkinterweb.dom.HTMLElement.textContent`.
+        :type end_element: None or :class:`~tkinterweb.dom.HTMLElement`
+
+        :raise RuntimeError: if "sel.first" or "self.last" is requested but no text is selected.
+
+        New in version 4.16.
+        """
+        pos = self.get_caret_position(return_element=False)
+
+        # Translate string indexes
+        selection = None
+        if start_index == "sel.first":
+            selection = self.get_selection_position(return_elements=False)
+            self.clear_selection()
+            try:
+                start_index = selection[1]
+                start_element = None
+            except TypeError:
+                raise RuntimeError("no text is selected")
+
+        if end_index == "sel.last":
+            if not selection:
+                selection = self.get_selection_position(return_elements=False)
+                self.clear_selection()
+            try:
+                end_index = selection[2]
+                end_element = None
+            except TypeError:
+                raise RuntimeError("no text is selected")
+
+        elif end_index is None:
+            end_index = start_index + 1
+        if end_index == "end":
+            if end_element:
+                end_index = len(end_element.textContent)
+            else:
+                end_index = len(self._html.text("text"))
+
+        # Gather data
+        if start_element:
+            _, ti = self._html.tkhtml_offset_to_text_index(start_element.node, start_index, True)
+            abs1 = self._html.text("offset", start_element.node, ti)
+            text1 = start_element.textContent
+        else:
+            abs1 = start_index
+            start_element, start_index = self._html.text("index", start_index)
+            text1, start_index = self._html.tkhtml_offset_to_text_index(start_element, start_index)
+            start_element = dom.HTMLElement(self.document, start_element)
+
+        if end_element:
+            _, ti = self._html.tkhtml_offset_to_text_index(end_element.node, end_index, True)
+            abs2 = self._html.text("offset", end_element.node, ti)
+            text2 = end_element.textContent
+        else:
+            abs2 = end_index
+            end_element, end_index = self._html.text("index", end_index)
+            text2, end_index = self._html.tkhtml_offset_to_text_index(end_element, end_index)
+            end_element = dom.HTMLElement(self.document, end_element)
+
+        # Ensure index 1 comes before index 2
+        if abs1 > abs2:
+            end_element, start_element = start_element, end_element
+            end_index, start_index = start_index, end_index
+        
+        # Deletions
+        if start_element == end_element:
+            start_element.textContent = self._check_text(text1[:start_index] + text2[end_index:])
+        else:
+            start_element.textContent = self._check_text(self._strip_text(text1[:start_index]) + self._strip_text(text2[end_index:]))
+            self._remove_between(start_element, end_element)
+            self._delete(end_element)
+        
+        # Shift the caret if needed
+        if pos and pos[1] > abs1:
+            index = max(pos[1] + len(self._html.text("text")) - len(pos[0]), abs1)
+            self.set_caret_position(index=index)
+    
+    def insert(self, index, text_or_element, element=None):
+        """Insert text or an element at the given index.
+        
+        :param index: The index to insert text at. Similar to the :py:class:`tk.Text` widget, if this is "insert", this method will insert at the caret's position. If this is "end", this will insert at the end of the document or the end of the element if provided.
+        :type index: int, "end", or "insert"
+        :param text_or_element: The text or HTML element to insert.
+        :type text_or_element: str or :class:`~tkinterweb.dom.HTMLElement`
+        :param element: If provided, the given index will be used relative to this element's :class:`~tkinterweb.dom.HTMLElement.textContent`.
+        :type element: None or :class:`~tkinterweb.dom.HTMLElement`
+
+        :raise RuntimeError: if "insert" is requested but the caret is not visible.
+
+        New in version 4.16.
+        """
+        pos = self.get_caret_position(return_element=False)
+
+        # Translate string indexes
+        if index == "end":
+            if element:
+                index = len(element.textContent)
+            else:
+                index = len(self._html.text("text"))
+        elif index == "insert":
+            try:
+                element, text, index = self.get_caret_position()
+            except TypeError:
+                raise RuntimeError("the caret is not visible")
+        
+        # Gather data
+        if element:
+            text = element.textContent
+            if pos:
+                _, offset = self._html.tkhtml_offset_to_text_index(element.node, index, True)
+                abs_index = self._html.text("offset", element.node, offset)
+        else:
+            abs_index = index
+            element, index = self._html.text("index", index)
+            text, index = self._html.tkhtml_offset_to_text_index(element, index)
+            element = dom.HTMLElement(self.document, element)
+        
+        # Insertions
+        if isinstance(text_or_element, dom.HTMLElement):
+            element2, element = self._duplicate(element)
+            element.textContent = self._strip_text(text[:index])
+            element2.textContent = text[index:]
+            element2.parentElement.insertBefore(text_or_element, element2)
+
+            children = text_or_element.children
+            while children:
+                text_or_element = text_or_element.children[-1]
+                children = text_or_element.children
+            #if pos and pos[1] >= abs_index:
+            #    self.set_caret_position(text_or_element, len(text_or_element.textContent))
+        else:
+            element.textContent = self._strip_text(text[:index]) + text_or_element + text[index:]
+        
+        # Shift the caret if needed
+        if pos and pos[1] >= abs_index:
+            index = pos[1] + len(self._html.text("text")) - len(pos[0])
+            self.set_caret_position(index=index)
+
     def _on_key_selection(self, event, selection):
         "Handle key presses when text is selected."
         self._html.selection_manager.clear_selection()
@@ -1575,12 +1735,12 @@ class HtmlText(HtmlFrame):
                 new, start_element = self._duplicate(start_element)
                 text1 = start_element_text[:start_element_index]
                 text2 = start_element_text[end_element_index:]
-                start_element.innerText = self._check_text(text1)
-                new.innerText = self._check_text(text2)
+                start_element.textContent = self._check_text(text1)
+                new.textContent = self._check_text(text2)
                 start_element = new.children[0]
                 start_element_index = 0
             else:
-                start_element.innerText = self._check_text(self._strip_text(start_element_text[:start_element_index]) + event.char + start_element_text[end_element_index:])
+                start_element.textContent = self._check_text(self._strip_text(start_element_text[:start_element_index]) + event.char + start_element_text[end_element_index:])
         else:
             # Otherwise, first delete all nodes in between if self.preserve_flow
             if self.preserve_flow:
@@ -1592,15 +1752,15 @@ class HtmlText(HtmlFrame):
 
             # If pressing Return, cut the end of the start node and the beginning of the end node
             if event.keysym in {"Return", "KP_Enter"}:
-                start_element.innerText = self._check_text(start_element_text[:start_element_index] + event.char)
-                end_element.innerText = self._check_text(end_element_text[end_element_index:])
+                start_element.textContent = self._check_text(start_element_text[:start_element_index] + event.char)
+                end_element.textContent = self._check_text(end_element_text[end_element_index:])
                 start_element = end_element
                 start_element_index = 0
 
             # Otherwise, cut out the section and move the end node's text into the start node
             # Delete the end node
             else:
-                start_element.innerText = self._check_text(self._strip_text(start_element_text[:start_element_index]) + event.char + end_element_text[end_element_index:])
+                start_element.textContent = self._check_text(self._strip_text(start_element_text[:start_element_index]) + event.char + end_element_text[end_element_index:])
                 self._delete(end_element)
 
         self.set_caret_position(start_element, start_element_index + len(event.char))
@@ -1642,11 +1802,11 @@ class HtmlText(HtmlFrame):
             # If the resulting text is empty, make it \xa0 to prevent the node from collapsing
             if element == element2:
                 newtext = self._check_text(text[:index2] + text[index:])
-                element.innerText = newtext
+                element.textContent = newtext
             # Otherwise, cut out the section and move the start node's text into the end node
             # Delete the start node
             else:
-                element2.innerText = self._check_text(self._strip_text(text2[:index2]) + self._strip_text(text[index:]))
+                element2.textContent = self._check_text(self._strip_text(text2[:index2]) + self._strip_text(text[index:]))
                 if self.preserve_flow:
                     self._remove_between(element2, element)
                 self._delete(element)
@@ -1661,7 +1821,7 @@ class HtmlText(HtmlFrame):
             # If the text to delete is within one element, cut out the section
             # If the resulting text is empty, make it \xa0 to prevent the node from collapsing
             if element == element2:
-                element.innerText = self._check_text(text[:index] + text[index2:])
+                element.textContent = self._check_text(text[:index] + text[index2:])
                 self.set_caret_position(element, index)
             # Otherwise, cut out the section but move the end node's text to the start node
             # Delete the end node
@@ -1680,8 +1840,8 @@ class HtmlText(HtmlFrame):
         # Move this node's text to the right of the caret into the new node
         if event.keysym in {"Return", "KP_Enter"}:
             element, new = self._duplicate(element)
-            element.innerText = self._check_text(text[index:])
-            new.innerText = self._check_text(text[:index])
+            element.textContent = self._check_text(text[index:])
+            new.textContent = self._check_text(text[:index])
             self.shift_caret_right()
             return
         
@@ -1691,11 +1851,14 @@ class HtmlText(HtmlFrame):
         # Insert characters
         text2 = self._strip_text(text[:index])
         newtext = text2 + event.char + text[index:]
-        element.innerText = newtext
+        element.textContent = newtext
         self.set_caret_position(element, len(text2) + len(event.char))
 
     def configure(self, **kwargs):
         ""
+        if "caret_browsing_enabled" in kwargs:
+            raise RuntimeError("caret browsing is always enabled in this widget")
+
         if "background" in kwargs:
             self._background = kwargs.pop("background")
             self.add_css(f"BODY {{ background-color: {self._background}; }}", "agent")
@@ -1725,6 +1888,16 @@ class HtmlText(HtmlFrame):
             self._html.caret_manager.caret_width = value
         if "insertbackground" in kwargs:
             self._html.caret_manager.caret_colour = kwargs.pop("insertbackground")
+        if "state" in kwargs:
+            state = kwargs.pop("state")
+            if state == "enabled":
+                self._html.bind("<Key>", self._on_key)
+                self._html.caret_browsing_enabled = True
+            elif state == "disabled":
+                self._html.unbind("<Key>")
+                self._html.caret_browsing_enabled = False
+            else:
+                raise ValueError("state must be 'enabled' or 'disabled'")
 
         if kwargs: super().configure(**kwargs)
 
@@ -1750,6 +1923,8 @@ class HtmlText(HtmlFrame):
             return self._html.caret_manager.caret_width
         elif "insertbackground" == key:
             return self._html.caret_manager.caret_colour
+        elif "state" == key:
+            return "enabled" if self._html.caret_browsing_enabled else "disabled"
         
         return super().cget(key)
 
@@ -1757,7 +1932,6 @@ class HtmlText(HtmlFrame):
         ""
         self.configure(**kwargs)
 
-    ### TODO: improve
 
 class HtmlParse(HtmlFrame):
     """The :class:`HtmlParse` class parses HTML but does not spawn a widget. It inherits from the :class:`HtmlFrame` class. 
@@ -1765,6 +1939,7 @@ class HtmlParse(HtmlFrame):
     For a complete list of avaliable methods, properties, configuration options, and generated events, see the :class:`HtmlFrame` docs.
     
     New in version 4.4."""
+    
     def __init__(self, **kwargs):
         self.root = root = tk.Tk()
 

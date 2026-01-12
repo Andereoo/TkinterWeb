@@ -103,6 +103,14 @@ Changelog
     * The configuration option ``about_page_background`` - use ``ttk.Style().configure("TFrame", background=)``.
     * The configuration option ``about_page_foreground`` - use ``ttk.Style().configure("TFrame", foreground=)``.
 
+    Version 4.16:
+
+    * :meth:`.HtmlFrame.get_caret_page_position` - use  :meth:`HtmlFrame.get_caret_position(return_element=False) <.HtmlFrame.get_caret_position>`
+    * :meth:`.HtmlFrame.set_caret_page_position` - use :meth:`HtmlFrame.set_caret_position(index=) <.HtmlFrame.set_caret_position>`
+    * :meth:`.HtmlFrame.get_selection_page_position` - use :meth:`HtmlFrame.get_selection_position(return_elements=False) <.HtmlFrame.get_selection_position>`
+    * :meth:`.HtmlFrame.set_selection_page_position` - use :meth:`HtmlFrame.set_selection_position(start_index=, end_index=) <.HtmlFrame.set_selection_position>`
+
+
 .. dropdown:: Renamed
 
     Version 4.0:
@@ -247,15 +255,15 @@ Changelog
 
     * :meth:`.HtmlFrame.get_page_text`
     * :meth:`.HtmlFrame.get_caret_position`
-    * :meth:`.HtmlFrame.get_caret_page_position`
+    * :meth:`.HtmlFrame.get_caret_page_position` (deprecated in version 4.16)
     * :meth:`.HtmlFrame.set_caret_position`
-    * :meth:`.HtmlFrame.set_caret_page_position`
+    * :meth:`.HtmlFrame.set_caret_page_position` (deprecated in version 4.16)
     * :meth:`.HtmlFrame.shift_caret_left`
     * :meth:`.HtmlFrame.shift_caret_right`
     * :meth:`.HtmlFrame.get_selection_position`
-    * :meth:`.HtmlFrame.get_selection_page_position`
+    * :meth:`.HtmlFrame.get_selection_page_position` (deprecated in version 4.16)
     * :meth:`.HtmlFrame.set_selection_position`
-    * :meth:`.HtmlFrame.set_selection_page_position`
+    * :meth:`.HtmlFrame.set_selection_page_position` (deprecated in version 4.16)
 
     * :attr:`.HTMLElement.previousSibling`
     * :attr:`.HTMLElement.nextSibling`
@@ -326,6 +334,16 @@ Changelog
     * :meth:`.CaretManager.shift_left`, :meth:`.CaretManager.shift_right`, :meth:`.CaretManager.shift_up`, :meth:`.CaretManager.shift_down`, and :meth:`.CaretManager.shift_update` now accept the additional parameter ``update``.
 
     * The :class:`.HtmlText` widget now supports the ``background``, ``foreground``, ``bg``, and ``fg`` keywords.
+
+    Version 4.16:
+
+    * :meth:`.HtmlFrame.get_caret_position` now accepts the additional parameter ``return_element``. 
+    * :meth:`.HtmlFrame.get_selection_position` now accepts the additional parameter ``return_elements``. 
+
+    * :attr:`.HtmlText.insert`
+    * :attr:`.HtmlText.delete`
+
+    * The :class:`.HtmlText` widget now supports the ``state`` keyword.
 
 .. dropdown:: Changed/Fixed
 
@@ -446,6 +464,12 @@ Changelog
     * Equality checking between :class:`.HTMLElement` objects is now fully supported.
     * The :class:`.HtmlText` widget is now editable out-of-the-box!
     * The :class:`.HtmlLabel` widget now uses the ``TLabel`` style by default instead of ``TFrame``.
+
+    Version 4.16:
+
+    * Fixed more bugs.
+    * :meth:`.HtmlFrame.set_caret_position` now sets the caret relative to the document text when no element is provided. 
+    * :meth:`.HtmlFrame.set_selection_position` now sets the selection relative to the document text when no elements are provided. 
 
 -------------------
 

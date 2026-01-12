@@ -356,10 +356,12 @@ class HtmlFrame(Frame):
         return self._html
     
     def grid_propagate(self, *args, **kwargs):
+        ""
         utilities.warn("grid_propagate is being ignored, because since version 4.13 widget geometry is always respected by default. If this is a problem, please file a bug report.")
         pass
 
     def pack_propagate(self, *args, **kwargs):
+        ""
         utilities.warn("pack_propagate is being ignored, because since version 4.13 widget geometry is always respected by default. If this is a problem, please file a bug report.")
         pass
 
@@ -372,81 +374,6 @@ class HtmlFrame(Frame):
             utilities.deprecate_param("about_page_background", "ttk.Style().configure('TFrame', background=)")
         if "about_page_foreground" in kwargs:
             utilities.deprecate_param("about_page_foreground", "ttk.Style().configure('TFrame', foreground=)")
-
-    def configure(self, **kwargs):
-        """
-        Change the widget's configuration options. See above for options.
-        """
-        # Deprecations
-        self._check_deprecations(**kwargs)
-
-        # 
-        for key in list(kwargs.keys()):
-            if key in self._htmlframe_options:
-                value = self._check_value(self._htmlframe_options[key], kwargs.pop(key))
-                setattr(self, key, value)
-                if key == "vertical_scrollbar":
-                    self._manage_vsb(value)
-                elif key == "horizontal_scrollbar":
-                    self._manage_hsb(value)
-            elif key in self._tkinterweb_options:
-                value = self._check_value(self._tkinterweb_options[key], kwargs.pop(key))
-                setattr(self._html, key, value)
-                if key in {"find_match_highlight_color", "find_match_text_color", "find_current_highlight_color",
-                           "find_current_text_color", "selected_text_highlight_color", "selected_text_color"}:
-                    self._html.selection_manager.update_tags()
-            elif key in self._tkhtml_options:
-                self._html[key] = kwargs.pop(key)
-                if key == "zoom":
-                    self._handle_resize(force=True)
-                    self._html.caret_manager.update()
-                elif key == "fontscale":
-                    self._html.caret_manager.update()
-        super().configure(**kwargs)
-
-    def config(self, _override=False, **kwargs):
-        """
-        Change the widget's configuration options. See above for options.
-        """
-        if _override:
-            super().configure(**kwargs)
-        else:
-            self.configure(**kwargs)
-
-    def cget(self, key):
-        """
-        Return the value of a given configuration option. See above for options.
-
-        :param key: The configuration option to search for.
-        :return: The value of the specified configuration option.
-        """
-        if key in self._htmlframe_options:
-            return getattr(self, key)
-        elif key in self._tkinterweb_options.keys():
-            return getattr(self._html, key)
-        elif key in self._tkhtml_options.keys():
-            return self._html.cget(key)
-        return super().cget(key)
-    
-    def bind(self, sequence, *args, **kwargs):
-        "Add an event binding. For convenience, some bindings will be bound to this widget and others will be bound to its associated :class:`~tkinterweb.TkinterWeb` instance."
-        if sequence in {"<Leave>", "<Enter>"}:
-            super().bind(sequence, *args, **kwargs)
-        else:
-            self._html.bind(sequence, *args, **kwargs)
-
-    def unbind(self, sequence, *args, **kwargs):
-        ""
-        if sequence in {"<Leave>", "<Enter>"}:
-            super().unbind(sequence, *args, **kwargs)
-        else:
-            self._html.unbind(sequence, *args, **kwargs)
-    
-    def __getitem__(self, key):
-        return self.cget(key)
-
-    def __setitem__(self, key, value):
-        self.configure(**{key: value})
 
     def load_html(self, html_source, base_url=None, fragment=None, _thread_safe=False):
         """Clear the current page and parse the given HTML code.
@@ -1344,6 +1271,78 @@ Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certif
     def _on_element_script(self, node_handle, attribute, attr_contents):
         self.javascript._on_element_script(node_handle, attribute, attr_contents)
 
+    def configure(self, **kwargs):
+        """
+        Change the widget's configuration options. See above for options.
+        """
+        # Deprecations
+        self._check_deprecations(**kwargs)
+
+        # 
+        for key in list(kwargs.keys()):
+            if key in self._htmlframe_options:
+                value = self._check_value(self._htmlframe_options[key], kwargs.pop(key))
+                setattr(self, key, value)
+                if key == "vertical_scrollbar":
+                    self._manage_vsb(value)
+                elif key == "horizontal_scrollbar":
+                    self._manage_hsb(value)
+            elif key in self._tkinterweb_options:
+                value = self._check_value(self._tkinterweb_options[key], kwargs.pop(key))
+                setattr(self._html, key, value)
+                if key in {"find_match_highlight_color", "find_match_text_color", "find_current_highlight_color",
+                           "find_current_text_color", "selected_text_highlight_color", "selected_text_color"}:
+                    self._html.selection_manager.update_tags()
+            elif key in self._tkhtml_options:
+                self._html[key] = kwargs.pop(key)
+                if key == "zoom":
+                    self._handle_resize(force=True)
+                    self._html.caret_manager.update()
+                elif key == "fontscale":
+                    self._html.caret_manager.update()
+        super().configure(**kwargs)
+
+    def config(self, _override=False, **kwargs):
+        """
+        Change the widget's configuration options. See above for options.
+        """
+        if _override:
+            super().configure(**kwargs)
+        else:
+            self.configure(**kwargs)
+
+    def cget(self, key):
+        """
+        Return the value of a given configuration option. See above for options.
+        """
+        if key in self._htmlframe_options:
+            return getattr(self, key)
+        elif key in self._tkinterweb_options.keys():
+            return getattr(self._html, key)
+        elif key in self._tkhtml_options.keys():
+            return self._html.cget(key)
+        return super().cget(key)
+    
+    def bind(self, sequence, *args, **kwargs):
+        "Add an event binding. For convenience, some bindings will be bound to this widget and others will be bound to its associated :class:`~tkinterweb.TkinterWeb` instance."
+        if sequence in {"<Leave>", "<Enter>"}:
+            super().bind(sequence, *args, **kwargs)
+        else:
+            self._html.bind(sequence, *args, **kwargs)
+
+    def unbind(self, sequence, *args, **kwargs):
+        "Remove an event binding."
+        if sequence in {"<Leave>", "<Enter>"}:
+            super().unbind(sequence, *args, **kwargs)
+        else:
+            self._html.unbind(sequence, *args, **kwargs)
+    
+    def __getitem__(self, key):
+        return self.cget(key)
+
+    def __setitem__(self, key, value):
+        self.configure(**{key: value})
+
 
 class HtmlLabel(HtmlFrame):
     """The :class:`HtmlLabel` widget is a label-like HTML widget. It inherits from the :class:`HtmlFrame` class. 
@@ -1451,6 +1450,8 @@ class HtmlText(HtmlFrame):
     :type insertwidth: int
     :param insertbackground:
     :type insertbackground: str
+    :param state:
+    :type state: str
 
     Changed in version 4.15.
     """

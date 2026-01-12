@@ -50,17 +50,17 @@ TkinterWeb is very easy to use! Here is an example:
     
     root.mainloop()
 
-.. tip::
+.. note::
     To load a website, call ``yourhtmlframe.load_website("www.yourwebsite.com")``.
     
     To load a file, call ``yourhtmlframe.load_file("/path/to/your/file.html")``.
     
-    To load any generic url, call ``yourhtmlframe.load_url(yourwebsiteorfile)``. Keep in mind that the url must be properly formatted and include the url scheme.
+    To load any url, call ``yourhtmlframe.load_url(yourwebsiteorfile)``. Keep in mind that the url must be properly formatted and include the url scheme.
 
-The :class:`~tkinterweb.HtmlFrame` widget behaves like any other Tkinter widget and supports bindings. It also supports link clicks, form submittions, website title changes, and much, much more! Refer below for more tips and tricks!
+The :class:`~tkinterweb.HtmlFrame` widget behaves like any other Tkinter widget and supports bindings. It also supports link clicks, form submittions, website title changes, and much, much more! See below for more tips and tricks.
 
 .. tip::
-    Use the :class:`~tkinterweb.HtmlLabel` widget for an HTML label widget and the :class:`~tkinterweb.HtmlText` widget for an HTML text widget.
+    Use the :class:`~tkinterweb.HtmlLabel` widget for an HTML-based label widget and the :class:`~tkinterweb.HtmlText` widget for an HTML-based text widget.
     
 Tips and tricks
 ---------------

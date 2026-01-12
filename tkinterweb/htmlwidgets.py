@@ -1503,13 +1503,22 @@ class HtmlText(HtmlFrame):
         new.className = parent.className
         new.setAttribute("style", parent.getAttribute("style"))
 
+        # Wrap inline elements in a div so that they display on an new line
+        # Return the inner element so that setting the textContent doesn't overwrite this structure
+        if parent.style.display == "inline":
+            outer = self.document.createElement("div")
+            outer.appendChild(new)
+            new, inner = outer, new
+        else:
+            inner = new
+
         sibling = parent.nextSibling
         if sibling:
             parent.parentElement.insertBefore(new, sibling)
         else:
             parent.parentElement.appendChild(new)
 
-        return new, element
+        return inner, element
     
     def _delete(self, element):
         parent = element.parentElement

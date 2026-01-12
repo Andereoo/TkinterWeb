@@ -866,8 +866,8 @@ class HtmlFrame(Frame):
 
         If the given index extends out of the bounds of the given element, the caret will be moved into the preceeding or following elements.
         
-        :param element: Specifies the element to place the caret in. This element must be a text node, must contain text, and must be visible. Optional.
-        :type element: :class:`~tkinterweb.dom.HTMLElement`
+        :param element: Specifies the element to place the caret in. This element must be a text node, must contain text, and must be visible.
+        :type element, optional: :class:`~tkinterweb.dom.HTMLElement`
         :param index: The index in the element's :class:`~tkinterweb.dom.HTMLElement.textContent` to place the caret at. If ``element`` is None, the index will be used relative to the page's text content.
         :type index: int
 
@@ -1007,12 +1007,12 @@ class HtmlFrame(Frame):
     def set_selection_position(self, start_element=None, start_index=0, end_element=None, end_index=0):
         """Set the current selection, given starting and ending text indexes and, optionally, HTML elements.
         
-        :param start_element: Specifies the element to begin the selection in. This element must be text nodes, must contain text, and must be visible. Optional.
-        :type start_element: :class:`~tkinterweb.dom.HTMLElement`
+        :param start_element: Specifies the element to begin the selection in. This element must be text nodes, must contain text, and must be visible.
+        :type start_element, optional: :class:`~tkinterweb.dom.HTMLElement`
         :param start_index: The index in the element's :class:`~tkinterweb.dom.HTMLElement.textContent` to begin the selection at. If ``start_element`` is None, this index instead is relative to the page's text content.
         :type start_index: int
-        :param end_element: Specifies the element to end the selection in. This element must be text nodes, must contain text, and must be visible. Optional.
-        :type end_element: :class:`~tkinterweb.dom.HTMLElement`
+        :param end_element: Specifies the element to end the selection in. This element must be text nodes, must contain text, and must be visible.
+        :type end_element, optional: :class:`~tkinterweb.dom.HTMLElement`
         :param end_index: The index in the element's :class:`~tkinterweb.dom.HTMLElement.textContent` to end the selection at. If ``end_element`` is None, this index instead is relative to the page's text content.
         :type end_index: int
 
@@ -1572,11 +1572,11 @@ class HtmlText(HtmlFrame):
         :param start_index: The starting index to delete text from. Similar to the :py:class:`tk.Text` widget, if this is "sel.first", this will be the beginning of the selection.
         :type start_index: int or "sel.first"
         :param end_index: The ending index to delete text at. If this is "sel.last", this will be the end of the selection. If this is "end", this will be the end of the document or the end of the ending element if provided. If this is None, only the character at the start index will be deleted.
-        :type end_index: int, "sel.last", "end", or None
+        :type end_index: int, "sel.last", "end", or None, optional
         :param start_element: If provided, the start index will be used relative to this element's :class:`~tkinterweb.dom.HTMLElement.textContent`.
-        :type start_element: None or :class:`~tkinterweb.dom.HTMLElement`
+        :type start_element: None or :class:`~tkinterweb.dom.HTMLElement`, optional
         :param end_element: If provided, the end index will be used relative to this element's :class:`~tkinterweb.dom.HTMLElement.textContent`.
-        :type end_element: None or :class:`~tkinterweb.dom.HTMLElement`
+        :type end_element: None or :class:`~tkinterweb.dom.HTMLElement`, optional
 
         :raise RuntimeError: if "sel.first" or "self.last" is requested but no text is selected.
 
@@ -1660,7 +1660,7 @@ class HtmlText(HtmlFrame):
         :param text_or_element: The text or HTML element to insert.
         :type text_or_element: str or :class:`~tkinterweb.dom.HTMLElement`
         :param element: If provided, the given index will be used relative to this element's :class:`~tkinterweb.dom.HTMLElement.textContent`.
-        :type element: None or :class:`~tkinterweb.dom.HTMLElement`
+        :type element: None or :class:`~tkinterweb.dom.HTMLElement`, optional
 
         :raise RuntimeError: if "insert" is requested but the caret is not visible.
 

@@ -1330,6 +1330,26 @@ Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certif
     def _on_element_script(self, node_handle, attribute, attr_contents):
         self.javascript._on_element_script(node_handle, attribute, attr_contents)
 
+    def open_style_report_win(self):
+        "Load a window that shows that style report of the main widget"
+        submaster = tk.Toplevel(self.html)
+        submaster.title("Style Report")
+        self.style_report_win = tkw = bindings.TkinterWeb(submaster, self._tkinterweb_options, **self._tkhtml_options)
+
+        hsb = subwidgets.AutoScrollbar(submaster, orient="horizontal", command=tkw.xview)
+        vsb = subwidgets.AutoScrollbar(submaster, orient="vertical", command=tkw.yview)
+        tkw.configure(xscrollcommand=hsb.set, yscrollcommand=vsb.set)
+        submaster.columnconfigure(0, weight=1)
+        submaster.rowconfigure(0, weight=1)
+        tkw.grid(row=0, column=0, sticky="nsew")
+        hsb.grid(row=1, column=0, sticky="nsew")
+        vsb.grid(row=0, column=1, sticky="nsew")
+        hsb.set_type(2, *tkw.xview())
+        vsb.set_type(2, *tkw.yview())
+
+        tkw.parse(self.html.style_report)
+        return tkw
+
     def configure(self, **kwargs):
         """
         Change the widget's configuration options. See above for options.

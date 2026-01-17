@@ -1745,6 +1745,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         NAMES = ("name", "pixmap", "w", "h", "alpha", "ref",)
         return {i[0]:dict(zip(NAMES, i[1:])) for i in self.tk.call(self._w, "_images")}
 
+    @property
     def style_report(self):
         return self.tk.call(self._w, "_stylereport")
 

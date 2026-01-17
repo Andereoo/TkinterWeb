@@ -191,6 +191,12 @@ class NodeManager(utilities.BaseManager):
         if open and self.html.using_tkhtml30:
             self._close_other_details(details)
 
+    def _on_progress(self, node):
+        widgetid = tk.ttk.Progressbar(self.html, maximum=self.html.get_node_attribute(node, "max", 100))
+        widgetid["value"] = self.html.get_node_attribute(node, "value", 0)
+        self.html.replace_node_contents(node, widgetid)
+
+
 class FormManager(utilities.BaseManager):
     "Handle forms and form elements."
     def __init__(self, html):

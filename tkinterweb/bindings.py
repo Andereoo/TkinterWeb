@@ -292,6 +292,8 @@ If you benefited from using this package, please consider supporting its develop
         if not self.using_tkhtml30:
             #self.register_lazy_handler("node", "details", "node_manager")
             self.register_lazy_handler("attribute", "details", "node_manager")
+
+        self.register_lazy_handler("node", "progress", "node_manager")
         
         self.register_lazy_handler("node", "form", "form_manager")
         self.register_lazy_handler("node", "table", "form_manager")
@@ -1738,11 +1740,13 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         utilities.deprecate("send_onload", "event_manager")
         return self.event_manager.send_onload(root, children)
 
-
     @property
     def images(self):  # Debuging
         NAMES = ("name", "pixmap", "w", "h", "alpha", "ref",)
         return {i[0]:dict(zip(NAMES, i[1:])) for i in self.tk.call(self._w, "_images")}
+
+    def style_report(self):
+        return self.tk.call(self._w, "_stylereport")
 
     def tkhtml_uri_decode(self, uri, base64=False):
         "This command is designed to help scripts process data: URIs. It is completely separate from the html widget"

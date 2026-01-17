@@ -6,7 +6,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
     name="tkinterweb",
-    version="4.16.1",
+    version="4.16.2",
     python_requires=">=3.2",
     description="HTML/CSS viewer, editor, and app builder for Tkinter",
     long_description=README,
@@ -27,13 +27,13 @@ setup(
     include_package_data=True,
     install_requires=["tkinterweb-tkhtml>=2.1.0"],
     extras_require = {
-          "html": ["tkinterweb-tkhtml-extras"],
+          "html": ["tkinterweb-tkhtml-extras>=1.1.0"],
           "images": ["pillow"],
-          "svg": ["tkinterweb-tkhtml-extras", "pillow", "cairosvg"],
+          "svg": ["tkinterweb-tkhtml-extras>=1.1.0", "pillow", "cairosvg"],
           "javascript": ["pythonmonkey"],
           "requests": ["brotli"],
 
-          "recommended": ["tkinterweb-tkhtml-extras", "pillow"],
-          "full": ["tkinterweb-tkhtml-extras", "pillow", "cairosvg", "pythonmonkey", "brotli"],
+          "recommended": ["tkinterweb-tkhtml-extras>=1.1.0", "pillow"],
+          "full": ["tkinterweb-tkhtml-extras>=1.1.0", "pillow", "cairosvg", "pythonmonkey", "brotli"],
     },
 )

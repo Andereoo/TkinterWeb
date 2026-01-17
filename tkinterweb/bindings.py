@@ -308,6 +308,8 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                 loaded_version = tkinterweb_tkhtml.get_loaded_tkhtml_version(self.master)
                 self.post_message(f"Tkhtml {loaded_version} successfully loaded")
 
+        self.tkhtml_version = loaded_version
+
     # --- Extensions ----------------------------------------------------------
 
     # The following 'managers' each offer extra functionality. 
@@ -1054,14 +1056,20 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
     def _crash_prevention(self, data):
         if self.crash_prevention_enabled:
+            ### TODO: enable emojis & noto colo emoji font in Tcl/Tk 9
+
+            # From Bug #11
             data = "".join(c for c in data if c <= "\uFFFF")
-            data = sub(
-                "font-family:[^;']*(;)?",
-                self._remove_noto_emoji,
-                data,
-                flags=IGNORECASE,
-            )
-            data = sub(r"rgb\([^0-9](.*?)\)", "inherit", data, flags=IGNORECASE)
+
+            # I moved these workarounds to Tkhtml in version 3.1
+            if self.tkhtml_version == "3.0":
+                data = sub(
+                    "font-family:[^;']*(;)?",
+                    self._remove_noto_emoji,
+                    data,
+                    flags=IGNORECASE,
+                )
+                data = sub(r"rgb\([^0-9](.*?)\)", "inherit", data, flags=IGNORECASE)
         return data
 
     def _remove_noto_emoji(self, match):

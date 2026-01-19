@@ -196,7 +196,6 @@ class FormEntry(tk.Entry):
         tk.Entry.__init__(self, parent, borderwidth=0, highlightthickness=0, insertwidth=insertwidth, **kwargs)
 
         self._placeholder = placeholder
-        self.onchangecommand = onchangecommand
         self.colour = self.cget("fg")
 
         if value:
@@ -207,7 +206,7 @@ class FormEntry(tk.Entry):
             self._halfway()
             self.insert(0, placeholder)
 
-        self.bind("<KeyRelease>", self._on_key_release)
+        self.bind("<KeyRelease>", lambda e: onchangecommand(self) if onchangecommand else None)
         self.bind("<KeyPress>", self._on_key_press)
         self.bind("<Control-a>", self._select_all)
         self.bind("<<Paste>>", self._on_paste)
@@ -233,15 +232,19 @@ class FormEntry(tk.Entry):
                int((fg[2] + bg[2]) / 2)]
         super().config(fg=rgb_to_hex(*new))
 
-    def _on_key_release(self, event):
-        if self._placeholder and not super().get():
-            self._show_placeholder()
-
-        if self.onchangecommand: self.onchangecommand(self)
-
     def _on_key_press(self, event):
-        if self.placeholder_shown and event.keysym != "BackSpace":
-            self._hide_placeholder()
+        if self.placeholder_shown:
+            if event.keysym in {"BackSpace", "Delete"}:
+                return "break"
+            elif event.char:
+                self._hide_placeholder()
+
+        if self._placeholder and (event.keysym == "BackSpace" and len(super().get()) == 1) or \
+            (event.keysym == "Delete" and len(super().get()) == 1 and self.index("insert") == 0) or \
+            (event.keysym in {"BackSpace", "Delete"} and self.select_present() and self.selection_get() == super().get()):
+            self.delete(0, "end")
+            self._show_placeholder()
+            return "break"
 
     def _on_click(self, event):
         if self.placeholder_shown:
@@ -262,9 +265,12 @@ class FormEntry(tk.Entry):
         return "break"
 
     def _select_all(self, event):
-        self.selection_range(0, "end")
-        self.icursor("end")
-        return "break"
+        if self.placeholder_shown:
+            return "break"
+        else:
+            self.selection_range(0, "end")
+            self.icursor("end")
+            return "break"
 
     def set(self, value):
         self.delete(0, "end")

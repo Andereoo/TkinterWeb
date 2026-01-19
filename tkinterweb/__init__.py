@@ -69,10 +69,10 @@ class Demo():
             webbrowser.open(url)
 
     def done_loading(self, event):
-        "Remove the search bar and display code blocks in iframes to allow horizontal scrolling when the page loads"
+        "Display code blocks in iframes to allow horizontal scrolling when the page loads"
         from tkinter import TclError
         try:
-            self.frame.document.querySelector("div[role=\"search\"]").remove()
+            #self.frame.document.querySelector("div[role=\"search\"]").remove()
             head = self.frame.document.getElementsByTagName("head")[0].innerHTML
             for code_block in self.frame.document.getElementsByClassName("highlight"):
                 iframe = HtmlFrame(self.frame, messages_enabled=False, horizontal_scrollbar="auto", shrink=True, overflow_scroll_frame=self.frame.html)

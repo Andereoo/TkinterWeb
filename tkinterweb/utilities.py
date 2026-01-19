@@ -12,7 +12,8 @@ import platform
 import sys
 import threading
 
-from functools import wraps
+from _thread import RLock
+from functools import wraps, update_wrapper, _make_key
 
 import ssl, gzip, zlib
 from urllib.request import Request, urlopen
@@ -24,16 +25,13 @@ try:
 except ImportError:
     brotli_installed = False
 
-from _thread import RLock
-from functools import update_wrapper, _make_key
-
 
 # We need this information here so the built-in pages can access it
 __title__ = "TkinterWeb"
 __author__ = "Andrew Clarke"
 __copyright__ = "(c) 2021-2025 Andrew Clarke"
 __license__ = "MIT"
-__version__ = "4.16.3"
+__version__ = "4.16.4"
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")

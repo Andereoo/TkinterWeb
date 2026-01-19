@@ -14,7 +14,7 @@ from decimal import Decimal, InvalidOperation
 import tkinter as tk
 from tkinter import colorchooser, filedialog, ttk
 
-from .utilities import ROOT_DIR
+from .utilities import ROOT_DIR, rgb_to_hex
 
 combobox_loaded = False
 
@@ -190,15 +190,68 @@ class ScrolledTextBox(tk.Frame):
             self.onchangecommand(self)
 
 class FormEntry(tk.Entry):
-    def __init__(self, parent, value="", entry_type="", onchangecommand=None, **kwargs):
+    def __init__(self, parent, value="", placeholder="", entry_type="", onchangecommand=None, insertwidth=1, **kwargs):
         if entry_type == "password":
             kwargs["show"] = "*"
-        tk.Entry.__init__(self, parent, borderwidth=0, highlightthickness=0, **kwargs)
-        self.insert(0, value)
+        tk.Entry.__init__(self, parent, borderwidth=0, highlightthickness=0, insertwidth=insertwidth, **kwargs)
 
-        self.bind("<KeyRelease>", lambda event: onchangecommand(self) if onchangecommand else None)
+        self._placeholder = placeholder
+        self.onchangecommand = onchangecommand
+        self.colour = self.cget("fg")
+
+        if value:
+            self.placeholder_shown = False
+            self.insert(0, value)
+        else:
+            self.placeholder_shown = True
+            self._halfway()
+            self.insert(0, placeholder)
+
+        self.bind("<KeyRelease>", self._on_key_release)
+        self.bind("<KeyPress>", self._on_key_press)
         self.bind("<Control-a>", self._select_all)
         self.bind("<<Paste>>", self._on_paste)
+        self.bind("<Button-1>", self._on_click)
+        self.bind("<Motion>", self._on_motion)
+
+    @property
+    def placeholder(self):
+        return self._placeholder
+    
+    @placeholder.setter
+    def placeholder(self, value):
+        self._placeholder = value
+        if self.placeholder_shown:
+            self.delete(0, "end")
+            self.insert(0, self._placeholder)
+
+    def _halfway(self, bg=None):
+        fg = list(self.winfo_rgb(self.colour))
+        bg = list(self.winfo_rgb(bg if bg else self.cget("bg")))
+        new = [int((fg[0] + bg[0]) / 2),
+               int((fg[1] + bg[1]) / 2),
+               int((fg[2] + bg[2]) / 2)]
+        super().config(fg=rgb_to_hex(*new))
+
+    def _on_key_release(self, event):
+        if self._placeholder and not super().get():
+            self._show_placeholder()
+
+        if self.onchangecommand: self.onchangecommand(self)
+
+    def _on_key_press(self, event):
+        if self.placeholder_shown and event.keysym != "BackSpace":
+            self._hide_placeholder()
+
+    def _on_click(self, event):
+        if self.placeholder_shown:
+            self.focus_set()
+            self.icursor(0)
+            return "break"
+    
+    def _on_motion(self, event):
+        if self.placeholder_shown:
+            return "break"
 
     def _on_paste(self, event):
         try:
@@ -215,12 +268,55 @@ class FormEntry(tk.Entry):
 
     def set(self, value):
         self.delete(0, "end")
-        self.insert(0, value)
+
+        if value:
+            if self.placeholder_shown:
+                self._hide_placeholder()
+            self.insert(0, value)
+        elif self._placeholder:
+            self._show_placeholder()
+
+    def _show_placeholder(self):
+        self._halfway()
+        self.insert(0, self._placeholder)
+        self.icursor(0)
+        self.placeholder_shown = True
+
+    def _hide_placeholder(self):
+        self.delete(0, "end")
+        super().config(fg=self.colour)
+        self.placeholder_shown = False
+
+    def get(self):
+        if self.placeholder_shown:
+            return ""
+        else:
+            return super().get()
 
     def configure(self, **kwargs):
         kwargs.pop("borderwidth", None)
         kwargs.pop("highlightthickness", None)
+
+        if "bg" in kwargs: bg = kwargs["bg"]
+        elif "background" in kwargs: bg = kwargs["background"]
+        else: bg = None
+
+        if "fg" in kwargs:
+            kwargs["insertbackground"] = kwargs["fg"]
+            if self.placeholder_shown:
+                self.colour = kwargs.pop("fg")
+                self._halfway(bg)
+        elif "foreground" in kwargs:
+            kwargs["insertbackground"] = kwargs["foreground"]
+            if self.placeholder_shown:
+                self.colour = kwargs.pop("foreground")
+                self._halfway(bg)
+        elif bg: self._halfway(bg)
+
         super().configure(**kwargs)
+    
+    def config(self, **kwargs):
+        self.configure(**kwargs)
 
 class FormCheckbox(ttk.Checkbutton):
     def __init__(self, parent, value=0, onchangecommand=None, **kwargs):

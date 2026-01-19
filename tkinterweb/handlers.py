@@ -405,7 +405,8 @@ class FormManager(utilities.BaseManager):
                 node, widgetid
             )
         else:
-            widgetid = subwidgets.FormEntry(self.html, nodevalue, nodetype, lambda widgetid, node=node: self._on_input_change(node, widgetid))
+            placeholder = self.html.get_node_attribute(node, "placeholder", "")
+            widgetid = subwidgets.FormEntry(self.html, nodevalue, placeholder, nodetype, lambda widgetid, node=node: self._on_input_change(node, widgetid))
             widgetid.bind(
                 "<Return>",
                 lambda event, node=node: self._handle_form_submission(
@@ -446,6 +447,8 @@ class FormManager(utilities.BaseManager):
                 nodevalue = self.html.get_node_attribute(node, "value")
                 if value != "false":
                     widget.variable.set(nodevalue)
+        elif attribute == "placeholder":
+            widget.placeholder = value
 
     def _on_input_change(self, node, widgetid):
         widgetid.event_generate(utilities.FIELD_CHANGED_EVENT)

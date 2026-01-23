@@ -289,7 +289,7 @@ class CaretManager(utilities.BaseManager):
     :ivar target_offset: The text offset used for traversing up/down.
     :ivar blink_delay: The caret's blink delay, in milliseconds. Updated in version 4.11.
     :ivar caret_width: The caret's width, in pixels. New in version 4.11.
-    :ivar caret_colour: The caret's colour. If None, the text colour under it will be matched.
+    :ivar caret_color: The caret's colour. If None, the text colour under it will be matched.
     :ivar scrolling_threshold: If the distance between the visible part of the page and the caret is nonzero but is less than this number, a scrolling animation will play.
     :ivar scrolling_teleport: If the distance between the visible part of the page and the caret is nonzero but is greater than :attr:`scrolling_threshold`, the page is scrolled to this number before the scrolling animation plays.
     
@@ -307,7 +307,7 @@ class CaretManager(utilities.BaseManager):
 
         self.blink_delays = [600, 300]
         self.caret_width = 1
-        self.caret_colour = None
+        self.caret_color = None
         self.scrolling_threshold = 300 
         self.scrolling_teleport = 75
 
@@ -549,8 +549,8 @@ class CaretManager(utilities.BaseManager):
         xoffset = self._scroll_if_needed(a, c, x1, x2, auto_scroll, 1)
 
         if (xoffset != None) and (yoffset != None): # Otherwise, yview/xview automatically re-calls this function, so we exit
-            if self.caret_colour:
-                bg = self.caret_colour
+            if self.caret_color:
+                bg = self.caret_color
             else:
                 bg = self.html.get_node_property(self.html.get_node_parent(self.node), "color")
             self.caret_frame.config(height=d-b, bg=bg, width=self.caret_width)

@@ -91,19 +91,19 @@ class HtmlFrame(Frame):
     :param ignore_invalid_images: If enabled and alt text is disabled or the image has no alt text, a broken image icon will be displayed in place of the image.
     :type ignore_invalid_images: bool
 
-    Widget colors and styling:
+    Widget colours and styling:
 
-    :param find_match_highlight_color: The highlight color of matches found by :py:func:`find_text()`. 
+    :param find_match_highlight_color: The background colour of matches found by :py:func:`find_text()`. 
     :type find_match_highlight_color: str
-    :param find_match_text_color: The text color of matches found by :py:func:`find_text()`. 
+    :param find_match_text_color: The foreground colour of matches found by :py:func:`find_text()`. 
     :type find_match_text_color: str
-    :param find_current_highlight_color: The highlight color of the current match selected by :py:func:`find_text()`. 
+    :param find_current_highlight_color: The background colour of the current match selected by :py:func:`find_text()`. 
     :type find_current_highlight_color: str
-    :param find_current_text_color: The text color of the current match selected by :py:func:`find_text()`. 
+    :param find_current_text_color: The foreground colour of the current match selected by :py:func:`find_text()`. 
     :type find_current_text_color: str
-    :param selected_text_highlight_color: The highlight color of selected text. 
+    :param selected_text_highlight_color: The background colour of selected text. 
     :type selected_text_highlight_color: str
-    :param selected_text_color: The text color of selected text. 
+    :param selected_text_color: The foreground colour of selected text. 
     :type selected_text_color: str
 
     Download behaviour:
@@ -1386,7 +1386,7 @@ class HtmlLabel(HtmlFrame):
     
     This widget also accepts one additional parameter:
 
-    :param text: The HTML content of the widget
+    :param text: The HTML or text content of the widget
     :type text: str
 
     By default the widget will be styled to match the :py:class:`ttk.Label` style. To change this, alter the ttk style or use CSS.
@@ -1468,23 +1468,23 @@ class HtmlText(HtmlFrame):
 
     This widget accepts the following :py:class:`tk.Text` parameters:
 
-    :param background:
+    :param background: the widget's background colour
     :type background: str
-    :param foreground:
+    :param foreground: the widget's foreground (text) colour
     :type foreground: str
-    :param selectbackground:
+    :param selectbackground: the background colour of selected text
     :type selectbackground: str
-    :param selectforeground:
+    :param selectforeground: the foreground colour of selected text
     :type selectforeground: str
-    :param insertontime:
+    :param insertontime: the number of milliseconds the insertion cursor is visible
     :type insertontime: int
-    :param insertofftime:
+    :param insertofftime: the number of milliseconds the insertion cursor is invisible
     :type insertofftime: int
-    :param insertwidth:
+    :param insertwidth: the width of the insertion cursor in pixels
     :type insertwidth: int
-    :param insertbackground:
+    :param insertbackground: the background colour of the insertion cursor
     :type insertbackground: str
-    :param state:
+    :param state: the widget's state (``"normal"`` or ``"disabled"``)
     :type state: str
 
     Changed in version 4.15.
@@ -1931,7 +1931,7 @@ class HtmlText(HtmlFrame):
             value = self._check_value(self._html.caret_manager.caret_width, kwargs.pop("insertwidth"))
             self._html.caret_manager.caret_width = value
         if "insertbackground" in kwargs:
-            self._html.caret_manager.caret_colour = kwargs.pop("insertbackground")
+            self._html.caret_manager.caret_color = kwargs.pop("insertbackground")
         if "state" in kwargs:
             state = kwargs.pop("state")
             if state == "enabled":
@@ -1966,7 +1966,7 @@ class HtmlText(HtmlFrame):
         elif "insertwidth" == key:
             return self._html.caret_manager.caret_width
         elif "insertbackground" == key:
-            return self._html.caret_manager.caret_colour
+            return self._html.caret_manager.caret_color
         elif "state" == key:
             return "enabled" if self._html.caret_browsing_enabled else "disabled"
         

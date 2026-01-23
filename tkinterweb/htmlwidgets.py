@@ -1114,10 +1114,13 @@ class HtmlFrame(Frame):
 
     def _handle_frame_resize(self, event):
         # Tkhtml doesn't handle resizing outwards when shrink is enabled
+        # Disabling text wrapping works great except that it has no effect on multiple inline text nodes in Tkhtml
+
         # When the widget resizes, resize it to the screen's width, and let it shrink back
         # Otherwise, the widget will shrink when it can and return
         # Not ideal, but still less ideal than the default behaviour
 
+        ### TODO: Needs improvement
         ### TODO: Fix from within Tkhtml???
 
         if self.unshrink:

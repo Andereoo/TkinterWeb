@@ -31,7 +31,7 @@ __title__ = "TkinterWeb"
 __author__ = "Andrew Clarke"
 __copyright__ = "(c) 2021-2025 Andrew Clarke"
 __license__ = "MIT"
-__version__ = "4.16.5"
+__version__ = "4.16.6"
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
@@ -97,6 +97,7 @@ DEFAULT_STYLE = r"""
 HEAD, SCRIPT, TITLE { display: none }
 BODY {
   margin:8px;
+  white-space: nowrap;
 }
 /* Rules for lists */
 LI                   { display: list-item }
@@ -446,6 +447,8 @@ INPUT[type="submit"],INPUT[type="button"], INPUT[type="reset"], BUTTON {
   color: tcl(::tkhtml::if_disabled #666666 #ffffff);
 }
 """
+
+SHRINK_STYLE = "BODY { white-space: nowrap }"
 
 class BuiltinPageGenerator():
     """BUILTIN_PAGES used to be a dictionary of URIs and corresponding HTML code.

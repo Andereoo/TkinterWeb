@@ -53,6 +53,9 @@ class TkinterWeb(tk.Widget):
         if kwargs.get("defaultstyle", "") == "" and self.default_style:
             kwargs["defaultstyle"] = self.default_style
 
+        if kwargs.get("shrink", False) == True:
+            kwargs["defaultstyle"] += utilities.SHRINK_STYLE
+
         # Unset width and height if -0
         if kwargs.get("width") == 0: 
             del kwargs["width"]

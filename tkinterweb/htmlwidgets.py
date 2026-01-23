@@ -46,7 +46,7 @@ class HtmlFrame(Frame):
     :type vertical_scrollbar: bool or "auto"
     :param horizontal_scrollbar: Show the horizontal scrollbar. It is usually best to leave this hidden. Consider adding the ``tkinterweb-overflow-x="scroll" | "auto" | "hidden"`` attribute on the ``<html>`` or ``<body>`` element instead.
     :type horizontal_scrollbar: bool or "auto"
-    :param shrink: If False, the widget's width and height are set by the width and height options as per usual. If this option is set to True, the widget's requested width and height are determined by the current document.
+    :param shrink: If False, the widget's width and height are set by the width and height options as per usual. If this option is set to True, the widget's width and height are determined by the current document.
     :type shrink: bool
     :param defaultstyle: The default stylesheet to use when parsing HTML. It's usually best to leave this setting alone. The default is ``tkintereb.utilities.DEFAULT_STYLE``.
     :type defaultstyle: str
@@ -155,6 +155,7 @@ class HtmlFrame(Frame):
         self._waiting_for_reset = False
         self._thread_in_progress = None
         self._prev_height = 0
+        self._prev_configure = ()
         self._button = None
         self._style = None
 
@@ -170,6 +171,7 @@ class HtmlFrame(Frame):
             "on_navigate_fail": self.show_error_page if on_navigate_fail is None else on_navigate_fail,
             "vertical_scrollbar": vertical_scrollbar,
             "horizontal_scrollbar": horizontal_scrollbar,
+            "unshrink": False,
             "about_page_background": kwargs.pop("about_page_background", ""), # will be removed
             "about_page_foreground": kwargs.pop("about_page_foreground", "") # will be removed
         }
@@ -211,7 +213,6 @@ class HtmlFrame(Frame):
             "request_timeout": request_timeout,
             "headers": headers,
             "experimental": experimental,
-            # No impact after loading
             "use_prebuilt_tkhtml": use_prebuilt_tkhtml,
             "tkhtml_version": tkhtml_version,
             # Internal
@@ -230,6 +231,10 @@ class HtmlFrame(Frame):
             "height": height,
             "width": width,
         }
+
+        # Some have no impact after loading
+        # Shrink seems to cause segfaults
+        self.final_options = {"use_prebuilt_tkhtml", "tkhtml_version", "experimental", "shrink"}
                             
         for key, value in self._htmlframe_options.items():
             if key in kwargs:
@@ -296,7 +301,8 @@ class HtmlFrame(Frame):
 
         self.bind("<Leave>", html._on_leave)
         self.bind("<Enter>", html._on_mouse_motion)
-        self.bind_class(html.tkinterweb_tag, "<Configure>", self._handle_resize)
+        self.bind_class(html.tkinterweb_tag, "<Configure>", self._handle_html_resize)
+        super().bind("<Configure>", self._handle_frame_resize)
 
     @property
     def title(self):
@@ -406,7 +412,7 @@ class HtmlFrame(Frame):
         # NOTE: must be run from main thread
         
         self._finish_css()
-        self._handle_resize(force=True)
+        self._handle_html_resize(force=True)
 
     def load_file(self, file_url, decode=None, force=False):
         """Convenience method to load a local HTML file.
@@ -526,7 +532,7 @@ class HtmlFrame(Frame):
             node = None
 
         self._finish_css()
-        self._handle_resize(force=True)
+        self._handle_html_resize(force=True)
 
         return node
     
@@ -557,7 +563,7 @@ class HtmlFrame(Frame):
         self._html.insert_node_before(body, node, child)
  
         self._finish_css()
-        self._handle_resize(force=True)
+        self._handle_html_resize(force=True)
 
         if return_element:
             return dom.HTMLElement(self.document, node)
@@ -1088,7 +1094,7 @@ class HtmlFrame(Frame):
                 raise TypeError(f"expected {expected_type.__name__}, got \"{new}\"")
         return new
     
-    def _handle_resize(self, event=None, force=False):
+    def _handle_html_resize(self, event=None, force=False):
         """Make all elements with the 'tkinterweb-full-page' attribute the same height as the html widget.
         This can be used in conjunction with table elements to vertical align pages,
         which is otherwise not possible with Tkhtml. Hopefully we won't need this forever."""
@@ -1105,6 +1111,23 @@ class HtmlFrame(Frame):
         if self._html.caret_browsing_enabled:
             self._html.caret_manager.update()
 
+    def _handle_frame_resize(self, event):
+        # Tkhtml doesn't handle resizing outwards when shrink is enabled
+        # When the widget resizes, resize it to the screen's width, and let it shrink back
+        # Otherwise, the widget will shrink when it can and return
+        # Not ideal, but still less ideal than the default behaviour
+
+        ### TODO: Expose???
+        ### TODO: Fix from within Tkhtml???
+
+        if self.unshrink:
+            if event.x and self._prev_configure != (event.width, event.x) and self._html.cget("shrink") == 1:
+                self.after_idle(lambda: self._html.configure(
+                    width=self.winfo_screenwidth(), 
+                    height=event.height)
+                )
+                self._prev_configure = (event.width, event.x)
+
     def _manage_vsb(self, allow=None, check=False):
         "Show or hide the scrollbars."
         if check:
@@ -1113,7 +1136,10 @@ class HtmlFrame(Frame):
         if allow == None:
             allow = self.vertical_scrollbar
         if allow == "auto":
-            allow = 2
+            if self._html.cget("shrink") == 1:
+                allow = 0
+            else:
+                allow = 2
         self._vsb.set_type(allow, *self._html.yview())
         return allow
     
@@ -1125,7 +1151,10 @@ class HtmlFrame(Frame):
         if allow == None:
             allow = self.horizontal_scrollbar
         if allow == "auto":
-            allow = 2
+            if self._html.cget("shrink") == 1:
+                allow = 0
+            else:
+                allow = 2
         self._hsb.set_type(allow, *self._html.xview())
         return allow
 
@@ -1254,7 +1283,10 @@ Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certif
         self.on_navigate_fail(url, error, code)
 
     def _finish_css(self):     
-        ## TODO: consider handling add_html/insert_html this way too   
+        ### TODO: consider handling add_html/insert_html this way too   
+        ### But then again I don't think they're quite as commonly used
+        ### And these days one could just bind to DOM_CONTENT_LOADED_EVENT
+
         if self._waiting_for_reset:
             self._waiting_for_reset = False
             for style in self._accumulated_styles:
@@ -1280,6 +1312,9 @@ Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certif
 
         # 
         for key in list(kwargs.keys()):
+            if key in self.final_options:
+                raise NotImplementedError(f"{key} should not be changed after the widget is loaded")
+
             if key in self._htmlframe_options:
                 value = self._check_value(self._htmlframe_options[key], kwargs.pop(key))
                 setattr(self, key, value)
@@ -1296,7 +1331,7 @@ Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certif
             elif key in self._tkhtml_options:
                 self._html[key] = kwargs.pop(key)
                 if key == "zoom":
-                    self._handle_resize(force=True)
+                    self._handle_html_resize(force=True)
                     self._html.caret_manager.update()
                 elif key == "fontscale":
                     self._html.caret_manager.update()
@@ -1349,10 +1384,12 @@ class HtmlLabel(HtmlFrame):
     
     For a complete list of avaliable methods, properties, configuration options, and generated events, see the :class:`HtmlFrame` docs.
     
-    This widget also accepts one additional parameters:
+    This widget also accepts one additional parameter:
 
     :param text: The HTML content of the widget
     :type text: str
+
+    By default the widget will be styled to match the :py:class:`ttk.Label` style. To change this, alter the ttk style or use CSS.
     """
 
     def __init__(self, master, *, text="", **kwargs):
@@ -1371,15 +1408,12 @@ class HtmlLabel(HtmlFrame):
 
         if text:
             self.load_html(text)
-        #else:
-        #    # This seems to make the widget shrink with certain HTML pages
-        #    # See Bug 145, for instance
-        #    # Will need to look into a way to make this work
-        #    self.load_html("<body></body>", _relayout=False)
+        elif self.unshrink:
+            self.load_html("<body></body>", _relayout=False)
 
-    def _handle_resize(self, *args, **kwargs):
-        # Overwrite HtmlFrame._handle_resize, which is not necessary when shrink is set to True
-        # HtmlFrame._handle_resize also causes weird behaviour when tables are present and shrink set to True
+    def _handle_html_resize(self, *args, **kwargs):
+        # Overwrite HtmlFrame._handle_html_resize, which is not necessary when shrink is set to True
+        # HtmlFrame._handle_html_resize also causes weird behaviour when tables are present and shrink set to True
         return
     
     def load_html(self, *args, _relayout=True, **kwargs):

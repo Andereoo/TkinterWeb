@@ -345,6 +345,8 @@ Changelog
 
     * The :class:`.HtmlText` widget now supports the ``state`` keyword.
 
+    * Added introductory support for :class:`.HtmlLabel` and :class:`.HtmlFrame(shrink=True)` widget resizing. This feature is experimental and may change at any time. Set ``HtmlFrame.unshrink = True`` to enable it and let me know how it works!
+
 .. dropdown:: Changed/Fixed
 
     Version 4.0:
@@ -470,6 +472,9 @@ Changelog
     * Fixed more bugs.
     * :meth:`.HtmlFrame.set_caret_position` now sets the caret relative to the document text when no element is provided. 
     * :meth:`.HtmlFrame.set_selection_position` now sets the selection relative to the document text when no elements are provided. 
+    * A ``NotImplementedError`` will now raise when changing some settings via ``Htmlframe.configure()``. This occurs on settings that have no effect after the widget loads and on the shrink value, which has been causing segfaults when changed after the widget loads. If you absolutely need to change it on the fly use ``Htmlframe.html.configure()``
+    * Scrollbars no longer will show in :class:`.HtmlLabel` and :class:`.HtmlFrame(shrink=True)` widgets when scrollbars are set to ``"auto"``.
+    * Text wrapping has been disabled by default in the :class:`.HtmlLabel` and :class:`.HtmlFrame(shrink=True)` widgets. Use CSS to override this (with caution).
 
 -------------------
 

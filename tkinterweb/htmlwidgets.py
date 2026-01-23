@@ -48,7 +48,7 @@ class HtmlFrame(Frame):
     :type horizontal_scrollbar: bool or "auto"
     :param shrink: If False, the widget's width and height are set by the width and height options as per usual. If this option is set to True, the widget's width and height are determined by the current document.
     :type shrink: bool
-    :param defaultstyle: The default stylesheet to use when parsing HTML. It's usually best to leave this setting alone. The default is ``tkintereb.utilities.DEFAULT_STYLE``.
+    :param defaultstyle: The default stylesheet to use when parsing HTML. Use caution when changing this setting. The default is ``tkintereb.utilities.DEFAULT_STYLE``.
     :type defaultstyle: str
     
     Debugging:
@@ -74,9 +74,9 @@ class HtmlFrame(Frame):
     :type objects_enabled: bool
     :param caches_enabled: Enable/disable caching. Disabling this option will conserve memory, but will also result in longer page and image reload times. This is enabled by default. Largely for debugging.
     :type caches_enabled: bool
-    :param crash_prevention_enabled: Enable/disable crash prevention. Disabling this option may improve page load speed, but crashes will occur on some websites. This is enabled by default.
+    :param crash_prevention_enabled: Enable/disable crash prevention. In older Tkhtml versions, disabling this option may improve page load speed, but crashes will occur on some websites. This is enabled by default. Largely for debugging.
     :type crash_prevention_enabled: bool
-    :param events_enabled: Enable/disable generation of Tk events. This is enabled by default.
+    :param events_enabled: Enable/disable generation of Tk events. This is enabled by default. Largely for debugging.
     :type events_enabled: bool
     :param threading_enabled: Enable/disable threading. Has no effect if the Tcl/Tk build does not support threading. This is enabled by default. Largely for debugging.
     :type threading_enabled: bool
@@ -302,7 +302,8 @@ class HtmlFrame(Frame):
         self.bind("<Leave>", html._on_leave)
         self.bind("<Enter>", html._on_mouse_motion)
         self.bind_class(html.tkinterweb_tag, "<Configure>", self._handle_html_resize)
-        super().bind("<Configure>", self._handle_frame_resize)
+        
+        if shrink: super().bind("<Configure>", self._handle_frame_resize)
 
     @property
     def title(self):
@@ -1117,11 +1118,10 @@ class HtmlFrame(Frame):
         # Otherwise, the widget will shrink when it can and return
         # Not ideal, but still less ideal than the default behaviour
 
-        ### TODO: Expose???
         ### TODO: Fix from within Tkhtml???
 
         if self.unshrink:
-            if event.x and self._prev_configure != (event.width, event.x) and self._html.cget("shrink") == 1:
+            if event.x and self._prev_configure != (event.width, event.x):
                 self.after_idle(lambda: self._html.configure(
                     width=self.winfo_screenwidth(), 
                     height=event.height)

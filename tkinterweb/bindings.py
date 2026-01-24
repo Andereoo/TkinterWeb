@@ -50,11 +50,12 @@ class TkinterWeb(tk.Widget):
         #    kwargs["logcmd"] = tkhtml_notifier
 
         # Set the default style if needed
+        if kwargs.get("shrink", False) == True:
+            # will be much easier once I remove default_style
+            setattr(self, "default_style", getattr(self, "default_style", "") + utilities.SHRINK_STYLE)
+
         if kwargs.get("defaultstyle", "") == "" and self.default_style:
             kwargs["defaultstyle"] = self.default_style
-
-        if kwargs.get("shrink", False) == True:
-            kwargs["defaultstyle"] += utilities.SHRINK_STYLE
 
         # Unset width and height if -0
         if kwargs.get("width") == 0: 

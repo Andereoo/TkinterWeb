@@ -796,9 +796,11 @@ class ObjectManager(utilities.BaseManager):
         "Handle <iframe> elements."
         src = self.html.get_node_attribute(node, "src")
         srcdoc = self.html.get_node_attribute(node, "srcdoc")
-        scrolling = "auto"
+        
         if self.html.get_node_attribute(node, "scrolling") == "no":
             scrolling = False
+        else:
+            scrolling = "auto"
 
         if srcdoc:
             self._create_iframe(node, None, srcdoc, scrolling)
@@ -826,6 +828,7 @@ class ObjectManager(utilities.BaseManager):
                 message_func=self.html.message_func,
                 overflow_scroll_frame=self.html,
                 stylesheets_enabled = self.html.stylesheets_enabled,
+                vertical_scrollbar = vertical_scrollbar,
                 images_enabled = self.html.images_enabled,
                 forms_enabled = self.html.forms_enabled,
                 objects_enabled = self.html.objects_enabled,

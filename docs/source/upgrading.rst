@@ -347,6 +347,10 @@ Changelog
 
     * Added introductory support for :class:`.HtmlLabel` and :class:`.HtmlFrame(shrink=True)` widget resizing. This feature is experimental and may change at any time. Set ``HtmlFrame.unshrink = True`` to enable it and let me know how it works!
 
+    Version 4.17:
+
+    * The new configuration option ``textwrap`` can be used to enable or disable text wrapping. In general, text wrapping should be disabled when shrink is enabled, and should be enabled when shrink is disabled. This is the default behaviour. This is only partially supported in Tkhtml 3.0; make sure you have the :py:mod:`tkinterweb-tkhtml-extras` package installed.
+
 .. dropdown:: Changed/Fixed
 
     Version 4.0:
@@ -473,8 +477,13 @@ Changelog
     * :meth:`.HtmlFrame.set_caret_position` now sets the caret relative to the document text when no element is provided. 
     * :meth:`.HtmlFrame.set_selection_position` now sets the selection relative to the document text when no elements are provided. 
     * A ``NotImplementedError`` will now raise when changing some settings via ``HtmlFrame.configure()``. This occurs on settings that have no effect after the widget loads and on the shrink value, which has been causing segfaults when changed after the widget loads. If you absolutely need to change the shrink value on the fly use ``HtmlFrame.html.configure()``
-    * Scrollbars will no longer show in :class:`.HtmlLabel` and :class:`.HtmlFrame(shrink=True)` widgets when scrollbars are set to ``"auto"``.
-    * Text wrapping has been disabled by default in the :class:`.HtmlLabel` and :class:`.HtmlFrame(shrink=True)` widgets. Use CSS to override this (with caution). See `bug #147 <https://github.com/Andereoo/TkinterWeb/issues/147>`_.
+    * Text wrapping has been disabled by default in the :class:`.HtmlLabel` and :class:`.HtmlFrame(shrink=True)` widgets. 
+    
+    Version 4.17:
+    
+    * Set the new configuration option ``textwrap`` to ``True`` to override the new default text wrapping settings. See `bug #147 <https://github.com/Andereoo/TkinterWeb/issues/147>`_.
+    * The configuration options ``horizontal_scrollbar`` and ``vertical_scrollbar`` now accept another option, ``"dynamic"``. This behaves like ``"auto"``, with the difference that scrollbars are always hidden in :class:`.HtmlLabel` and :class:`.HtmlFrame(shrink=True)` widgets. This is the new default for vertical scrollbars.
+    * Fixed iframe scrolling attribute support.
 
 -------------------
 

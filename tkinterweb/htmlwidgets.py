@@ -42,14 +42,19 @@ class HtmlFrame(Frame):
     :type zoom: float
     :param fontscale: The page fontscale multiplier.
     :type fontscale: float
-    :param vertical_scrollbar: Show the vertical scrollbar. Consider using the CSS ``overflow`` property on the ``<html>`` or ``<body>`` element instead.
-    :type vertical_scrollbar: bool or "auto"
-    :param horizontal_scrollbar: Show the horizontal scrollbar. It is usually best to leave this hidden. Consider adding the ``tkinterweb-overflow-x="scroll" | "auto" | "hidden"`` attribute on the ``<html>`` or ``<body>`` element instead.
-    :type horizontal_scrollbar: bool or "auto"
-    :param shrink: If False, the widget's width and height are set by the width and height options as per usual. If this option is set to True, the widget's width and height are determined by the current document.
-    :type shrink: bool
     :param defaultstyle: The default stylesheet to use when parsing HTML. Use caution when changing this setting. The default is ``tkintereb.utilities.DEFAULT_STYLE``.
     :type defaultstyle: str
+
+    Widget sizing and overflow:
+
+    :param vertical_scrollbar: Show the vertical scrollbar. You can also set the CSS ``overflow`` property on the ``<html>`` or ``<body>`` element instead.
+    :type vertical_scrollbar: bool, "auto", or "dynamic"
+    :param horizontal_scrollbar: Show the horizontal scrollbar. It is usually best to leave this hidden. You can also set the ``tkinterweb-overflow-x="scroll" | "auto" | "hidden"`` attribute on the ``<html>`` or ``<body>`` element instead.
+    :type horizontal_scrollbar: bool, "auto", or "dynamic"
+    :param shrink: If False, the widget's width and height are set by the width and height options as per usual. If this option is set to True, the widget's width and height are determined by the current document.
+    :type shrink: bool
+    param textwrap: Determines whether text is allowed to wrap. This is similar to the CSS ``text-wrap: normal | nowrap`` property, but more forceful. By default, wrapping will be disabled when shrink is True and will be enabled when shrink is False. Make sure the tkinterweb-tkhtml-extras package is installed; this is only partially supported in Tkhtml version 3.0. New in version 4.17.
+    :type textwrap: bool or "auto"
     
     Debugging:
 
@@ -136,7 +141,7 @@ class HtmlFrame(Frame):
     
     :raise TypeError: If the value type is wrong and cannot be converted to the correct type."""
 
-    def __init__(self, master, *, zoom = 1.0, fontscale = 1.0, messages_enabled = True, vertical_scrollbar = "auto", horizontal_scrollbar = False, \
+    def __init__(self, master, *, zoom = 1.0, fontscale = 1.0, messages_enabled = True, vertical_scrollbar = "dynamic", horizontal_scrollbar = False, \
                     on_navigate_fail = None, on_link_click = None, on_form_submit = None, on_script = None, on_element_script = None, on_resource_setup = None, \
                     message_func = utilities.notifier, request_func = None, caret_browsing_enabled = False, selection_enabled = True, \
                     stylesheets_enabled = True, images_enabled = True, forms_enabled = True, objects_enabled = True, caches_enabled = True, \
@@ -146,7 +151,7 @@ class HtmlFrame(Frame):
                     find_current_text_color = "#000", selected_text_highlight_color = "#9bc6fa", selected_text_color = "#000", \
                     insecure_https = False, ssl_cafile = None, request_timeout = 15, headers = utilities.HEADERS, experimental = False, \
                     use_prebuilt_tkhtml = True, tkhtml_version = "", parsemode = utilities.DEFAULT_PARSE_MODE, \
-                    shrink = False, mode = utilities.DEFAULT_ENGINE_MODE, defaultstyle = "", height = 0, width = 0, **kwargs):
+                    shrink = False, textwrap="auto", mode = utilities.DEFAULT_ENGINE_MODE, defaultstyle = "", height = 0, width = 0, **kwargs):
         
         # State and settings variables
         self._current_url = ""
@@ -226,6 +231,7 @@ class HtmlFrame(Frame):
             "fontscale": fontscale,
             "parsemode": parsemode,
             "shrink": shrink,
+            "textwrap": textwrap,
             "mode": mode,
             "defaultstyle": defaultstyle,
             "height": height,
@@ -1131,18 +1137,23 @@ class HtmlFrame(Frame):
                 )
                 self._prev_configure = (event.width, event.x)
 
-    def _manage_vsb(self, allow=None, check=False):
-        "Show or hide the scrollbars."
-        if check:
-            return self._vsb.scroll
-        
-        if allow == None:
-            allow = self.vertical_scrollbar
+    def _adjust_allow(self, allow):
         if allow == "auto":
+            allow = 2
+        elif allow == "dynamic":
             if self._html.cget("shrink") == 1:
                 allow = 0
             else:
                 allow = 2
+        return allow
+
+    def _manage_vsb(self, allow=None, check=False):
+        "Show or hide the scrollbars."
+        if check:
+            return self._vsb.scroll
+        if allow == None:
+            allow = self.vertical_scrollbar
+        allow = self._adjust_allow(allow)
         self._vsb.set_type(allow, *self._html.yview())
         return allow
     
@@ -1150,14 +1161,9 @@ class HtmlFrame(Frame):
         "Show or hide the scrollbars."
         if check:
             return self._hsb.scroll
-
         if allow == None:
             allow = self.horizontal_scrollbar
-        if allow == "auto":
-            if self._html.cget("shrink") == 1:
-                allow = 0
-            else:
-                allow = 2
+        allow = self._adjust_allow(allow)
         self._hsb.set_type(allow, *self._html.xview())
         return allow
 

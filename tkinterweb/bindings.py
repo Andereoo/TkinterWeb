@@ -36,6 +36,9 @@ class TkinterWeb(tk.Widget):
         _delayed_options = {"dark_theme_enabled", "caches_enabled", "threading_enabled"}
         tkinterweb_options = self._setup_settings(tkinterweb_options, _delayed_options)
 
+        # Load Tkhtml3
+        self._load_tkhtml()
+
         # Register image loading infrastructure
         if "imagecmd" not in kwargs:
             kwargs["imagecmd"] = master.register(self._on_image_cmd)
@@ -49,14 +52,27 @@ class TkinterWeb(tk.Widget):
         # if "logcmd" not in kwargs:
         #    kwargs["logcmd"] = tkhtml_notifier
 
-        # Set the default style if needed
-        if kwargs.get("shrink", False) == True and self.default_style:
-            self.default_style += utilities.SHRINK_STYLE
+        shrink = bool(kwargs.get("shrink"))
+        textwrap = kwargs.get("textwrap")
 
-        if kwargs.get("defaultstyle", "") == "" and self.default_style:
+        # Set the textwrap value if needed
+        if self.using_tkhtml30:
+            if self.default_style:
+                # For Tkhtml 3.0, we do our best by applying CSS to block word wrapping
+                if textwrap == "auto" and shrink:
+                    self.default_style += utilities.TEXTWRAP_STYLE
+                elif not textwrap:
+                    self.default_style += utilities.TEXTWRAP_STYLE
+            # Version 3.0 doesn't support textwrap
+            kwargs.pop("textwrap", None)
+        elif textwrap == "auto":
+            kwargs["textwrap"] = not(shrink)
+
+        # Set the default style if needed
+        if not kwargs.get("defaultstyle", "") and self.default_style:
             kwargs["defaultstyle"] = self.default_style
 
-        # Unset width and height if -0
+        # Unset width and height if null
         if kwargs.get("width") == 0: 
             del kwargs["width"]
         if kwargs.get("height") == 0: 
@@ -65,8 +81,7 @@ class TkinterWeb(tk.Widget):
         # Provide OS information for troubleshooting
         self.post_message(f"Starting TkinterWeb for {utilities.PLATFORM.processor} {utilities.PLATFORM.system} with Python {'.'.join(utilities.PYTHON_VERSION)}")
 
-        # Load and initialize the Tkhtml3 widget
-        self._load_tkhtml()
+        # Initialize the Tkhtml3 widget
         tk.Widget.__init__(self, master, "html", kwargs)
 
         # Setup threading settings
@@ -312,6 +327,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                 self.post_message(f"Tkhtml {loaded_version} successfully loaded")
 
         self.tkhtml_version = loaded_version
+        self.using_tkhtml30 = loaded_version == "3.0"
 
     # --- Extensions ----------------------------------------------------------
 
@@ -1065,7 +1081,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             data = "".join(c for c in data if c <= "\uFFFF")
 
             # I moved these workarounds to Tkhtml in version 3.1
-            if self.tkhtml_version == "3.0":
+            if self.using_tkhtml30:
                 data = sub(
                     "font-family:[^;']*(;)?",
                     self._remove_noto_emoji,

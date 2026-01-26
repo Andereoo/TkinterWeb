@@ -1330,11 +1330,24 @@ Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certif
     def _on_element_script(self, node_handle, attribute, attr_contents):
         self.javascript._on_element_script(node_handle, attribute, attr_contents)
 
-    def open_style_report_win(self):
+    def open_style_report_win(self, **kwargs):
         "Load a window that shows that style report of the main widget"
-        submaster = tk.Toplevel(self.html)
+        if hasattr(self, "style_report_win") and self.style_report_win:
+            self.style_report_win.destroy()
+        self.style_report_win = submaster = tk.Toplevel(self.html)
         submaster.title("Style Report")
-        self.style_report_win = tkw = bindings.TkinterWeb(submaster, self._tkinterweb_options, **self._tkhtml_options)
+        self._tkinterweb_options["messages_enabled"] = False
+
+        for k in kwargs:
+            if k in self._tkinterweb_options:
+                value = self._check_value(self._htmlframe_options[k], kwargs.pop(k))
+                self._htmlframe_options[k] = value
+
+            elif k in self._tkhtml_options:
+                value = self._check_value(self._tkhtml_options[k], kwargs.pop(k))
+                self._htmlframe_options[k] = value
+
+        tkw = bindings.TkinterWeb(submaster, self._tkinterweb_options, **self._tkhtml_options)
 
         hsb = subwidgets.AutoScrollbar(submaster, orient="horizontal", command=tkw.xview)
         vsb = subwidgets.AutoScrollbar(submaster, orient="vertical", command=tkw.yview)

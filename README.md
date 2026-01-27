@@ -98,10 +98,16 @@ See [Frequently Asked Questions](https://tkinterweb.readthedocs.io/en/latest/faq
 * TkinterWeb supports nearly 50 different image types through PIL.
 * In order to load Scalable Vector Graphic images, CairoSVG, both PyCairo and PyGObject, or both PyCairo and Rsvg must also be installed. 
 
-## Contributing
-**The best ways to contribute to this project are by submitting a [bug report](https://github.com/Andereoo/TkinterWeb/issues/new) to report bugs or suggest new features, or by submitting a [pull request](https://github.com/Andereoo/TkinterWeb/pulls) to offer fixes. Your help makes TkinterWeb become more stable and full-featured!**
+## Support & Donations
+
+This project is released under the MIT License and is free to use, including for commercial purposes.
 
 ☕ If you’d like to support ongoing development and maintenance, please consider supporting this project by [buying me a coffee](https://buymeacoffee.com/andereoo) — any amount is hugely appreciated!
+
+If you use this project in a commercial product or derive financial benefit from it, please kindly consider supporting its development with a donation. This helps cover maintenance time and ongoing improvements, which in turn will improve your own software!
+
+## Contributing
+**The best ways to contribute to this project are by submitting a [bug report](https://github.com/Andereoo/TkinterWeb/issues/new) to report bugs or suggest new features, or by submitting a [pull request](https://github.com/Andereoo/TkinterWeb/pulls) to offer fixes. Your help makes TkinterWeb become more stable and full-featured!**
 
 Please check the [FAQs](https://tkinterweb.readthedocs.io/en/latest/faq.html) and [closed bugs](https://github.com/Andereoo/TkinterWeb/issues?q=is%3Aissue) before submitting a bug report to see if your question as already been answered.
 

@@ -11,9 +11,9 @@ System compatibility
 * ARM64 Macos and Linux
 * ARMv71 Linux
 
-If your system is unsupported, compile and install Tkhtml by visiting https://github.com/Andereoo/TkinterWeb-Tkhtml/tree/3.1-TclTk9 and running ``python compile.py --install``.
+If your system is unsupported, compile and install Tkhtml by visiting and cloning https://github.com/Andereoo/TkinterWeb-Tkhtml. Then run ``python compile.py --install``.
 
-Alternatively, you can install Tkhtml system-wide (i.e. through your system package manager) and then add the parameter :attr:`use_prebuilt_tkhtml=False` when creating your :class:`~tkinterweb.HtmlFrame` or :class:`~tkinterweb.HtmlLabel` widget to use the system's Tkhtml. Keep in mind that some features will no longer work.
+Alternatively, you can install Tkhtml system-wide (i.e. through your system package manager) and then add the parameter :attr:`use_prebuilt_tkhtml=False` when creating your :class:`~tkinterweb.HtmlFrame`, :class:`~tkinterweb.HtmlLabel`, or :class:`~tkinterweb.HtmlText` widget to use the system's Tkhtml. Keep in mind that some features will no longer work.
 
 If you are encountering issues, feel free to submit a bug report or feature request.
 

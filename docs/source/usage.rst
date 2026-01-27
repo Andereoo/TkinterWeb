@@ -214,6 +214,11 @@ Making the page editable
 
 Refer to :doc:`caret` (new in version 4.8).
 
+Shrinking a widget to match its contents
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Refer to :doc:`shrink`.
+
 Using dark mode
 ~~~~~~~~~~~~~~~
 

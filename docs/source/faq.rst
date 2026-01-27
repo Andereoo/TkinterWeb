@@ -19,6 +19,11 @@ TkinterWeb is crashing
 * If you are using a :py:class:`ttk.Notebook` in your app, see the question below.
 * If all else fails, `file a bug report <https://github.com/Andereoo/TkinterWeb/issues/new>`_. Post your operating system, Python version, and TkinterWeb version, as well as any error codes or instructions for reproducing the crash.
 
+I'm having issues when using shrink or the HtmlLabel widget
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* See :doc:`shrink` for more information.
+
 My app crashes when I open a tab with an HtmlFrame in it
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

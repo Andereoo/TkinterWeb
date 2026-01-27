@@ -56,6 +56,7 @@ Pages
    dom
    caret
    javascript
+   shrink
    faq
    compatibility
    upgrading

@@ -1131,6 +1131,9 @@ class HtmlFrame(Frame):
 
         if self.unshrink:
             if event.x and self._prev_configure != (event.width, event.x):
+                # if not self._html.using_tkhtml30:
+                #    self._html.configure(textwrap=False)
+                #    self.after(10, lambda: self._html.configure(textwrap=True))
                 self.after_idle(lambda: self._html.configure(
                     width=self.winfo_screenwidth(), 
                     height=event.height)

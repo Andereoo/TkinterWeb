@@ -82,7 +82,7 @@ class AutoScrollbar(ttk.Scrollbar):
         if self.visible and (self.scroll == 0):
             self.tk.call("grid", "remove", self)
             self.visible = False
-        elif (self.visible == False) and (self.scroll == 1):
+        elif not self.visible and (self.scroll == 1):
             self.grid()
             self.visible = True
         elif self.scroll == 2:

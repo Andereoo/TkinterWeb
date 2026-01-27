@@ -1094,7 +1094,7 @@ class HtmlFrame(Frame):
         elif callable(old):
             if not callable(new):
                 raise TypeError(f"expected callable object, got \"{new}\"")
-        elif not isinstance(new, expected_type) and old != "auto" and new != "auto":
+        elif not isinstance(new, expected_type) and old not in {"auto", "dynamic"} and new not in {"auto", "dynamic"}:
             try:
                 new = expected_type(new)
             except (TypeError, ValueError,):
@@ -1139,13 +1139,14 @@ class HtmlFrame(Frame):
 
     def _adjust_allow(self, allow):
         if allow == "auto":
-            allow = 2
+            return 2
         elif allow == "dynamic":
             if self._html.cget("shrink") == 1:
-                allow = 0
+                return 0
             else:
-                allow = 2
-        return allow
+                return 2
+        else:
+            return allow
 
     def _manage_vsb(self, allow=None, check=False):
         "Show or hide the scrollbars."

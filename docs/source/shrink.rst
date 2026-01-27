@@ -1,4 +1,4 @@
-Creating a label widget
+Creating a Label Widget
 =======================
 
 .. note::

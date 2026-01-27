@@ -55,8 +55,8 @@ Pages
    geometry
    dom
    caret
-   javascript
    shrink
+   javascript
    faq
    compatibility
    upgrading

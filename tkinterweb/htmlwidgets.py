@@ -437,7 +437,7 @@ class HtmlFrame(Frame):
             file_url = "file://" + str(file_url)
             self._current_url = file_url
             self._html.post_event(utilities.URL_CHANGED_EVENT)
-        self._continue_loading(file_url, decode=decode, force=force)
+        self.load_url(file_url, decode, force)
 
     def load_website(self, website_url, decode=None, force=False):
         """Convenience method to load a website.
@@ -482,7 +482,8 @@ class HtmlFrame(Frame):
 
         if self._thread_in_progress:
             self._thread_in_progress.stop()
-        if self._html.threading_enabled:
+            
+        if self._html.threading_enabled and not url.startswith("file://"):
             thread = utilities.StoppableThread(target=self._continue_loading, args=(
                 url,), kwargs={"decode": decode, "force": force, "thread_safe": True})
             self._thread_in_progress = thread
@@ -1186,7 +1187,7 @@ class HtmlFrame(Frame):
 
     def _continue_loading(self, url, data="", method="GET", decode=None, force=False, thread_safe=False):
         "Finish loading urls and handle URI fragments."
-        # NOTE: this method is thread-safe and is designed to run in a thread
+        # NOTE: this runs in a thread
 
         code = 404
         self._current_url = url
@@ -1274,7 +1275,7 @@ class HtmlFrame(Frame):
         if self._current_url != url:
             self._html.post_event(utilities.URL_CHANGED_EVENT)
         text = self._get_about_page("about:image", name)
-        self._html.image_manager.finish_fetching_images(None, data, name, url, filetype, data_is_image)
+        self._html.image_manager.finish_fetching_images(data, name, url, filetype, data_is_image)
         self.load_html(text, url)
     
     def _finish_loading_nothing(self):

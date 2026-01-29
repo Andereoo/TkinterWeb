@@ -735,7 +735,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             thread.start()
 
     def _begin_download(self):
-        # NOTE: this method is thread-safe and is designed to run in a thread
+        # NOTE: this runs in a thread
 
         thread = utilities.get_current_thread()
         self.active_threads.append(thread)
@@ -743,7 +743,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         return thread
 
     def _finish_download(self, thread):
-        # NOTE: this method is thread-safe and is designed to run in a thread
+        # NOTE: this runs in a thread
 
         self.active_threads.remove(thread)
         if len(self.active_threads) == 0:

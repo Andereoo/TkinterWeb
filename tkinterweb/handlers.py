@@ -479,7 +479,7 @@ class ScriptManager(utilities.BaseManager):
     
     def fetch_scripts(self, attributes, url=None, data=None):
         "Fetch and run scripts"
-        # NOTE: this method is thread-safe and is designed to run in a thread
+        # NOTE: this runs in a thread
 
         thread = self.html._begin_download()
 
@@ -520,7 +520,7 @@ class StyleManager(utilities.BaseManager):
     
     def _on_style(self, attributes, tag_contents):
         "Handle <style> elements."
-        self.html._thread_check(self.fetch_styles, data=tag_contents)
+        self._finish_fetching_styles(data=tag_contents)
 
     def _on_link(self, node):
         "Handle <link> elements."
@@ -536,7 +536,10 @@ class StyleManager(utilities.BaseManager):
             ("stylesheet" in rel)
             and ("all" in media or "screen" in media)
         ):
-            self.html._thread_check(self.fetch_styles, node, url)
+            if url.startswith("file://"):
+                self.fetch_styles(node, url)
+            else:
+                self.html._thread_check(self.fetch_styles, node, url)
             # Onload is fired if and when the stylesheet is parsed
         elif "icon" in rel:
             self.html.icon = url
@@ -564,25 +567,25 @@ class StyleManager(utilities.BaseManager):
         newurl = f"url('{newurl}')"
         return newurl
     
-    def fetch_styles(self, node=None, url=None, data=None):
+    def fetch_styles(self, node=None, url=None):
         "Fetch stylesheets and parse the CSS code they contain"
-        # NOTE: this method is thread-safe and is designed to run in a thread
+        # NOTE: this runs in a thread
 
         thread = self.html._begin_download()
         if url and thread.isrunning():
             self.html.post_message(f"Fetching stylesheet from {utilities.shorten(url)}", True)
             try:
                 data = self.html.download_url(url)[1]
+                if data and thread.isrunning():
+                    self.html.post_to_queue(lambda node=node, url=url, data=data: self._finish_fetching_styles(node, url, data))
+
             except Exception as error:
                 self.html.post_to_queue(lambda message=f"ERROR: could not load stylesheet {url}: {error}",
                     url=url: self.html._finish_resource_load(message, url, "stylesheet", False))
-
-        if data and thread.isrunning():
-            self.html.post_to_queue(lambda node=node, url=url, data=data: self._finish_fetching_styles(node, url, data))
                         
         self.html._finish_download(thread)
 
-    def _finish_fetching_styles(self, node, url, data):
+    def _finish_fetching_styles(self, node=None, url=None, data=None):
         # NOTE: this must run in the main thread
 
         self.html._style_count += 1
@@ -689,13 +692,16 @@ class ImageManager(utilities.BaseManager):
             else:
                 url = url.split("), url(", 1)[0].replace("'", "").replace('"', "")
                 url = self.html.resolve_url(url)
-                self.html._thread_check(self.fetch_images, url, name)
+                if url.startswith("file://"):
+                    self.fetch_images(url, name)
+                else:
+                    self.html._thread_check(self.fetch_images, url, name)
 
         return list((name, self.html.register(self._on_image_delete)))
 
     def fetch_images(self, url, name):
         "Fetch images and display them in the document."
-        # NOTE: this method is thread-safe and is designed to run in a thread
+        # NOTE: this runs in a thread
 
         thread = self.html._begin_download()
         if thread.isrunning():
@@ -717,7 +723,7 @@ class ImageManager(utilities.BaseManager):
 
     def check_images(self, data, name, url, filetype):
         "Invert images if needed and convert SVG images to PNGs."
-        # NOTE: this method is thread-safe and is designed to run in a thread
+        # NOTE: this runs in a thread
 
         data_is_image = False
         if "svg" in filetype:
@@ -887,7 +893,10 @@ class ObjectManager(utilities.BaseManager):
                     return
 
                 self.html.post_message(f"Creating object from {utilities.shorten(data)}")
-                self.html._thread_check(self.fetch_objects, node, data)
+                if data.startswith("file://"):
+                    self.fetch_objects(node, data, straight=True)
+                else:
+                    self.html._thread_check(self.fetch_objects, node, data)
 
     def _on_object_value_change(self, node, attribute, value):
         if attribute == "data":
@@ -898,10 +907,11 @@ class ObjectManager(utilities.BaseManager):
                 # Force reset because it might contain widgets that are added internally
                 self.html.widget_manager.map_node(node, True)
 
-    def fetch_objects(self, node, url):
-        # NOTE: this method is thread-safe and is designed to run in a thread
+    def fetch_objects(self, node, url, straight=False):
+        # NOTE: this runs in a thread
 
         thread = self.html._begin_download()
+
         if thread.isrunning():
             try:
                 url, data, filetype, code = self.html.download_url(url)
@@ -910,9 +920,15 @@ class ObjectManager(utilities.BaseManager):
                     if filetype.startswith("image"):
                         name = self.html.image_manager.allocate_image_name()
                         data, data_is_image = self.html.image_manager.check_images(data, name, url, filetype)
-                        self.html.post_to_queue(lambda node=node, data=data, name=name, url=url, filetype=filetype, data_is_image=data_is_image: self._finish_fetching_image_objects(node, data, name, url, filetype, data_is_image))
+                        if straight:
+                            self._finish_fetching_image_objects(node, data, name, url, filetype, data_is_image)
+                        else:
+                            self.html.post_to_queue(lambda node=node, data=data, name=name, url=url, filetype=filetype, data_is_image=data_is_image: self._finish_fetching_image_objects(node, data, name, url, filetype, data_is_image))
                     elif filetype == "text/html":
-                        self.html.post_to_queue(lambda node=node, data=data, name=name, url=url, filetype=filetype: self._finish_fetching_HTML_objects(node, data, name, url, filetype))
+                        if straight:
+                            self._finish_fetching_HTML_objects(node, data, url, filetype)
+                        else:
+                            self.html.post_to_queue(lambda node=node, data=data, url=url, filetype=filetype: self._finish_fetching_HTML_objects(node, data, url, filetype))
 
             except Exception as error:
                 self.html.post_message(f"ERROR: could not load object element with data {url}: {error}", True)
@@ -920,9 +936,9 @@ class ObjectManager(utilities.BaseManager):
         self.html._finish_download(thread)
 
     def _finish_fetching_image_objects(self, node, data, name, url, filetype, data_is_image):
-        # NOTE: this must run in the main thread
+        # NOTE: this must run in the main thread 
 
-        image = self.html.image_manager.finish_fetching_images(None, data, name, filetype, url, data_is_image)
+        image = self.html.image_manager.finish_fetching_images(data, name, filetype, url, data_is_image)
         self.html.override_node_properties(node, "-tkhtml-replacement-image", f"url({image})")
         self.html.event_manager.post_element_event(node, "onload", None, utilities.ELEMENT_LOADED_EVENT)
 

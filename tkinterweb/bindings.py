@@ -344,8 +344,8 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                 loaded_version = tkinterweb_tkhtml.get_loaded_tkhtml_version(self.master)
                 self.post_message(f"Tkhtml {loaded_version} successfully loaded")
 
-        self.tkhtml_version = loaded_version
-        self.using_tkhtml30 = loaded_version == "3.0"
+        self.tkhtml_version = float(loaded_version)
+        self.using_tkhtml30 = float(loaded_version) == 3
 
     # --- Extensions ----------------------------------------------------------
 

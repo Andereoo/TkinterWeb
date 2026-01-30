@@ -471,7 +471,7 @@ class ScriptManager(utilities.BaseManager):
         attributes = dict(zip(attributes[::2], attributes[1::2])) # Make attributes a dict
 
         if "src" in attributes:
-            self.html._thread_check(self.fetch_scripts, attributes, self.html.resolve_url(attributes["src"]))
+            self.html._thread_check(self.fetch_scripts, self.html.resolve_url(attributes["src"]), attributes)
         elif "defer" in attributes:
             self.pending_scripts.append((attributes, tag_contents))
         else:
@@ -484,22 +484,22 @@ class ScriptManager(utilities.BaseManager):
         thread = self.html._begin_download()
 
         if url and thread.isrunning():
-            self.html.post_message(f"Fetching script from {utilities.shorten(url)}", True)
+            self.html.post_message(f"Fetching script from {utilities.shorten(url)}", thread.is_subthread)
             try:
                 data = self.html.download_url(url)[1]
             except Exception as error:
                 self.html.post_to_queue(lambda message=f"ERROR: could not load script {url}: {error}",
-                            url=url: self.html._finish_resource_load(message, url, "script", False))
+                            url=url: self.html._finish_resource_load(message, url, "script", False), thread.is_subthread)
 
         if data and thread.isrunning():
             if "defer" in attributes:
                 self.pending_scripts.append((attributes, data))
             else:
-                self.html.post_to_queue(lambda attributes=attributes, data=data: self.html.on_script(attributes, data))
+                self.html.post_to_queue(lambda attributes=attributes, data=data: self.html.on_script(attributes, data), thread.is_subthread)
                 
             if url:
                 self.html.post_to_queue(lambda message=f"Successfully loaded {utilities.shorten(url)}", 
-                            url=url: self.html._finish_resource_load(message, url, "script", True))
+                            url=url: self.html._finish_resource_load(message, url, "script", True), thread.is_subthread)
 
         self.html._finish_download(thread)
 
@@ -532,14 +532,9 @@ class StyleManager(utilities.BaseManager):
         except tk.TclError:
             return
 
-        if (
-            ("stylesheet" in rel)
-            and ("all" in media or "screen" in media)
-        ):
-            if url.startswith("file://"):
-                self.fetch_styles(node, url)
-            else:
-                self.html._thread_check(self.fetch_styles, node, url)
+        if (("stylesheet" in rel)
+            and ("all" in media or "screen" in media)):
+            self.html._thread_check(self.fetch_styles, url, node)
             # Onload is fired if and when the stylesheet is parsed
         elif "icon" in rel:
             self.html.icon = url
@@ -553,8 +548,7 @@ class StyleManager(utilities.BaseManager):
         try:
             new_url = self.html.resolve_url(new_url, parent_url)
             self.html.post_message(f"Loading stylesheet from {utilities.shorten(new_url)}")
-
-            self.html._thread_check(self.fetch_styles, url=new_url)
+            self.html._thread_check(self.fetch_styles, new_url)
 
         except Exception as error:
             self.html.post_message(f"ERROR: could not load stylesheet {new_url}: {error}")
@@ -567,21 +561,21 @@ class StyleManager(utilities.BaseManager):
         newurl = f"url('{newurl}')"
         return newurl
     
-    def fetch_styles(self, node=None, url=None):
+    def fetch_styles(self, url=None, node=None):
         "Fetch stylesheets and parse the CSS code they contain"
         # NOTE: this runs in a thread
 
         thread = self.html._begin_download()
         if url and thread.isrunning():
-            self.html.post_message(f"Fetching stylesheet from {utilities.shorten(url)}", True)
+            self.html.post_message(f"Fetching stylesheet from {utilities.shorten(url)}", thread.is_subthread)
             try:
                 data = self.html.download_url(url)[1]
                 if data and thread.isrunning():
-                    self.html.post_to_queue(lambda node=node, url=url, data=data: self._finish_fetching_styles(node, url, data))
+                    self.html.post_to_queue(lambda node=node, url=url, data=data: self._finish_fetching_styles(node, url, data), thread.is_subthread)
 
             except Exception as error:
                 self.html.post_to_queue(lambda message=f"ERROR: could not load stylesheet {url}: {error}",
-                    url=url: self.html._finish_resource_load(message, url, "stylesheet", False))
+                    url=url: self.html._finish_resource_load(message, url, "stylesheet", False), thread.is_subthread)
                         
         self.html._finish_download(thread)
 
@@ -651,7 +645,7 @@ class ImageManager(utilities.BaseManager):
         self.bad_paths.add(url)
         
         if not self.html.ignore_invalid_images:
-            image, data_is_image = self.check_images(utilities.BROKEN_IMAGE, name, url, "image/png")
+            image, data_is_image = self.check_images(utilities.BROKEN_IMAGE, name, url, "image/png", False)
             image = imageutils.data_to_image(image, name, "image/png", data_is_image)
 
             self.loaded_images.setdefault(name, set()).add(image)
@@ -692,10 +686,7 @@ class ImageManager(utilities.BaseManager):
             else:
                 url = url.split("), url(", 1)[0].replace("'", "").replace('"', "")
                 url = self.html.resolve_url(url)
-                if url.startswith("file://"):
-                    self.fetch_images(url, name)
-                else:
-                    self.html._thread_check(self.fetch_images, url, name)
+                self.html._thread_check(self.fetch_images, url, name)
 
         return list((name, self.html.register(self._on_image_delete)))
 
@@ -705,23 +696,26 @@ class ImageManager(utilities.BaseManager):
 
         thread = self.html._begin_download()
         if thread.isrunning():
-            self.html.post_message(f"Fetching image from {utilities.shorten(url)}", True)
+            self.html.post_message(f"Fetching image from {utilities.shorten(url)}", thread.is_subthread)
 
             if url == self.html.base_url:
-                self.html.post_to_queue(lambda url=url, name=name, error="ERROR: image url not specified": self._on_image_error(url, name, error))
+                self.html.post_to_queue(lambda url=url, name=name, error="ERROR: image url not specified": 
+                                        self._on_image_error(url, name, error), thread.is_subthread)
             else:
                 try:
                     url, data, filetype, code = self.html.download_url(url)
-                    data, data_is_image = self.check_images(data, name, url, filetype)                
+                    data, data_is_image = self.check_images(data, name, url, filetype, thread.is_subthread)                
                         
                     if thread.isrunning():
-                        self.html.post_to_queue(lambda data=data, name=name, url=url, filetype=filetype, data_is_image=data_is_image: self.finish_fetching_images(data, name, url, filetype, data_is_image))
+                        self.html.post_to_queue(lambda data=data, name=name, url=url, filetype=filetype, data_is_image=data_is_image: 
+                                                self.finish_fetching_images(data, name, url, filetype, data_is_image), thread.is_subthread)
                 except Exception as error:
-                    self.html.post_to_queue(lambda url=url, name=name, error=f"ERROR: could not load image {url}: {error}": self._on_image_error(url, name, error))
+                    self.html.post_to_queue(lambda url=url, name=name, error=f"ERROR: could not load image {url}: {error}": 
+                                            self._on_image_error(url, name, error), thread.is_subthread)
 
         self.html._finish_download(thread)
 
-    def check_images(self, data, name, url, filetype):
+    def check_images(self, data, name, url, filetype, thread_safe):
         "Invert images if needed and convert SVG images to PNGs."
         # NOTE: this runs in a thread
 
@@ -738,7 +732,7 @@ class ImageManager(utilities.BaseManager):
                 data_is_image = True
             except (ImportError, ModuleNotFoundError,):
                 error = f"ERROR: could not invert the image {url}: PIL and PIL.ImageTk must be installed."
-                self.html.post_to_queue(lambda url=url, name=name, error=error: self._on_image_error(url, name, error))
+                self.html.post_to_queue(lambda url=url, name=name, error=error: self._on_image_error(url, name, error), thread_safe)
             
         return data, data_is_image
 
@@ -893,10 +887,7 @@ class ObjectManager(utilities.BaseManager):
                     return
 
                 self.html.post_message(f"Creating object from {utilities.shorten(data)}")
-                if data.startswith("file://"):
-                    self.fetch_objects(node, data, straight=True)
-                else:
-                    self.html._thread_check(self.fetch_objects, node, data)
+                self.html._thread_check(self.fetch_objects, data, node)
 
     def _on_object_value_change(self, node, attribute, value):
         if attribute == "data":
@@ -907,7 +898,7 @@ class ObjectManager(utilities.BaseManager):
                 # Force reset because it might contain widgets that are added internally
                 self.html.widget_manager.map_node(node, True)
 
-    def fetch_objects(self, node, url, straight=False):
+    def fetch_objects(self, url, node):
         # NOTE: this runs in a thread
 
         thread = self.html._begin_download()
@@ -919,16 +910,12 @@ class ObjectManager(utilities.BaseManager):
                 if data and thread.isrunning():
                     if filetype.startswith("image"):
                         name = self.html.image_manager.allocate_image_name()
-                        data, data_is_image = self.html.image_manager.check_images(data, name, url, filetype)
-                        if straight:
-                            self._finish_fetching_image_objects(node, data, name, url, filetype, data_is_image)
-                        else:
-                            self.html.post_to_queue(lambda node=node, data=data, name=name, url=url, filetype=filetype, data_is_image=data_is_image: self._finish_fetching_image_objects(node, data, name, url, filetype, data_is_image))
+                        data, data_is_image = self.html.image_manager.check_images(data, name, url, filetype, thread.is_subthread)
+                        self.html.post_to_queue(lambda node=node, data=data, name=name, url=url, filetype=filetype, data_is_image=data_is_image: 
+                                                self._finish_fetching_image_objects(node, data, name, url, filetype, data_is_image), thread.is_subthread)
                     elif filetype == "text/html":
-                        if straight:
-                            self._finish_fetching_HTML_objects(node, data, url, filetype)
-                        else:
-                            self.html.post_to_queue(lambda node=node, data=data, url=url, filetype=filetype: self._finish_fetching_HTML_objects(node, data, url, filetype))
+                        self.html.post_to_queue(lambda node=node, data=data, url=url, filetype=filetype: 
+                                                self._finish_fetching_HTML_objects(node, data, url, filetype), thread.is_subthread)
 
             except Exception as error:
                 self.html.post_message(f"ERROR: could not load object element with data {url}: {error}", True)

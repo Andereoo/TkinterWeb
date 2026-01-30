@@ -532,13 +532,13 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             self.queue_after = None
         self.queue = None
 
-    def post_to_queue(self, callback):
+    def post_to_queue(self, callback, thread_safe=True):
         """Use this method to send a callback to TkinterWeb's thread-safety queue. The callback will be evaluated on the main thread.
         Use this when running Tkinter commands from within a thread. 
         If the queue is not running (i.e. threading is disabled), the callback will be evaluated immediately.
         
         New in version 4.9."""
-        if self.queue:
+        if thread_safe and self.queue:
             self.queue.put(callback)
         else:
             callback()
@@ -546,6 +546,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     def post_event(self, event, thread_safe=False):
         "Generate a virtual event."
         # NOTE: when thread_safe=True, this method is thread-safe
+        # Would you believe that?
         if not self.events_enabled:
             return
 
@@ -565,6 +566,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     def post_message(self, message, thread_safe=False):
         "Post a message."
         # NOTE: when thread_safe=True, this method is thread-safe
+        # Amazing stuff, eh?
         if not self.messages_enabled:
             return
         
@@ -722,16 +724,16 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         else:
             return utilities.cache_download(url, *args, insecure=self.insecure_https, cafile=self.ssl_cafile, headers=tuple(self.headers.items()), timeout=self.request_timeout)
     
-    def _thread_check(self, callback, *args, **kwargs):
+    def _thread_check(self, callback, url, *args, **kwargs):
         if not self.downloads_have_occured:
             self.downloads_have_occured = True
             
-        if not self.threading_enabled:
-            callback(*args, **kwargs)
+        if not self.threading_enabled or url.startswith("file://"):
+            callback(url, *args, **kwargs)
         elif len(self.active_threads) >= self.maximum_thread_count:
-            self.after(500, lambda callback=callback, args=args: self._thread_check(callback, *args, **kwargs))
+            self.after(500, lambda callback=callback, url=url, args=args: self._thread_check(callback, url, *args, **kwargs))
         else:
-            thread = utilities.StoppableThread(target=callback, args=args, kwargs=kwargs)
+            thread = utilities.StoppableThread(target=callback, args=(url, *args,), kwargs=kwargs)
             thread.start()
 
     def _begin_download(self):
@@ -747,9 +749,9 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
         self.active_threads.remove(thread)
         if len(self.active_threads) == 0:
-            self.post_to_queue(self._handle_load_finish)
+            self.post_to_queue(self._handle_load_finish, thread.is_subthread)
         else:
-            self.post_to_queue(lambda: self._handle_load_finish(False))
+            self.post_to_queue(lambda: self._handle_load_finish(False), thread.is_subthread)
 
     def _finish_resource_load(self, message, url, resource, success):
         # NOTE: this must run in the main thread

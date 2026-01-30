@@ -447,23 +447,23 @@ Changelog
 
     Version 4.12:
 
-    * Fixed more bugs.
+    * Fixed more minor bugs.
     * Side-scrolling is now supported.
 
     Version 4.13:
 
-    * Fixed more bugs, including a segfault when inserting a widget into the page's root element.
+    * Fixed more minor bugs, including a segfault when inserting a widget into the page's root element.
     * ``grid_propagate(0)`` and ``pack_propagate(0)`` no longer have any effect on the widget. Requested width and height will now always be respected.
 
     Version 4.14:
 
-    * Fixed more bugs.
+    * Fixed more minor bugs.
     * The :class:`.HtmlLabel` widget now automatically matches the ttk style.
     * Alternate text for broken images is now displayed natively through Tkhtml.
 
     Version 4.15:
 
-    * Fixed more bugs.
+    * Fixed more minor bugs.
     * Improved some error messages.
     * Improved code autocompletion.
     * All HTML widgets now bind to ``<Ctrl-A>`` by default.
@@ -473,7 +473,7 @@ Changelog
 
     Version 4.16:
 
-    * Fixed more bugs.
+    * Fixed more minor bugs.
     * :meth:`.HtmlFrame.set_caret_position` now sets the caret relative to the document text when no element is provided. 
     * :meth:`.HtmlFrame.set_selection_position` now sets the selection relative to the document text when no elements are provided. 
     * A ``NotImplementedError`` will now raise when changing some settings via ``HtmlFrame.configure()``. This occurs on settings that have no effect after the widget loads and on the shrink value, which has been causing segfaults when changed after the widget loads. If you absolutely need to change the shrink value on the fly use ``HtmlFrame.html.configure()``
@@ -481,11 +481,13 @@ Changelog
     
     Version 4.17:
     
-    * Fixed some regressions.
-    * Set the new configuration option ``textwrap`` to ``True`` to override the new default text wrapping settings. See `bug #147 <https://github.com/Andereoo/TkinterWeb/issues/147>`_.
-    * The configuration options ``horizontal_scrollbar`` and ``vertical_scrollbar`` now accept another option, ``"dynamic"``. This behaves like ``"auto"``, with the difference that scrollbars are always hidden in :class:`.HtmlLabel` and :class:`.HtmlFrame(shrink=True)` widgets. This is the new default for vertical scrollbars.
+    * Fixed some HtmlFrame shrink regressions. See `bug #147 <https://github.com/Andereoo/TkinterWeb/issues/147>`_.
+    * Fixed some image loading and iframe scrolling regressions.
+    * Fixed a bug where stopping a page load prevented the page from loading again when caches were enabled.
     * ``<style>`` tags now always evaluate in the main thread.
     * Local CSS, HTML, and image files will now always evaluate in the main thread.
+    * Set the new configuration option ``textwrap`` to ``True`` to override the new default text wrapping settings.
+    * The configuration options ``horizontal_scrollbar`` and ``vertical_scrollbar`` now accept another option, ``"dynamic"``. This behaves like ``"auto"``, with the difference that scrollbars are always hidden in :class:`.HtmlLabel` and :class:`.HtmlFrame(shrink=True)` widgets. This is the new default for vertical scrollbars.
 
 -------------------
 

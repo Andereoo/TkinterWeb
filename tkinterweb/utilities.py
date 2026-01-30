@@ -31,7 +31,7 @@ __title__ = "TkinterWeb"
 __author__ = "Andrew Clarke"
 __copyright__ = "(c) 2021-2025 Andrew Clarke"
 __license__ = "MIT"
-__version__ = "4.17.2"
+__version__ = "4.17.3"
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
@@ -686,6 +686,8 @@ class StoppableThread(threading.Thread):
         self.daemon = True
         self.running = True
 
+        self.is_subthread = True
+
     def stop(self):
         self.running = False
 
@@ -696,6 +698,9 @@ class StoppableThread(threading.Thread):
 class PlaceholderThread:
     """Fake StoppableThread. The only purpose of this is to provide fake methods that mirror the StoppableThread class.
     This means that if a download is running in the MainThread, the stop flags can still be set without raising errors, though they won't do anything."""
+
+    def __init__(self, *args, **kwargs):
+        self.is_subthread = False
 
     def stop(self):
         return
@@ -855,14 +860,11 @@ def download(url, data=None, method="GET", decode=None, insecure=False, cafile=N
         parsed = urlparse(url)
         url = urlunparse(parsed._replace(query=""))
 
-    thread = get_current_thread()
     url = url.replace(" ", "%20")
     if data and (method == "POST"):
         req = Request(url, data, headers=dict(headers))
     else:
         req = Request(url, headers=dict(headers))
-    if not thread.isrunning():
-        return None, url, "", ""
     
     with urlopen(req, context=context, timeout=timeout) as res:
         data = res.read()
@@ -893,10 +895,8 @@ def download(url, data=None, method="GET", decode=None, insecure=False, cafile=N
                 data = data.decode(decode, errors="ignore")
             else:
                 data = data.decode(errors="ignore")
-        if not thread.isrunning():
-            return url, None, "", code
-        else:
-            return url, data, filetype, code
+
+        return url, data, filetype, code
 
 
 @lru_cache()
@@ -915,6 +915,7 @@ def shorten(string):
 def get_current_thread():
     "Return the currently running thread"
     thread = threading.current_thread()
+    # Py 3.4+: Use is threading.main_thread()
     if thread.name == "MainThread":
         thread = PlaceholderThread()
     return thread

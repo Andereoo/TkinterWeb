@@ -1223,6 +1223,8 @@ class HtmlFrame(Frame):
                     url = url.replace("view-source:", "")
                     parsed = urlparse(url)
 
+                thread = utilities.get_current_thread()
+
                 location = parsed.netloc if parsed.netloc else parsed.path
                 self._html.post_message(f"Connecting to {location}", True)
                 if self._html.insecure_https: self._html.post_message("WARNING: Using insecure HTTPS session", True)
@@ -1230,7 +1232,7 @@ class HtmlFrame(Frame):
                 newurl, data, filetype, code = self._html.download_url(url, data, method, decode)
                 self._html.post_message(f"Successfully connected to {location}", True)
 
-                if utilities.get_current_thread().isrunning():
+                if thread.isrunning():
                     if view_source:
                         newurl = "view-source:"+newurl
                         if self._current_url != newurl:
@@ -1250,7 +1252,7 @@ class HtmlFrame(Frame):
                     elif "image" in filetype:
                         name = self._html.image_manager.allocate_image_name()
                         if name:
-                            data, data_is_image = self._html.image_manager.check_images(data, name, url, filetype)
+                            data, data_is_image = self._html.image_manager.check_images(data, name, url, filetype, thread.is_subthread)
                             self._html.post_to_queue(lambda data=data, name=name, url=url, filetype=filetype, data_is_image=data_is_image: self._finish_loading_image(data, name, url, filetype, data_is_image))
                         else:
                             self.load_html(self._get_about_page("about:image", name), newurl, _thread_safe=thread_safe)

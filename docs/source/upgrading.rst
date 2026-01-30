@@ -482,7 +482,7 @@ Changelog
     Version 4.17:
     
     * Fixed some :class:`.HtmlFrame` shrink regressions. See `bug #147 <https://github.com/Andereoo/TkinterWeb/issues/147>`_.
-    * Fixed some image loading and iframe scrolling regressions.
+    * Fixed some image loading and ``<iframe>`` scrolling regressions.
     * Fixed a bug where stopping a page load prevented the page from loading again when caches were enabled.
     * ``<style>`` tags and local files are now always evaluated in the main thread.
     * The configuration options ``horizontal_scrollbar`` and ``vertical_scrollbar`` now accept another option, ``"dynamic"``. This behaves like ``"auto"``, with the difference that scrollbars are always hidden in :class:`.HtmlLabel` and :class:`.HtmlFrame(shrink=True)` widgets. This is the new default for vertical scrollbars.

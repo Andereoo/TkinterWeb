@@ -1424,8 +1424,8 @@ class HtmlLabel(HtmlFrame):
 
         if text:
             self.load_html(text)
-        # I'd like to just make this an else statement
-        # But someone in issue 145 mentioned layout issues when that was the case
+        # I'd like to just make this an else statement to prevent the widget from being a massive white screen when text=""
+        # But a fellow in issue 145 mentioned layout issues when that was the case
         # I can't seem to reproduce it though...?
         elif self.unshrink or (not self._html.using_tkhtml30 and not self._html.cget("textwrap")):
             self.load_html("<body></body>", _relayout=False)

@@ -584,7 +584,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     # --- HTML/CSS parsing ----------------------------------------------------
 
     def parse(self, html, thread_safe=False):
-        "Parse HTML code. reset() must be called before running parse() for the first time."
+        "Parse HTML code. Call :meth:`TkinterWeb.reset` before calling this method for the first time."
         # NOTE: when thread_safe=True, this method is thread-safe
 
         self.downloads_have_occured = False
@@ -769,20 +769,20 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         else:
             return None, None
 
-    def text(self, *args):
-        "Enable interaction with the text of the HTML document."
-        return self.tk.call(self._w, "text", *args)
+    def text(self, subcommand, *args):
+        "Interact with the text of the HTML document. Valid subcommands are bbox, index, offset, and text."
+        return self.tk.call(self._w, "text", subcommand, *args)
 
     def tag(self, subcommand, tag_name, *args):
-        "Return the name of the Html tag that generated this document node, or an empty string if the node is a text node."
+        "Highlight regions of text displayed by the widget. Valid subcommands are add, remove, configure, and delete."
         return self.tk.call(self._w, "tag", subcommand, tag_name, *args)
 
     def search(self, selector, *a, cnf={}, **kw):
-        """Search the document for the specified CSS selector; return a Tkhtml3 node if found."""
+        """Search the document for the specified CSS selector; return a Tkhtml node if found."""
         return self.tk.call((self._w, "search", selector)+utilities.TclOpt(a)+self._options(cnf, kw))
 
     def xview(self, *args, auto_scroll=False):
-        "Used to control horizontal scrolling."
+        "Control horizontal scrolling."
         #if args:
         #    return self.tk.call(self._w, "xview", *args)
         #coords = map(float, self.tk.call(self._w, "xview").split()) #raises an error
@@ -802,7 +802,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         return self.xview("moveto", number, auto_scroll=auto_scroll)
 
     def yview(self, *args, auto_scroll=False):
-        """Used to control vertical scrolling."""
+        """Control vertical scrolling."""
         yview = self.tk.call(self._w, "yview", *args)
         if args:
             self.caret_manager.update(auto_scroll=auto_scroll)
@@ -970,11 +970,11 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         self.tk.call(node, "dynamic", "set", name)
 
     def remove_node_flags(self, node, name):
-        "Set dynamic flags on the given node."
+        "remove dynamic flags on the given node."
         self.tk.call(node, "dynamic", "clear", name)
 
     def get_node_tkhtml(self, node_handle):
-        "Get the path name of node."
+        "Get the path name of the node's corresponding Tkhtml instance."
         return self.tk.call(node_handle, "html")
 
     def get_node_stacking(self, node_handle):
@@ -985,7 +985,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         return self.tk.call(node_handle, "stacking")
 
     def get_current_hovered_node(self, event):
-        "Get current node."
+        "Get the current node."
         if self.widget_manager.hovered_embedded_node:
             return self.widget_manager.hovered_embedded_node
 
@@ -994,11 +994,11 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         )
 
     def get_current_hovered_node_parent(self, node):
-        "Get the parent of the given node."
+        "Get the parent of the node returned by :meth:`TkinterWeb.get_current_hovered_node`."
         return self.tk.eval(f"""set node [lindex [lindex [{node} parent] end] end]""")
 
     def register_handler(self, handler_type, node_tag, callback):
-        "Register a node handler"
+        "Register a node handler."
         self.tk.call(self._w, "handler", handler_type, node_tag, self.register(callback))
 
     def _lazy_handler(self, manager, method):
@@ -1008,7 +1008,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         return callback
     
     def register_lazy_handler(self, handler_type, node_tag, manager_name):
-        "Register a node handler to run in the given manager"
+        "Register a node handler to run lazily in the given manager."
         if handler_type == "attribute":
             callback_name = f"_on_{node_tag}_value_change"
         else:

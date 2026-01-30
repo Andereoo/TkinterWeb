@@ -481,7 +481,7 @@ Changelog
     
     Version 4.17:
     
-    * Fixed some HtmlFrame shrink regressions. See `bug #147 <https://github.com/Andereoo/TkinterWeb/issues/147>`_.
+    * Fixed some :class:`.HtmlFrame` shrink regressions. See `bug #147 <https://github.com/Andereoo/TkinterWeb/issues/147>`_.
     * Fixed some image loading and iframe scrolling regressions.
     * Fixed a bug where stopping a page load prevented the page from loading again when caches were enabled.
     * ``<style>`` tags now always evaluate in the main thread.

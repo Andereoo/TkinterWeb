@@ -484,8 +484,7 @@ Changelog
     * Fixed some :class:`.HtmlFrame` shrink regressions. See `bug #147 <https://github.com/Andereoo/TkinterWeb/issues/147>`_.
     * Fixed some image loading and iframe scrolling regressions.
     * Fixed a bug where stopping a page load prevented the page from loading again when caches were enabled.
-    * ``<style>`` tags now always evaluate in the main thread.
-    * Local CSS, HTML, and image files will now always evaluate in the main thread.
+    * ``<style>`` tags and local files are now always evaluated in the main thread.
     * Set the new configuration option ``textwrap`` to ``True`` to override the new default text wrapping settings.
     * The configuration options ``horizontal_scrollbar`` and ``vertical_scrollbar`` now accept another option, ``"dynamic"``. This behaves like ``"auto"``, with the difference that scrollbars are always hidden in :class:`.HtmlLabel` and :class:`.HtmlFrame(shrink=True)` widgets. This is the new default for vertical scrollbars.
 

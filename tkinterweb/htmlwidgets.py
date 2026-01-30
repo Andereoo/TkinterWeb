@@ -8,6 +8,7 @@ Copyright (c) 2021-2025 Andrew Clarke
 from . import bindings, dom, js, utilities, subwidgets, imageutils
 
 from urllib.parse import urldefrag, urlparse, urlunparse, urljoin
+from os.path import isfile
 
 import tkinter as tk
 from tkinter.ttk import Frame, Style
@@ -2041,18 +2042,29 @@ class HtmlParse(HtmlFrame):
     
     New in version 4.4."""
     
-    def __init__(self, **kwargs):
+    def __init__(self, markup="", **kwargs):
         self.root = root = tk.Tk()
 
         self._is_destroying = False
 
-        for flag in {"events_enabled", "images_enabled", "forms_enabled"}:
+        for flag in {"events_enabled", "images_enabled", "forms_enabled", "stylesheets_enabled"}:
             if flag not in kwargs:
                 kwargs[flag] = False
                 
         HtmlFrame.__init__(self, root, **kwargs)
 
         root.withdraw()
+
+        if markup:
+            if isfile(markup): markup = f"file:///{markup}"
+            parsed = urlparse(markup)
+            if parsed.scheme and parsed.path:
+                self.load_url(markup)
+            else:
+                self.load_html(markup)
+
+    def __str__(self):
+        return f"<html>{self.document.documentElement.innerHTML}</html>"
 
     def destroy(self):
         super().destroy()

@@ -1414,7 +1414,7 @@ class HtmlLabel(HtmlFrame):
         else:
             utilities.warn("Since version 4.14 the style keyword no longer sets the HtmlLabel's CSS code. Please use the add_css() method instead.")
         
-        HtmlFrame.__init__(self, master, vertical_scrollbar=False, horizontal_scrollbar=False, shrink=True, **kwargs)
+        HtmlFrame.__init__(self, master, shrink=True, **kwargs)
 
         tags = list(self._html.bindtags())
         tags.remove("Html")
@@ -1424,7 +1424,10 @@ class HtmlLabel(HtmlFrame):
 
         if text:
             self.load_html(text)
-        elif self.unshrink:
+        # I'd like to just make this an else statement
+        # But someone in issue 145 mentioned layout issues when that was the case
+        # I can't seem to reproduce it though...?
+        elif self.unshrink or (not self._html.using_tkhtml30 and not self._html.cget("textwrap")):
             self.load_html("<body></body>", _relayout=False)
 
     def _handle_html_resize(self, *args, **kwargs):
@@ -1513,7 +1516,7 @@ class HtmlText(HtmlFrame):
         self.preserve_flow = True # mostly for debugging
 
         if "horizontal_scrollbar" not in kwargs:
-            kwargs["horizontal_scrollbar"] = "auto"
+            kwargs["horizontal_scrollbar"] = "dynamic"
         
         if state == "enabled":
             caret_browsing_enabled=True

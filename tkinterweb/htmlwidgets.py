@@ -1106,6 +1106,9 @@ class HtmlFrame(Frame):
         """Make all elements with the 'tkinterweb-full-page' attribute the same height as the html widget.
         This can be used in conjunction with table elements to vertical align pages,
         which is otherwise not possible with Tkhtml. Hopefully we won't need this forever."""
+        if self._html.cget("shrink"):
+            return
+
         if event:
             height = event.height
         else:
@@ -1422,18 +1425,12 @@ class HtmlLabel(HtmlFrame):
 
         self._style = Style()
 
-        if text:
-            self.load_html(text)
+        if text: self.load_html(text)
         # I'd like to just make this an else statement to prevent the widget from being a massive white screen when text=""
-        # But a fellow in issue 145 mentioned layout issues when that was the case
-        # I can't seem to reproduce it though...?
         elif self.unshrink or (not self._html.using_tkhtml30 and not self._html.cget("textwrap")):
+            # A fellow in issue 145 mentioned layout issues when this was used
+            # I can't seem to reproduce it though...?
             self.load_html("<body></body>", _relayout=False)
-
-    def _handle_html_resize(self, *args, **kwargs):
-        # Overwrite HtmlFrame._handle_html_resize, which is not necessary when shrink is set to True
-        # HtmlFrame._handle_html_resize also causes weird behaviour when tables are present and shrink set to True
-        return
     
     def load_html(self, *args, _relayout=True, **kwargs):
         ""

@@ -175,7 +175,7 @@ Changelog
 
     * Many new configuration options were added. See the :doc:`api/htmlframe` for a complete list.
 
-    * The ``tkinterweb-full-page`` attribute can now be added to elements to make them the same height as the viewport. This can be used for vertical alignment of page content. See the TkinterWeb Demo class in `__init__.py <https://github.com/Andereoo/TkinterWeb/blob/main/tkinterweb/__init__.py>`_ for example usage.
+    * The ``tkinterweb-full-page`` attribute can now be added to elements to make them the same height as the viewport. Use this to align content vertically. This has no effect when shrink is enabled.
 
     Version 4.1:
 

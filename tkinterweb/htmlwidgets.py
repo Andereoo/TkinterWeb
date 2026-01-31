@@ -1190,7 +1190,7 @@ class HtmlFrame(Frame):
 
     def _continue_loading(self, url, data="", method="GET", decode=None, force=False, thread_safe=False):
         "Finish loading urls and handle URI fragments."
-        # NOTE: this runs in a thread
+        # NOTE: this may run in a thread
 
         code = 404
         self._current_url = url

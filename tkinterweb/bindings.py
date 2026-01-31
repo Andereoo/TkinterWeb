@@ -737,15 +737,15 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             thread.start()
 
     def _begin_download(self):
-        # NOTE: this runs in a thread
+        # NOTE: this may run in a thread
 
         thread = utilities.get_current_thread()
         self.active_threads.append(thread)
-        self.post_event(utilities.DOWNLOADING_RESOURCE_EVENT, True)
+        self.post_event(utilities.DOWNLOADING_RESOURCE_EVENT, thread.is_subthread)
         return thread
 
     def _finish_download(self, thread):
-        # NOTE: this runs in a thread
+        # NOTE: this may run in a thread
 
         self.active_threads.remove(thread)
         if len(self.active_threads) == 0:

@@ -479,7 +479,7 @@ class ScriptManager(utilities.BaseManager):
     
     def fetch_scripts(self, attributes, url=None, data=None):
         "Fetch and run scripts"
-        # NOTE: this runs in a thread
+        # NOTE: this may run in a thread
 
         thread = self.html._begin_download()
 
@@ -563,7 +563,7 @@ class StyleManager(utilities.BaseManager):
     
     def fetch_styles(self, url=None, node=None):
         "Fetch stylesheets and parse the CSS code they contain"
-        # NOTE: this runs in a thread
+        # NOTE: this may run in a thread
 
         thread = self.html._begin_download()
         if url and thread.isrunning():
@@ -692,7 +692,7 @@ class ImageManager(utilities.BaseManager):
 
     def fetch_images(self, url, name):
         "Fetch images and display them in the document."
-        # NOTE: this runs in a thread
+        # NOTE: this may run in a thread
 
         thread = self.html._begin_download()
         if thread.isrunning():
@@ -717,7 +717,7 @@ class ImageManager(utilities.BaseManager):
 
     def check_images(self, data, name, url, filetype, thread_safe):
         "Invert images if needed and convert SVG images to PNGs."
-        # NOTE: this runs in a thread
+        # NOTE: this may run in a thread
 
         data_is_image = False
         if "svg" in filetype:
@@ -899,7 +899,7 @@ class ObjectManager(utilities.BaseManager):
                 self.html.widget_manager.map_node(node, True)
 
     def fetch_objects(self, url, node):
-        # NOTE: this runs in a thread
+        # NOTE: this may run in a thread
 
         thread = self.html._begin_download()
 

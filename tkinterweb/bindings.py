@@ -676,16 +676,16 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                     new_url, url
                 )
             )
-            
-            if sheetid:
-                self.tk.call(
-                    self._w, "style", "-id", sheetid, "-importcmd", importcmd, "-urlcmd", urlcmd, data
-                )
-            else:
+            if not sheetid:
                 self._style_count += 1
-                self.tk.call(
-                    self._w, "style", "-id", fallback_priority + str(self._style_count).zfill(4), "-importcmd", importcmd, "-urlcmd", urlcmd, data
-                )
+                sheetid = f"{fallback_priority}{self._style_count:04d}"
+                
+            self.tk.call(
+                self._w, "style",
+                "-id", sheetid,
+                "-importcmd", importcmd,
+                "-urlcmd", urlcmd,  data
+            )
         except tk.TclError:
             # The widget doesn't exist anymore
             pass

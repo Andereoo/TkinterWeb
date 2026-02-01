@@ -667,9 +667,8 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         
         try:
             importcmd = self.register(
-                lambda new_url, parent_url=url: self.style_manager._on_atimport(
-                    parent_url, new_url
-                )
+                lambda new_url, media=None, parent_url=url: 
+                    self.style_manager._on_atimport(parent_url, new_url, media)
             )
             urlcmd = self.register(
                 lambda new_url, url=url: self.resolve_url(

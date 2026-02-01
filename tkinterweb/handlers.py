@@ -629,12 +629,12 @@ class StyleManager(utilities.BaseManager):
         else:
             self.html.event_manager.post_element_event(node, "onload", None, utilities.ELEMENT_LOADED_EVENT)
 
-    def _on_atimport(self, parent_url, new_url):
+    def _on_atimport(self, parent_url, new_url, media=None):
         "Load @import scripts."
         try:
             new_url = self.html.resolve_url(new_url, parent_url)
             self.html.post_message(f"Loading stylesheet from {utilities.shorten(new_url)}")
-            self.html._thread_check(self.fetch_styles, new_url)
+            self.html._thread_check(self.fetch_styles, new_url, media=media)
 
         except Exception as error:
             self.html.post_message(f"ERROR: could not load stylesheet {new_url}: {error}")
@@ -647,7 +647,7 @@ class StyleManager(utilities.BaseManager):
         newurl = f"url('{newurl}')"
         return newurl
     
-    def fetch_styles(self, url=None, node=None):
+    def fetch_styles(self, url=None, node=None, media=None):
         "Fetch stylesheets and parse the CSS code they contain"
         # NOTE: this may run in a thread
 
@@ -656,6 +656,8 @@ class StyleManager(utilities.BaseManager):
             self.html.post_message(f"Fetching stylesheet from {utilities.shorten(url)}", thread.is_subthread)
             try:
                 data = self.html.download_url(url)[1]
+                if media is not None: data = f"@media {media} {{{data}}}"
+
                 if data and thread.isrunning():
                     self.html.post_to_queue(lambda node=node, url=url, data=data: self._finish_fetching_styles(node, url, data), thread.is_subthread)
 

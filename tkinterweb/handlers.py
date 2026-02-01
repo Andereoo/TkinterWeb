@@ -619,8 +619,8 @@ class StyleManager(utilities.BaseManager):
             return
 
         if (("stylesheet" in rel)
-            and ("all" in media or "screen" in media)):
-            self.html._thread_check(self.fetch_styles, url, node)
+            and (media in frozenset(("screen", "print", "all")))):
+            self.html._thread_check(self.fetch_styles, url, node, media)
             # Onload is fired if and when the stylesheet is parsed
         elif "icon" in rel:
             self.html.icon = url
@@ -656,7 +656,7 @@ class StyleManager(utilities.BaseManager):
             self.html.post_message(f"Fetching stylesheet from {utilities.shorten(url)}", thread.is_subthread)
             try:
                 data = self.html.download_url(url)[1]
-                if media is not None: data = f"@media {media} {{{data}}}"
+                if media is not None and media != "all": data = f"@media {media} {{{data}}}"
 
                 if data and thread.isrunning():
                     self.html.post_to_queue(lambda node=node, url=url, data=data: self._finish_fetching_styles(node, url, data), thread.is_subthread)

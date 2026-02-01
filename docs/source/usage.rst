@@ -149,9 +149,11 @@ Refer to the API reference for more information.
 Done loading?
 ~~~~~~~~~~~~~
 
-The ``<<DoneLoading>>`` event fires when the document is done loading. 
+Website loading is performed asynchronously. When loading a website, you can bind to the ``<<DoneLoading>>`` event, which fires when the document has finished loading.
 
-When binding to ``<<DoneLoading>>`` to, for example, change a 'stop' button to a 'refresh' button, it is generally a good idea to bind to ``<<DownloadingResource>>`` to do the opposite. Otherwise, the document may show that is is done loading while it is still loading.
+If you bind to ``<<DoneLoading>>`` to update GUI state (for example, switching a 'Stop' button to 'Refresh'), it is generally recommended to also bind to the ``<<DownloadingResource>>`` event to handle the opposite case. Without this, the document may report that it has finished loading while additional resources (such as images, scripts, or stylesheets) are still being downloaded.
+
+When loading raw HTML or local files, the page loads synchronously and can be manipulated immediately.
 
 Stop loading
 ~~~~~~~~~~~~

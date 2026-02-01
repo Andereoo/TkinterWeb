@@ -292,8 +292,6 @@ If you benefited from using this package, please consider supporting its develop
         if not self.using_tkhtml30:
             #self.register_lazy_handler("node", "details", "node_manager")
             self.register_lazy_handler("attribute", "details", "node_manager")
-
-        self.register_lazy_handler("node", "progress", "node_manager")
         
         self.register_lazy_handler("node", "form", "form_manager")
         self.register_lazy_handler("node", "table", "form_manager")
@@ -315,6 +313,9 @@ If you benefited from using this package, please consider supporting its develop
         self.register_lazy_handler("attribute", "iframe", "object_manager")
         self.register_lazy_handler("node", "object", "object_manager")
         self.register_lazy_handler("attribute", "object", "object_manager")
+
+        if self.experimental:
+            self.register_lazy_handler("node", "progress", "node_manager")
 
     def _load_tkhtml(self):
         "Load Tkhtml"

@@ -30,7 +30,7 @@ Run the TkinterWeb demo to see if it worked!
 
 .. image:: ../../images/tkinterweb-demo.png
 
-TkinterWeb requires :py:class:`Tkinter`, `TkinterWeb-Tkhtml <https://pypi.org/project/tkinterweb-tkhtml/>`_, `PIL <https://pillow.readthedocs.io/>`_, and `PIL.ImageTk <https://pillow.readthedocs.io/en/stable/reference/ImageTk.html>`_. All dependencies should be installed when installing TkinterWeb the recomended way, but on some systems :py:class:`PIL.ImageTk` may need to be installed seperately in order to load most image types.
+TkinterWeb requires Tkinter, `TkinterWeb-Tkhtml <https://pypi.org/project/tkinterweb-tkhtml/>`_, `PIL <https://pillow.readthedocs.io/>`_, and `PIL.ImageTk <https://pillow.readthedocs.io/en/stable/reference/ImageTk.html>`_. All dependencies should be installed when installing TkinterWeb the recomended way, but on some systems `PIL.ImageTk <https://pillow.readthedocs.io/en/stable/reference/ImageTk.html>`_ may need to be installed seperately in order to load most image types.
 
 Getting started
 ----------------

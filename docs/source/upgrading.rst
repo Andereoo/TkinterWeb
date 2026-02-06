@@ -16,7 +16,7 @@ Changelog
 
     * Basic JavaScript support (new in version 4.1)
     * Improved embedded widget handling (new in version 4.2)
-    * SVG support on Windows and ``border-radius`` support on Windows and Linux (new in version 4.4)
+    * Cross-platform SVG and ``border-radius`` support (new in version 4.4)
     * Support for Tcl 9 (new in version 4.5)
     * Caret browsing functionality (new in version 4.8)
     * Improved thread safety (new in version 4.9)
@@ -349,11 +349,11 @@ Changelog
 
     Version 4.17:
 
-    * The new configuration option ``textwrap`` can be used to enable or disable text wrapping. In general, text wrapping should be disabled when shrink is enabled, and should be enabled when shrink is disabled. This is the default behaviour. This is only partially supported in Tkhtml 3.0; make sure you have the :py:mod:`tkinterweb-tkhtml-extras` package installed and up-to-date.
+    * The new configuration option ``textwrap`` can be used to enable or disable text wrapping. In general, text wrapping should be disabled when shrink is enabled, and should be enabled when shrink is disabled. This is the default behaviour. This is only partially supported in Tkhtml 3.0; make sure you have the `TkinterWeb-Tkhtml-Extras <https://pypi.org/project/tkinterweb-tkhtml-extras/>`_ package installed and up-to-date.
 
     Version 4.18:
 
-    * Added basic support for most HTML5 elements in the corresponding :py:mod:`tkinterweb-tkhtml-extras` release (version 1.3.0)
+    * Added basic support for most HTML5 elements in the corresponding `TkinterWeb-Tkhtml-Extras <https://pypi.org/project/tkinterweb-tkhtml-extras/>`_ release (version 1.3.0)
     * Added full support for the HTML ``<details>``, ``<summary>``, and ``<q>`` tags. 
 
 .. dropdown:: Changed/Fixed
@@ -429,7 +429,7 @@ Changelog
 
     * Binding button presses and motion events to the widget no longer removes internal bindings.
     * Setting ``html.maximum_thread_count = 0`` no longer disables threading. Use ``html.threading_enabled = False``.
-    * :py:mod:`PIL` is now an optional dependency. I also recommend installing the new :py:mod:`tkinterweb-tkhtml-extras` package.
+    * :py:mod:`PIL` is now an optional dependency. I also recommend installing the new `TkinterWeb-Tkhtml-Extras <https://pypi.org/project/tkinterweb-tkhtml-extras/>`_ package.
     * The :attr:`.HTMLElement.widget` property now returns a Tk widget when used on ``<input>``, ``<textarea>``, ``<select>``, ``<iframe>``, and some ``<object>`` elements.
     * Fixed scrollbar flashes when the widget opens.
     * DOM objects now provide more useful information when printed.

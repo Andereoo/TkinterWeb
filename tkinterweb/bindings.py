@@ -81,6 +81,16 @@ class TkinterWeb(tk.Widget):
         # Provide OS information for troubleshooting
         self.post_message(f"Starting TkinterWeb for {utilities.PLATFORM.processor} {utilities.PLATFORM.system} with Python {'.'.join(utilities.PYTHON_VERSION)}")
 
+        # Check tkinterweb_tkhtml_extras
+        if not self.using_tkhtml30 and tkinterweb_tkhtml.TKHTML_EXTRAS_VERSION is not None:
+            version = []
+            for letter in tkinterweb_tkhtml.TKHTML_EXTRAS_VERSION.split("."): version.append(int(letter))
+            if tuple(version) < (1, 3, 0):
+                raise RuntimeError(
+                    f"tkinterweb-tkhtml-extras >= 1.3.0 is required but version {tkinterweb_tkhtml.TKHTML_EXTRAS_VERSION} is installed. " \
+                    "Upgrade with pip install --upgrade tkinterweb[recommended]."
+                )
+
         # Initialize the Tkhtml3 widget
         tk.Widget.__init__(self, master, "html", kwargs)
 
@@ -99,6 +109,7 @@ class TkinterWeb(tk.Widget):
         self.motion_frame = tk.Frame(self, bg=self.motion_frame_bg, width=1, height=1)
         self.motion_frame.place(x=0, y=0)
 
+
         # Setup bindings        
         self._setup_bindings()
         self._setup_handlers()
@@ -113,6 +124,7 @@ Load about:tkinterweb for debugging information.
                                 
 If you benefited from using this package, please consider supporting its development by donating at https://buymeacoffee.com/andereoo - any amount helps!""")
         
+        # Check tkinterweb_tkhtml_extras
         if not tkinterweb_tkhtml.TKHTML_EXTRAS_ROOT_DIR:
             self.post_message("The tkinterweb-tkhtml-extras package is either not installed or does not support your system. Some functionality may be missing.")
 

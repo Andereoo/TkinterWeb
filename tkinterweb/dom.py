@@ -52,11 +52,6 @@ def camel_case_to_property(string):
             new_string += i
     return new_string
 
-    # This also works:
-    # from re import finditer
-    # matches = finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)', string)
-    # return "-".join([m.group(0).lower() for m in matches])
-
 
 class HTMLDocument:
     """Access this class via the :attr:`~tkinterweb.HtmlFrame.document` property of the :class:`~tkinterweb.HtmlFrame` and :class:`~tkinterweb.HtmlLabel` widgets.

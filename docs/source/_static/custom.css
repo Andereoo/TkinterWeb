@@ -189,11 +189,16 @@ details.sd-dropdown .sd-summary-content p {
 }
 
 details.sd-dropdown summary.sd-summary-title{
-  padding: 0 !important;
+  padding: .5em .6em .5em 1em !important;
+}
+
+.sd-mb-3, .sd-my-3 {
+  margin-bottom: 16px !important;
 }
 
 .sd-card-header, .sd-card {
-  border-color: transparent;
+  border-color: #dcdcdc;
+  border-radius: 4px;
 }
 
 .sd-card-body {
@@ -206,16 +211,4 @@ details.sd-dropdown summary.sd-summary-title{
 
 .sd-card-body > p {
   margin: 12px 0px !important;
-}
-
-@media {
-  .sd-card-header, .sd-card {
-    border-color: var(--sd-color-card-border);
-  }
-  details.sd-dropdown summary.sd-summary-title{
-    padding: .5em .6em .5em 1em !important;
-  }
-  .sd-bg-primary {
-    background-color: rgb(77, 122, 77) !important;
-  }
 }

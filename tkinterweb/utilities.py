@@ -31,7 +31,7 @@ __title__ = "TkinterWeb"
 __author__ = "Andrew Clarke"
 __copyright__ = "(c) 2021-2025 Andrew Clarke"
 __license__ = "MIT"
-__version__ = "4.17.6"
+__version__ = "4.18.0"
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
@@ -91,7 +91,7 @@ DEFAULT_STYLE = r"""
 /* This is a modified version of the stylesheet that comes bundled with Tkhtml. */
 /* Display types for non-table items. */
   ADDRESS, BLOCKQUOTE, BODY, DD, DIV, DL, DT, FIELDSET, 
-  FRAME, H1, H2, H3, H4, H5, H6, NOFRAMES, 
+  FRAME, H1, H2, H3, H4, H5, H6, NOFRAMES, DETAILS, SUMMARY,
   OL, P, UL, APPLET, CENTER, DIR, HR, MENU, PRE, FORM
                 { display: block }
 HEAD, SCRIPT, TITLE { display: none }
@@ -188,6 +188,7 @@ TD, TH          { display: table-cell }
 CAPTION         { display: table-caption }
 TH              { font-weight: bolder; text-align: center }
 CAPTION         { text-align: center }
+/* General formatting */
 H1              { font-size: 2em; margin: .67em 0 }
 H2              { font-size: 1.5em; margin: .83em 0 }
 H3              { font-size: 1.17em; margin: 1em 0 }
@@ -223,9 +224,17 @@ PRE, PLAINTEXT, XMP {
   margin: 1em 0;
   font-family: monospace;
 }
-/* Formatting for <mark> */
-MARK {
-    background: yellow;
+/* Rules for recently-added elements*/
+MARK { background: yellow }
+Q:before { content: "“" }
+Q:after { content: "”" }
+DETAILS[open] SUMMARY:before {
+    content: "▾";
+    margin-right: 5px;
+}
+DETAILS SUMMARY:before, DETAILS[open="false"] SUMMARY:before {
+    content: "▸";
+    margin-right: 5px;
 }
 /* Display properties for hyperlinks */
 :link    { color: darkblue; text-decoration: underline ; cursor: pointer }
@@ -455,14 +464,15 @@ class BuiltinPageGenerator():
     def __init__(self):
         self._html = None
         self._pages = {
-    "about:blank": "<html><head><style>html,body{{background-color:{bg};color:{fg};cursor:gobbler;width:100%;height:100%;margin:0}}</style><title>about:blank</title></head><body></body></html>{i1}{i2}",
+    "about:blank": "<html><head><style>html,body{{width:100%;height:100%;margin:0}}</style><title>about:blank</title></head><body></body></html>{bg}{fg}{i1}{i2}",
     "about:tkinterweb": "<html tkinterweb-overflow-x=auto><head>\
         <style>html,body{{{{background-color:{bg};color:{fg}}}}}\
             code{{{{display:block}}}}\
-            span{{{{margin-right:10px;border:1px solid black;width:20px;padding-left:45px}}}}\
-            .header{{{{display:block;text-decoration:underline;margin-top:25px}}}}\
-            .closeheader{{{{display:block;text-decoration:underline}}}}\
-            .section{{{{margin-left:10px;border-left:2px solid lightgrey;padding-left:10px}}}}\
+            span{{{{cursor:gobbler;margin-right:10px;border:1px solid black;width:20px;padding-left:45px}}}}\
+            summary{{{{font-weight:bold;cursor:pointer;font-family:monospace;display:inline}}}}\
+            details[open]{{{{margin-bottom:25px;}}}}\
+            details[open='false'],details[open].bottom{{{{margin-bottom:0px;}}}}\
+            .section{{{{margin-left:10px;border-left:1px solid;padding-left:10px}}}}\
             .indented{{{{margin-left:20px}}}}\
             .colourbox{{{{margin-right:75px;display:inline}}}}</style>\
         <title>about:tkinterweb</title></head><body>\
@@ -470,40 +480,39 @@ class BuiltinPageGenerator():
         <code>✉ <a href=https://github.com/Andereoo/TkinterWeb>github.com/Andereoo/TkinterWeb</a></code>\
         <code>✨ <a href=https://tkinterweb.readthedocs.io>tkinterweb.readthedocs.io</a></code>\
         <code>☕ <a href=https://buymeacoffee.com/andereoo>buymeacoffee.com/andereoo</a></code>\
-        <code class='header'>Debugging information</code><code class='section'>\
-            <code class='closeheader'>Versioning</code>\
+        <details open style='margin-top:25px'><summary>Debugging information</summary><code class='section'>\
+            <details open><summary>Versioning</summary>\
             <code>Version: {__version__}</code><code>Tkhtml version: {tkhtml_version}</code><code>TkinterWeb-Tkhtml version: {tkw_tkhtml_version}</code>\
-            <code>Python version: {python_version}</code><code>Tcl version: {tcl_version}</code><code>Tk version: {tk_version}</code>\
-            <code class='header'>Resource loading</code>\
+            <code>Python version: {python_version}</code><code>Tcl version: {tcl_version}</code><code>Tk version: {tk_version}</code></details>\
+            <details open><summary>Resource loading</summary>\
             <code>Use prebuilt Tkhtml: {use_prebuilt_tkhtml}</code>\
             <code>Available Tkhtml binaries: {tkhtml_binaries}</code>\
             <code>Resource directories: {root}{tkhtml_root}{tkhtml_extras_root}</code><code>Working directory: {working_dir}</code>\
             <code>Tcl paths: {tcl_path}</code>\
-            <code>System dependency paths: {path}</code>\
-            <code class='header'>System specs</code>\
+            <code>System dependency paths: {path}</code></details>\
+            <details open class='bottom'><summary>System specs</summary>\
             <code>Platform: {platform}</code><code>Machine: {machine}</code><code>Processor: {processor}</code>\
-        </code>\
-         <iframe src=\"about:tkinterweb\" height=\"200\" width=\"300\" title=\"Iframe Example\"></iframe> \
-        <code class='header'>Preferences</code><code class='section'>\
-            <code class='closeheader'>Renderer settings</code>\
+        </code></details>\
+        <details open><summary>Preferences</summary><code class='section'>\
+            <details open><summary>Renderer settings</summary>\
             <code>Parse mode: {parse_mode}</code>\
             <code>Rendering engine mode: {rendering_mode}</code>\
             <code>Zoom: {zoom}</code>\
-            <code>Font scale: {font_scale}</code>\
-            <code class='header'>HTTP settings</code>\
+            <code>Font scale: {font_scale}</code></details>\
+            <details open><summary>HTTP settings</summary>\
             <code>Headers: {headers}</code>\
             <code>Insecure HTTPS: {insecure_https}</code>\
             <code>CA file path: {ssl_cafile}</code>\
-            <code>Request timeout: {request_timeout}s</code>\
-            <code class='header'>Threading settings</code>\
+            <code>Request timeout: {request_timeout}s</code></details>\
+            <details open><summary>Threading settings</summary>\
             <code>Threading enabled: {threading_enabled}</code>\
             <code>Tcl allows threading: {allow_threading}</code>\
-            <code>Maximum thread count: {maximum_thread_count}</code>\
-            <code class='header'>Image settings</code>\
+            <code>Maximum thread count: {maximum_thread_count}</code></details>\
+            <details open><summary>Image settings</summary>\
             <code>Images enabled: {images_enabled}</code>\
             <code>Ignore invalid images: {ignore_invalid_images}</code>\
-            <code>Image alt text: {image_alternate_text_enabled}</code>\
-            <code class='header'>Flags</code>\
+            <code>Image alt text: {image_alternate_text_enabled}</code></details>\
+            <details open><summary>Flags</summary>\
             <code>Experimental mode: {experimental}</code>\
             <code>Caret browsing mode: {caret_mode}</code>\
             <code>Stylesheets enabled: {stylesheets_enabled}</code>\
@@ -514,37 +523,37 @@ class BuiltinPageGenerator():
             <code>Crash prevention enabled: {crash_prevention_enabled}</code>\
             <code>Debug messages enabled: {messages_enabled}</code>\
             <code>Events enabled: {events_enabled}</code>\
-            <code>Selection enabled: {selection_enabled}</code>\
-            <code class='header'>Colours</code>\
-            <span style='background-color:{find_match_highlight_color}'>&nbsp;</span><code class='colourbox'>Found text highlight colour: {find_match_highlight_color}</code><code></code>\
+            <code>Selection enabled: {selection_enabled}</code></details>\
+            <details open><summary>Colours</summary>\
+            <div><span style='background-color:{find_match_highlight_color}'>&nbsp;</span><code class='colourbox'>Found text highlight colour: {find_match_highlight_color}</code><code></code>\
             <span style='background-color:{find_match_text_color}'>&nbsp;</span><code class='colourbox'>Found text colour: {find_match_text_color}</code><code></code>\
             <span style='background-color:{find_current_highlight_color}'>&nbsp;</span><code class='colourbox'>Current found match highlight colour: {find_current_highlight_color}</code><code></code>\
             <span style='background-color:{find_current_text_color}'>&nbsp;</span><code class='colourbox'>Current found match text colour: {find_current_text_color}</code><code></code>\
             <span style='background-color:{selected_text_highlight_color}'>&nbsp;</span><code class='colourbox'>Selected text highlight colour: {selected_text_highlight_color}</code><code></code>\
             <span style='background-color:{selected_text_color}'>&nbsp;</span><code class='colourbox'>Selected text colour: {selected_text_color}</code><code></code>\
             <span style='background-color:{bg}'>&nbsp;</span><code class='colourbox'>About page background colour: {bg}</code><code></code>\
-            <span style='background-color:{fg}'>&nbsp;</span><code class='colourbox'>About page foreground colour: {fg}</code><code></code>\
-            <code class='header'>Dark mode settings</code>\
+            <span style='background-color:{fg}'>&nbsp;</span><code class='colourbox'>About page foreground colour: {fg}</code><code></code></div></details>\
+            <details open class='bottom'><summary>Dark mode settings</summary>\
             <code>Dark mode: {dark_theme_enabled}</code>\
             <code>Image inversion: {image_inversion_enabled}</code>\
             <code>Dark theme general regexes: {general_dark_theme_regexes}</code>\
             <code>Dark theme inline regexes: {inline_dark_theme_regexes}</code>\
             <code>Dark theme style regex: {style_dark_theme_regex}</code>\
-            <code>Colour threshold: {dark_theme_limit}</code>\
-        </code>\
-        <code class='header'>Site memory</code>\
-        <code>Visited hyperlinks: {visited_links}</code>\
-            </body></html>{i1}{i2}",
+            <code>Colour threshold: {dark_theme_limit}</code></details>\
+        </code></details>\
+        <details open class='bottom'><summary>Site memory</summary>\
+            <code class='section'><code>Visited hyperlinks: {visited_links}</code></code></details>\
+        </body></html>{i1}{i2}",
     "about:error": "<html><head><style>html,body,table,tr,td{{background-color:{bg};color:{fg};width:100%;height:100%;margin:0}}</style><title>Error {i1}</title></head>\
         <body><table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle'>\
         <h2 style='margin:0;padding:0;font-weight:normal'>Oops</h2>\
         <h3 style='margin-top:10px;margin-bottom:25px;font-weight:normal'>The page you've requested could not be found :(</h3>\
         <object handleremoval allowscrolling style='cursor:pointer' data='{i2}'></object>\
         </td></tr></table></body></html>",
-    "about:loading": "<html><head><style>html,body,table,tr,td{{background-color:{bg};color:{fg};width:100%;height:100%;margin:0}}</style></head>\
+    "about:loading": "<html><head><style>html,body,table,tr,td{{width:100%;height:100%;margin:0}}</style></head>\
         <body><table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle'>\
         <p>Loading...</p>\
-        </td></tr></table></body></html>{i1}{i2}",
+        </td></tr></table></body></html>{bg}{fg}{i1}{i2}",
     "about:image": "<html><head><style>html,body,table,tr {{background-color:{bg};color:{fg};width:100%;height:100%;margin:0}}</style></head><body>\
         <table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle;padding:4px 4px 0px 4px'><img style='max-width:100%;max-height:100%' src='{i1}'><h3 style='margin:0;padding:0;font-weight:normal'></td></tr></table></body></html>{i2}",
     "about:view-source": "<html tkinterweb-overflow-x=auto><head><style>\
@@ -566,7 +575,7 @@ class BuiltinPageGenerator():
                 general_dark_theme_regexes=("".join(f"<code class='indented'>{i.replace('{', '{{').replace('}', '}}')}</code>" for i in self._html.general_dark_theme_regexes)), 
                 inline_dark_theme_regexes=("".join(f"<br><code class='indented'>{i.replace('{', '{{').replace('}', '}}')}</code>" for i in self._html.inline_dark_theme_regexes)),
                 style_dark_theme_regex=f"<code class='indented'>{self._html.style_dark_theme_regex.replace('{', '{{').replace('}', '}}')}</code>", 
-                visited_links=(("".join(f"<code class='indented'>{i}</code>" for i in self._html.visited_links)) if self._html.visited_links else None),
+                visited_links=(("".join(f"<code class='indented'><a href='{i}'>{i}</a></code>" for i in self._html.visited_links)) if self._html.visited_links else None),
                 tkhtml_binaries=("".join(f"<code class='indented'>{os.path.join(i, e)}</code>" for i, e in tkinterweb_tkhtml.TKHTML_BINARIES)),
                 root=f"<code class='indented'>{ROOT_DIR}</code>", 
                 tkhtml_root=f"<code class='indented'>{tkinterweb_tkhtml.TKHTML_ROOT_DIR}</code>", 

@@ -349,7 +349,12 @@ Changelog
 
     Version 4.17:
 
-    * The new configuration option ``textwrap`` can be used to enable or disable text wrapping. In general, text wrapping should be disabled when shrink is enabled, and should be enabled when shrink is disabled. This is the default behaviour. This is only partially supported in Tkhtml 3.0; make sure you have the :py:mod:`tkinterweb-tkhtml-extras` package installed.
+    * The new configuration option ``textwrap`` can be used to enable or disable text wrapping. In general, text wrapping should be disabled when shrink is enabled, and should be enabled when shrink is disabled. This is the default behaviour. This is only partially supported in Tkhtml 3.0; make sure you have the :py:mod:`tkinterweb-tkhtml-extras` package installed and up-to-date.
+
+    Version 4.18:
+
+    * Added basic support for most HTML5 elements in the corresponding :py:mod:`tkinterweb-tkhtml-extras` release (version 1.3.0)
+    * Added full support for the HTML ``<details>``, ``<summary>``, and ``<q>`` tags. 
 
 .. dropdown:: Changed/Fixed
 
@@ -486,6 +491,11 @@ Changelog
     * Fixed a bug where stopping a page load prevented the page from loading again when caches were enabled.
     * ``<style>`` tags and local files are now always evaluated in the main thread.
     * The configuration options ``horizontal_scrollbar`` and ``vertical_scrollbar`` now accept another option, ``"dynamic"``. This behaves like ``"auto"``, with the difference that scrollbars are always hidden in :class:`.HtmlLabel` and :class:`.HtmlFrame(shrink=True)` widgets. This is the new default for vertical scrollbars.
+
+    Version 4.18:
+
+    * Triple-clicking on text now highlights all text in the line, even if multiple inline elements are present.
+    * Fixed some bugs that arose when stopping a page load and introduced some minor optimizations.
 
 -------------------
 

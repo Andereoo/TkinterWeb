@@ -12,7 +12,7 @@ Overview
 Setup
 ------
 
-To enable JavaScript support in TkinterWeb, first install PythonMonkey using pip:
+To enable JavaScript support in TkinterWeb, first install `PythonMonkey <http://pythonmonkey.io/>`_ using pip:
 
 .. code-block:: console
 

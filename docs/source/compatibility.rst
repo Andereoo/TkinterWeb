@@ -22,25 +22,25 @@ The experimental Tkhtml version is not provided as a pre-built binary but can be
 Webpage compatibility
 ---------------------
 
-**HTML/CSS:**
+**HTML & CSS:**
 
-* TkinterWeb supports HTML 4.01 and CSS 2.1. A full list of supported CSS declarations can be found at `http://tkhtml.tcl.tk/support.html <https://web.archive.org/web/20250325123206/http://tkhtml.tcl.tk/support.html>`_.  ``overflow-x`` is also supported on ``body`` and ``html`` elements.
+* TkinterWeb supports HTML 4.01 and CSS 2.1. A full list of supported CSS declarations can be found at `http://tkhtml.tcl.tk/support.html <https://web.archive.org/web/20250325123206/http://tkhtml.tcl.tk/support.html>`_.
 * Most CSS pseudo-elements, such as ``:hover`` and ``:active`` are also supported.
-* On 64-bit Windows and Linux, if the TkinterWeb-Tkhtml-Extras package is installed, ``border-radius`` and more cursor options are also supported. 
+* On 64-bit Windows and Linux, if the `TkinterWeb-Tkhtml-Extras <https://pypi.org/project/tkinterweb-tkhtml-extras/>`_ package is installed, HTML5 tags and some extra CSS properties (including ``border-radius`` and ``overflow-x``) and cursors are also supported. To use these features on all other platforms, you will simply need to compile Tkhtml yourself. Visit and clone https://github.com/Andereoo/TkinterWeb-Tkhtml. Then run ``python compile.py --install``.
 
 **JavaScript:**
 
 * JavaScript partly supported at the moment. See :doc:`javascript` for more information.
 
-  * To use JavaScript, :py:mod:`PythonMonkey`  must be installed.
+  * To use JavaScript, `PythonMonkey <http://pythonmonkey.io/>`_  must be installed.
 
 * It is also possible for the user to connect their own JavaScript interpreter or manipulate the document through Python. See :doc:`javascript` and :doc:`dom` for more information.
 
 **Images:**
 
-* TkinterWeb supports nearly 50 different image types through :py:mod:`PIL`.
+* TkinterWeb supports nearly 50 different image types through `PIL <https://pillow.readthedocs.io/>`_.
 
-* In order to load Scalable Vector Graphic images, :py:mod:`CairoSVG`, both :py:mod:`PyCairo` and :py:mod:`PyGObject`, or both :py:mod:`PyCairo` and :py:mod:`Rsvg` must also be installed. 
+* In order to load Scalable Vector Graphic images, `CairoSVG <https://cairosvg.org/>`_, `PyGObject <https://pygobject.gnome.org/>`_, or both :py:mod:`PyCairo` and :py:mod:`Rsvg` must also be installed. 
 
 -------------------
 

@@ -147,10 +147,11 @@ class SelectionManager(utilities.BaseManager):
             return
         
         if self.selection_type == 1:
-            text = self.html.get_node_text(self.selection_start_node)
-            self.selection_start_offset = 0
-            self.selection_end_node = self.selection_start_node
-            self.selection_end_offset = len(text)
+            # Tkhtml seems to wrap the output of text("text") with \n, so this works
+            text = self.html.text("text")
+            index = self.html.text("offset", self.selection_start_node, self.selection_start_offset)
+            self.selection_start_node, self.selection_start_offset = self.html.text("index", text[:index].rfind("\n") + 1)
+            self.selection_end_node, self.selection_end_offset = self.html.text("index", text.find("\n", index))
             self.update_selection()
             self.selection_type = 2
 
@@ -183,16 +184,16 @@ class SelectionManager(utilities.BaseManager):
                 self.selection_end_offset = end_offset2
 
         elif self.selection_type == 2:
+            text = self.html.text("text")
             start_index = self.html.text("offset", self.selection_start_node, self.selection_start_offset)
             end_index = self.html.text("offset", self.selection_end_node, self.selection_end_offset)
+            
             if start_index > end_index:
-                text = self.html.get_node_text(self.selection_start_node)
-                self.selection_start_offset = len(text)
-                self.selection_end_offset = 0
+                self.selection_start_node, self.selection_start_offset = self.html.text("index", text.find("\n", start_index))
+                self.selection_end_node, self.selection_end_offset = self.html.text("index", text[:end_index].rfind("\n") + 1)
             else:
-                text = self.html.get_node_text(self.selection_end_node)
-                self.selection_start_offset = 0
-                self.selection_end_offset = len(text)
+                self.selection_start_node, self.selection_start_offset = self.html.text("index", text[:start_index].rfind("\n") + 1)
+                self.selection_end_node, self.selection_end_offset = self.html.text("index", text.find("\n", end_index))
             
         self.update_selection()
 

@@ -51,17 +51,17 @@ Or, you can also choose from the following extras: `pip install tkinterweb[html,
 ## Dependencies
 **In order to load webpages and show images, TkinterWeb requires the following packages:**
 * Tkinter
-* TkinterWeb-Tkhtml
+* [TkinterWeb-Tkhtml](https://pypi.org/project/tkinterweb-tkhtml/)
 
 I also **strongly** recommended installing the following:
-* TkinterWeb-Tkhtml-Extras
-* PIL
-* PIL.ImageTk
+* [TkinterWeb-Tkhtml-Extras](https://pypi.org/project/tkinterweb-tkhtml-extras/)
+* [PIL](https://pillow.readthedocs.io/)
+* [PIL.ImageTk](https://pillow.readthedocs.io/en/stable/reference/ImageTk.html)
 
 You can also choose from the following list for extra functionality:
-* Brotli (for faster page loads on some sites)
-* PythonMonkey (for basic JavaScript support)
-* CairoSVG or PyGObject (for SVG support)
+* [Brotli](https://github.com/google/brotli) (for faster page loads on some sites)
+* [PythonMonkey](http://pythonmonkey.io/) (for basic JavaScript support)
+* [CairoSVG](https://cairosvg.org/) or [PyGObject](https://pygobject.gnome.org/) (for SVG support)
 
 Pip will automatically install dependencies when installing TkinterWeb. PIL.ImageTk should be automatically installed with PIL but might need to installed separately on some systems.
 
@@ -83,10 +83,10 @@ Pip will automatically install dependencies when installing TkinterWeb. PIL.Imag
 See [Frequently Asked Questions](https://tkinterweb.readthedocs.io/en/latest/faq.html).
 
 ## Webpage Compatability
-**HTML/CSS:**
+**HTML & CSS:**
 * TkinterWeb supports HTML 4.01 and CSS 2.1. A full list of supported CSS declarations can be found at [http://tkhtml.tcl.tk/support.html](https://web.archive.org/web/20250325123206/http://tkhtml.tcl.tk/support.html).
 * Most CSS pseudo-elements, such as `:hover` and `:active` are also supported. 
-* On 64-bit Windows and Linux, if the TkinterWeb-Tkhtml-Extras package is installed, ``border-radius`` and more cursor options are also supported.
+* On 64-bit Windows and Linux, if the [TkinterWeb-Tkhtml-Extras](https://pypi.org/project/tkinterweb-tkhtml-extras/) is installed, HTML5 tags and some extra CSS properties (including `border-radius` and `overflow-x`) and cursors are also supported. To use these features on all other platforms, you will simply need to compile Tkhtml yourself. Visit and clone https://github.com/Andereoo/TkinterWeb-Tkhtml. Then run `python compile.py --install`.
 
 **JavaScript:**
 * Javascript only partly supported at the moment.

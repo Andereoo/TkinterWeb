@@ -397,6 +397,8 @@ class HtmlFrame(Frame):
         :type base_url: str, optional
         :param fragment: The url fragment to scroll to after the document loads.
         :type fragment: str, optional"""
+        if self._thread_in_progress:
+            self._thread_in_progress.stop()
         self._html.reset(_thread_safe)
 
         if fragment: fragment = "".join(char for char in fragment if char.isalnum() or char in ("-", "_", ".")).replace(".", r"\.")
@@ -593,9 +595,8 @@ class HtmlFrame(Frame):
         """Stop loading this page and abandon all pending requests."""
         if self._thread_in_progress:
             self._thread_in_progress.stop()
-        self._html.stop()
-        if self._thread_in_progress:
             self._current_url = self._previous_url
+        self._html.stop()
         self._html.post_event(utilities.URL_CHANGED_EVENT)
         self._html.post_event(utilities.DONE_LOADING_EVENT)
 

@@ -8,15 +8,20 @@ import tkinter as tk
 
 from urllib.parse import urlencode, urlparse
 
-from . import subwidgets, utilities, imageutils
+from . import subwidgets, utilities, imageutils, dom
 
 class NodeManager(utilities.BaseManager):
-    "Handle hyperlinks, body/html elements, and title/meta/base elements."
+    "Handle body, html, title, meta, base, details, and hyperlink elements."
     def __init__(self, html):
         super().__init__(html)
 
+        self._node_texts = {}
+
     def __repr__(self):
         return f"{self.html._w}::{self.__class__.__name__.lower()}"
+    
+    def reset(self):
+        self._node_texts.clear()
 
     # --- Handle title, base, and meta elements -------------------------------
 
@@ -110,6 +115,81 @@ class NodeManager(utilities.BaseManager):
             self.html.motion_frame_bg = background
             self.html.motion_frame.config(bg=background)
 
+    
+    # --- Handle <details> elements -------------------------------------------
+
+    # Technically <details> elements should be visible whenever the open attribute is present
+    # But Tkhtml can't remove attributes (or at lease I can't figure out how to do it)
+    # So for now we hide the content if open="false"
+    # I could cut out most of this code if we could remove attributes though
+
+    def _is_open(self, node):
+        return self.html.get_node_attribute(node, "open", "false") != "false"
+
+    def _update_details(self, node, display):
+        for child in self.html.get_node_children(node):
+            if self.html.get_node_tag(child) == "summary":
+                continue
+
+            try:
+                self.html.override_node_properties(child, "display", "" if display else "none")
+            except tk.TclError:
+                # We need a better solution here
+                if display and child in self._node_texts:
+                    self.html.set_node_text(child, self._node_texts[child])
+                else:
+                    self._node_texts[child] = self.html.get_node_text(child)
+                    self.html.set_node_text(child, "")
+
+    def _set_open(self, node, display):
+        self.html.set_node_attribute(node, "open", "" if display else "false")
+        if self.html.using_tkhtml30:
+            # In Tkhtml 3.1+ we add an attribute handler, which does this for us
+            self._update_details(node, display)
+
+    def _close_other_details(self, node):
+        node = dom.extract_nested(node)
+        name = self.html.get_node_attribute(node, "name")
+        if not name:
+            return
+        
+        for details in self.html.search(f"DETAILS[name={name}]"):
+            if dom.extract_nested(details) != node:
+                self._set_open(details, False)
+
+    def _on_details(self, node):
+        "Handle <details> elements."
+        if self._is_open(node):
+            self._close_other_details(node)
+        else:
+            self._update_details(node, False)
+
+    def _on_details_value_change(self, node, attribute, value):
+        if attribute != "open":
+            return
+        
+        open = value != "false"
+        self._update_details(node, open)
+        if open:
+            self._close_other_details(node)
+
+    def _handle_load_finish(self):
+        "Collapse <details> elements. Only needed for Tkhtml 3.0, which doesn't support HTML5 elements."
+        "It turns out if groups are used this preserves the first box while handling _on_details preserves the last."
+        "I think there's value in preserving behaviour between Tkhtml versions, so for now I guess we'll keep this."
+        for details in self.html.search("DETAILS"):
+            self._on_details(details)
+    
+    def _handle_summary_click(self, node):
+        "Handle clicks on <summary> elements"
+        details = self.html.get_node_parent(node)
+        if self.html.get_node_tag(details).lower() != "details":
+            return
+        
+        open = not self._is_open(details)
+        self._set_open(details, open)
+        if open and self.html.using_tkhtml30:
+            self._close_other_details(details)
 
 class FormManager(utilities.BaseManager):
     "Handle forms and form elements."

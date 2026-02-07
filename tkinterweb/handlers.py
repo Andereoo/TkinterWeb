@@ -196,6 +196,10 @@ class NodeManager(utilities.BaseManager):
         widgetid["value"] = self.html.get_node_attribute(node, "value", 0)
         self.html.replace_node_contents(node, widgetid)
 
+    def _on_progress_value_change(self, node, attribute, value):
+        widgetid = self.html.nametowidget(self.html.get_node_replacement(node))
+        widgetid["value"] = value
+
 
 class FormManager(utilities.BaseManager):
     "Handle forms and form elements."

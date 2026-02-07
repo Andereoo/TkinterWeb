@@ -316,6 +316,7 @@ If you benefited from using this package, please consider supporting its develop
 
         if self.experimental:
             self.register_lazy_handler("node", "progress", "node_manager")
+            self.register_lazy_handler("attribute", "progress", "node_manager")
 
     def _load_tkhtml(self):
         "Load Tkhtml"

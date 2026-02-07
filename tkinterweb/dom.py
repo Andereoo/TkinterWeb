@@ -54,11 +54,11 @@ def camel_case_to_property(string):
 
 
 def DOM_element_events(cls):  # class
-    for event in frozenset({
+    for event in {
         "onchange", "onclick", "oncontextmenu", "ondblclick", "onload",
         "onmousedown", "onmouseenter", "onmouseleave", "onmousemove", "onmouseout",
         "onmouseover", "onmouseup"
-    }):
+    }:
         # Create the getter function
         def getter(cls, event=event):  # Default argument to capture current event
             return cls.getAttribute(event)
@@ -520,21 +520,27 @@ class HTMLElement:
     
     @property
     def value(self):
-        """Get and set the input's value. Only works on ``<input>``, ``<textarea>``, and ``<select>`` elements.
+        """Get and set the input's value. Only works on ``<input>``, ``<textarea>``, ``<select>``, and ``progress`` elements.
         
         :rtype: str
         
         New in version 4.1."""
-        node = str(self.node)
-        if node in self.html.form_manager.form_widgets:
-            return self.html.form_manager.form_widgets[node].get()
+        replacement = self.html.widget_manager.get_node_widget(self.node)
+        if replacement and self.tagName in {"select", "input", "textarea", "progress"}:
+            try:
+                return replacement.get()
+            except AttributeError:
+                return self.html.get_node_attribute(self.node, "value")
         return None
         
     @value.setter
     def value(self, value):
-        node = str(self.node)
-        if node in self.html.form_manager.form_widgets:
-            self.html.form_manager.form_widgets[node].set(value)
+        replacement = self.html.widget_manager.get_node_widget(self.node)
+        if replacement and self.tagName in {"select", "input", "textarea", "progress"}:
+            try:
+                replacement.set(value)
+            except AttributeError:
+                self.html.set_node_attribute(self.node, "value", value)
 
     @property
     def checked(self):
@@ -920,17 +926,16 @@ class CSSStyleDeclaration:
 
     @property
     def cssText(self):
-        """Return the text of the element's inline style declaration.
+        """Get and set the element's inline style declaration.
         
-        :rtype: str"""
+        :rtype: str
+        
+        Updated in version 4.19."""
         return self.html.get_node_attribute(self.node, "style")
 
     @cssText.setter
-    def cssText(self, txt):
-        """Define the text of the element's inline style declaration.
-        
-        :rtype: str"""
-        return self.html.set_node_attribute(self.node, "style", txt)
+    def cssText(self, contents):
+        return self.html.set_node_attribute(self.node, "style", contents)
     
     @property
     def length(self):

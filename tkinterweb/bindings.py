@@ -291,6 +291,8 @@ If you benefited from using this package, please consider supporting its develop
 
         if not self.using_tkhtml30:
             #self.register_lazy_handler("node", "details", "node_manager")
+            self.register_lazy_handler("node", "progress", "node_manager")
+            self.register_lazy_handler("attribute", "progress", "node_manager")
             self.register_lazy_handler("attribute", "details", "node_manager")
         
         self.register_lazy_handler("node", "form", "form_manager")
@@ -313,10 +315,6 @@ If you benefited from using this package, please consider supporting its develop
         self.register_lazy_handler("attribute", "iframe", "object_manager")
         self.register_lazy_handler("node", "object", "object_manager")
         self.register_lazy_handler("attribute", "object", "object_manager")
-
-        if self.experimental:
-            self.register_lazy_handler("node", "progress", "node_manager")
-            self.register_lazy_handler("attribute", "progress", "node_manager")
 
     def _load_tkhtml(self):
         "Load Tkhtml"
@@ -534,6 +532,26 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     def tkhtml_default_style(self):
         return self.tk.call("::tkhtml::htmlstyle")
 
+    @property
+    def images(self):  # Debugging
+        NAMES = ("name", "pixmap", "w", "h", "alpha", "ref",)
+        return {i[0]:dict(zip(NAMES, i[1:])) for i in self.tk.call(self._w, "_images")}
+
+    @property
+    def style_report(self):
+        """Return the document's style report.
+        
+        New in version 4.19."""
+        return self.tk.call(self._w, "_stylereport")
+
+    @property
+    def imagecache(self):
+        return bool(self.tk.call(self._w, "cget", "-imagecache"))
+
+    @imagecache.setter
+    def imagecache(self, toggle):
+        self.tk.call(self._w, "configure", "-imagecache", toggle)
+
     # --- Queuing, messaging, and events --------------------------------------
 
     def _check_queue(self):
@@ -662,8 +680,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
     def parse_css(self, sheetid=None, data="", url=None, fallback_priority="author"):
         "Parse CSS code."
-        if not url:
-            url = self.base_url
+        if not url: url = self.base_url
         data = self._crash_prevention(data)
         data = self._css_dark_mode(data)
         
@@ -685,7 +702,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                 self._w, "style",
                 "-id", sheetid,
                 "-importcmd", importcmd,
-                "-urlcmd", urlcmd,  data
+                "-urlcmd", urlcmd, data
             )
         except tk.TclError:
             # The widget doesn't exist anymore
@@ -865,16 +882,6 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             self.post_event(utilities.DONE_LOADING_EVENT)
         self.script_manager._submit_deferred_scripts()
         return fragment
-
-    @property
-    def imagecache(self):
-        "Tell if the Tkhtml image cache is enabled or disabled"
-        return bool(self.tk.call(self._w, "cget", "-imagecache"))
-
-    @imagecache.setter
-    def imagecache(self, toggle):
-        "Enable or disable the Tkhtml image cache."
-        self.tk.call(self._w, "configure", "-imagecache", toggle)
 
     def get_node_text(self, node_handle, *args):
         "Get the text content of the given node."
@@ -1618,12 +1625,10 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             if self.text_mode and not (event.state & 0x4):
                 return
             
-            if node_tag == "input":
-                if node_type == "reset":
-                    self._handle_form_reset(node_handle)
-                elif node_type in {"submit", "image"}:
-                    self._handle_form_submission(node_handle)
-
+            if node_tag == "input" and node_type == "reset":
+                self._handle_form_reset(node_handle)
+            elif node_tag == "input" and node_type in {"submit", "image"}:
+                self._handle_form_submission(node_handle)
             else:
                 for node in self.hovered_nodes:
                     if node != node_handle:
@@ -1741,15 +1746,6 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         utilities.deprecate("send_onload", "event_manager")
         return self.event_manager.send_onload(root, children)
 
-    @property
-    def images(self):  # Debuging
-        NAMES = ("name", "pixmap", "w", "h", "alpha", "ref",)
-        return {i[0]:dict(zip(NAMES, i[1:])) for i in self.tk.call(self._w, "_images")}
-
-    @property
-    def style_report(self):
-        return self.tk.call(self._w, "_stylereport")
-
     def tkhtml_uri_decode(self, uri, base64=False):
         "This command is designed to help scripts process data: URIs. It is completely separate from the html widget"
         c = ("::tkhtml::decode", "-base64", uri) if base64 else ("::tkhtml::decode", uri)
@@ -1847,7 +1843,7 @@ class TkHtmlParsedURI:
     @property
     def splitfrag(self):
         "Return namedtuple with uri and fragment"
-        return utilities.SplitFrag(self.defrag, self.fragment)
+        return self.defrag, self.fragment
 
     def destroy(self):
         "Destroy this uri."

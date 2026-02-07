@@ -11,7 +11,7 @@ from urllib.parse import urlencode, urlparse
 from . import subwidgets, utilities, imageutils, dom
 
 class NodeManager(utilities.BaseManager):
-    "Handle body, html, title, meta, base, details, and hyperlink elements."
+    "Handle body, html, title, meta, base, details, progress, and hyperlink elements."
     def __init__(self, html):
         super().__init__(html)
 
@@ -197,8 +197,12 @@ class NodeManager(utilities.BaseManager):
         self.html.replace_node_contents(node, widgetid)
 
     def _on_progress_value_change(self, node, attribute, value):
-        widgetid = self.html.nametowidget(self.html.get_node_replacement(node))
-        widgetid["value"] = value
+        if attribute == "value":
+            widgetid = self.html.nametowidget(self.html.get_node_replacement(node))
+            widgetid["value"] = value
+        elif attribute == "max":
+            widgetid = self.html.nametowidget(self.html.get_node_replacement(node))
+            widgetid["maximum"] = value
 
 
 class FormManager(utilities.BaseManager):
@@ -623,7 +627,7 @@ class StyleManager(utilities.BaseManager):
             return
 
         if (("stylesheet" in rel)
-            and (media in frozenset(("screen", "print", "all")))):
+            and (media in {"screen", "print", "all"})):
             self.html._thread_check(self.fetch_styles, url, node, media)
             # Onload is fired if and when the stylesheet is parsed
         elif "icon" in rel:

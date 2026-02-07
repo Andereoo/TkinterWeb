@@ -25,14 +25,13 @@ try:
 except ImportError:
     brotli_installed = False
 
-from collections import namedtuple
 
 # We need this information here so the built-in pages can access it
 __title__ = "TkinterWeb"
 __author__ = "Andrew Clarke"
 __copyright__ = "(c) 2021-2025 Andrew Clarke"
 __license__ = "MIT"
-__version__ = "4.18.1"
+__version__ = "4.19.0"
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
@@ -687,7 +686,6 @@ JS_EVENT_MAP = {
     "onmiddlemouse": "onmousedown",
     "onmouseb1move": None,
 }
-SplitFrag = namedtuple("SplitFrag", ("uri", "fragment"))
 
 class StoppableThread(threading.Thread):
     "A thread that stores a state flag that can be set and used to check if the thread is supposed to be running"

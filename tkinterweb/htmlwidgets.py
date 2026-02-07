@@ -7,7 +7,8 @@ Copyright (c) 2021-2025 Andrew Clarke
 
 from . import bindings, dom, js, utilities, subwidgets, imageutils
 
-from urllib.parse import urldefrag, urlparse, urlunparse
+from urllib.parse import urldefrag, urlparse, urlunparse, urljoin
+from os.path import isfile
 
 import tkinter as tk
 from tkinter.ttk import Frame, Style
@@ -471,6 +472,7 @@ class HtmlFrame(Frame):
         :type decode: str or None, optional
         :param force: Force the page to reload all elements.
         :type force: bool, optional"""
+        if url.startswith("mailto"): return  # Don't try to load emails!
         if not self._current_url == url:
             self._previous_url = self._current_url
         if url in utilities.BUILTIN_PAGES:
@@ -590,6 +592,12 @@ class HtmlFrame(Frame):
             self._accumulated_styles.append(css_source)
         else:
             self._html.parse_css(data=css_source, fallback_priority=priority)
+
+    def import_css(self, url):
+        """Manually add a CSS stylesheet, like @import but in Python
+
+        :param url: The URL to the CSS stylesheet."""
+        self._html.style_manager._on_atimport(self._html.base_url, url)
 
     def stop(self):
         """Stop loading this page and abandon all pending requests."""
@@ -1323,6 +1331,39 @@ Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certif
     def _on_element_script(self, node_handle, attribute, attr_contents):
         self.javascript._on_element_script(node_handle, attribute, attr_contents)
 
+    def open_style_report_win(self, **kwargs):
+        "Load a window that shows that style report of the main widget"
+        if hasattr(self, "style_report_win") and self.style_report_win:
+            self.style_report_win.destroy()
+        self.style_report_win = submaster = tk.Toplevel(self.html)
+        submaster.title("Style Report")
+        self._tkinterweb_options["messages_enabled"] = False
+
+        for k in kwargs:
+            if k in self._tkinterweb_options:
+                value = self._check_value(self._htmlframe_options[k], kwargs.pop(k))
+                self._htmlframe_options[k] = value
+
+            elif k in self._tkhtml_options:
+                value = self._check_value(self._tkhtml_options[k], kwargs.pop(k))
+                self._htmlframe_options[k] = value
+
+        tkw = bindings.TkinterWeb(submaster, self._tkinterweb_options, **self._tkhtml_options)
+
+        hsb = subwidgets.AutoScrollbar(submaster, orient="horizontal", command=tkw.xview)
+        vsb = subwidgets.AutoScrollbar(submaster, orient="vertical", command=tkw.yview)
+        tkw.configure(xscrollcommand=hsb.set, yscrollcommand=vsb.set)
+        submaster.columnconfigure(0, weight=1)
+        submaster.rowconfigure(0, weight=1)
+        tkw.grid(row=0, column=0, sticky="nsew")
+        hsb.grid(row=1, column=0, sticky="nsew")
+        vsb.grid(row=0, column=1, sticky="nsew")
+        hsb.set_type(2, *tkw.xview())
+        vsb.set_type(2, *tkw.yview())
+
+        tkw.parse(self.html.style_report)
+        return tkw
+
     def configure(self, **kwargs):
         """
         Change the widget's configuration options. See above for options.
@@ -2001,18 +2042,29 @@ class HtmlParse(HtmlFrame):
     
     New in version 4.4."""
     
-    def __init__(self, **kwargs):
+    def __init__(self, markup="", **kwargs):
         self.root = root = tk.Tk()
 
         self._is_destroying = False
 
-        for flag in {"events_enabled", "images_enabled", "forms_enabled"}:
+        for flag in {"events_enabled", "images_enabled", "forms_enabled", "stylesheets_enabled"}:
             if flag not in kwargs:
                 kwargs[flag] = False
                 
         HtmlFrame.__init__(self, root, **kwargs)
 
         root.withdraw()
+
+        if markup:
+            if isfile(markup): markup = f"file:///{markup}"
+            parsed = urlparse(markup)
+            if parsed.scheme and parsed.path:
+                self.load_url(markup)
+            else:
+                self.load_html(markup)
+
+    def __str__(self):
+        return f"<html>{self.document.documentElement.innerHTML}</html>"
 
     def destroy(self):
         super().destroy()

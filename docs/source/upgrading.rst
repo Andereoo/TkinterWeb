@@ -354,7 +354,17 @@ Changelog
     Version 4.18:
 
     * Added basic support for most HTML5 elements in the corresponding `TkinterWeb-Tkhtml-Extras <https://pypi.org/project/tkinterweb-tkhtml-extras/>`_ release (version 1.3.0)
-    * Added full support for the HTML ``<details>``, ``<summary>``, and ``<q>`` tags. 
+    * Added support for the HTML ``<details>``, ``<summary>``, and ``<q>`` tags. 
+
+    Version 4.19:
+
+    * :meth:`.HtmlFrame.generate_style_report`
+    * :attr:`.TkinterWeb.default_style`
+    * :attr:`.TkinterWeb.images`
+    * :attr:`.TkinterWeb.style_report`
+
+    * Added support for the ``media`` attribute of ``<link>`` elements. Ensure our experimental Tkhtml release is installed.
+    * Added support for the HTML ``<progress>`` tag. Ensure `TkinterWeb-Tkhtml-Extras <https://pypi.org/project/tkinterweb-tkhtml-extras/>`_ is installed.
 
 .. dropdown:: Changed/Fixed
 
@@ -496,6 +506,10 @@ Changelog
 
     * Triple-clicking on text now highlights all text in the line, even if multiple inline elements are present.
     * Fixed some bugs that arose when stopping a page load and introduced some minor optimizations.
+
+    Version 4.19:
+    
+    * :attr:`.CSSStyleDeclaration.cssText` can now be set.
 
 -------------------
 

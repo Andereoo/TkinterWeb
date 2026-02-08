@@ -354,9 +354,6 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     # These objects are created when needed, if enabled
     # Most can be disabled, except search_manager and widget_manager, which run at the user's request or via other managers that can be disabled
     # Any calls to a disabled manager will be ignored and return 'None'
-
-    # There's probably a lot more re-organization that should be done here,
-    # But for now this is a lot better
     
     @utilities.lazy_manager("selection_enabled")
     def selection_manager(self):
@@ -463,7 +460,15 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     def caches_enabled(self, prev_enabled, enabled):
         "Disable the Tkhtml image cache when disabling caches."
         if prev_enabled != enabled: self.imagecache = enabled
-    
+
+    @property
+    def imagecache(self):
+        return bool(self.tk.call(self._w, "cget", "-imagecache"))
+
+    @imagecache.setter
+    def imagecache(self, toggle):
+        self.tk.call(self._w, "configure", "-imagecache", toggle)
+
     @utilities.special_setting(False)
     def javascript_enabled(self, prev_enabled, enabled):
         "Warn the user when enabling JavaScript."
@@ -529,28 +534,26 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             self._selection_manager.clear_selection()
 
     @property
-    def tkhtml_default_style(self):
+    def default_style(self):
+        """Return the current document's default stylesheet. Use for debugging.
+        
+        New in version 4.19."""
         return self.tk.call("::tkhtml::htmlstyle")
 
     @property
-    def images(self):  # Debugging
+    def images(self):
+        """Return a dictionary containing the document's images. Use for debugging.
+        
+        New in version 4.19."""
         NAMES = ("name", "pixmap", "w", "h", "alpha", "ref",)
         return {i[0]:dict(zip(NAMES, i[1:])) for i in self.tk.call(self._w, "_images")}
 
     @property
     def style_report(self):
-        """Return the document's style report.
+        """Return the document's style report. Use for debugging.
         
         New in version 4.19."""
         return self.tk.call(self._w, "_stylereport")
-
-    @property
-    def imagecache(self):
-        return bool(self.tk.call(self._w, "cget", "-imagecache"))
-
-    @imagecache.setter
-    def imagecache(self, toggle):
-        self.tk.call(self._w, "configure", "-imagecache", toggle)
 
     # --- Queuing, messaging, and events --------------------------------------
 

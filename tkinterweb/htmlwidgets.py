@@ -592,9 +592,12 @@ class HtmlFrame(Frame):
             self._html.parse_css(data=css_source, fallback_priority=priority)
 
     def import_css(self, url):
-        """Manually add a CSS stylesheet, like @import but in Python
+        """Add a CSS stylesheet given a url.
 
-        :param url: The URL to the CSS stylesheet."""
+        :param url: The url of the CSS stylesheet.
+        :type url: str
+        
+        New in version 4.19."""
         self._html.style_manager._on_atimport(self._html.base_url, url)
 
     def stop(self):
@@ -1329,10 +1332,15 @@ Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certif
     def _on_element_script(self, node_handle, attribute, attr_contents):
         self.javascript._on_element_script(node_handle, attribute, attr_contents)
 
-    def open_style_report_win(self):
-        """Load a window that shows that style report of the main widget.
+    def generate_style_report(self, return_report=False):
+        """Return or load a window showing this widget's style report.
+
+        :param return_report: If False, a window opens showing the report. If True, the report is simply returned.
+        :type return_report: str
         
         New in version 4.19."""
+        if return_report: return self.html.style_report
+        
         if getattr(self, "style_report_win", None):
             self.style_report_win.destroy()
 

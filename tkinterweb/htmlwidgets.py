@@ -524,6 +524,7 @@ class HtmlFrame(Frame):
         :type force: bool, optional"""
         ### TODO: Maybe consider merging load_url, load_file, and load_website into one
         ### One could use the checker from the sample web browser
+        if url.startswith("mailto") and not self._html.request_func: return  # Don't try to load emails!
         if not self._current_url == url:
             self._previous_url = self._current_url
         if url in utilities.BUILTIN_PAGES:

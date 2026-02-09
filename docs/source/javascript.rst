@@ -7,7 +7,9 @@ Using JavaScript
 Overview
 --------
 
-**JavaScript support makes it easy to embed JavaScript or Python code in your document. JavaScript is fully supported through Mozilla's SpiderMonkey engine, but not all DOM commands are supported.**  See the :doc:`api/htmldocument` for an exhaustive list of supported DOM commands.
+**JavaScript support makes it easy to embed JavaScript or Python code in your document.**
+
+JavaScript is fully supported through Mozilla's SpiderMonkey engine, but not all DOM commands are supported.  See the :doc:`api/htmldocument` for an exhaustive list of supported DOM commands.
 
 Setup
 ------
@@ -50,7 +52,7 @@ To change the color and text of a ``<p>`` element when clicked, you could use th
 
 Add the ``defer`` attribute to the relevant ``<script>`` element if you want it to run after the page loads. Otherwise, the script will be executed as soon as it is encountered in the document.
 
-The following JavaScript event attributes are supported: ``onchange`` (``<input>`` elements only), ``onload``, ``onclick``, ``oncontextmenu``, ``ondblclick``, ``onmousedown``, ``onmouseenter``, ``onmouseleave``, ``onmousemove``, ``onmouseout``, ``onmouseover``, and ``onmouseup``.
+The following JavaScript event attributes are supported: ``onchange``, ``onload``, ``onclick``, ``oncontextmenu``, ``ondblclick``, ``onmousedown``, ``onmouseenter``, ``onmouseleave``, ``onmousemove``, ``onmouseout``, ``onmouseover``, and ``onmouseup``.
 
 Registering new JavaScript objects
 ----------------------------------
@@ -70,7 +72,7 @@ Embedding Python in your document
 
 To run embedded scripts as Python code instead of JavaScript, simply use the parameters ``javascript_enabled=True`` and ``javascript_backend="python"`` when creating your HTML widget. Ensure you are running code you trust.
 
-Like normal JavaScript code, by default scripts can access the ``document`` property and events can also access the ``this`` property. You will still need to register objects if you want the document's scripts to be able to access other functions, classes or variables.
+Like normal JavaScript code, by default scripts can access the ``document`` property and inline event callbacks can also access the ``this`` property. You will still need to register objects if you want the document's scripts to be able to access other functions, classes or variables.
 
 That's it!
 

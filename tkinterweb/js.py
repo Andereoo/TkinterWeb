@@ -40,6 +40,7 @@ class JSEngine:
         :param obj: The Python object to pass.
         :type obj: anything
         :raise RuntimeError: If JavaScript is not enabled."""
+        # TODO: it would be nice to make name optional
         if self.html.javascript_enabled:
             if self.backend == "pythonmonkey":
                 self._initialize_javascript()
@@ -50,7 +51,7 @@ class JSEngine:
         else:
             raise RuntimeError("JavaScript support must be enabled to register a JavaScript object")
         
-    def eval(self, expr, _this=None):
+    def eval(self, expr, _locals=None):
         """Evaluate JavaScript code.
         
         JavaScript must be enabled.
@@ -64,9 +65,13 @@ class JSEngine:
                 return pm.eval(expr)
             elif self.backend == "python":
                 self._initialize_exec_context()
-                # Update 'this'. Not thread-safe, but the best I can do.
-                self._globals["this"].node = _this
-                return exec(expr, self._globals)
+                if _locals is None: _locals = {}
+                # Pass _locals. This is used to copy JavaScript 'this' behaviour.
+                _exec_locals = _locals.copy()
+                exec(expr, self._globals, _exec_locals)
+                for name in _exec_locals.keys() - _locals.keys():
+                    self._globals[name] = _exec_locals[name]
+                return
         else:
             raise RuntimeError("JavaScript support must be enabled to run JavaScript")
         
@@ -85,7 +90,6 @@ class JSEngine:
                 # Full builtins are intentionally exposed. Execution is trusted.
                 "__builtins__": __builtins__,
                 "document": self.document,
-                "this": dom.HTMLElement(self.document, None),
             }
 
     def _on_script(self, attributes, tag_contents):
@@ -101,12 +105,12 @@ class JSEngine:
 
     def _on_element_script(self, node_handle, attribute, attr_contents):
         try:
+            element = dom.HTMLElement(self.document, node_handle)
             if self.backend == "pythonmonkey":
-                element = dom.HTMLElement(self.document, node_handle)
                 # Note: if anyone tries to run a function named TkinterWeb_JSEngine_run (unlikely); this will throw up.
                 self.eval(f"(element) => {{function TkinterWeb_JSEngine_run() {{ {attr_contents} }}; TkinterWeb_JSEngine_run.bind(element)()}}")(element)
             elif self.backend == "python":
-                self.eval(attr_contents, node_handle)
+                self.eval(attr_contents, {"this": element})
         except Exception as error:
             if self.backend == "python": error = format_exc()
             self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running an {attribute} script: {error}")

@@ -1748,18 +1748,26 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     def send_onload(self, root=None, children=None):
         utilities.deprecate("send_onload", "event_manager")
         return self.event_manager.send_onload(root, children)
+    
+    # --- Tkhtml URIs ---------------------------------------------------------
 
-    def tkhtml_uri_decode(self, uri, base64=False):
-        "This command is designed to help scripts process data: URIs. It is completely separate from the html widget"
+    def decode_uri(self, uri, base64=False):
+        """This command is designed to help scripts process data: URIs. It is completely separate from the html widget.
+        
+        New in version 4.19."""
         c = ("::tkhtml::decode", "-base64", uri) if base64 else ("::tkhtml::decode", uri)
         return self.tk.call(*c).strip(b"}")
 
-    def tkhtml_uri_encode(self, uri):
-        "Encodes the uri."
+    def encode_uri(self, uri):
+        """Encodes the uri.
+        
+        New in version 4.19."""
         return self.tk.call("::tkhtml::encode", uri)
 
-    def tkhtml_uri_escape(self, uri, query=False):
-        "Returns the decoded data."
+    def escape_uri(self, uri, query=False):
+        """Returns the decoded data.
+        
+        New in version 4.19."""
         a = "-query" if query else ""
         return self.tk.call("::tkhtml::escape_uri", a, uri)
 

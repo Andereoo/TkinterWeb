@@ -2043,7 +2043,7 @@ class HtmlParse(HtmlFrame):
     
     New in version 4.4."""
     
-    def __init__(self, markup="", **kwargs):
+    def __init__(self, **kwargs): #markup=""
         self.root = root = tk.Tk()
 
         self._is_destroying = False
@@ -2053,6 +2053,15 @@ class HtmlParse(HtmlFrame):
                 kwargs[flag] = False
                 
         HtmlFrame.__init__(self, root, **kwargs)
+
+        # Should I keep this, remove this, or keep it and add it to HtmlFrame...?
+        # if markup:
+        #     if isfile(markup): markup = f"file:///{markup}"
+        #     parsed = urlparse(markup)
+        #     if parsed.scheme and parsed.path:
+        #         self.load_url(markup)
+        #     else:
+        #         self.load_html(markup)
 
         root.withdraw()
 

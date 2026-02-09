@@ -362,6 +362,9 @@ Changelog
     * :attr:`.TkinterWeb.default_style`
     * :attr:`.TkinterWeb.images`
     * :attr:`.TkinterWeb.style_report`
+    * :meth:`.TkinterWeb.decode_uri`
+    * :meth:`.TkinterWeb.encode_uri`
+    * :meth:`.TkinterWeb.escape_uri`
 
     * Added support for the ``media`` attribute of ``<link>`` elements. Ensure our experimental Tkhtml release is installed.
     * Added support for the HTML ``<progress>`` tag. Ensure `TkinterWeb-Tkhtml-Extras <https://pypi.org/project/tkinterweb-tkhtml-extras/>`_ is installed.

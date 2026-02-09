@@ -359,7 +359,7 @@ Changelog
     Version 4.19:
 
     * :meth:`.HtmlFrame.generate_style_report`
-    * :attr:`.TkinterWeb.default_style`
+    * :attr:`.TkinterWeb.tkhtml_default_style`
     * :attr:`.TkinterWeb.images`
     * :attr:`.TkinterWeb.style_report`
     * :meth:`.TkinterWeb.decode_uri`
@@ -368,6 +368,7 @@ Changelog
 
     * Added support for the ``media`` attribute of ``<link>`` elements. Ensure our experimental Tkhtml release is installed.
     * Added support for the HTML ``<progress>`` tag. Ensure `TkinterWeb-Tkhtml-Extras <https://pypi.org/project/tkinterweb-tkhtml-extras/>`_ is installed.
+    * The new configuration option ``javascript_backend`` can be used to evaluate ``<script>`` elements and JavaScript events as Python code.
 
 .. dropdown:: Changed/Fixed
 

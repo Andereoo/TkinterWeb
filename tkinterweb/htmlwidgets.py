@@ -85,7 +85,9 @@ class HtmlFrame(Frame):
     :type events_enabled: bool
     :param threading_enabled: Enable/disable threading. Has no effect if the Tcl/Tk build does not support threading. This is enabled by default. Largely for debugging.
     :type threading_enabled: bool
-    :param javascript_enabled: Enable/disable JavaScript support. This is disabled by default. Highly experimental. New in version 4.1.
+    :param javascript_enabled: Enable/disable JavaScript support. This is disabled by default. Experimental. New in version 4.1.
+    :type javascript_enabled: bool
+    :param javascript_backend: The JavaScript backend to use. Set to ``pythonmonkey`` (the default) to evaluate scripts as JavaScript code, or set to ``python`` to evaluate as Python code. Experimental. New in version 4.19.
     :type javascript_enabled: bool
     :param image_alternate_text_enabled: Enable/disable the display of alt text for broken images. This is enabled by default.
     :type image_alternate_text_enabled: bool
@@ -145,7 +147,7 @@ class HtmlFrame(Frame):
                     on_navigate_fail = None, on_link_click = None, on_form_submit = None, on_script = None, on_element_script = None, on_resource_setup = None, \
                     message_func = utilities.notifier, request_func = None, caret_browsing_enabled = False, selection_enabled = True, \
                     stylesheets_enabled = True, images_enabled = True, forms_enabled = True, objects_enabled = True, caches_enabled = True, \
-                    dark_theme_enabled = False, image_inversion_enabled = False, javascript_enabled = False, events_enabled = True, \
+                    dark_theme_enabled = False, image_inversion_enabled = False, javascript_enabled = False, javascript_backend="pythonmonkey", events_enabled = True, \
                     threading_enabled = True, crash_prevention_enabled = True, image_alternate_text_enabled = True, ignore_invalid_images = True, \
                     visited_links = [], find_match_highlight_color = "#f1a1f7", find_match_text_color = "#000", find_current_highlight_color = "#8bf0b3", \
                     find_current_text_color = "#000", selected_text_highlight_color = "#9bc6fa", selected_text_color = "#000", \
@@ -176,6 +178,7 @@ class HtmlFrame(Frame):
             "on_navigate_fail": self.show_error_page if on_navigate_fail is None else on_navigate_fail,
             "vertical_scrollbar": vertical_scrollbar,
             "horizontal_scrollbar": horizontal_scrollbar,
+            "javascript_backend": javascript_backend,
             "unshrink": False,
             "about_page_background": kwargs.pop("about_page_background", ""), # will be removed
             "about_page_foreground": kwargs.pop("about_page_foreground", "") # will be removed
@@ -240,7 +243,7 @@ class HtmlFrame(Frame):
 
         # Some have no impact after loading
         # Shrink seems to cause segfaults
-        self.final_options = {"use_prebuilt_tkhtml", "tkhtml_version", "experimental", "shrink"}
+        self.final_options = {"use_prebuilt_tkhtml", "tkhtml_version", "experimental", "shrink", "javascript_backend"}
                             
         for key, value in self._htmlframe_options.items():
             if key in kwargs:
@@ -358,7 +361,7 @@ class HtmlFrame(Frame):
         try:
             return self._javascript
         except AttributeError:
-            self._javascript = js.JSEngine(self._html, self.document)
+            self._javascript = js.JSEngine(self._html, self.document, self.javascript_backend)
             return self._javascript
 
     @property

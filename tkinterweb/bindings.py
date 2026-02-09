@@ -533,8 +533,8 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         if getattr(self, "_selection_manager", False) and not enabled:
             self._selection_manager.clear_selection()
 
-    @property
-    def default_style(self):
+    @property # will rename to default_style once I finally remove the default_style setting
+    def tkhtml_default_style(self):
         """Return the current document's default stylesheet. Use for debugging.
         
         New in version 4.19."""

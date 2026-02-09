@@ -2,12 +2,12 @@ Using JavaScript
 ================
 
 .. note::
-    JavaScript support is new in version 4.1. Make sure you are using the latest version of TkinterWeb.
+    JavaScript support is new in version 4.1. Embedded Python support is new in version 4.19. Make sure you are using the latest version of TkinterWeb.
 
 Overview
 --------
 
-**JavaScript is fully supported through Mozilla's SpiderMonkey engine, but not all DOM commands are supported.**  See the :doc:`api/htmldocument` for an exhaustive list of supported DOM commands.
+**JavaScript support makes it easy to embed JavaScript or Python code in your document. JavaScript is fully supported through Mozilla's SpiderMonkey engine, but not all DOM commands are supported.**  See the :doc:`api/htmldocument` for an exhaustive list of supported DOM commands.
 
 Setup
 ------
@@ -18,15 +18,17 @@ To enable JavaScript support in TkinterWeb, first install `PythonMonkey <http://
 
    $ pip install pythonmonkey
 
+Skip this step if you are embedding Python code in your document.
+
 Or when installing TkinterWeb, use:
 
 .. code-block:: console
 
    $ pip install tkinterweb[javascript]
 
-Then add ``yourhtmlframe.configure(javascript_enabled=True)`` to your script or add the parameter ``javascript_enabled=True`` when creating your :class:`~tkinterweb.HtmlFrame` or :class:`~tkinterweb.HtmlLabel` widget.
+Then add ``yourhtmlframe.configure(javascript_enabled=True)`` to your script or add the parameter ``javascript_enabled=True`` when creating your :class:`~tkinterweb.HtmlFrame`, :class:`~tkinterweb.HtmlLabel`, or :class:`~tkinterweb.HtmlText` widget.
 
-**Only enable JavaScript on documents with code you know and trust.**
+**Only enable JavaScript in documents with code you know and trust.**
 
 How-to
 ------
@@ -63,10 +65,19 @@ To register new JavaScript object, use :meth:`.JSEngine.register`. This can be u
     yourhtmlframe.javascript.register("alert", open_alert_window)
     yourhtmlframe.load_html("<script>alert('Hello, world!')</script><p>Hello, world!</p>")
 
+Embedding Python in your document
+---------------------------------
+
+To run embedded scripts as Python code instead of JavaScript, simply use the parameters ``javascript_enabled=True`` and ``javascript_backend="python"`` when creating your HTML widget. Ensure you are running code you trust.
+
+Like normal JavaScript code, by default scripts can access the ``document`` property and events can also access the ``this`` property. You will still need to register objects if you want the document's scripts to be able to access other functions, classes or variables.
+
+That's it!
+
 Using your own interpreter
 --------------------------
 
-Alternatively, you can register your own callback for ``<script>`` elements using the :attr:`on_script` parameter. This allows you to use your own interpreter or even simply embed Python code in your document instead:
+Alternatively, you can register your own callback for ``<script>`` elements using the :attr:`on_script` parameter:
 
 .. code-block:: python
 

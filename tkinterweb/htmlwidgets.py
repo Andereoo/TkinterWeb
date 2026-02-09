@@ -85,7 +85,9 @@ class HtmlFrame(Frame):
     :type events_enabled: bool
     :param threading_enabled: Enable/disable threading. Has no effect if the Tcl/Tk build does not support threading. This is enabled by default. Largely for debugging.
     :type threading_enabled: bool
-    :param javascript_enabled: Enable/disable JavaScript support. This is disabled by default. Highly experimental. New in version 4.1.
+    :param javascript_enabled: Enable/disable JavaScript support. This is disabled by default. Experimental. New in version 4.1.
+    :type javascript_enabled: bool
+    :param javascript_backend: The JavaScript backend to use. Set to ``pythonmonkey`` (the default) to evaluate scripts as JavaScript code, or set to ``python`` to evaluate as Python code. Experimental. New in version 4.19.
     :type javascript_enabled: bool
     :param image_alternate_text_enabled: Enable/disable the display of alt text for broken images. This is enabled by default.
     :type image_alternate_text_enabled: bool
@@ -145,7 +147,7 @@ class HtmlFrame(Frame):
                     on_navigate_fail = None, on_link_click = None, on_form_submit = None, on_script = None, on_element_script = None, on_resource_setup = None, \
                     message_func = utilities.notifier, request_func = None, caret_browsing_enabled = False, selection_enabled = True, \
                     stylesheets_enabled = True, images_enabled = True, forms_enabled = True, objects_enabled = True, caches_enabled = True, \
-                    dark_theme_enabled = False, image_inversion_enabled = False, javascript_enabled = False, events_enabled = True, \
+                    dark_theme_enabled = False, image_inversion_enabled = False, javascript_enabled = False, javascript_backend="pythonmonkey", events_enabled = True, \
                     threading_enabled = True, crash_prevention_enabled = True, image_alternate_text_enabled = True, ignore_invalid_images = True, \
                     visited_links = [], find_match_highlight_color = "#f1a1f7", find_match_text_color = "#000", find_current_highlight_color = "#8bf0b3", \
                     find_current_text_color = "#000", selected_text_highlight_color = "#9bc6fa", selected_text_color = "#000", \
@@ -176,6 +178,7 @@ class HtmlFrame(Frame):
             "on_navigate_fail": self.show_error_page if on_navigate_fail is None else on_navigate_fail,
             "vertical_scrollbar": vertical_scrollbar,
             "horizontal_scrollbar": horizontal_scrollbar,
+            "javascript_backend": javascript_backend,
             "unshrink": False,
             "about_page_background": kwargs.pop("about_page_background", ""), # will be removed
             "about_page_foreground": kwargs.pop("about_page_foreground", "") # will be removed
@@ -240,7 +243,7 @@ class HtmlFrame(Frame):
 
         # Some have no impact after loading
         # Shrink seems to cause segfaults
-        self.final_options = {"use_prebuilt_tkhtml", "tkhtml_version", "experimental", "shrink"}
+        self.final_options = {"use_prebuilt_tkhtml", "tkhtml_version", "experimental", "shrink", "javascript_backend"}
                             
         for key, value in self._htmlframe_options.items():
             if key in kwargs:
@@ -358,7 +361,7 @@ class HtmlFrame(Frame):
         try:
             return self._javascript
         except AttributeError:
-            self._javascript = js.JSEngine(self._html, self.document)
+            self._javascript = js.JSEngine(self._html, self.document, self.javascript_backend)
             return self._javascript
 
     @property
@@ -590,6 +593,15 @@ class HtmlFrame(Frame):
             self._accumulated_styles.append(css_source)
         else:
             self._html.parse_css(data=css_source, fallback_priority=priority)
+
+    def import_css(self, url):
+        """Add a CSS stylesheet given a url.
+
+        :param url: The url of the CSS stylesheet.
+        :type url: str
+        
+        New in version 4.19."""
+        self._html.style_manager._on_atimport(self._html.base_url, url)
 
     def stop(self):
         """Stop loading this page and abandon all pending requests."""
@@ -1323,6 +1335,39 @@ Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certif
     def _on_element_script(self, node_handle, attribute, attr_contents):
         self.javascript._on_element_script(node_handle, attribute, attr_contents)
 
+    def generate_style_report(self, return_report=False):
+        """Return or load a window showing this widget's style report.
+
+        :param return_report: If False, a window opens showing the report. If True, the report is simply returned.
+        :type return_report: str
+        
+        New in version 4.19."""
+        if return_report: return self.html.style_report
+        
+        if getattr(self, "style_report_win", None):
+            self.style_report_win.destroy()
+
+        self.style_report_win = submaster = tk.Toplevel(self.html)
+        submaster.title("Style Report")
+        submaster.columnconfigure(0, weight=1)
+        submaster.rowconfigure(0, weight=1)
+
+        options = self._tkinterweb_options.copy()
+        options["messages_enabled"] = False
+        tkw = bindings.TkinterWeb(submaster, options, **self._tkhtml_options)
+
+        hsb = subwidgets.AutoScrollbar(submaster, orient="horizontal", command=tkw.xview)
+        vsb = subwidgets.AutoScrollbar(submaster, orient="vertical", command=tkw.yview)
+        tkw.configure(xscrollcommand=hsb.set, yscrollcommand=vsb.set)
+        tkw.grid(row=0, column=0, sticky="nsew")
+        hsb.grid(row=1, column=0, sticky="nsew")
+        vsb.grid(row=0, column=1, sticky="nsew")
+        hsb.set_type(2, *tkw.xview())
+        vsb.set_type(2, *tkw.yview())
+
+        tkw.parse(self.html.style_report)
+        return tkw
+
     def configure(self, **kwargs):
         """
         Change the widget's configuration options. See above for options.
@@ -2001,18 +2046,30 @@ class HtmlParse(HtmlFrame):
     
     New in version 4.4."""
     
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs): #markup=""
         self.root = root = tk.Tk()
 
         self._is_destroying = False
 
-        for flag in {"events_enabled", "images_enabled", "forms_enabled"}:
+        for flag in {"events_enabled", "images_enabled", "forms_enabled", "stylesheets_enabled"}:
             if flag not in kwargs:
                 kwargs[flag] = False
                 
         HtmlFrame.__init__(self, root, **kwargs)
 
+        # Should I keep this, remove this, or keep it and add it to HtmlFrame...?
+        # if markup:
+        #     if isfile(markup): markup = f"file:///{markup}"
+        #     parsed = urlparse(markup)
+        #     if parsed.scheme and parsed.path:
+        #         self.load_url(markup)
+        #     else:
+        #         self.load_html(markup)
+
         root.withdraw()
+
+    def __str__(self):
+        return f"<html>{self.document.documentElement.innerHTML}</html>"
 
     def destroy(self):
         super().destroy()

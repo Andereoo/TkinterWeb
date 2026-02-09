@@ -53,6 +53,25 @@ def camel_case_to_property(string):
     return new_string
 
 
+def DOM_element_events(cls):  # class
+    for event in {
+        "onchange", "onclick", "oncontextmenu", "ondblclick", "onload",
+        "onmousedown", "onmouseenter", "onmouseleave", "onmousemove", "onmouseout",
+        "onmouseover", "onmouseup"
+    }:
+        # Create the getter function
+        def getter(cls, event=event):  # Default argument to capture current event
+            return cls.getAttribute(event)
+
+        # Create the setter function
+        def setter(cls, value, event=event):  # Default argument to capture current event
+            cls.setAttribute(event, value)
+
+        # Use property to create a new property with the getter and setter
+        prop = property(lambda cls: getter(cls), lambda cls, value: setter(cls, value))
+        setattr(cls.__class__, event, prop)  # Set the property on the class
+
+
 class HTMLDocument:
     """Access this class via the :attr:`~tkinterweb.HtmlFrame.document` property of the :class:`~tkinterweb.HtmlFrame` and :class:`~tkinterweb.HtmlLabel` widgets.
     
@@ -228,6 +247,7 @@ class HTMLElement:
         self.html = document_manager.html
         self.node = extract_nested(node)
         self._style_cache = None  # Initialize style as None
+        DOM_element_events(self)
         try:
             self.html.get_node_tkhtml(node)  # check if the node is valid, rises invalid command error if not.
         except TclError as e:
@@ -500,21 +520,27 @@ class HTMLElement:
     
     @property
     def value(self):
-        """Get and set the input's value. Only works on ``<input>``, ``<textarea>``, and ``<select>`` elements.
+        """Get and set the input's value. Only works on ``<input>``, ``<textarea>``, ``<select>``, and ``progress`` elements.
         
         :rtype: str
         
         New in version 4.1."""
-        node = str(self.node)
-        if node in self.html.form_manager.form_widgets:
-            return self.html.form_manager.form_widgets[node].get()
+        replacement = self.html.widget_manager.get_node_widget(self.node)
+        if replacement and self.tagName in {"select", "input", "textarea", "progress"}:
+            try:
+                return replacement.get()
+            except AttributeError:
+                return self.html.get_node_attribute(self.node, "value")
         return None
         
     @value.setter
     def value(self, value):
-        node = str(self.node)
-        if node in self.html.form_manager.form_widgets:
-            self.html.form_manager.form_widgets[node].set(value)
+        replacement = self.html.widget_manager.get_node_widget(self.node)
+        if replacement and self.tagName in {"select", "input", "textarea", "progress"}:
+            try:
+                replacement.set(value)
+            except AttributeError:
+                self.html.set_node_attribute(self.node, "value", value)
 
     @property
     def checked(self):
@@ -534,162 +560,6 @@ class HTMLElement:
     def checked(self, value):
         if str(self.node) in self.html.form_manager.form_widgets:
             self.html.set_node_attribute(self.node, "checked", value)
-
-    @property
-    def onchange(self):
-        """Convenience property for the ``onchange`` HTML attribute. Get and set the JavaScript code to execute when the input element's value changes
-        
-        :rtype: str
-        
-        New in version 4.1."""
-        return self.getAttribute("onchange")
-    
-    @onchange.setter
-    def onchange(self, callback):
-        self.setAttribute("onchange", callback)
-
-    @property
-    def onload(self):
-        """Convenience property for the ``onload`` HTML attribute. Get and set the code to execute when the element loads.
-        
-        :rtype: str
-        
-        New in version 4.1."""
-        return self.getAttribute("onload")
-    
-    @onload.setter
-    def onload(self, callback):
-        self.setAttribute("onload", callback)
-
-    @property
-    def onclick(self):
-        """Convenience property for the ``onclick`` HTML attribute. Get and set the code to execute when the element is clicked.
-        
-        :rtype: str
-        
-        New in version 4.1."""
-        return self.getAttribute("onclick")
-    
-    @onclick.setter
-    def onclick(self, callback):
-        self.setAttribute("onclick", callback)
-
-    @property
-    def oncontextmenu(self):
-        """Convenience property for the ``oncontextmenu`` HTML attribute. Get and set the code to execute when the element is right-clicked.
-        
-        :rtype: str
-        
-        New in version 4.1."""
-        return self.getAttribute("oncontextmenu")
-    
-    @oncontextmenu.setter
-    def oncontextmenu(self, callback):
-        self.setAttribute("oncontextmenu", callback)
-
-    @property
-    def ondblclick(self):
-        """Convenience property for the ``ondblclick`` HTML attribute. Get and set the code to execute when the element is double-clicked.
-        
-        :rtype: str
-        
-        New in version 4.1."""
-        return self.getAttribute("ondblclick")
-    
-    @ondblclick.setter
-    def ondblclick(self, callback):
-        self.setAttribute("ondblclick", callback)
-
-    @property
-    def onmousedown(self):
-        """Convenience property for the ``onmousedown`` HTML attribute. Get and set the code to execute when any mouse button is pressed over the element.
-        
-        :rtype: str
-        
-        New in version 4.1."""
-        return self.getAttribute("onmousedown")
-    
-    @onmousedown.setter
-    def onmousedown(self, callback):
-        self.setAttribute("onmousedown", callback)
-
-    @property
-    def onmouseenter(self):
-        """Convenience property for the ``onmouseenter`` HTML attribute. Get and set the code to execute when the mouse moves onto the element.
-        
-        :rtype: str
-        
-        New in version 4.1."""
-        return self.getAttribute("onmouseenter")
-    
-    @onmouseenter.setter
-    def onmouseenter(self, callback):
-        self.setAttribute("onmouseenter", callback)
-
-    @property
-    def onmouseleave(self):
-        """Convenience property for the ``onmouseleave`` HTML attribute. Get and set the code to execute when the mouse moves out of the element.
-        
-        :rtype: str
-        
-        New in version 4.1."""
-        return self.getAttribute("onmouseleave")
-    
-    @onmouseleave.setter
-    def onmouseleave(self, callback):
-        self.setAttribute("onmouseleave", callback)
-
-    @property
-    def onmousemove(self):
-        """Convenience property for the ``onmousemove`` HTML attribute. Get and set the code to execute when the mouse moves over the element.
-        
-        :rtype: str
-        
-        New in version 4.1."""
-        return self.getAttribute("onmousemove")
-    
-    @onmousemove.setter
-    def onmousemove(self, callback):
-        self.setAttribute("onmousemove", callback)
-
-    @property
-    def onmouseout(self):
-        """Convenience property for the ``onmouseout`` HTML attribute. Get and set the code to execute when the mouse moves out of the element or its parent elements.
-        
-        :rtype: str
-        
-        New in version 4.1."""
-        return self.getAttribute("onmouseout")
-    
-    @onmouseout.setter
-    def onmouseout(self, callback):
-        self.setAttribute("onmouseout", callback)
-
-    @property
-    def onmouseover(self):
-        """Convenience property for the ``onmouseover`` HTML attribute. Get and set the code to execute when the mouse moves into the element or its children elements.
-        
-        :rtype: str
-        
-        New in version 4.1."""
-        return self.getAttribute("onmouseover")
-    
-    @onmouseover.setter
-    def onmouseover(self, callback):
-        self.setAttribute("onmouseover", callback)
-
-    @property
-    def onmouseup(self):
-        """Convenience property for the ``onmouseup`` HTML attribute. Get and set the code to execute when the mouse button is released over the element.
-        
-        :rtype: str
-        
-        New in version 4.1."""
-        return self.getAttribute("onmouseup")
-    
-    @onmouseup.setter
-    def onmouseup(self, callback):
-        self.setAttribute("onmouseup", callback)
 
     def getAttribute(self, attribute):
         """Return the value of the given attribute..
@@ -1056,10 +926,16 @@ class CSSStyleDeclaration:
 
     @property
     def cssText(self):
-        """Return the text of the element's inline style declaration.
+        """Get and set the element's inline style declaration.
         
-        :rtype: str"""
+        :rtype: str
+        
+        Updated in version 4.19."""
         return self.html.get_node_attribute(self.node, "style")
+
+    @cssText.setter
+    def cssText(self, contents):
+        return self.html.set_node_attribute(self.node, "style", contents)
     
     @property
     def length(self):

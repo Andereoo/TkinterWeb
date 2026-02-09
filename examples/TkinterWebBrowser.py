@@ -42,8 +42,8 @@ if os.name == "nt":
 version = []
 for letter in __version__.split("."):
     version.append(int(letter))
-if tuple(version) < (4, 8, 0):
-    raise RuntimeError("This demo needs TkinterWeb version 4.8.0 or higher.")
+if tuple(version) < (4, 19, 0):
+    raise RuntimeError("This demo needs TkinterWeb version 4.19.0 or higher.")
 
 if len(sys.argv) > 1:
     NEW_TAB = sys.argv[1]
@@ -95,7 +95,7 @@ class Page(ttk.Frame):
 
         self.frame = frame = HtmlFrame(self, message_func=self.add_message, on_link_click=self.link_click, on_form_submit=self.form_submit)
         
-        self.sidebar = sidebar = HtmlFrame(frame, width=250, fontscale=0.8, selection_enabled=False, messages_enabled=False, javascript_enabled=True, on_element_script=self.run_script)
+        self.sidebar = sidebar = HtmlFrame(frame, width=250, fontscale=0.8, selection_enabled=False, messages_enabled=False, javascript_enabled=True, javascript_backend="python")
 
         self.images_var = images_var = tk.IntVar(value=self.frame["images_enabled"])
         images_enabled = ttk.Checkbutton(sidebar, text="Enable images", variable=images_var, command=self.toggle_images)
@@ -138,6 +138,8 @@ class Page(ttk.Frame):
         topbar.grid(column=0, row=0, sticky="ew")
         frame.grid(column=0, row=1, sticky="nsew")
         bottombar.grid(column=0, row=4, sticky="ew")
+
+        self.sidebar.javascript.register("frame", frame)
 
         self.sidebar.load_html(f"""<html>
   <body>
@@ -238,12 +240,6 @@ class Page(ttk.Frame):
         settingsbutton.bind("<Escape>", lambda x: self.close_sidebar())
 
         self.toggle_theme(False)
-    
-    def run_script(self, node_handle, attribute, attr_contents):
-        document = self.sidebar.document
-        frame = self.frame
-        this = HTMLElement(document, node_handle)
-        exec(attr_contents)
 
     def apply_dark_theme(self):
         self.style.configure(".", background="#2b2b2b", foreground="#FFFFFF")

@@ -12,6 +12,8 @@ The methods described in this page make it easy to modify the appearance and con
 .. autoclass:: tkinterweb.dom.HTMLElement
    :members:
 
+The following JavaScript event properties are also supported: ``onchange``, ``onclick``, ``oncontextmenu``, ``ondblclick``, ``onload``, ``onmousedown``, ``onmouseenter``, ``onmouseleave``, ``onmousemove``, ``onmouseout``, ``onmouseover``, and ``onmouseup``.
+
 .. autoclass:: tkinterweb.dom.HTMLCollection
    :members:
 

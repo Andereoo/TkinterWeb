@@ -291,6 +291,8 @@ If you benefited from using this package, please consider supporting its develop
 
         if not self.using_tkhtml30:
             #self.register_lazy_handler("node", "details", "node_manager")
+            self.register_lazy_handler("node", "progress", "node_manager")
+            self.register_lazy_handler("attribute", "progress", "node_manager")
             self.register_lazy_handler("attribute", "details", "node_manager")
         
         self.register_lazy_handler("node", "form", "form_manager")
@@ -342,8 +344,8 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                 loaded_version = tkinterweb_tkhtml.get_loaded_tkhtml_version(self.master)
                 self.post_message(f"Tkhtml {loaded_version} successfully loaded")
 
-        self.tkhtml_version = loaded_version
-        self.using_tkhtml30 = loaded_version == "3.0"
+        self.tkhtml_version = float(loaded_version)
+        self.using_tkhtml30 = float(loaded_version) == 3
 
     # --- Extensions ----------------------------------------------------------
 
@@ -352,9 +354,6 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     # These objects are created when needed, if enabled
     # Most can be disabled, except search_manager and widget_manager, which run at the user's request or via other managers that can be disabled
     # Any calls to a disabled manager will be ignored and return 'None'
-
-    # There's probably a lot more re-organization that should be done here,
-    # But for now this is a lot better
     
     @utilities.lazy_manager("selection_enabled")
     def selection_manager(self):
@@ -460,9 +459,16 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     @utilities.special_setting(True)
     def caches_enabled(self, prev_enabled, enabled):
         "Disable the Tkhtml image cache when disabling caches."
-        if prev_enabled != enabled:
-            self._enable_imagecache(enabled)
-    
+        if prev_enabled != enabled: self.imagecache = enabled
+
+    @property
+    def imagecache(self):
+        return bool(self.tk.call(self._w, "cget", "-imagecache"))
+
+    @imagecache.setter
+    def imagecache(self, toggle):
+        self.tk.call(self._w, "configure", "-imagecache", toggle)
+
     @utilities.special_setting(False)
     def javascript_enabled(self, prev_enabled, enabled):
         "Warn the user when enabling JavaScript."
@@ -527,9 +533,27 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         if getattr(self, "_selection_manager", False) and not enabled:
             self._selection_manager.clear_selection()
 
-    @property
+    @property # will rename to default_style once I finally remove the default_style setting
     def tkhtml_default_style(self):
+        """Return the current document's default stylesheet. Use for debugging.
+        
+        New in version 4.19."""
         return self.tk.call("::tkhtml::htmlstyle")
+
+    @property
+    def images(self):
+        """Return a dictionary containing the document's images. Use for debugging.
+        
+        New in version 4.19."""
+        NAMES = ("name", "pixmap", "w", "h", "alpha", "ref",)
+        return {i[0]:dict(zip(NAMES, i[1:])) for i in self.tk.call(self._w, "_images")}
+
+    @property
+    def style_report(self):
+        """Return the document's style report. Use for debugging.
+        
+        New in version 4.19."""
+        return self.tk.call(self._w, "_stylereport")
 
     # --- Queuing, messaging, and events --------------------------------------
 
@@ -659,32 +683,30 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
     def parse_css(self, sheetid=None, data="", url=None, fallback_priority="author"):
         "Parse CSS code."
-        if not url:
-            url = self.base_url
+        if not url: url = self.base_url
         data = self._crash_prevention(data)
         data = self._css_dark_mode(data)
         
         try:
             importcmd = self.register(
-                lambda new_url, parent_url=url: self.style_manager._on_atimport(
-                    parent_url, new_url
-                )
+                lambda new_url, media=None, parent_url=url: 
+                    self.style_manager._on_atimport(parent_url, new_url, media)
             )
             urlcmd = self.register(
                 lambda new_url, url=url: self.resolve_url(
                     new_url, url
                 )
             )
-            
-            if sheetid:
-                self.tk.call(
-                    self._w, "style", "-id", sheetid, "-importcmd", importcmd, "-urlcmd", urlcmd, data
-                )
-            else:
+            if not sheetid:
                 self._style_count += 1
-                self.tk.call(
-                    self._w, "style", "-id", fallback_priority + str(self._style_count).zfill(4), "-importcmd", importcmd, "-urlcmd", urlcmd, data
-                )
+                sheetid = f"{fallback_priority}{self._style_count:04d}"
+                
+            self.tk.call(
+                self._w, "style",
+                "-id", sheetid,
+                "-importcmd", importcmd,
+                "-urlcmd", urlcmd, data
+            )
         except tk.TclError:
             # The widget doesn't exist anymore
             pass
@@ -863,10 +885,6 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             self.post_event(utilities.DONE_LOADING_EVENT)
         self.script_manager._submit_deferred_scripts()
         return fragment
-    
-    def _enable_imagecache(self, enabled):
-        "Enable or disable the Tkhtml image cache."
-        self.tk.call(self._w, "configure", "-imagecache", enabled)
 
     def get_node_text(self, node_handle, *args):
         "Get the text content of the given node."
@@ -1282,7 +1300,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             except TypeError:
                 pass
             return text, offset
-        
+
     def _set_cursor(self, cursor):
         "Set the document cursor."
         if self._current_cursor != cursor:
@@ -1611,9 +1629,9 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                 return
             
             if node_tag == "input" and node_type == "reset":
-                self.form_manager._handle_form_reset(node_handle)
+                self._handle_form_reset(node_handle)
             elif node_tag == "input" and node_type in {"submit", "image"}:
-                self.form_manager._handle_form_submission(node_handle)
+                self._handle_form_submission(node_handle)
             else:
                 for node in self.hovered_nodes:
                     if node != node_handle:
@@ -1730,7 +1748,28 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     def send_onload(self, root=None, children=None):
         utilities.deprecate("send_onload", "event_manager")
         return self.event_manager.send_onload(root, children)
+    
+    # --- Tkhtml URIs ---------------------------------------------------------
 
+    def decode_uri(self, uri, base64=False):
+        """This command is designed to help scripts process data: URIs. It is completely separate from the html widget.
+        
+        New in version 4.19."""
+        c = ("::tkhtml::decode", "-base64", uri) if base64 else ("::tkhtml::decode", uri)
+        return self.tk.call(*c).strip(b"}")
+
+    def encode_uri(self, uri):
+        """Encodes the uri.
+        
+        New in version 4.19."""
+        return self.tk.call("::tkhtml::encode", uri)
+
+    def escape_uri(self, uri, query=False):
+        """Returns the decoded data.
+        
+        New in version 4.19."""
+        a = "-query" if query else ""
+        return self.tk.call("::tkhtml::escape_uri", a, uri)
 
 class TkHtmlParsedURI:
     """Bindings for the Tkhtml URI parsing system. 
@@ -1747,64 +1786,76 @@ class TkHtmlParsedURI:
         return f"{self._html._w}::{self.__class__.__name__.lower()}"
 
     def __str__(self):
-        return self.uri_get(self.parsed)
+        return self.get(self.parsed)
 
     def __del__(self):
-        self.uri_destroy(self.parsed)
+        self.destroy(self.parsed)
 
     def uri(self, uri):
         "Returns name of parsed uri to be used in methods below."
         return self._html.tk.call("::tkhtml::uri", uri)
 
     def tkhtml_uri_decode(self, uri, base64=False):
-        "Decode the uri."
-        return self._html.tk.call("::tkhtml::decode", "-base64" if base64 else "", uri)
+        "This command is designed to help scripts process data: URIs. It is completely separate from the html widget"
+        return self._html.tkhtml_uri_decode(uri, base64)
 
     def tkhtml_uri_encode(self, uri):
         "Encodes the uri."
-        return self._html.tk.call("::tkhtml::encode", uri)
+        return self._html.tkhtml_uri_encode(uri)
 
     def tkhtml_uri_escape(self, uri, query=False):
         "Returns the decoded data."
-        a = "-query" if query else ""
-        return self._html.tk.call("::tkhtml::escape_uri", a, uri)
+        return self._html.tkhtml_uri_escape(uri, query)
 
     def uri_resolve(self, uri):
         "Resolve a uri."
         return self._html.tk.call(self.parsed, "resolve", uri)
 
-    def uri_load(self, uri):
+    @property
+    def load(self, uri):
         "Load a uri."
         return self._html.tk.call(self.parsed, "load", uri)
 
-    def uri_get(self):
+    @property
+    def get(self):
         "Get the uri."
         return self._html.tk.call(self.parsed, "get")
 
-    def uri_defrag(self):
+    @property
+    def defrag(self):
         "Defrag the uri."
         return self._html.tk.call(self.parsed, "get_no_fragment")
 
-    def uri_scheme(self):
+    @property
+    def scheme(self):
         "Return the uri scheme."
         return self._html.tk.call(self.parsed, "scheme")
 
-    def uri_authority(self):
+    @property
+    def authority(self):
         "Return the uri authority."
         return self._html.tk.call(self.parsed, "authority")
 
-    def uri_path(self):
+    @property
+    def path(self):
         "Return the uri path."
         return self._html.tk.call(self.parsed, "path")
 
-    def uri_query(self):
+    @property
+    def query(self):
         "Return the uri query."
         return self._html.tk.call(self.parsed, "query")
 
-    def uri_fragment(self):
+    @property
+    def fragment(self):
         "Return the uri fragment."
         return self._html.tk.call(self.parsed, "fragment")
 
-    def uri_destroy(self):
+    @property
+    def splitfrag(self):
+        "Return namedtuple with uri and fragment"
+        return self.defrag, self.fragment
+
+    def destroy(self):
         "Destroy this uri."
         self._html.tk.call(self.parsed, "destroy")

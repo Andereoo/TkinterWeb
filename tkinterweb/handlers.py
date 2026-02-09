@@ -11,7 +11,7 @@ from urllib.parse import urlencode, urlparse
 from . import subwidgets, utilities, imageutils, dom
 
 class NodeManager(utilities.BaseManager):
-    "Handle body, html, title, meta, base, details, and hyperlink elements."
+    "Handle body, html, title, meta, base, details, progress, and hyperlink elements."
     def __init__(self, html):
         super().__init__(html)
 
@@ -190,6 +190,20 @@ class NodeManager(utilities.BaseManager):
         self._set_open(details, open)
         if open and self.html.using_tkhtml30:
             self._close_other_details(details)
+
+    def _on_progress(self, node):
+        widgetid = tk.ttk.Progressbar(self.html, maximum=self.html.get_node_attribute(node, "max", 100))
+        widgetid["value"] = self.html.get_node_attribute(node, "value", 0)
+        self.html.replace_node_contents(node, widgetid)
+
+    def _on_progress_value_change(self, node, attribute, value):
+        if attribute == "value":
+            widgetid = self.html.nametowidget(self.html.get_node_replacement(node))
+            widgetid["value"] = value
+        elif attribute == "max":
+            widgetid = self.html.nametowidget(self.html.get_node_replacement(node))
+            widgetid["maximum"] = value
+
 
 class FormManager(utilities.BaseManager):
     "Handle forms and form elements."
@@ -613,8 +627,8 @@ class StyleManager(utilities.BaseManager):
             return
 
         if (("stylesheet" in rel)
-            and ("all" in media or "screen" in media)):
-            self.html._thread_check(self.fetch_styles, url, node)
+            and (media in {"screen", "print", "all"})):
+            self.html._thread_check(self.fetch_styles, url, node, media)
             # Onload is fired if and when the stylesheet is parsed
         elif "icon" in rel:
             self.html.icon = url
@@ -623,12 +637,12 @@ class StyleManager(utilities.BaseManager):
         else:
             self.html.event_manager.post_element_event(node, "onload", None, utilities.ELEMENT_LOADED_EVENT)
 
-    def _on_atimport(self, parent_url, new_url):
+    def _on_atimport(self, parent_url, new_url, media=None):
         "Load @import scripts."
         try:
             new_url = self.html.resolve_url(new_url, parent_url)
             self.html.post_message(f"Loading stylesheet from {utilities.shorten(new_url)}")
-            self.html._thread_check(self.fetch_styles, new_url)
+            self.html._thread_check(self.fetch_styles, new_url, media=media)
 
         except Exception as error:
             self.html.post_message(f"ERROR: could not load stylesheet {new_url}: {error}")
@@ -641,7 +655,7 @@ class StyleManager(utilities.BaseManager):
         newurl = f"url('{newurl}')"
         return newurl
     
-    def fetch_styles(self, url=None, node=None):
+    def fetch_styles(self, url=None, node=None, media=None):
         "Fetch stylesheets and parse the CSS code they contain"
         # NOTE: this may run in a thread
 
@@ -650,6 +664,8 @@ class StyleManager(utilities.BaseManager):
             self.html.post_message(f"Fetching stylesheet from {utilities.shorten(url)}", thread.is_subthread)
             try:
                 data = self.html.download_url(url)[1]
+                if media is not None and media != "all": data = f"@media {media} {{{data}}}"
+
                 if data and thread.isrunning():
                     self.html.post_to_queue(lambda node=node, url=url, data=data: self._finish_fetching_styles(node, url, data), thread.is_subthread)
 

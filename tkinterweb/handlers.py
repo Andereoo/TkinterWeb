@@ -297,20 +297,14 @@ class FormManager(utilities.BaseManager):
                     continue
                 elif nodetype == "file":
                     for value in nodevalue:
-                        data.append(
-                            (nodeattrname, value),
-                        )
+                        data.append((nodeattrname, value),)
                 else:
-                    data.append(
-                        (nodeattrname, nodevalue),
-                    )
+                    data.append((nodeattrname, nodevalue),)
         if not event:
             nodeattrname = self.html.get_node_attribute(node, "name")
             nodevalue = self.html.get_node_attribute(node, "value")
             if nodeattrname and nodevalue:
-                data.append(
-                    (nodeattrname, nodevalue),
-                )
+                data.append((nodeattrname, nodevalue),)
 
         data = urlencode(data)
 

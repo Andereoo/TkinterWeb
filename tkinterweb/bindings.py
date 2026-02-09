@@ -1750,8 +1750,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         """Returns the decoded data.
         
         New in version 4.19."""
-        a = "-query" if query else ""
-        return self.tk.call("::tkhtml::escape_uri", a, uri)
+        return self.tk.call("::tkhtml::escape_uri", "-query" if query else "", uri)
 
 class TkHtmlParsedURI:
     """Bindings for the Tkhtml URI parsing system. 
@@ -1777,19 +1776,19 @@ class TkHtmlParsedURI:
         "Returns name of parsed uri to be used in methods below."
         return self._html.tk.call("::tkhtml::uri", uri)
 
-    def tkhtml_uri_decode(self, uri, base64=False):
+    def decode(self, uri, base64=False):
         "This command is designed to help scripts process data: URIs. It is completely separate from the html widget"
         return self._html.tkhtml_uri_decode(uri, base64)
 
-    def tkhtml_uri_encode(self, uri):
+    def encode(self, uri):
         "Encodes the uri."
         return self._html.tkhtml_uri_encode(uri)
 
-    def tkhtml_uri_escape(self, uri, query=False):
+    def escape(self, uri, query=False):
         "Returns the decoded data."
         return self._html.tkhtml_uri_escape(uri, query)
 
-    def uri_resolve(self, uri):
+    def resolve(self, uri):
         "Resolve a uri."
         return self._html.tk.call(self.parsed, "resolve", uri)
 

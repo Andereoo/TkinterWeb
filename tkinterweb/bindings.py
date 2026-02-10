@@ -297,7 +297,7 @@ If you benefited from using this package, please consider supporting its develop
         self.register_lazy_handler("node", "base", "node_manager")
         self.register_lazy_handler("attribute", "a", "node_manager")
 
-        if not self.using_tkhtml30:
+        if not self.using_tkhtml30 or self.experimental:
             #self.register_lazy_handler("node", "details", "node_manager")
             self.register_lazy_handler("node", "progress", "node_manager")
             self.register_lazy_handler("attribute", "progress", "node_manager")
@@ -676,7 +676,6 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         self.script_manager._submit_deferred_scripts()
         self.event_manager.send_onload()
 
-        #if self.using_tkhtml30: # Handle unsupported tags
         self.node_manager._handle_load_finish()
 
     def _handle_load_finish(self, post_event=True):

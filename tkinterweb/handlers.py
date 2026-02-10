@@ -159,7 +159,7 @@ class NodeManager(utilities.BaseManager):
 
     def _set_open(self, node, display):
         self.html.set_node_attribute(node, "open", "" if display else "false")
-        if self.html.using_tkhtml30:
+        if self.html.using_tkhtml30 and not self.html.experimental:
             # In Tkhtml 3.1+ we add an attribute handler, which does this for us
             self._update_details(node, display)
 
@@ -204,7 +204,7 @@ class NodeManager(utilities.BaseManager):
         
         open = not self._is_open(details)
         self._set_open(details, open)
-        if open and self.html.using_tkhtml30:
+        if open and self.html.using_tkhtml30 or not self.html.experimental:
             self._close_other_details(details)
 
     def _on_progress(self, node):

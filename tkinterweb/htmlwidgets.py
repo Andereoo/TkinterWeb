@@ -87,7 +87,7 @@ class HtmlFrame(Frame):
     :type threading_enabled: bool
     :param javascript_enabled: Enable/disable JavaScript support. This is disabled by default. Experimental. New in version 4.1.
     :type javascript_enabled: bool
-    :param javascript_backend: The JavaScript backend to use. Set to ``pythonmonkey`` (the default) to evaluate scripts as JavaScript code, or set to ``python`` to evaluate as Python code. Experimental. New in version 4.19.
+    :param javascript_backend: The scripting backend to use. Set to ``pythonmonkey`` (the default) to evaluate scripts as JavaScript code, or set to ``python`` to evaluate as Python code. Experimental. New in version 4.19.
     :type javascript_enabled: bool
     :param image_alternate_text_enabled: Enable/disable the display of alt text for broken images. This is enabled by default.
     :type image_alternate_text_enabled: bool

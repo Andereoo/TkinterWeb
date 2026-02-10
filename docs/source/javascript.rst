@@ -7,7 +7,7 @@ Using JavaScript
 Overview
 --------
 
-**JavaScript support makes it easy to embed JavaScript or Python code in your document.**
+**Scripting support makes it easy to embed JavaScript or Python code in your document.**
 
 JavaScript is fully supported through Mozilla's SpiderMonkey engine, but not all DOM commands are supported.  See the :doc:`api/htmldocument` for an exhaustive list of supported DOM commands.
 
@@ -54,10 +54,19 @@ Add the ``defer`` attribute to the relevant ``<script>`` element if you want it 
 
 The following JavaScript event attributes are supported: ``onchange``, ``onload``, ``onclick``, ``oncontextmenu``, ``ondblclick``, ``onmousedown``, ``onmouseenter``, ``onmouseleave``, ``onmousemove``, ``onmouseout``, ``onmouseover``, and ``onmouseup``.
 
-Registering new JavaScript objects
-----------------------------------
+Embedding Python in your document
+---------------------------------
 
-To register new JavaScript object, use :meth:`.JSEngine.register`. This can be used to access Python variables, functions, and classes from JavaScript. This, for instance, can be used to implement a ``window`` API or to add a callback for the JavaScript ``alert()`` function:
+To run embedded scripts as Python code instead of JavaScript, simply use the parameters ``javascript_enabled=True`` and ``javascript_backend="python"`` when creating your HTML widget. Ensure you are running code you trust.
+
+Like normal JavaScript code, by default scripts can access the ``document`` property and inline event callbacks can also access the ``this`` property. You will need to register new objects if you want the document's scripts to be able to access other functions, classes or variables.
+
+That's it!
+
+Registering new objects
+-----------------------
+
+To register new objects, use :meth:`.JSEngine.register`. This gives the document's scripts access to Python objects. This, for instance, can be used to implement a ``window`` API or to add a callback for the JavaScript ``alert()`` function:
 
 .. code-block:: python
 
@@ -66,15 +75,6 @@ To register new JavaScript object, use :meth:`.JSEngine.register`. This can be u
         ## Do stuff
     yourhtmlframe.javascript.register("alert", open_alert_window)
     yourhtmlframe.load_html("<script>alert('Hello, world!')</script><p>Hello, world!</p>")
-
-Embedding Python in your document
----------------------------------
-
-To run embedded scripts as Python code instead of JavaScript, simply use the parameters ``javascript_enabled=True`` and ``javascript_backend="python"`` when creating your HTML widget. Ensure you are running code you trust.
-
-Like normal JavaScript code, by default scripts can access the ``document`` property and inline event callbacks can also access the ``this`` property. You will still need to register objects if you want the document's scripts to be able to access other functions, classes or variables.
-
-That's it!
 
 Using your own interpreter
 --------------------------

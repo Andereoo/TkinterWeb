@@ -18,11 +18,16 @@ class JSEngine:
     New in version 4.12.
     
     :ivar html: The associated :class:`.TkinterWeb` instance.
-    :ivar document: The associated :class:`.HTMLDocument` instance."""
+    :ivar document: The associated :class:`.HTMLDocument` instance.
+    :ivar backend: The scripting backend in use. May be ``pythonmonkey`` or ``python``. New in version 4.19.
+    :ivar sandbox: If True, scripts running Python code will lose access to built-in objects. Default False. New in version 4.19."""
+
     def __init__(self, html, document, backend):
         self.html = html
         self.document = document
         self.backend = backend
+        
+        self.sandbox = False
 
         if backend not in {"pythonmonkey", "python"}: 
             raise RuntimeError(f"Unknown backend {backend}")
@@ -51,7 +56,7 @@ class JSEngine:
         else:
             raise RuntimeError("JavaScript support must be enabled to register a JavaScript object")
         
-    def eval(self, expr, _locals=None):
+    def eval(self, expr, _this=None):
         """Evaluate JavaScript code.
         
         JavaScript must be enabled.
@@ -62,16 +67,26 @@ class JSEngine:
         if self.html.javascript_enabled:
             if self.backend == "pythonmonkey":
                 self._initialize_javascript()
-                return pm.eval(expr)
+                if _this is not None:
+                    # Bind 'this'
+                    # Note: if anyone tries to run a function named TkinterWeb_JSEngine_run (unlikely); this will throw up.
+                    return pm.eval(f"(element) => {{function TkinterWeb_JSEngine_run() {{ {expr} }}; TkinterWeb_JSEngine_run.bind(element)()}}")(_this)
+                else:
+                    return pm.eval(expr)
             elif self.backend == "python":
                 self._initialize_exec_context()
-                if _locals is None: _locals = {}
-                # Pass _locals. This is used to copy JavaScript 'this' behaviour.
-                _exec_locals = _locals.copy()
-                exec(expr, self._globals, _exec_locals)
-                for name in _exec_locals.keys() - _locals.keys():
-                    self._globals[name] = _exec_locals[name]
-                return
+                # Pass _locals to copy JavaScript 'this' behaviour.
+                _locals = {}
+                if _this is not None:
+                    _locals["this"] = _this
+                    
+                exec(expr, self._globals, _locals)
+
+                # Add new variables to _global
+                for var in _locals:
+                    if _this is not None and var == "this":
+                        continue
+                    self._globals[var] = _locals[var]
         else:
             raise RuntimeError("JavaScript support must be enabled to run JavaScript")
         
@@ -87,8 +102,8 @@ class JSEngine:
     def _initialize_exec_context(self):
         if not hasattr(self, "_globals"):
             self._globals = {
-                # Full builtins are intentionally exposed. Execution is trusted.
-                "__builtins__": __builtins__,
+                # Full built-ins may be intentionally exposed if execution is trusted.
+                "__builtins__": {} if self.sandbox else __builtins__,
                 "document": self.document,
             }
 
@@ -106,11 +121,7 @@ class JSEngine:
     def _on_element_script(self, node_handle, attribute, attr_contents):
         try:
             element = dom.HTMLElement(self.document, node_handle)
-            if self.backend == "pythonmonkey":
-                # Note: if anyone tries to run a function named TkinterWeb_JSEngine_run (unlikely); this will throw up.
-                self.eval(f"(element) => {{function TkinterWeb_JSEngine_run() {{ {attr_contents} }}; TkinterWeb_JSEngine_run.bind(element)()}}")(element)
-            elif self.backend == "python":
-                self.eval(attr_contents, {"this": element})
+            self.eval(attr_contents, element)
         except Exception as error:
             if self.backend == "python": error = format_exc()
             self.html.post_message(f"ERROR: the JavaScript interpreter encountered an error while running an {attribute} script: {error}")

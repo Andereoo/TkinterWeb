@@ -10,14 +10,9 @@
 **<p align="center">Fast and lightweight web browser, rich text, and app design widgets for Tkinter.</p>**
 
 ## Overview
-**TkinterWeb offers bindings and extensions to a modified version of the Tkhtml3 widget from [http://tkhtml.tcl.tk](https://web.archive.org/web/20250219233338/http://tkhtml.tcl.tk/), which enables the display of HTML and CSS code in Tkinter applications.** 
+**TkinterWeb adds HTML and CSS rendering capabilities to Tkinter widgets.**
 
-Some of TkinterWeb's uses include:
-* Displaying and editing websites, feeds, help files, and other styled HTML
-* Displaying images, including SVG images
-* Creating a rich text or HTML editor
-* Designing apps using HTML templates
-* Creating prettier apps, with rounded buttons and more!
+Common use cases include displaying HTML content, rendering images (including SVG), building rich-text editors, designing apps with HTML templates, and creating more modern-looking interfaces, with advanced styling and even round buttons!
 
 All [major operating systems](https://tkinterweb.readthedocs.io/en/latest/compatibility.html#a-note-on-tkhtml-binaries) running Python 3.2+ are supported. 
 
@@ -49,13 +44,12 @@ To install TkinterWeb, simply type `pip install tkinterweb[recommended]` in the 
 Or, you can also choose from the following extras: `pip install tkinterweb[html,images,svg,javascript,requests]`. You can also use `pip install tkinterweb[full]` to install all optional dependencies or ``pip install tkinterweb`` to install the bare minimum.
 
 ## Dependencies
-**In order to load webpages and show images, TkinterWeb requires the following packages:**
-* Tkinter
-* [TkinterWeb-Tkhtml](https://pypi.org/project/tkinterweb-tkhtml/)
+
+**TkinterWeb offers bindings and extensions to a modified version of the Tkhtml3 widget from [http://tkhtml.tcl.tk](https://web.archive.org/web/20250219233338/http://tkhtml.tcl.tk/). Tkinter and the [TkinterWeb-Tkhtml](https://pypi.org/project/tkinterweb-tkhtml/) package are required.**
 
 I also **strongly** recommended installing the following:
-* [TkinterWeb-Tkhtml-Extras](https://pypi.org/project/tkinterweb-tkhtml-extras/)
-* [PIL](https://pillow.readthedocs.io/)
+* [TkinterWeb-Tkhtml-Extras](https://pypi.org/project/tkinterweb-tkhtml-extras/) (for better HTML/CSS support and bug fixes)
+* [PIL](https://pillow.readthedocs.io/) (for better image support)
 * [PIL.ImageTk](https://pillow.readthedocs.io/en/stable/reference/ImageTk.html)
 
 You can also choose from the following list for extra functionality:

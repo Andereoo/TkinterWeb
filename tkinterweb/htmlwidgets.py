@@ -1586,17 +1586,19 @@ class HtmlLabel(HtmlFrame):
     
     def load_html(self, *args, _relayout=True, **kwargs):
         ""
-        # Match the ttk theme
-        style_type = self.cget("style")
-        bg = self._style.lookup(style_type, 'background')
-        fg = self._style.lookup(style_type, 'foreground')
-        style = self._html.default_style + \
-            (self._html.dark_style if self._html.dark_theme_enabled else "") +\
-            f"BODY {{ background-color: {bg}; color: {fg}; }}"
-        self._html.configure(defaultstyle=style)
-        
         # Load the HTML
         super().load_html(*args, **kwargs)
+
+        # Match the ttk theme
+        style_type = self.cget("style")
+        options = {
+            'background-color': 'background',
+            'color':            'foreground',
+        }
+        css = "BODY {" + ";".join(
+            f"{p}:{self._style.lookup(style_type, v)}" for p, v in options.items()
+        ) + "}"
+        self.add_css(css)
 
         # This stops infinite flickering when tables are present
         # My computer was having this bug for a while but now I don't experience it
@@ -1620,13 +1622,9 @@ class HtmlLabel(HtmlFrame):
         ""
         if "text" == key:
             return "".join(self._html.serialize_node(0).splitlines())
-        elif "style" == key:
-           return "".join(self._html.serialize_node_style(0).splitlines())
         return super().cget(key)
 
-    def config(self, **kwargs):
-        ""
-        self.configure(**kwargs)
+    config = configure
 
 class HtmlText(HtmlFrame):
     """The :class:`HtmlText` widget is a text-like HTML widget. It inherits from the :class:`HtmlFrame` class. 

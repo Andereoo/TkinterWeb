@@ -12,7 +12,7 @@
 ## Overview
 **TkinterWeb adds HTML and CSS rendering capabilities to Tkinter widgets.**
 
-Common use cases include displaying HTML content, rendering images (including SVG), building rich-text editors, designing apps with HTML templates, and creating more modern-looking interfaces, with advanced styling and even round buttons!
+Common use cases include displaying help files, documentation, and other HTML content, rendering images (including SVG), building rich-text editors, designing apps with HTML templates, and creating more modern-looking interfaces, with advanced styling and even round buttons!
 
 All [major operating systems](https://tkinterweb.readthedocs.io/en/latest/compatibility.html#a-note-on-tkhtml-binaries) running Python 3.2+ are supported. 
 

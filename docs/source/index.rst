@@ -20,7 +20,7 @@ Welcome to TkinterWeb!
 
 **TkinterWeb** is a Python library that adds HTML and CSS rendering capabilities to Tkinter widgets.
 
-Common use cases include displaying HTML content, rendering images (including SVG), building rich-text editors, designing apps with HTML templates, and creating more modern-looking interfaces, with advanced styling and even round buttons!
+Common use cases include displaying help files, documentation, and other HTML content, rendering images (including SVG), building rich-text editors, designing apps with HTML templates, and creating more modern-looking interfaces, with advanced styling and even round buttons!
 
 Getting started
 ---------------

@@ -514,7 +514,7 @@ class CaretManager(utilities.BaseManager):
         except ValueError:
             self.reset()
 
-    def update(self, event=None, auto_scroll=True, fallback=None, update=True):
+    def update(self, event=None, auto_scroll=True, fallback=None, update=True, xview=None, yview=None):
         "Refresh the caret or update its position."
         if not fallback:
             fallback = self.shift_left
@@ -523,6 +523,12 @@ class CaretManager(utilities.BaseManager):
             return
     
         self.html.update() # Particularly important when this method runs after the document is scrolled
+
+        # If this method was invoked by xivew() or yview(), check to see if the viewport actually changed
+        # No action is needed if nothing moved
+        if xview and xview == self.html.xview(): return
+        if yview and yview == self.html.yview(): return
+
         if not self.caret_frame:
             self.caret_frame = BlinkyFrame(self.html, blink_delays=self.blink_delays, width=self.caret_width)
             

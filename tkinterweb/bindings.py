@@ -837,7 +837,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         #return tuple(coords)
         xview = self.tk.call(self._w, "xview", *args)
         if args:
-            self.caret_manager.update(auto_scroll=auto_scroll)
+            self.caret_manager.update(auto_scroll=auto_scroll, xview=xview)
         return xview
 
     def xview_scroll(self, number, what, auto_scroll=False):
@@ -853,7 +853,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         """Control vertical scrolling."""
         yview = self.tk.call(self._w, "yview", *args)
         if args:
-            self.caret_manager.update(auto_scroll=auto_scroll)
+            self.caret_manager.update(auto_scroll=auto_scroll, yview=yview)
         return yview
 
     def yview_scroll(self, number, what, auto_scroll=False):

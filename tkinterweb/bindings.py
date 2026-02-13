@@ -1427,7 +1427,11 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
     def _on_focusout(self, event):
         if self.caret_browsing_enabled:
-            if (self.winfo_toplevel().focus_displayof() not in {None, self}):
+            try:
+                if (self.winfo_toplevel().focus_displayof() not in {None, self}):
+                    self.caret_manager.hide()
+            except KeyError:
+                # Clicked on the combobox. Not too sure why.
                 self.caret_manager.hide()
 
     def _on_focusin(self, event):

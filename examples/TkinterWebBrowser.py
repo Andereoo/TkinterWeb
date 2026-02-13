@@ -29,7 +29,6 @@ from tkinter import filedialog
 from tkinter import ttk
 
 from tkinterweb import HtmlFrame, Notebook, __version__
-from tkinterweb.dom import HTMLElement
 from tkinterweb.utilities import BUILTIN_PAGES, DONE_LOADING_EVENT, URL_CHANGED_EVENT, TITLE_CHANGED_EVENT, DOWNLOADING_RESOURCE_EVENT
 
 import os
@@ -127,6 +126,9 @@ class Page(ttk.Frame):
         frame.bind(URL_CHANGED_EVENT, self.url_change)
         frame.bind(DONE_LOADING_EVENT, self.done_loading)
         frame.bind(DOWNLOADING_RESOURCE_EVENT, self.on_downloading)
+
+        for i in {"<Up>", "<Down>", "<Left>", "<Right>", "<Prior>", "<Next>", "<Home>", "<End>"}:
+            frame.unbind(i)
 
         linklabel.bind("<Button-1>", self.hide_messsage_box)
         urlbar.bind("<Return>", self.load_site)

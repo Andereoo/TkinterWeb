@@ -513,6 +513,7 @@ Changelog
 
     Version 4.19:
     
+    * Fixed some minor bugs.
     * :attr:`.CSSStyleDeclaration.cssText` can now be set.
 
 -------------------

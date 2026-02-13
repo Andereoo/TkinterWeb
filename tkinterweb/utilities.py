@@ -909,6 +909,17 @@ def check_download(url, data="", method="GET", decode=None, insecure=False, cafi
     return lru_cache.check(url, data, method, decode, insecure, cafile, headers, timeout)
 
 
+@lru_cache()
+def ttk_style_css(self, style_type):
+    options = {
+         'background-color': 'background',
+           'color':            'foreground',
+    }
+    return "BODY {" + ";".join(
+         f"{p}:{self._style.lookup(style_type, v)}" for p, v in options.items()
+    ) + "}"
+
+
 def shorten(string):
     "Shorten text to avoid overloading the terminal"
     if len(string) > 100:

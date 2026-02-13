@@ -1590,15 +1590,7 @@ class HtmlLabel(HtmlFrame):
         super().load_html(*args, **kwargs)
 
         # Match the ttk theme
-        style_type = self.cget("style")
-        options = {
-            'background-color': 'background',
-            'color':            'foreground',
-        }
-        css = "BODY {" + ";".join(
-            f"{p}:{self._style.lookup(style_type, v)}" for p, v in options.items()
-        ) + "}"
-        self.add_css(css)
+        self.add_css(utilities.ttk_style_css(self, self.cget("style")))
 
         # This stops infinite flickering when tables are present
         # My computer was having this bug for a while but now I don't experience it
@@ -1615,6 +1607,7 @@ class HtmlLabel(HtmlFrame):
             
         if "style" in kwargs:
             utilities.warn("Since version 4.14 the style keyword no longer sets the HtmlLabel's CSS code. Please use the add_css() method instead.")
+            self.add_css(utilities.ttk_style_css(self, kwargs.pop("style")))
 
         if kwargs: super().configure(**kwargs)
 

@@ -46,8 +46,10 @@ class NodeManager(utilities.BaseManager):
                 if content[1].startswith("url="):
                     url = self.html.resolve_url(content[1].lstrip("url="))
                     self.html.post_message(f"Redirecting to '{utilities.shorten(url)}'")
-                    self.html.visited_links.append(url)
-                    self.html.on_link_click(url)
+                    if self.html.on_link_click is not None:
+                        if url not in self.html.visited_links:
+                            self.html.visited_links.append(url)
+                        self.html.on_link_click(url)
 
     # --- Handle hyperlinks ---------------------------------------------------
 
@@ -69,6 +71,17 @@ class NodeManager(utilities.BaseManager):
                 self.html.set_node_flags(node, "visited")
             else:
                 self.html.remove_node_flags(node, "visited")
+    
+    def _handle_link_click(self, node_handle):
+        "Handle link clicks."
+        href = self.html.get_node_attribute(node_handle, "href")
+        url = self.html.resolve_url(href)
+        self.html.post_message(f"A link to '{utilities.shorten(url)}' was clicked")
+        if self.html.on_link_click is not None:
+            self.html.set_node_flags(node_handle, "visited")
+            if url not in self.html.visited_links:
+                self.html.visited_links.append(url)
+            self.html.on_link_click(url)
 
     # --- Handle body elements ------------------------------------------------
 
@@ -99,16 +112,19 @@ class NodeManager(utilities.BaseManager):
         # But for now it's its own thing and the only one of the three that is actually respected by Tkhtml in rendering
         if self.html.experimental: 
             overflow_options = ("overflow", "overflow-y")
-            self._handle_overflow_property(self.html.get_node_property(node, "overflow-x") , self.html.manage_hsb_func)
         else:
             overflow_options = ("overflow",)
-            
-        for overflow_type in overflow_options:
-            overflow = self.html.get_node_property(node, overflow_type) 
-            overflow = self._handle_overflow_property(overflow, self.html.manage_vsb_func)
+
+        if self.html.manage_vsb_func is not None:
+            for overflow_type in overflow_options:
+                overflow = self.html.get_node_property(node, overflow_type) 
+                overflow = self._handle_overflow_property(overflow, self.html.manage_vsb_func)
         
-        overflow = self.html.get_node_attribute(node, utilities.BUILTIN_ATTRIBUTES["overflow-x"]) # Tkhtml doesn't support overflow-x
-        overflow = self._handle_overflow_property(overflow, self.html.manage_hsb_func)
+        if self.html.manage_hsb_func is not None:
+            if self.html.experimental:
+                self._handle_overflow_property(self.html.get_node_property(node, "overflow-x") , self.html.manage_hsb_func)
+            overflow = self.html.get_node_attribute(node, utilities.BUILTIN_ATTRIBUTES["overflow-x"]) # Tkhtml doesn't support overflow-x
+            overflow = self._handle_overflow_property(overflow, self.html.manage_hsb_func)
 
         background = self.html.get_node_property(node, "background-color")
         if background != "transparent" and self.html.motion_frame_bg != background: # Transparent is the Tkhtml default, so it's largely meaningless
@@ -310,7 +326,8 @@ class FormManager(utilities.BaseManager):
             data = data.encode()
 
         self.html.post_message(f"A form was submitted to {utilities.shorten(url)}")
-        self.html.on_form_submit(url, data, method)
+        if self.html.on_form_submit is not None:
+            self.html.on_form_submit(url, data, method)
 
     # --- Handle forms --------------------------------------------------------
 
@@ -387,6 +404,7 @@ class FormManager(utilities.BaseManager):
             lambda node=node, widgetid=widgetid, widgettype="text": self.html.widget_manager._handle_node_style(
                 node, widgetid, widgettype
             ),
+            check=False
         )
         #self.html.post_message(f"Successfully setup select element {node}")
 
@@ -406,10 +424,12 @@ class FormManager(utilities.BaseManager):
         self.html.widget_manager.handle_node_replacement(
             node,
             widgetid,
-            lambda widgetid=widgetid: self.html.widget_manager._handle_node_removal(widgetid),
-            lambda node=node, widgetid=widgetid, widgettype="text": self.html.widget_manager._handle_node_style(
+            deletecmd=lambda widgetid=widgetid: self.html.widget_manager._handle_node_removal(widgetid),
+            stylecmd=lambda node=node, widgetid=widgetid, widgettype="text": self.html.widget_manager._handle_node_style(
                 node, widgetid, widgettype
             ),
+            allowscrolling=False,
+            check=False
         )
         #self.html.post_message(f"Successfully setup select element {node}")
 
@@ -438,7 +458,7 @@ class FormManager(utilities.BaseManager):
             )
         elif nodetype == "color":
             widgetid = subwidgets.ColourSelector(self.html, nodevalue, lambda widgetid, node=node: self._on_input_change(node, widgetid))
-            stylecmd = utilities.placeholder
+            stylecmd = lambda *a, **k: None
         elif nodetype == "checkbox":
             if self.html.get_node_attribute(node, "checked", "false") != "false": 
                 checked = 1
@@ -516,7 +536,8 @@ class FormManager(utilities.BaseManager):
             node,
             widgetid,
             lambda widgetid=widgetid: self.html.widget_manager._handle_node_removal(widgetid),
-            stylecmd
+            stylecmd,
+            check=False
         )
 
         if state != "false": 
@@ -568,7 +589,7 @@ class ScriptManager(utilities.BaseManager):
             self.html._thread_check(self.fetch_scripts, self.html.resolve_url(attributes["src"]), attributes)
         elif "defer" in attributes:
             self.pending_scripts.append((attributes, tag_contents))
-        else:
+        elif self.html.on_script is not None:
             return self.html.on_script(attributes, tag_contents)
     
     def fetch_scripts(self, attributes, url=None, data=None):
@@ -588,7 +609,7 @@ class ScriptManager(utilities.BaseManager):
         if data and thread.isrunning():
             if "defer" in attributes:
                 self.pending_scripts.append((attributes, data))
-            else:
+            elif self.html.on_script is not None:
                 self.html.post_to_queue(lambda attributes=attributes, data=data: self.html.on_script(attributes, data), thread.is_subthread)
                 
             if url:
@@ -686,7 +707,8 @@ class StyleManager(utilities.BaseManager):
             self.html.event_manager.post_element_event(node, "onload", None, utilities.ELEMENT_LOADED_EVENT)
         if url:
             self.html.post_message(f"Successfully loaded {utilities.shorten(url)}")
-            self.html.on_resource_setup(url, "stylesheet", True)
+            if self.html.on_resource_setup is not None:
+                self.html.on_resource_setup(url, "stylesheet", True)
 
 
 class ImageManager(utilities.BaseManager):
@@ -778,7 +800,8 @@ class ImageManager(utilities.BaseManager):
                 self.load_alt_text(url, name)
                 for image in url.split(","):
                     self.html.post_message(f"ERROR: could not display the image {utilities.shorten(url)} because it is not supported yet")
-                self.html.on_resource_setup(url, "image", False)
+                if self.html.on_resource_setup is not None:
+                    self.html.on_resource_setup(url, "image", False)
             else:
                 url = url.split("), url(", 1)[0].replace("'", "").replace('"', "")
                 url = self.html.resolve_url(url)
@@ -839,7 +862,8 @@ class ImageManager(utilities.BaseManager):
             image = imageutils.data_to_image(data, name, filetype, data_is_image)
             
             self.html.post_message(f"Successfully loaded {utilities.shorten(url)}")
-            self.html.on_resource_setup(url, "image", True)
+            if self.html.on_resource_setup is not None:
+                self.html.on_resource_setup(url, "image", True)
             if url in self.image_directory:
                 for node in self.image_directory[url]:
                     self.html.event_manager.post_element_event(node, "onload", None, utilities.ELEMENT_LOADED_EVENT)
@@ -857,7 +881,8 @@ class ImageManager(utilities.BaseManager):
         # NOTE: this must run in the main thread
         self.html.post_message(error)
         self.load_alt_text(url, name)
-        self.html.on_resource_setup(url, "image", False)
+        if self.html.on_resource_setup is not None:
+            self.html.on_resource_setup(url, "image", False)
 
     def _on_image_delete(self, name):
         # Remove the reference to the image in the main thread
@@ -957,7 +982,7 @@ class ObjectManager(utilities.BaseManager):
             self.loaded_iframes[node] = widgetid
 
             self.html.widget_manager.handle_node_replacement(
-                node, widgetid, lambda widgetid=widgetid: self.html.widget_manager._handle_node_removal(widgetid), allowscrolling=False,
+                node, widgetid, lambda widgetid=widgetid: self.html.widget_manager._handle_node_removal(widgetid), allowscrolling=False, check=False
             )
         else:
             self.html.post_message(f"WARNING: the embedded page {url} could not be shown because no embed widget was provided.")

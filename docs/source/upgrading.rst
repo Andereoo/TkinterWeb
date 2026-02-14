@@ -513,7 +513,8 @@ Changelog
 
     Version 4.19:
     
-    * Fixed some minor bugs.
+    * Fixed some bugs.
+    * Callbacks now accept ``None`` as a valid value.
     * :attr:`.CSSStyleDeclaration.cssText` can now be set.
 
 -------------------

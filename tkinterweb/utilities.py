@@ -682,10 +682,12 @@ UNHANDLED_EVENT_WHITELIST = [
 # These JS events don't exist but are used internally. Translate them when needed.
 JS_EVENT_MAP = {
     "onscrollup": "onscroll",
-    "onscrolldown": "onscrollup",
+    "onscrolldown": "onscroll",
     "onmiddlemouse": "onmousedown",
     "onmouseb1move": None,
 }
+
+UNSET = object()
 
 class StoppableThread(threading.Thread):
     "A thread that stores a state flag that can be set and used to check if the thread is supposed to be running"
@@ -983,11 +985,6 @@ def warn(message):
 def TclOpt(options):
     "Format string into Tcl option command-line names"
     return tuple(o if o.startswith("-") else "-"+o for o in options)
-
-
-def placeholder(*args, **kwargs):
-    """Blank placeholder function. The only purpose of this is to
-    improve readability by avoiding `lambda a, b, c, d: None` statements."""
 
 
 def safe_tk_eval(html, expr):

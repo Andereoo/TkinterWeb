@@ -22,17 +22,17 @@ class HtmlFrame(Frame):
     Callbacks:
 
     :param on_navigate_fail: The function to be called when a url cannot be loaded. The target url, error, and code will be passed as arguments. By default the TkinterWeb error page is shown.
-    :type on_navigate_fail: function
+    :type on_navigate_fail: None or function
     :param on_link_click: The function to be called when a hyperlink is clicked. The target url will be passed as an argument. By default the url is navigated to.
-    :type on_link_click: function
+    :type on_link_click: None or function
     :param on_form_submit: The function to be called when a form is submitted. The target url, data, and method ("GET" or "POST") will be passed as arguments. By default the response is loaded.
-    :type on_form_submit: function
+    :type on_form_submit: None or function
     :param on_script: The function to be called when a ``<script>`` element is encountered. This can be used to connect a script handler, such as a JavaScript engine. The script element's attributes and contents will be passed as arguments.
-    :type on_script: function
+    :type on_script: None or function
     :param on_element_script: The function to be called when a JavaScript event attribute on an element is encountered. This can be used to connect a script handler, such as a JavaScript engine, or even to run your own Python code. The element's corresponding Tkhtml3 node, relevant attribute, and attribute contents will be passed as arguments. New in version 4.1.
-    :type on_element_script: function
+    :type on_element_script: None or function
     :param on_resource_setup: The function to be called when an image, stylesheet, or script load finishes. The resource's url, type ("image", "stylesheet", or "script"), and whether setup was successful or not (True or False) will be passed as arguments.
-    :type on_resource_setup: function
+    :type on_resource_setup: None or function
 
     Widget appearance:
 
@@ -61,7 +61,7 @@ class HtmlFrame(Frame):
     :param messages_enabled: Enable/disable messages. This is enabled by default.
     :type messages_enabled: bool
     :param message_func: The function to be called when a debug message is issued. This only works if :attr:`messages_enabled` is set to True. The message will be passed as an argument. By default the message is printed.
-    :type message_func: function
+    :type message_func: None or function
 
     Features:
 
@@ -124,7 +124,7 @@ class HtmlFrame(Frame):
     :param request_timeout: The number of seconds to wait when fetching a resource before timing out. New in version 4.6.
     :type request_timeout: int
     :param request_func: The function to be called when a resource is requested. This overrides all other download settings. The callback must accept the following arguments: the resource's url, data, method ("GET" or "POST"), and encoding. The callback must return the following: url, data, file type, and HTTP code.
-    :type request_func: function
+    :type request_func: None or function
 
     HTML rendering behaviour:
 
@@ -144,17 +144,24 @@ class HtmlFrame(Frame):
     :raise TypeError: If the value type is wrong and cannot be converted to the correct type."""
 
     def __init__(self, master, *, 
-                    zoom = None, fontscale = None, messages_enabled = None, vertical_scrollbar = None, horizontal_scrollbar = None, \
-                    on_navigate_fail = None, on_link_click = None, on_form_submit = None, on_script = None, on_element_script = None, on_resource_setup = None, \
-                    message_func = None, request_func = None, caret_browsing_enabled = None, selection_enabled = None, \
-                    stylesheets_enabled = None, images_enabled = None, forms_enabled = None, objects_enabled = None, caches_enabled = None, \
-                    dark_theme_enabled = None, image_inversion_enabled = None, javascript_enabled = None, javascript_backend = None, events_enabled = None, \
-                    threading_enabled = None, crash_prevention_enabled = None, image_alternate_text_enabled = None, ignore_invalid_images = None, \
-                    visited_links = None, find_match_highlight_color = None, find_match_text_color = None, find_current_highlight_color = None, \
-                    find_current_text_color = None, selected_text_highlight_color = None, selected_text_color = None, \
-                    insecure_https = None, ssl_cafile = None, request_timeout = None, headers = None, experimental = None, \
-                    use_prebuilt_tkhtml = None, tkhtml_version = None, parsemode = None, \
-                    shrink = None, textwrap = None, mode = None, defaultstyle = None, height = None, width = None, **kwargs):
+                    zoom = utilities.UNSET, fontscale = utilities.UNSET, messages_enabled = utilities.UNSET, \
+                    vertical_scrollbar = utilities.UNSET, horizontal_scrollbar = utilities.UNSET, \
+                    on_navigate_fail = utilities.UNSET, on_link_click = utilities.UNSET, on_form_submit = utilities.UNSET, 
+                    on_script = utilities.UNSET, on_element_script = utilities.UNSET, on_resource_setup = utilities.UNSET, \
+                    message_func = utilities.UNSET, request_func = utilities.UNSET, caret_browsing_enabled = utilities.UNSET, 
+                    selection_enabled = utilities.UNSET, stylesheets_enabled = utilities.UNSET, images_enabled = utilities.UNSET, \
+                    forms_enabled = utilities.UNSET, objects_enabled = utilities.UNSET, caches_enabled = utilities.UNSET, \
+                    dark_theme_enabled = utilities.UNSET, image_inversion_enabled = utilities.UNSET, \
+                    javascript_enabled = utilities.UNSET, javascript_backend = utilities.UNSET, events_enabled = utilities.UNSET, \
+                    threading_enabled = utilities.UNSET, crash_prevention_enabled = utilities.UNSET, \
+                    image_alternate_text_enabled = utilities.UNSET, ignore_invalid_images = utilities.UNSET, \
+                    visited_links = utilities.UNSET, find_match_highlight_color = utilities.UNSET, find_match_text_color = utilities.UNSET, \
+                    find_current_highlight_color = utilities.UNSET, find_current_text_color = utilities.UNSET, \
+                    selected_text_highlight_color = utilities.UNSET, selected_text_color = utilities.UNSET, \
+                    insecure_https = utilities.UNSET, ssl_cafile = utilities.UNSET, request_timeout = utilities.UNSET, \
+                    headers = utilities.UNSET, experimental = utilities.UNSET, use_prebuilt_tkhtml = utilities.UNSET, \
+                    tkhtml_version = utilities.UNSET, parsemode = utilities.UNSET, shrink = utilities.UNSET, textwrap = utilities.UNSET, \
+                    mode = utilities.UNSET, defaultstyle = utilities.UNSET, height = utilities.UNSET, width = utilities.UNSET, **kwargs):
         
         init_args = locals().copy()
         
@@ -187,7 +194,7 @@ class HtmlFrame(Frame):
             "on_form_submit": {"default": self.load_form_data, "type": "callable"},
             "on_script": {"default": self._on_script, "type": "callable"},
             "on_element_script": {"default": self._on_element_script, "type": "callable"},
-            "on_resource_setup": {"default": utilities.placeholder, "type": "callable"},
+            "on_resource_setup": {"default": None, "type": "callable"},
             "message_func": {"default": utilities.notifier, "type": "callable"},
             "messages_enabled": {"default": True, "type": bool},
             "caret_browsing_enabled": {"default": False, "type": bool},
@@ -214,7 +221,7 @@ class HtmlFrame(Frame):
             "selected_text_color": {"default": "#000", "type": str},
             "default_style": {"default": utilities.DEFAULT_STYLE, "deprecated": "utilities.DEFAULT_STYLE"},
             "dark_style": {"default": utilities.DARK_STYLE, "deprecated": "utilities.DARK_STYLE"},
-            "request_func": {"default": None, "type": "nonecallable"},
+            "request_func": {"default": None, "type": "callable"},
             "insecure_https": {"default": False, "type": bool},
             "ssl_cafile": {"default": None, "type": "nonestr"},
             "request_timeout": {"default": 15, "type": int},
@@ -222,6 +229,7 @@ class HtmlFrame(Frame):
             "experimental": {"default": False, "type": "autobool", "changeable": False},
             "use_prebuilt_tkhtml": {"default": True, "type": bool, "changeable": False},
             "tkhtml_version": {"default": "auto", "type": "autofloat", "changeable": False},
+            # Internal
             "overflow_scroll_frame": {"default": None},
             "embed_obj": {"default": HtmlFrame},
             "manage_vsb_func": {"default": self._manage_vsb},
@@ -241,9 +249,11 @@ class HtmlFrame(Frame):
             "width": {"default": 0},
         }
         
+        
         self._check_options(self._htmlframe_options, init_args, kwargs, True)
         _tkinterweb_options = self._check_options(self._tkinterweb_options, init_args, kwargs)
         _tkhtml_options = self._check_options(self._tkhtml_options, init_args, kwargs)
+
 
         super().__init__(master, **kwargs)
 
@@ -1281,7 +1291,8 @@ This might also happen if your Python distribution does not come installed with 
 This is a known Python bug on older MacOS systems. \
 Running something along the lines of \"/Applications/Python {'.'.join(utilities.PYTHON_VERSION[:2])}/Install Certificates.command\" (with the qoutes) to install the missing certificates may do the trick.\n\
 Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certificates or 'HtmlFrame(master, ssl_cafile=[path_to_your_cafile])' to specify the path to your CA file if you know where it is.")
-        self.on_navigate_fail(url, error, code)
+        if self.on_navigate_fail is not None:
+            self.on_navigate_fail(url, error, code)
 
     def _finish_css(self):     
         ### TODO: consider handling add_html/insert_html this way too   
@@ -1340,9 +1351,9 @@ Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certif
     def _check_options(self, options, init_args, kwargs, set_attr=False):
         result = {}
         for key, data in options.items():
-            value = init_args.get(key, kwargs.pop(key, None))
+            value = init_args.get(key, kwargs.pop(key, utilities.UNSET))
             default = data.get("default")
-            if value is None: value = default
+            if value is utilities.UNSET: value = default
             elif value != default: 
                 value = self._check_value(key, data, value)
             if set_attr: setattr(self, key, value)
@@ -1372,15 +1383,12 @@ Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certif
                 if value is None: return value
                 extras = "None or "
                 expected_type = str
-            elif expected_type == "nonecallable":
-                if value is None: return value
-                extras = "None or "
-                expected_type = "callable"
+            elif expected_type == "callable":
+                if value is None or callable(value): 
+                    return value
+                raise TypeError(f"expected None or callable object, got <{type(value).__name__}>")
 
-            if expected_type == "callable":
-                if not callable(value):
-                    raise TypeError(f"expected {extras}callable object, got <{type(value).__name__}>")
-            elif not isinstance(value, expected_type):
+            if not isinstance(value, expected_type):
                 # This conversion should probably be removed or restricted
                 try: value = expected_type(value)
                 except (TypeError, ValueError,): raise TypeError(f"expected {extras}<{expected_type.__name__}> object, got <{type(value).__name__}>")

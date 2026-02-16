@@ -106,7 +106,7 @@ class HTMLDocument:
         """Write into the current document or output stream. If the document is loaded, this first deletes all existing HTML.
 
         :param *text: The text or HTML code to insert.
-        :type text: str
+        :type *text: str
 
         New in version 4.20."""
         if self.html.parsing:

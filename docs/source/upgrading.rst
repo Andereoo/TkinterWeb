@@ -370,6 +370,11 @@ Changelog
     * Added support for the HTML ``<progress>`` tag. Ensure `TkinterWeb-Tkhtml-Extras <https://pypi.org/project/tkinterweb-tkhtml-extras/>`_ is installed.
     * The new configuration option ``javascript_backend`` can be used to evaluate ``<script>`` elements and JavaScript events as Python code.
 
+    Version 4.20:
+
+    * :meth:`.HTMLDocument.write`
+    * :meth:`.HTMLElement.removeAttribute`
+
 .. dropdown:: Changed/Fixed
 
     Version 4.0:

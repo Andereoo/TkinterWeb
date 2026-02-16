@@ -103,9 +103,14 @@ class HTMLDocument:
         )
     
     def write(self, text):
+        """Write into the current document or output stream.
+
+        :param text: The text to insert.
+        :type text: str
+
+        New in version 4.20."""
         if self.html.parsing:
-            # does self.html.write do something related?
-            self.html.parse(text)
+            self.html.write("text", text)
         else:
             self.html.reset()
             self.html.parse(text)
@@ -591,6 +596,13 @@ class HTMLElement:
             self.html.set_node_attribute(self.node, attribute, value)
         except TclError:
             raise TclError(f"the assoiciated element has been destroyed")
+        
+    def removeAttribute(self, attribute):
+        """Remove the given attribute. At the moment this sets the value of the attribute to "".
+        
+        :param attribute: The attribute to remove.
+        :type attribute: str"""
+        self.setAttribute(attribute, "")
         
     def remove(self):
         """Delete the element. Cannot be used on ``<html>`` or ``<body>`` elements.

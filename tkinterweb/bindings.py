@@ -212,6 +212,7 @@ If you benefited from using this package, please consider supporting its develop
         self.icon = ""
 
         self.fragment = ""
+        self.parsing = False
         self.active_threads = []
         self.pending_threads = []
         self.current_active_node = None

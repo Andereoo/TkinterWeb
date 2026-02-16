@@ -102,18 +102,17 @@ class HTMLDocument:
             self, self.html.safe_tk_eval(f"""set root [lindex [{self.html} node] 0]"""),
         )
     
-    def write(self, text):
-        """Write into the current document or output stream.
+    def write(self, *args):
+        """Write into the current document or output stream. If the document is loaded, this first deletes all existing HTML.
 
-        :param text: The text to insert.
-        :type text: str
+        :param *args: The text or HTML code to insert.
 
         New in version 4.20."""
         if self.html.parsing:
-            self.html.write("text", text)
+            self.html.write("text", args)
         else:
             self.html.reset()
-            self.html.parse(text)
+            self.html.parse(" ".join(args))
 
     def createElement(self, tagname):  # Taken from hv3_dom_core.tcl line 214
         """Create and return a new HTML element with the given tag name.

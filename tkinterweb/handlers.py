@@ -592,7 +592,7 @@ class ScriptManager(utilities.BaseManager):
         elif self.html.on_script is not None:
             return self.html.on_script(attributes, tag_contents)
     
-    def fetch_scripts(self, attributes, url=None, data=None):
+    def fetch_scripts(self, url=None, attributes="", data=None):
         "Fetch and run scripts"
         # NOTE: this may run in a thread
 

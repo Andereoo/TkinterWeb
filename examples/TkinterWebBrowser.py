@@ -111,6 +111,8 @@ class Page(ttk.Frame):
         self.threads_var = threads_var = tk.IntVar(value=self.frame["threading_enabled"])
         threads_enabled = ttk.Checkbutton(sidebar, text="Enable threading", variable=threads_var, command=self.toggle_threads)
         self.invert_page_var = invert_page_var = tk.IntVar(value=self.frame["dark_theme_enabled"])
+        self.js_var = js_var = tk.IntVar(value=self.frame["javascript_enabled"])
+        js_enabled = ttk.Checkbutton(sidebar, text="Enable javascript", variable=js_var, command=self.toggle_js)
         invert_page_enabled = ttk.Checkbutton(sidebar, text="Dark theme", variable=invert_page_var, command=self.toggle_theme)
         self.invert_images_var = invert_images_var = tk.IntVar(value=self.frame["image_inversion_enabled"])
         invert_images_enabled = ttk.Checkbutton(sidebar, text="Image inverter", variable=invert_images_var, command=self.toggle_inverter)
@@ -157,8 +159,9 @@ class Page(ttk.Frame):
     <object allowscrolling data={forms_enabled}></object><br>
     <object allowscrolling data={objects_enabled}></object><br>
     <object allowscrolling data={caches_enabled}></object><br>
-    <object allowscrolling data={emojis_enabled}></object>
-    <object allowscrolling data={threads_enabled}></object><hr>
+    <object allowscrolling data={emojis_enabled}></object><br>
+    <object allowscrolling data={threads_enabled}></object><br>
+    <object allowscrolling data={js_enabled}></object><hr>
     <object allowscrolling data={selection_enabled}></object>
     <object allowscrolling data={caret_browsing_enabled}></object><hr>
     
@@ -484,6 +487,10 @@ class Page(ttk.Frame):
 
     def toggle_forms(self):
         self.frame.configure(forms_enabled = self.forms_var.get())
+        self.reload()
+
+    def toggle_js(self):
+        self.frame.configure(javascript_enabled = self.js_var.get())
         self.reload()
 
     def toggle_objects(self):

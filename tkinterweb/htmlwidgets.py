@@ -1391,8 +1391,12 @@ Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certif
                 if value is None or callable(value): 
                     return value
                 raise TypeError(f"expected None or callable object, got <{type(value).__name__}> for {key}")
+            
             if not isinstance(value, expected_type):
+                if expected_type is bool and value in {0, 1} or expected_type is int and isinstance(value, float):
+                    return expected_type(value)
                 raise TypeError(f"expected {extras}<{expected_type.__name__}> object, got <{type(value).__name__}> for {key}")
+        
         return value
     
     def _check_changeability(self, key, settings):

@@ -2084,8 +2084,6 @@ class HtmlParse(HtmlFrame):
     def __init__(self, **kwargs): #markup=""
         self.root = root = tk.Tk()
 
-        self._is_destroying = False
-
         for flag in {"events_enabled", "images_enabled", "forms_enabled", "stylesheets_enabled"}:
             if flag not in kwargs:
                 kwargs[flag] = False

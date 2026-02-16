@@ -19,7 +19,7 @@ rsvg_type = None
 
 def load_cairo():
     global rsvg_type
-    if rsvg_type == None:
+    if rsvg_type is None:
         try:
             import cairo
             globals()['cairo'] = cairo

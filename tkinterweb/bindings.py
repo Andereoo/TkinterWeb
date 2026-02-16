@@ -1225,7 +1225,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
         Since version 4.9 all callbacks are evaluated on the main thread. Except for niche cases this command should not need to be used.
 
-        This command may be moved or removed at any time.
+        This command may be removed at any time.
         
         New in version 4.4."""
         return utilities.safe_tk_eval(self, expr)

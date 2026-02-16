@@ -601,7 +601,9 @@ class HTMLElement:
         """Remove the given attribute. At the moment this sets the value of the attribute to "".
         
         :param attribute: The attribute to remove.
-        :type attribute: str"""
+        :type attribute: str
+        
+        New in version 4.20."""
         self.setAttribute(attribute, "")
         
     def remove(self):

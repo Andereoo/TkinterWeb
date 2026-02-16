@@ -515,6 +515,7 @@ Changelog
     
     * Fixed some bugs.
     * Callbacks now accept ``None`` as a valid value.
+    * Permitted values for configuration option are now more tightly restricted.
     * :attr:`.CSSStyleDeclaration.cssText` can now be set.
 
 -------------------

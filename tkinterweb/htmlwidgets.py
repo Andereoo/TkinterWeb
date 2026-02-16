@@ -1278,6 +1278,10 @@ class HtmlFrame(Frame):
     def _finish_loading_nothing(self):
         # NOTE: must be run in main thread
 
+        if not self._html.fragment and self.html.yview() != 0:
+            # Reset the view if needed
+            self.html.yview_moveto(0)
+        
         self._html._handle_load_finish()
         self._finish_css()
     
@@ -1386,12 +1390,9 @@ Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certif
             elif expected_type == "callable":
                 if value is None or callable(value): 
                     return value
-                raise TypeError(f"expected None or callable object, got <{type(value).__name__}>")
-
+                raise TypeError(f"expected None or callable object, got <{type(value).__name__}> for {key}")
             if not isinstance(value, expected_type):
-                # This conversion should probably be removed or restricted
-                try: value = expected_type(value)
-                except (TypeError, ValueError,): raise TypeError(f"expected {extras}<{expected_type.__name__}> object, got <{type(value).__name__}>")
+                raise TypeError(f"expected {extras}<{expected_type.__name__}> object, got <{type(value).__name__}> for {key}")
         return value
     
     def _check_changeability(self, key, settings):

@@ -255,14 +255,20 @@ class SelectionManager(utilities.BaseManager):
                     "offset", self.selection_start_node, len(text)
                 )
         else:
-            start_index = self.html.text(
-                "offset", self.selection_start_node, self.selection_start_offset
-            )
-            end_index = self.html.text(
-                "offset", self.selection_end_node, self.selection_end_offset
-            )
-            if start_index > end_index:
-                start_index, end_index = end_index, start_index
+            try:
+                start_index = self.html.text(
+                    "offset", self.selection_start_node, self.selection_start_offset
+                )
+                end_index = self.html.text(
+                    "offset", self.selection_end_node, self.selection_end_offset
+                )
+                if start_index > end_index:
+                    start_index, end_index = end_index, start_index
+            except TclError:
+                # When this happens something weird happened to this node
+                # Not too sure why
+                self.reset()
+                return
                 
         whole_text = self.html.text("text")
         return whole_text[start_index:end_index]

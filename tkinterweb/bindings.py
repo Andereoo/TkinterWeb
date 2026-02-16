@@ -1326,96 +1326,55 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
     # --- Widget-user interaction ---------------------------------------------
 
-    def _scroll_x11(self, event, widget=None):
-        "Manage scrolling on Linux."
-        if not widget:
-            widget = event.widget
+    def _finish_scrolling(self, event, widget, x11, vsb):
+        if not widget: widget = event.widget
 
         # If the user scrolls on the page while its resources are loading, stop scrolling to the fragment
         if isinstance(widget.fragment, tuple):
             widget.fragment = None
-            
-        yview = widget.yview()
 
-        vsb_locked = widget.manage_vsb_func is not None and widget.manage_vsb_func(check=True) == 0
+        if x11:
+            scroll_up = (event.num == 4)
+        else:
+            scroll_up = event.delta > 0
 
-        scroll_up = (event.num == 4)
-        stype = "onscrollup" if scroll_up else "onscrolldown"
-        units = -4 if scroll_up else 4
-        at_edge = yview[0] == 0 if scroll_up else yview[1] == 1
+        if vsb:
+            yview = widget.yview()
+            at_edge = yview[0] == 0 if scroll_up else yview[1] == 1
+            vsb_locked = widget.manage_vsb_func is not None and widget.manage_vsb_func(check=True) == 0
 
-        for node_handle in widget.hovered_nodes:
-            widget.event_manager.post_element_event(node_handle, stype, event)
+            for node_handle in widget.hovered_nodes:
+                if x11: stype = "onscrollup" if scroll_up else "onscrolldown"
+                else: stype = "onscroll"
+                widget.event_manager.post_element_event(node_handle, stype, event)
+
+        else:
+            xview = widget.xview()
+            at_edge = xview[0] == 0 if scroll_up else xview[1] == 1
+            vsb_locked = widget.manage_hsb_func is not None and widget.manage_hsb_func(check=True) == 0
 
         if widget.overflow_scroll_frame and (at_edge or vsb_locked):
-            widget.overflow_scroll_frame._scroll_x11(event, widget.overflow_scroll_frame)
-        elif not vsb_locked:
-            widget.yview_scroll(units, "units")
-
-    def _xscroll_x11(self, event, widget=None):
-        "Manage scrolling on Linux."
-        if not widget:
-            widget = event.widget
-
-        xview = widget.xview()
-
-        hsb_locked = widget.manage_hsb_func is not None and widget.manage_hsb_func(check=True) == 0
-
-        scroll_up = (event.num == 4)
-        units = -4 if scroll_up else 4
-        at_edge = xview[0] == 0 if scroll_up else xview[1] == 1
-
-        if widget.overflow_scroll_frame and (at_edge or hsb_locked):
-            widget.overflow_scroll_frame._xscroll_x11(event, widget.overflow_scroll_frame)
-        elif not hsb_locked:
-            widget.xview_scroll(units, "units")
-
-    def _scroll(self, event):
-        "Manage scrolling on Windows/MacOS."
-
-        # If the user scrolls on the page while it is loading, stop scrolling to the fragment
-        if isinstance(self.fragment, tuple):
-            self.fragment = None
-
-        yview = self.yview()
-
-        vsb_locked = self.manage_vsb_func is not None and self.manage_vsb_func(check=True) == 0
-
-        scroll_up = event.delta > 0
-        at_edge = yview[0] == 0 if scroll_up else yview[1] == 1
-
-        for node_handle in self.hovered_nodes:
-            self.event_manager.post_element_event(node_handle, "onscroll", event)     
-
-        if self.overflow_scroll_frame and scroll_up and (at_edge or vsb_locked):
-            self.overflow_scroll_frame._scroll(event)
-        elif not vsb_locked:
-            if utilities.PLATFORM.system == "Darwin":
-                units = int(-1*event.delta)
+            if vsb:
+                widget.overflow_scroll_frame._finish_scrolling(event, widget.overflow_scroll_frame, x11, vsb)
             else:
-                units = int(-1*event.delta/30)
-            
-            self.yview_scroll(units, "units")
-          
-    def _xscroll(self, event):
-        "Manage scrolling on Windows/MacOS."
-
-        xview = self.xview()
-
-        hsb_locked = self.manage_hsb_func is not None and self.manage_hsb_func(check=True) == 0
-
-        scroll_up = event.delta > 0
-        at_edge = xview[0] == 0 if scroll_up else xview[1] == 1
-
-        if self.overflow_scroll_frame and scroll_up and (at_edge or hsb_locked):
-            self.overflow_scroll_frame._scroll(event)
-        elif not hsb_locked:
-            if utilities.PLATFORM.system == "Darwin":
-                units = int(-1*event.delta)
+                widget.overflow_scroll_frame._finish_scrolling(event, widget.overflow_scroll_frame, x11, vsb)
+        elif not vsb_locked:
+            if x11:
+                units = -4 if scroll_up else 4
             else:
-                units = int(-1*event.delta/30)
-            
-            self.xview_scroll(units, "units")
+                if utilities.PLATFORM.system == "Darwin":
+                    units = int(-1*event.delta)
+                else:
+                    units = int(-1*event.delta/30)
+            if vsb:
+                widget.yview_scroll(units, "units")
+            else:
+                widget.xview_scroll(units, "units")
+
+    def _scroll_x11(self, event, widget=None): self._finish_scrolling(event, widget, True, True)
+    def _xscroll_x11(self, event, widget=None): self._finish_scrolling(event, widget, True, False)
+    def _scroll(self, event): self._finish_scrolling(event, self, False, True)
+    def _xscroll(self, event): self._finish_scrolling(event, self, False, False)
 
     def _on_right_click(self, event):
         for node_handle in self.hovered_nodes:

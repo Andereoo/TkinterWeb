@@ -103,8 +103,12 @@ class HTMLDocument:
         )
     
     def write(self, text):
-        for child in self.body.children: child.remove()
-        self.html.parse(text)
+        if self.html.parsing:
+            # does self.html.write do something related?
+            self.html.parse(text)
+        else:
+            self.html.reset()
+            self.html.parse(text)
 
     def createElement(self, tagname):  # Taken from hv3_dom_core.tcl line 214
         """Create and return a new HTML element with the given tag name.

@@ -575,7 +575,7 @@ class HTMLElement:
             self.html.set_node_attribute(self.node, "checked", value)
 
     def getAttribute(self, attribute):
-        """Return the value of the given attribute..
+        """Return the value of the given attribute.
         
         :param attribute: The attribute to return.
         :type attribute: str
@@ -586,7 +586,7 @@ class HTMLElement:
             raise TclError(f"the assoiciated element has been destroyed")
 
     def setAttribute(self, attribute, value):
-        """Set the value of the given attribute..
+        """Set the value of the given attribute.
         
         :param attribute: The attribute to set.
         :type attribute: str

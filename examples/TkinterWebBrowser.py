@@ -49,6 +49,9 @@ if len(sys.argv) > 1:
 else:
     NEW_TAB = "about:tkinterweb"
 
+class DOMwindow:
+    def __init__(self, html):
+        self.document = html.document
 
 class Page(ttk.Frame):
     def __init__(self, master, *args, **kwargs):
@@ -491,6 +494,9 @@ class Page(ttk.Frame):
 
     def toggle_js(self):
         self.frame.configure(javascript_enabled = self.js_var.get())
+        self.window = getattr(self, "window", DOMwindow(self.frame))
+        self.frame.javascript.register("window", self.window)
+        self.frame.javascript.register("this", self.window)
         self.reload()
 
     def toggle_objects(self):

@@ -102,6 +102,10 @@ class HTMLDocument:
             self, self.html.safe_tk_eval(f"""set root [lindex [{self.html} node] 0]"""),
         )
     
+    def write(self, text):
+        for child in self.body.children: child.remove()
+        self.html.parse(text)
+
     def createElement(self, tagname):  # Taken from hv3_dom_core.tcl line 214
         """Create and return a new HTML element with the given tag name.
 

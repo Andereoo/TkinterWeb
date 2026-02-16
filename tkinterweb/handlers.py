@@ -586,7 +586,9 @@ class ScriptManager(utilities.BaseManager):
         attributes = dict(zip(attributes[::2], attributes[1::2])) # Make attributes a dict
 
         if "src" in attributes:
-            self.html._thread_check(self.fetch_scripts, self.html.resolve_url(attributes["src"]), attributes)
+            src = attributes["src"]
+            src = src.strip("{").strip("}")
+            self.html._thread_check(self.fetch_scripts, self.html.resolve_url(src), attributes)
         elif "defer" in attributes:
             self.pending_scripts.append((attributes, tag_contents))
         elif self.html.on_script is not None:

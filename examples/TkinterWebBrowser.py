@@ -493,11 +493,17 @@ class Page(ttk.Frame):
         self.reload()
 
     def toggle_js(self):
-        self.frame.configure(javascript_enabled = self.js_var.get())
-        self.window = getattr(self, "window", DOMwindow(self.frame))
-        self.frame.javascript.register("window", self.window)
-        self.frame.javascript.register("this", self.window)
-        self.reload()
+        try:
+            val = self.js_var.get()
+            self.frame.configure(javascript_enabled = val)
+            if val:
+                self.window = getattr(self, "window", DOMwindow(self.frame))
+                self.frame.javascript.register("window", self.window)
+                self.frame.javascript.register("this", self.window)
+                self.reload()
+        except ModuleNotFoundError:
+            self.js_var.set(0)
+            tk.messagebox.showerror("Error", "PythonMonkey must be installed to enable JavaScript.")
 
     def toggle_objects(self):
         self.frame.configure(objects_enabled = self.objects_var.get())

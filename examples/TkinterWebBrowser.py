@@ -6,16 +6,16 @@ These already exist and are generally resource-hungry and not highly integratabl
 Being based on Tkhtml, TkinterWeb is intended to be fast, lightweight, and highly integrated with Tkinter while providing far more control over layouts and styling than is feasible than Tkinter
 TkinterWeb displays older or simpler websites well but may be found lacking on more modern websites
 
-This code was originally created for testing TkinterWeb and is a bit of a mess, but nonetheless is a great example of some of the things that can be done with the software, including:
+This code was created for testing TkinterWeb and is a bit of a mess, but nonetheless is a great example of some of the things that can be done with the software, including:
  - loading pages
  - searching pages
  - embedding Tkinter widgets
  - managing input elements
- - triggering Python code using JavaScript events
+ - embedding Python code
  - manipulating the DOM
  - and others
  
-Copyright (c) 2025 Andrew Clarke
+Copyright (c) 2026 Andrew Clarke
 """
 
 import os
@@ -29,7 +29,8 @@ from tkinter import filedialog
 from tkinter import ttk
 
 from tkinterweb import HtmlFrame, Notebook, __version__
-from tkinterweb.utilities import BUILTIN_PAGES, DONE_LOADING_EVENT, URL_CHANGED_EVENT, TITLE_CHANGED_EVENT, DOWNLOADING_RESOURCE_EVENT
+from tkinterweb.utilities import BUILTIN_PAGES, DONE_LOADING_EVENT, URL_CHANGED_EVENT, TITLE_CHANGED_EVENT, DOWNLOADING_RESOURCE_EVENT, download
+from tkinterweb.subwidgets import ScrolledTextBox, FormEntry
 
 import os
 
@@ -49,9 +50,92 @@ if len(sys.argv) > 1:
 else:
     NEW_TAB = "about:tkinterweb"
 
-class DOMwindow:
-    def __init__(self, html):
-        self.document = html.document
+
+def check_url(entry):
+    url = entry.get()
+    if not any((url.startswith("file:"), url.startswith("http:"), url.startswith("about:"), url.startswith("view-source:"), url.startswith("https:"), url.startswith("data:"))):
+        url = "http://{}".format(url)
+        entry.delete(0, "end")
+        entry.insert(0, url)
+    return url
+
+
+class HTMLPlayground(ttk.PanedWindow):
+    def __init__(self, master):
+        ttk.PanedWindow.__init__(self, master, orient=tk.HORIZONTAL)
+
+        self.master = master
+
+        text_frame = ttk.Frame(self)
+        html_frame = ttk.Frame(self)
+        text_frame._scroll = lambda *a: None
+        text_frame._xscroll = lambda *a: None
+        text_frame._scroll_x11 = lambda *a: None
+        text_frame._xscroll_x11 = lambda *a: None
+        self.textarea = textarea = ScrolledTextBox(text_frame, content="Type HTML code here", onchangecommand=self._on_textarea_change, padx=8, pady=8)
+        self.iframe = iframe = HtmlFrame(html_frame, request_func=self._on_request,
+            message_func = master.html.message_func,
+            images_enabled = master.html.images_enabled,
+            forms_enabled = master.html.forms_enabled,
+            objects_enabled = master.html.objects_enabled,
+            ignore_invalid_images = master.html.ignore_invalid_images,
+            crash_prevention_enabled = master.html.crash_prevention_enabled,
+            dark_theme_enabled = master.html.dark_theme_enabled,
+            image_inversion_enabled = master.html.image_inversion_enabled,
+            caches_enabled = master.html.caches_enabled,
+            threading_enabled = master.html.threading_enabled,
+            image_alternate_text_enabled = master.html.image_alternate_text_enabled,
+            selection_enabled = master.html.selection_enabled,
+            find_match_highlight_color = master.html.find_match_highlight_color,
+            find_match_text_color = master.html.find_match_text_color,
+            find_current_highlight_color = master.html.find_current_highlight_color,
+            find_current_text_color = master.html.find_current_text_color,
+            selected_text_highlight_color = master.html.selected_text_highlight_color,
+            selected_text_color = master.html.selected_text_color,
+            caret_browsing_enabled = master.html.caret_browsing_enabled)
+        iframe.html.text_mode = False
+        iframe.load_html("HTML output shows here")
+
+        self.urlbar = urlbar = FormEntry(text_frame, placeholder="https://")
+        urlbar.bind("<Return>", self._load_url)
+        go_button = ttk.Button(text_frame, text="Go", cursor="hand2", command=self._load_url)
+
+        text_frame.grid_rowconfigure(1, weight=1)
+        text_frame.grid_columnconfigure(0, weight=1)
+        urlbar.grid(row=0, column=0, sticky="nsew", padx=(5,0))
+        go_button.grid(row=0, column=1, padx=(5,0))
+        textarea.grid(row=1, column=0, columnspan=2, sticky="nsew", pady=(5,0), padx=(5,0))
+        iframe.pack(expand=True, fill="both", padx=(0,5))
+
+        self.add(text_frame)
+        self.add(html_frame)
+
+    def _load_url(self, event=None):
+        url = check_url(self.urlbar)
+        self.iframe.load_url(url)
+
+    def _on_request(self, url, *args):
+        res = self.master.html.download_url(url, *args)
+        if url == self.iframe.current_url:
+            self.textarea.delete("0.0", "end")
+            self.textarea.insert("1.0", res[1])
+        return res
+
+    def _on_textarea_change(self, event=None):
+        self.iframe.load_html(self.textarea.get(), self.iframe.base_url)
+
+
+HTML_TEST_PAGE = """
+<head>
+    <title>HTML Playground</title>
+    <style>
+        html, body {{margin:0;overflow: hidden}}
+        object {{width:100%}}
+    </style>
+</head>
+<body><object tkinterweb-full-page data={}></object></body>
+</html>"""
+
 
 class Page(ttk.Frame):
     def __init__(self, master, *args, **kwargs):
@@ -67,6 +151,8 @@ class Page(ttk.Frame):
         topbar = ttk.Frame(self)
         self.bottombar = bottombar = ttk.Frame(self)
         self.findbar = findbar = ttk.Frame(self)
+
+        self.html_playground = None
         
         self.linklabel = linklabel = ttk.Label(bottombar, text="Welcome to TkinterWeb!", cursor="hand2")
 
@@ -125,7 +211,9 @@ class Page(ttk.Frame):
         caret_browsing_enabled = ttk.Checkbutton(sidebar, text="Caret browsing enabled", variable=caret_browsing_var, command=self.toggle_caret_browsing)
         
         self.view_source_button = view_source_button = ttk.Button(sidebar, text="View page source", command=self.view_source)
-        about_button = ttk.Button(sidebar, text="About TkinterWeb", command=lambda url="about:tkinterweb": self.open_new_tab(url))
+        about_button = ttk.Button(sidebar, text="About TkinterWeb", command=lambda: self.open_new_tab("about:tkinterweb"))
+        html_button = ttk.Button(sidebar, text="HTML playground", command=lambda: self.open_new_tab("about:html"))
+        style_button = ttk.Button(sidebar, text="Style report", command=self.style_report)
         
         frame.bind(TITLE_CHANGED_EVENT, self.change_title)
         frame.bind(URL_CHANGED_EVENT, self.url_change)
@@ -174,13 +262,13 @@ class Page(ttk.Frame):
     <div>
       <p style="float:left">Zoom:</p>
       <span style="float:right" id="zoom">{frame['zoom']}</span>
-      <input onchange="document.getElementById('zoom').textContent = this.value; frame.configure(zoom=this.value)" style="width: 100%" type="range" min="0.1" max="10" step="0.1" value="{self.frame['zoom']}">
+      <input onchange="document.getElementById('zoom').textContent = this.value; frame.config(zoom=this.value)" style="width: 100%" type="range" min="0.1" max="10" step="0.1" value="{self.frame['zoom']}">
     </div>
     
     <div>
       <p style="float:left">Font scale:</p>
       <span style="float:right" id="fontscale">{frame['fontscale']}</span>
-      <input onchange="document.getElementById('fontscale').textContent = this.value; frame.configure(fontscale=this.value)" style="width: 100%" type="range" min="0.1" max="10" step="0.1" value="{self.frame['fontscale']}">
+      <input onchange="document.getElementById('fontscale').textContent = this.value; frame.config(fontscale=this.value)" style="width: 100%" type="range" min="0.1" max="10" step="0.1" value="{self.frame['fontscale']}">
     </div>
     
     <hr style="margin-bottom:10px;margin-top:10px">
@@ -190,28 +278,32 @@ class Page(ttk.Frame):
     <hr style="margin-bottom:10px;margin-top:0">
     
     <p>Parse mode:</p>
-    <select onchange="frame.configure(parsemode=this.value)" style="padding: 3px 0px 1px 0px; width:100%; color:black">
+    <select onchange="frame.config(parsemode=this.value)" style="padding: 3px 0px 1px 0px; width:100%; color:black">
       <option value="xml">xml</option>
       <option value="xhtml">xhtml</option>
       <option value="html">html</option>
     </select>
     <hr style="margin-bottom:10px;margin-top:0">
 
-    <input type="color" onchange="frame['find_match_highlight_color'] = this.value" value="{frame['find_match_highlight_color']}">
-    <input type="color" onchange="frame['find_match_text_color'] = this.value" value="{frame['find_match_text_color']}"><label>Find matches</label><br>
-    <input type="color" onchange="frame['find_current_highlight_color'] = this.value" value="{frame['find_current_highlight_color']}">
-    <input type="color" onchange="frame['find_current_text_color'] = this.value" value="{frame['find_current_text_color']}"><label>Current match</label><br>
-    <input type="color" onchange="frame['selected_text_highlight_color'] = this.value" value="{frame['selected_text_highlight_color']}">
-    <input type="color" onchange="frame['selected_text_color'] = this.value" value="{frame['selected_text_color']}"><label>Selected text</label><br>
+    <input type="color" onchange="frame.config(find_match_highlight_color=this.value)" value="{frame['find_match_highlight_color']}">
+    <input type="color" onchange="frame.config(find_match_text_color=this.value)" value="{frame['find_match_text_color']}"><label>Find matches</label><br>
+    <input type="color" onchange="frame.config(find_current_highlight_color=this.value)" value="{frame['find_current_highlight_color']}">
+    <input type="color" onchange="frame.config(find_current_text_color=this.value)" value="{frame['find_current_text_color']}"><label>Current match</label><br>
+    <input type="color" onchange="frame.config(selected_text_highlight_color=this.value)" value="{frame['selected_text_highlight_color']}">
+    <input type="color" onchange="frame.config(selected_text_color=this.value)" value="{frame['selected_text_color']}"><label>Selected text</label><br>
 
     <hr>
     
     <div style="margin-top: 20px">
       <object allowscrolling data={view_source_button}></object>
+      <object allowscrolling data={style_button}></object>
+      <object allowscrolling data={html_button}></object>
       <object allowscrolling data={about_button}></object>
     </div>
   </body>
 </html>""")
+        
+        frame.config = self.html_config
 
         linklabel.pack(expand=True, fill="both")
         topbar.columnconfigure(4, weight=1)
@@ -248,6 +340,17 @@ class Page(ttk.Frame):
         settingsbutton.bind("<Escape>", lambda x: self.close_sidebar())
 
         self.toggle_theme(False)
+
+    def html_config(self, **kwargs):
+        self.frame.configure(**kwargs)
+        if self.html_playground is not None: 
+            self.html_playground.iframe.configure(**kwargs)
+
+    def style_report(self):
+        if self.frame.current_url == "about:html":
+            self.html_playground.iframe.generate_style_report().grab_set()
+        else:
+            self.frame.generate_style_report().grab_set()
 
     def apply_dark_theme(self):
         self.style.configure(".", background="#2b2b2b", foreground="#FFFFFF")
@@ -452,9 +555,13 @@ class Page(ttk.Frame):
         self.search_in_page(change=False)
 
     def search_in_page(self, x=None, y=None, change=True):
+        if self.frame.current_url == "about:html":
+            frame = self.html_playground.iframe
+        else:
+            frame = self.frame
         if change:
             self.find_select_num = 1
-        self.find_match_num = self.frame.find_text(self.findbox_var.get(), self.find_select_num, self.ignore_case_var.get(), self.highlight_all_var.get())
+        self.find_match_num = frame.find_text(self.findbox_var.get(), self.find_select_num, self.ignore_case_var.get(), self.highlight_all_var.get())
         if self.find_match_num > 0:
             self.find_bar_caption.configure(text="Selected {} of {} matches.".format(self.find_select_num, self.find_match_num))
         else:
@@ -481,44 +588,40 @@ class Page(ttk.Frame):
         self.linklabel.config(text=self.cut_text(message, 80))
 
     def toggle_images(self):
-        self.frame.configure(images_enabled= self.images_var.get())
+        self.frame.config(images_enabled= self.images_var.get())
         self.reload()
 
     def toggle_styles(self):
-        self.frame.configure(stylesheets_enabled = self.styles_var.get())
+        self.frame.config(stylesheets_enabled = self.styles_var.get())
         self.reload()
 
     def toggle_forms(self):
-        self.frame.configure(forms_enabled = self.forms_var.get())
+        self.frame.config(forms_enabled = self.forms_var.get())
         self.reload()
 
     def toggle_js(self):
         try:
             val = self.js_var.get()
-            self.frame.configure(javascript_enabled = val)
-            if val:
-                self.window = getattr(self, "window", DOMwindow(self.frame))
-                self.frame.javascript.register("window", self.window)
-                self.frame.javascript.register("this", self.window)
-                self.reload()
+            self.frame.config(javascript_enabled = val)
+            self.reload()
         except ModuleNotFoundError:
             self.js_var.set(0)
             tk.messagebox.showerror("Error", "PythonMonkey must be installed to enable JavaScript.")
 
     def toggle_objects(self):
-        self.frame.configure(objects_enabled = self.objects_var.get())
+        self.frame.config(objects_enabled = self.objects_var.get())
         self.reload()
 
     def toggle_caches(self):
-        self.frame.configure(caches_enabled = self.caches_var.get())
+        self.frame.config(caches_enabled = self.caches_var.get())
         self.reload()
 
     def toggle_emojis(self):
-        self.frame.configure(crash_prevention_enabled = self.crashes_var.get())
+        self.frame.config(crash_prevention_enabled = self.crashes_var.get())
         self.reload()
 
     def toggle_threads(self):
-        self.frame.configure(threading_enabled = self.threads_var.get())
+        self.frame.config(threading_enabled = self.threads_var.get())
         self.reload()
 
     def toggle_theme(self, update_page=True):
@@ -528,19 +631,19 @@ class Page(ttk.Frame):
         else:
             self.apply_light_theme()
 
-        self.frame.configure(dark_theme_enabled = value)
+        self.frame.config(dark_theme_enabled = value)
         if update_page:
             self.reload()
 
     def toggle_inverter(self):
-        self.frame.configure(image_inversion_enabled = self.invert_images_var.get())
+        self.frame.config(image_inversion_enabled = self.invert_images_var.get())
         self.reload()
 
     def toggle_selection(self):
-        self.frame.configure(selection_enabled = self.selection_var.get())
+        self.frame.config(selection_enabled = self.selection_var.get())
 
     def toggle_caret_browsing(self):
-        self.frame.configure(caret_browsing_enabled = self.caret_browsing_var.get())
+        self.frame.config(caret_browsing_enabled = self.caret_browsing_var.get())
 
     def open_sidebar(self, keep_open=False):
         if self.sidebar.winfo_ismapped() and not keep_open:
@@ -583,13 +686,20 @@ class Page(ttk.Frame):
         self.forward_history.append(self.back_history[-1])
         url = self.back_history[-2]
         self.back_history = self.back_history[:-1]
-        self.frame.load_url(url)
+        self.load_url(url)
         if len(self.back_history) <= 1:
             self.backbutton.config(state="disabled", cursor="arrow")
         self.url_change(url)
 
     def on_downloading(self, event):
         self.reloadbutton.config(text="Stop", command=self.frame.stop)
+
+    def load_url(self, url, decode=None, force=False):
+        if url == "about:html":
+            if self.html_playground is None: self.html_playground = HTMLPlayground(self.frame)
+            self.frame.load_html(HTML_TEST_PAGE.format(self.html_playground), url)
+        else:
+            self.frame.load_url(url, decode, force)
 
     def forward(self):
         if len(self.forward_history) == 0:
@@ -600,7 +710,7 @@ class Page(ttk.Frame):
             self.forwardbutton.config(state="disabled", cursor="arrow")
         self.backbutton.config(state="normal", cursor="hand2")
         self.back_history.append(url)
-        self.frame.load_url(url)
+        self.load_url(url)
         self.url_change(url)
 
     def cut_text(self, text, limit):
@@ -626,6 +736,8 @@ class Page(ttk.Frame):
     def done_loading(self, event):
         self.linklabel.config(text="Done")
         self.reloadbutton.config(text="Reload", command=self.reload)
+
+        self.search_in_page()
 
     def handle_view_source_button(self, url):
         if url in BUILTIN_PAGES or url.startswith("view-source:"):
@@ -654,13 +766,9 @@ class Page(ttk.Frame):
         self.frame.load_form_data(url, data, method)
 
     def load_site(self, event):
-        url = self.urlbar.get()
-        if not any((url.startswith("file:"), url.startswith("http:"), url.startswith("about:"), url.startswith("view-source:"), url.startswith("https:"), url.startswith("data:"))):
-            url = "http://{}".format(url)
-            self.urlbar.delete(0, "end")
-            self.urlbar.insert(0, url)
+        url = check_url(self.urlbar)
         self.addtohist(url)
-        self.frame.load_url(url, force=True)
+        self.load_url(url, force=True)
         self.handle_view_source_button(url)
 
     def link_click(self, url, history=True):
@@ -670,11 +778,12 @@ class Page(ttk.Frame):
             self.backbutton.config(state="disabled", cursor="arrow")
         self.urlbar.delete(0, "end")
         self.urlbar.insert(0, url)
-        self.frame.load_url(url)
+        self.load_url(url)
         self.handle_view_source_button(url)
 
     def reload(self):
-        self.frame.load_url(self.frame.current_url, force=True)
+        self.load_url(self.frame.current_url, force=True)
+        if self.html_playground: self.html_playground._on_textarea_change()
 
     def change_title(self, event):
         self.master.tab(self, text=self.cut_text(self.frame.title, 40))  

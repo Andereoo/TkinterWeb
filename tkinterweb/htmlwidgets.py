@@ -2,7 +2,7 @@
 Widgets that expand on the functionality of the basic bindings
 by adding scrolling, file loading, and many other convenience functions
 
-Copyright (c) 2021-2025 Andrew Clarke
+Copyright (c) 2021-2026 Andrew Clarke
 """
 
 from . import bindings, dom, js, utilities, subwidgets, imageutils
@@ -183,7 +183,7 @@ class HtmlFrame(Frame):
             "on_navigate_fail": {"default": self.show_error_page, "type": "callable"},
             "vertical_scrollbar": {"default": "dynamic", "type": "scrollbar"},
             "horizontal_scrollbar": {"default": False, "type": "scrollbar"},
-            "javascript_backend": {"default": "pythonmonkey", "type": str, "changeable": False},
+            "javascript_backend": {"default": "pythonmonkey", "type": str},
             "unshrink": {"default": False},
             "about_page_background": {"default": "", "deprecated": "ttk.Style().configure('TFrame', background=)"},
             "about_page_foreground": {"default": "", "deprecated": "ttk.Style().configure('TFrame', foreground=)"},
@@ -1336,20 +1336,11 @@ Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certif
         submaster.columnconfigure(0, weight=1)
         submaster.rowconfigure(0, weight=1)
 
-        options = self._tkinterweb_options.copy()
-        options["messages_enabled"] = False
-        tkw = bindings.TkinterWeb(submaster, options, **self._tkhtml_options)
-
-        hsb = subwidgets.AutoScrollbar(submaster, orient="horizontal", command=tkw.xview)
-        vsb = subwidgets.AutoScrollbar(submaster, orient="vertical", command=tkw.yview)
-        tkw.configure(xscrollcommand=hsb.set, yscrollcommand=vsb.set)
-        tkw.grid(row=0, column=0, sticky="nsew")
-        hsb.grid(row=1, column=0, sticky="nsew")
-        vsb.grid(row=0, column=1, sticky="nsew")
-        hsb.set_type(2, *tkw.xview())
-        vsb.set_type(2, *tkw.yview())
-
-        tkw.parse(self.html.style_report)
+        # I had to remove settings copying after making changes to how settings are parsed
+        # TODO: maybe copy more settings
+        tkw = HtmlFrame(submaster, messages_enabled=False, dark_theme_enabled=self.html.dark_theme_enabled)
+        tkw.load_html(self.html.style_report)
+        tkw.pack(expand=True, fill="both")
         return tkw
 
     def _check_options(self, options, init_args, kwargs, set_attr=False):
@@ -1908,6 +1899,7 @@ class HtmlText(HtmlFrame):
                 self._delete(end_element)
 
         self.set_caret_position(start_element, start_element_index + len(event.char))
+        self.html.event_generate(utilities.FIELD_CHANGED_EVENT)
 
     def _on_key(self, event):
         "Handle key presses."
@@ -1955,6 +1947,7 @@ class HtmlText(HtmlFrame):
                     self._remove_between(element2, element)
                 self._delete(element)
                 self._html.caret_manager.update()
+            self.html.event_generate(utilities.FIELD_CHANGED_EVENT)
             return
 
         if event.keysym == "Delete":
@@ -1978,6 +1971,7 @@ class HtmlText(HtmlFrame):
                 self._delete(element2)
 
                 self.set_caret_position(element, len(text))
+            self.html.event_generate(utilities.FIELD_CHANGED_EVENT)
             return
 
         # Create a new node with the same tag and class as the current node
@@ -1987,6 +1981,7 @@ class HtmlText(HtmlFrame):
             element.textContent = self._check_text(text[index:])
             new.textContent = self._check_text(text[:index])
             self.shift_caret_right()
+            self.html.event_generate(utilities.FIELD_CHANGED_EVENT)
             return
         
         # Map spaces to non-breaking spaces
@@ -1997,6 +1992,8 @@ class HtmlText(HtmlFrame):
         newtext = text2 + event.char + text[index:]
         element.textContent = newtext
         self.set_caret_position(element, len(text2) + len(event.char))
+
+        self.html.event_generate(utilities.FIELD_CHANGED_EVENT)
 
     def configure(self, **kwargs):
         ""

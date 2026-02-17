@@ -1,7 +1,7 @@
 """
 Various constants and utilities used by TkinterWeb
 
-Copyright (c) 2021-2025 Andrew Clarke
+Copyright (c) 2021-2026 Andrew Clarke
 
 Some of the CSS code in this file is modified from the Tkhtml/Hv3 project. Tkhtml is copyright (c) 2005 Dan Kennedy.
 """
@@ -257,11 +257,7 @@ class FormEntry(tk.Entry):
             return "break"
 
     def _on_paste(self, event):
-        try:
-            self.delete("sel.first", "sel.last")
-        except tk.TclError:
-            pass
-        self.insert("insert", self.clipboard_get())
+        self.set(self.clipboard_get())
         return "break"
 
     def _select_all(self, event):
@@ -651,13 +647,11 @@ class FileSelector(tk.Frame):
             self.label.config(text=files)
         else:
             self.label.config(text=f"{number} files selected.")
-        self.event_generate("<<Modified>>")
         if self.onchangecommand:
             self.onchangecommand(self)
 
     def set(self, value):
         self.label.config(text="No files selected.")
-        self.event_generate("<<Modified>>")
         if self.onchangecommand:
             self.onchangecommand(self)
 
@@ -697,7 +691,6 @@ class ColourSelector(tk.Frame):
     def set(self, colour):
         colour = colour if colour else "#000000"
         self.config(bg=colour, activebackground=colour)
-        self.event_generate("<<Modified>>")
         if self.onchangecommand:
             self.onchangecommand(self)
 

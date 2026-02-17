@@ -1,7 +1,7 @@
 """
 The core Python bindings to Tkhtml3
 
-Copyright (c) 2021-2025 Andrew Clarke
+Copyright (c) 2021-2026 Andrew Clarke
 """
 
 from re import IGNORECASE, split, sub
@@ -634,7 +634,10 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
 
         # By default Tkhtml won't display plain text
         if "<" not in html and ">" not in html:
-            html = f"<body><div>{html}</div></body>"
+            html = f"<html><body><div>{html}</div></body></html>"
+        elif "<html>" not in html and "</html>" not in html:
+            # Otherwise, document.write can be buggy
+            html = f"<html>{html}</html>"
 
         # Send the HTML code to the queue if needed
         # Otherwise, evaluate directly so that the document can be manipulated as soon as parse() returns
@@ -1235,7 +1238,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         """Pretty-print a node's contents. Similar to innerHTML, but formatted.
 
         New in version 4.4."""
-        return utilities.safe_tk_eval(r"""
+        return utilities.safe_tk_eval(self, r"""
             proc indent {d} {return [string repeat { } $d]}
             proc prettify {node} {
                 set depth [expr {([info level] - 1) * %d}]

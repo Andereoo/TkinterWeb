@@ -1,7 +1,7 @@
 """
 Various constants and utilities used by TkinterWeb
 
-Copyright (c) 2021-2025 Andrew Clarke
+Copyright (c) 2021-2026 Andrew Clarke
 
 Some of the CSS code in this file is modified from the Tkhtml/Hv3 project. Tkhtml is copyright (c) 2005 Dan Kennedy.
 The lru_cache function in this file is modified from functools. Functools is copyright (c) Python Software Foundation.
@@ -31,7 +31,7 @@ __title__ = "TkinterWeb"
 __author__ = "Andrew Clarke"
 __copyright__ = "(c) 2021-2025 Andrew Clarke"
 __license__ = "MIT"
-__version__ = "4.20.1"
+__version__ = "4.20.2"
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")

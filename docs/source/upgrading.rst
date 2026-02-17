@@ -523,6 +523,11 @@ Changelog
     * Permitted values for configuration option are now more tightly restricted.
     * :attr:`.CSSStyleDeclaration.cssText` can now be set.
 
+    Version 4.20:
+
+    * Fixed some regressions and bugs.
+    * The :class:`.HtmlText` widget now emits the ``<<Modified>>`` event when the user types in it.
+
 -------------------
 
 Please report bugs or request new features on the `issues page <https://github.com/Andereoo/TkinterWeb/issues>`_.

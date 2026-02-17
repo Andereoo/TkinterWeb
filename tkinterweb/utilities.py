@@ -687,7 +687,12 @@ JS_EVENT_MAP = {
     "onmouseb1move": None,
 }
 
-UNSET = object()
+class unset:
+    # We set this so that Sphinx documentation pages look nicer and make more sense to viewers
+    def __repr__(self):
+        return "DEFAULT"
+
+UNSET = unset()
 
 class StoppableThread(threading.Thread):
     "A thread that stores a state flag that can be set and used to check if the thread is supposed to be running"

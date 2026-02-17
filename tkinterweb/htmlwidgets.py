@@ -471,6 +471,8 @@ class HtmlFrame(Frame):
         :type decode: str or None, optional
         :param force: Force the page to reload all elements.
         :type force: bool, optional"""
+        ### TODO: Maybe consider merging load_url, load_file, and load_website into one
+        ### One could use the checker from the sample web browser
         if not self._current_url == url:
             self._previous_url = self._current_url
         if url in utilities.BUILTIN_PAGES:

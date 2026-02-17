@@ -54,9 +54,12 @@ else:
 def check_url(entry):
     url = entry.get()
     if not any((url.startswith("file:"), url.startswith("http:"), url.startswith("about:"), url.startswith("view-source:"), url.startswith("https:"), url.startswith("data:"))):
-        url = "http://{}".format(url)
-        entry.delete(0, "end")
-        entry.insert(0, url)
+        if os.path.exists(url):
+            url = f"file://{url}"
+        else:
+            url = "http://{}".format(url)
+            entry.delete(0, "end")
+            entry.insert(0, url)
     return url
 
 
@@ -740,7 +743,7 @@ class Page(ttk.Frame):
         self.search_in_page()
 
     def handle_view_source_button(self, url):
-        if url in BUILTIN_PAGES or url.startswith("view-source:"):
+        if url in BUILTIN_PAGES or url.startswith("view-source:") or url == "about:html":
             self.view_source_button.config(state="disabled", cursor="arrow")
         else:
             self.view_source_button.config(state="normal", cursor="hand2")
@@ -790,7 +793,10 @@ class Page(ttk.Frame):
     
     def select_all(self):
         if self.focus_get() not in (self.urlbar, self.find_box):
-            self.frame.select_all()
+            if self.frame.current_url == "about:html":
+                self.html_playground.iframe.select_all()
+            else:
+                self.frame.select_all()
 
     def view_source(self):
         if str(self.view_source_button.cget("state")) == "normal":

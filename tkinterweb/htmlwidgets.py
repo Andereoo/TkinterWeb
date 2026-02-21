@@ -381,7 +381,7 @@ class HtmlFrame(Frame):
         utilities.warn("pack_propagate is being ignored, because since version 4.13 widget geometry is always respected by default. If this is a problem, please file a bug report.")
         pass
 
-    def load_html(self, html_source, base_url=None, fragment=None, _thread_safe=False, _internal=False):
+    def load_html(self, html_source, base_url=None, fragment=None):
         """Clear the current page and parse the given HTML code.
         
         :param html_source: The HTML code to render.
@@ -389,34 +389,36 @@ class HtmlFrame(Frame):
         :param base_url: The base url to use when parsing stylesheets and images. If this argument is not supplied, it will be set to the current working directory.
         :type base_url: str, optional
         :param fragment: The url fragment to scroll to after the document loads.
-        :type fragment: str, optional"""
-        if self._thread_in_progress:
-            self._thread_in_progress.stop()
-        self._html.reset(_thread_safe)
-
-        if fragment: fragment = "".join(char for char in fragment if char.isalnum() or char in ("-", "_", ".")).replace(".", r"\.")
-
-        self._html_cache = html_source
+        :type fragment: str, optional"""        
 
         if base_url == None:
             path = utilities.WORKING_DIR
             if not path.startswith("/"):
                 path = f"/{path}"
             base_url = f"file://{path}/"
+
+        self._current_url = ""
+
+        self._load_html(html_source, base_url, fragment)    
+
+    def _load_html(self, html_source, base_url=None, fragment=None, _thread_safe=False):
+        if self._thread_in_progress:
+            self._thread_in_progress.stop()
+        if fragment: 
+            fragment = "".join(char for char in fragment if char.isalnum() or char in ("-", "_", ".")).replace(".", r"\.")
+
+        self._html.reset(_thread_safe)
+        self._html_cache = html_source
         self._html.base_url = base_url
-
-        if not _internal:
-            self._current_url = ""
-
         self._html.fragment = fragment
         self._html.parse(html_source, _thread_safe)
 
         if _thread_safe:
-            self._html.post_to_queue(self._load_html)
+            self._html.post_to_queue(self._finish_loading_html)
         else:
-            self._load_html()
+            self._finish_loading_html()
     
-    def _load_html(self):
+    def _finish_loading_html(self):
         # NOTE: must be run from main thread
         
         self._finish_css()
@@ -477,7 +479,7 @@ class HtmlFrame(Frame):
         if url in utilities.BUILTIN_PAGES:
             utilities.BUILTIN_PAGES._html = self._html
             self._current_url = url
-            return self.load_html(self._get_about_page(url), url, _internal=True)
+            return self._load_html(self._get_about_page(url), url)
 
         self._waiting_for_reset = True
 
@@ -525,7 +527,7 @@ class HtmlFrame(Frame):
         if self._current_url:
             self.load_url(self._current_url, force=True)
         else:
-            self.load_html(self._html_cache, base_url=self._html.base_url)
+            self._load_html(self._html_cache, self._html.base_url)
 
     def add_html(self, html_source, return_element=False, index=-1):
         """Parse HTML and add it to the end of the current document. Unlike :meth:`HtmlFrame.load_html`, :meth:`HtmlFrame.add_html` adds rendered HTML code without clearing the original document.
@@ -718,7 +720,7 @@ class HtmlFrame(Frame):
         """Return the page's HTML code or save the page as an HTML file.
 
         As of version 4.21, this method returns or saves the page's original HTML. 
-        Consider using :meth:`HtmlFrame.snapshot_page` or :attr:`HTMLElement.innerHTML` do get the page's HTML in real-time.
+        Consider using :meth:`HtmlFrame.snapshot_page` or :attr:`HTMLElement.innerHTML` to get the page's HTML in real-time.
                 
         :param filename: The file path to save the page to. If None, the image is not saved to the disk.
         :type filename: str or None, optional
@@ -794,7 +796,7 @@ class HtmlFrame(Frame):
         if self.winfo_exists():
             if not self._button:
                 self._button = tk.Button(self, text="Try Again", command=self.reload)
-            self.load_html(self._get_about_page("about:error", code, self._button), url, _internal=True)
+            self._load_html(self._get_about_page("about:error", code, self._button), url)
 
     def resolve_url(self, url):
         """Generate a full url from the specified url. This can be used to generate full urls when given a relative url.
@@ -1238,16 +1240,16 @@ class HtmlFrame(Frame):
                         else:
                             data = "".join(data)
                         text = self._get_about_page("about:view-source", length*9, data)
-                        self.load_html(text, newurl, _thread_safe=thread_safe, _internal=True)
+                        self._load_html(text, newurl, _thread_safe=thread_safe)
                     elif "image" in filetype:
                         name = self._html.image_manager.allocate_image_name()
                         if name:
                             data, data_is_image = self._html.image_manager.check_images(data, name, url, filetype, thread.is_subthread)
                             self._html.post_to_queue(lambda data=data, name=name, url=url, filetype=filetype, data_is_image=data_is_image: self._finish_loading_image(data, name, url, filetype, data_is_image))
                         else:
-                            self.load_html(self._get_about_page("about:image", name), newurl, _thread_safe=thread_safe, _internal=True)
+                            self._load_html(self._get_about_page("about:image", name), newurl, _thread_safe=thread_safe)
                     else:
-                        self.load_html(data, newurl, fragment, _thread_safe=thread_safe, _internal=True)
+                        self._load_html(data, newurl, fragment, _thread_safe=thread_safe)
             else:
                 # If no requests need to be made, we can signal that the page is done loading, handle fragments, etc.
                 self._html.fragment = fragment
@@ -1263,7 +1265,7 @@ class HtmlFrame(Frame):
 
         text = self._get_about_page("about:image", name)
         self._html.image_manager.finish_fetching_images(data, name, url, filetype, data_is_image)
-        self.load_html(text, url, _internal=True)
+        self._load_html(text, url)
     
     def _finish_loading_nothing(self):
         # NOTE: must be run in main thread

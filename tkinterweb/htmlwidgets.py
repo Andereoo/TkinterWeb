@@ -726,8 +726,8 @@ class HtmlFrame(Frame):
     def save_page(self, filename=None):
         """Return the page's HTML code or save the page as an HTML file.
 
-        As of version 4.21, if caching is enabled, this method returns or saves the page's original HTML. 
-        Consider using :meth:`HtmlFrame.snapshot_page` or :attr:`HTMLElement.innerHTML` to get the page's HTML in real-time.
+        As of version 4.21, if caching is enabled, this method uses the page's original HTML. 
+        Consider using :meth:`HtmlFrame.snapshot_page` or :attr:`.HTMLElement.innerHTML` to get the page's HTML in real-time.
 
         :param filename: The file path to save the page to. If None, the page is not saved to the disk.
         :type filename: str or None, optional

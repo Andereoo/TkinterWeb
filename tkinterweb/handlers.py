@@ -592,7 +592,9 @@ class ScriptManager(utilities.BaseManager):
         elif "defer" in attributes:
             self.pending_scripts.append((attributes, tag_contents))
         elif self.html.on_script is not None:
-            return self.html.on_script(attributes, tag_contents)
+            self.html.on_script(attributes, tag_contents)
+
+        #self.html.write("text", f"<tkw_script style='display:none'>{tag_contents.replace("<", "&lt;").replace(">", "&gt;")}</tkw_script>")
     
     def fetch_scripts(self, url=None, attributes="", data=None):
         "Fetch and run scripts"
@@ -638,6 +640,8 @@ class StyleManager(utilities.BaseManager):
     def _on_style(self, attributes, tag_contents):
         "Handle <style> elements."
         self._finish_fetching_styles(data=tag_contents)
+
+        #self.html.write("text", f"<tkw_style style='display:none'>{tag_contents.replace("<", "&lt;").replace(">", "&gt;")}</tkw_style>")
 
     def _on_link(self, node):
         "Handle <link> elements."
@@ -892,7 +896,8 @@ class ImageManager(utilities.BaseManager):
 
     def _finish_image_delete(self, name):
         # NOTE: this must run in the main thread
-        del self.loaded_images[name]
+        if name in self.loaded_images:
+            del self.loaded_images[name]
 
     def allocate_image_name(self):
         "Get a unique image name."

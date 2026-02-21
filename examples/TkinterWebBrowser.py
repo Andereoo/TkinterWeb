@@ -13,7 +13,8 @@ This code was created for testing TkinterWeb and is a bit of a mess, but nonethe
  - managing input elements
  - embedding Python code
  - manipulating the DOM
- - and others
+ - making round buttons
+ - and more
  
 Copyright (c) 2026 Andrew Clarke
 """
@@ -75,8 +76,9 @@ class HTMLPlayground(ttk.PanedWindow):
         text_frame._xscroll = lambda *a: None
         text_frame._scroll_x11 = lambda *a: None
         text_frame._xscroll_x11 = lambda *a: None
-        self.textarea = textarea = ScrolledTextBox(text_frame, content="Type HTML code here", onchangecommand=self._on_textarea_change, padx=8, pady=8)
-        self.iframe = iframe = HtmlFrame(html_frame, request_func=self._on_request,
+        self.textarea = textarea = ScrolledTextBox(text_frame, content="Type HTML code here", padx=8, pady=8, wrap=tk.NONE)
+        self.iframe = iframe = HtmlFrame(html_frame,
+            messages_enabled=False,
             message_func = master.html.message_func,
             images_enabled = master.html.images_enabled,
             forms_enabled = master.html.forms_enabled,
@@ -98,10 +100,33 @@ class HTMLPlayground(ttk.PanedWindow):
             caret_browsing_enabled = master.html.caret_browsing_enabled)
         iframe.html.text_mode = False
         iframe.load_html("HTML output shows here")
+        iframe.config(messages_enabled=True)
 
         self.urlbar = urlbar = FormEntry(text_frame, placeholder="https://")
         urlbar.bind("<Return>", self._load_url)
         go_button = ttk.Button(text_frame, text="Go", cursor="hand2", command=self._load_url)
+
+        self.base_title = "HTML Playground"
+        master.add_html(f"<title>{self.base_title}</title>")
+
+        # Make a round button
+        # Quite unnecessary, but very fun
+        s = ttk.Style()
+        run_button = HtmlFrame(textarea.tbox, messages_enabled=False, shrink=True, javascript_enabled=True, javascript_backend="python", selection_enabled=False)
+        run_button.load_html(f"""<body>
+                                <style>
+                                    body{{margin:0;background-color:white}}
+                                    button{{color:{s.lookup("TButton", "foreground")};background-color:{s.lookup("TButton", "background")};border-radius:5px;padding:6px 11px;border-width:0}}
+                                    button:hover{{background-color:{s.lookup("TButton", "background", state=("active",))}}}
+                                    button:active{{background-color:{s.lookup("TButton", "background")}}}
+                                </style>
+                                <button onclick='update_iframe()'>&gt;</button>
+                                </body>""")
+        run_button.javascript.register("update_iframe", self._update_iframe)
+        run_button.place(relx=1.0, rely=1.0, anchor="se")
+
+        self.iframe.bind("<<DOMContentLoaded>>", self._on_page_loaded)
+        self.iframe.bind("<<TitleChanged>>", self._on_title_change)
 
         text_frame.grid_rowconfigure(1, weight=1)
         text_frame.grid_columnconfigure(0, weight=1)
@@ -117,20 +142,25 @@ class HTMLPlayground(ttk.PanedWindow):
         url = check_url(self.urlbar)
         self.iframe.load_url(url)
 
-    def _on_request(self, url, *args):
-        res = self.master.html.download_url(url, *args)
-        if url == self.iframe.current_url:
-            self.textarea.delete("0.0", "end")
-            self.textarea.insert("1.0", res[1])
-        return res
+    def _on_title_change(self, event, addendum=None):
+        if addendum is None:
+            addendum = f" - {self.iframe.title}"
+        self.master.add_html(f"<title>{self.base_title}{addendum}</title>")
 
-    def _on_textarea_change(self, event=None):
+    def _on_page_loaded(self, event):
+        html = self.iframe.save_page()
+        self.textarea.delete("0.0", "end")
+        self.textarea.insert("1.0", html)
+
+    def _update_iframe(self, event=None):
+        self.iframe.unbind("<<DOMContentLoaded>>")
+        self.master.add_html(f"<title>{self.base_title}</title>")
         self.iframe.load_html(self.textarea.get(), self.iframe.base_url)
+        self.iframe.bind("<<DOMContentLoaded>>", self._on_page_loaded)
 
 
 HTML_TEST_PAGE = """
 <head>
-    <title>HTML Playground</title>
     <style>
         html, body {{margin:0;overflow: hidden}}
         object {{width:100%}}
@@ -350,7 +380,7 @@ class Page(ttk.Frame):
             self.html_playground.iframe.configure(**kwargs)
 
     def style_report(self):
-        if self.frame.current_url == "about:html":
+        if self.frame.base_url == "about:html":
             self.html_playground.iframe.generate_style_report().grab_set()
         else:
             self.frame.generate_style_report().grab_set()
@@ -558,7 +588,7 @@ class Page(ttk.Frame):
         self.search_in_page(change=False)
 
     def search_in_page(self, x=None, y=None, change=True):
-        if self.frame.current_url == "about:html":
+        if self.frame.base_url == "about:html":
             frame = self.html_playground.iframe
         else:
             frame = self.frame
@@ -785,15 +815,17 @@ class Page(ttk.Frame):
         self.handle_view_source_button(url)
 
     def reload(self):
-        self.load_url(self.frame.current_url, force=True)
-        if self.html_playground: self.html_playground._on_textarea_change()
+        if self.frame.base_url == "about:html": 
+            self.html_playground.iframe.reload()
+        else:
+            self.frame.reload()
 
     def change_title(self, event):
         self.master.tab(self, text=self.cut_text(self.frame.title, 40))  
     
     def select_all(self):
         if self.focus_get() not in (self.urlbar, self.find_box):
-            if self.frame.current_url == "about:html":
+            if self.frame.base_url == "about:html":
                 self.html_playground.iframe.select_all()
             else:
                 self.frame.select_all()

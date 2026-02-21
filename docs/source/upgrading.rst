@@ -375,6 +375,9 @@ Changelog
     * :meth:`.HTMLDocument.write`
     * :meth:`.HTMLElement.removeAttribute`
 
+    Version 4.21:
+    * :meth:`.HtmlFrame.reload`
+
 .. dropdown:: Changed/Fixed
 
     Version 4.0:
@@ -527,6 +530,12 @@ Changelog
 
     * Fixed some regressions and bugs.
     * The :class:`.HtmlText` widget now emits the ``<<Modified>>`` event when the user types in it.
+
+    Version 4.21:
+
+    * Fixed a bug where ``<style>`` and ``<script>`` elements were left out of the output from :meth:`.HtmlFrame.save_page`. The output of this method is now the document's original HTML and is unaffected by JavaScript or DOM changes.
+    * Fixed a bug where adding :class:`.HtmlLabel` widgets causes the app to open in the wrong part of the screen.
+    * :attr:`.HtmlFrame.current_url` no longer returns the working directory when loading plain HTML code.
 
 -------------------
 

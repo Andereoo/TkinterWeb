@@ -307,7 +307,7 @@ class HTMLElement:
 
     @property
     def innerHTML(self):  # Taken from hv3_dom2.tcl line 61
-        """Get and set the inner HTML of the element. Cannot be used on ``<html>`` elements.
+        """Get and set the inner HTML of the element. Cannot be set on ``<html>`` elements.
         
         :rtype: str
         :raises: :py:class:`tkinter.TclError`"""
@@ -358,7 +358,7 @@ class HTMLElement:
 
     @property
     def innerText(self):  # Original for this project
-        """Get and set the text content of an element, as displayed. Cannot be used on ``<html>`` elements.
+        """Get and set the text content of an element, as displayed. Cannot be set on ``<html>`` elements.
         
         :rtype: str
         :raises: :py:class:`tkinter.TclError`

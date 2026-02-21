@@ -12,8 +12,7 @@ import platform
 import sys
 import threading
 
-from _thread import RLock
-from functools import wraps, update_wrapper, _make_key
+from functools import wraps, lru_cache
 
 import ssl, gzip, zlib
 from urllib.request import Request, urlopen
@@ -31,7 +30,7 @@ __title__ = "TkinterWeb"
 __author__ = "Andrew Clarke"
 __copyright__ = "(c) 2021-2025 Andrew Clarke"
 __license__ = "MIT"
-__version__ = "4.20.2"
+__version__ = "4.21.0"
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
@@ -465,103 +464,103 @@ class BuiltinPageGenerator():
         self._html = None
         self._pages = {
     "about:blank": "<html><head><style>html,body{{width:100%;height:100%;margin:0}}</style><title>about:blank</title></head><body></body></html>{bg}{fg}{i1}{i2}",
-    "about:tkinterweb": "<html tkinterweb-overflow-x=auto><head>\
-        <style>html,body{{{{background-color:{bg};color:{fg}}}}}\
-            code{{{{display:block}}}}\
-            span{{{{cursor:gobbler;margin-right:10px;border:1px solid black;width:20px;padding-left:45px}}}}\
-            summary{{{{font-weight:bold;cursor:pointer;font-family:monospace;display:inline}}}}\
-            details[open]{{{{margin-bottom:25px;}}}}\
-            details[open='false'],details[open].bottom{{{{margin-bottom:0px;}}}}\
-            .section{{{{margin-left:10px;border-left:1px solid;padding-left:10px}}}}\
-            .indented{{{{margin-left:20px}}}}\
-            .colourbox{{{{margin-right:75px;display:inline}}}}</style>\
-        <title>about:tkinterweb</title></head><body>\
-        <code>Welcome to {title}!</code><code>Licenced under the {license} licence</code><code>Copyright {copyright}</code>\
-        <code>✉ <a href=https://github.com/Andereoo/TkinterWeb>github.com/Andereoo/TkinterWeb</a></code>\
-        <code>✨ <a href=https://tkinterweb.readthedocs.io>tkinterweb.readthedocs.io</a></code>\
-        <code>☕ <a href=https://buymeacoffee.com/andereoo>buymeacoffee.com/andereoo</a></code>\
-        <details open style='margin-top:25px'><summary>Debugging information</summary><code class='section'>\
-            <details open><summary>Versioning</summary>\
-            <code>Version: {__version__}</code><code>Tkhtml version: {tkhtml_version}</code><code>TkinterWeb-Tkhtml version: {tkw_tkhtml_version}</code>\
-            <code>Python version: {python_version}</code><code>Tcl version: {tcl_version}</code><code>Tk version: {tk_version}</code></details>\
-            <details open><summary>Resource loading</summary>\
-            <code>Use prebuilt Tkhtml: {use_prebuilt_tkhtml}</code>\
-            <code>Available Tkhtml binaries: {tkhtml_binaries}</code>\
-            <code>Resource directories: {root}{tkhtml_root}{tkhtml_extras_root}</code><code>Working directory: {working_dir}</code>\
-            <code>Tcl paths: {tcl_path}</code>\
-            <code>System dependency paths: {path}</code></details>\
-            <details open class='bottom'><summary>System specs</summary>\
-            <code>Platform: {platform}</code><code>Machine: {machine}</code><code>Processor: {processor}</code>\
-        </code></details>\
-        <details open><summary>Preferences</summary><code class='section'>\
-            <details open><summary>Renderer settings</summary>\
-            <code>Parse mode: {parse_mode}</code>\
-            <code>Rendering engine mode: {rendering_mode}</code>\
-            <code>Zoom: {zoom}</code>\
-            <code>Font scale: {font_scale}</code></details>\
-            <details open><summary>HTTP settings</summary>\
-            <code>Headers: {headers}</code>\
-            <code>Insecure HTTPS: {insecure_https}</code>\
-            <code>CA file path: {ssl_cafile}</code>\
-            <code>Request timeout: {request_timeout}s</code></details>\
-            <details open><summary>Threading settings</summary>\
-            <code>Threading enabled: {threading_enabled}</code>\
-            <code>Tcl allows threading: {allow_threading}</code>\
-            <code>Maximum thread count: {maximum_thread_count}</code></details>\
-            <details open><summary>Image settings</summary>\
-            <code>Images enabled: {images_enabled}</code>\
-            <code>Ignore invalid images: {ignore_invalid_images}</code>\
-            <code>Image alt text: {image_alternate_text_enabled}</code></details>\
-            <details open><summary>Flags</summary>\
-            <code>Experimental mode: {experimental}</code>\
-            <code>Caret browsing mode: {caret_mode}</code>\
-            <code>Stylesheets enabled: {stylesheets_enabled}</code>\
-            <code>Javascript enabled: {javascript_enabled}</code>\
-            <code>Forms enabled: {forms_enabled}</code>\
-            <code>Objects enabled: {objects_enabled}</code>\
-            <code>Caches enabled: {caches_enabled}</code>\
-            <code>Crash prevention enabled: {crash_prevention_enabled}</code>\
-            <code>Debug messages enabled: {messages_enabled}</code>\
-            <code>Events enabled: {events_enabled}</code>\
-            <code>Selection enabled: {selection_enabled}</code></details>\
-            <details open><summary>Colours</summary>\
-            <div><span style='background-color:{find_match_highlight_color}'>&nbsp;</span><code class='colourbox'>Found text highlight colour: {find_match_highlight_color}</code><code></code>\
-            <span style='background-color:{find_match_text_color}'>&nbsp;</span><code class='colourbox'>Found text colour: {find_match_text_color}</code><code></code>\
-            <span style='background-color:{find_current_highlight_color}'>&nbsp;</span><code class='colourbox'>Current found match highlight colour: {find_current_highlight_color}</code><code></code>\
-            <span style='background-color:{find_current_text_color}'>&nbsp;</span><code class='colourbox'>Current found match text colour: {find_current_text_color}</code><code></code>\
-            <span style='background-color:{selected_text_highlight_color}'>&nbsp;</span><code class='colourbox'>Selected text highlight colour: {selected_text_highlight_color}</code><code></code>\
-            <span style='background-color:{selected_text_color}'>&nbsp;</span><code class='colourbox'>Selected text colour: {selected_text_color}</code><code></code>\
-            <span style='background-color:{bg}'>&nbsp;</span><code class='colourbox'>About page background colour: {bg}</code><code></code>\
-            <span style='background-color:{fg}'>&nbsp;</span><code class='colourbox'>About page foreground colour: {fg}</code><code></code></div></details>\
-            <details open class='bottom'><summary>Dark mode settings</summary>\
-            <code>Dark mode: {dark_theme_enabled}</code>\
-            <code>Image inversion: {image_inversion_enabled}</code>\
-            <code>Dark theme general regexes: {general_dark_theme_regexes}</code>\
-            <code>Dark theme inline regexes: {inline_dark_theme_regexes}</code>\
-            <code>Dark theme style regex: {style_dark_theme_regex}</code>\
-            <code>Colour threshold: {dark_theme_limit}</code></details>\
-        </code></details>\
-        <details open class='bottom'><summary>Site memory</summary>\
-            <code class='section'><code>Visited hyperlinks: {visited_links}</code></code></details>\
-        </body></html>{i1}{i2}",
-    "about:error": "<html><head><style>html,body,table,tr,td{{background-color:{bg};color:{fg};width:100%;height:100%;margin:0}}</style><title>Error {i1}</title></head>\
-        <body><table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle'>\
-        <h2 style='margin:0;padding:0;font-weight:normal'>Oops</h2>\
-        <h3 style='margin-top:10px;margin-bottom:25px;font-weight:normal'>The page you've requested could not be found :(</h3>\
-        <object handleremoval allowscrolling style='cursor:pointer' data='{i2}'></object>\
-        </td></tr></table></body></html>",
-    "about:loading": "<html><head><style>html,body,table,tr,td{{width:100%;height:100%;margin:0}}</style></head>\
-        <body><table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle'>\
-        <p>Loading...</p>\
-        </td></tr></table></body></html>{bg}{fg}{i1}{i2}",
-    "about:image": "<html><head><style>html,body,table,tr {{background-color:{bg};color:{fg};width:100%;height:100%;margin:0}}</style></head><body>\
-        <table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle;padding:4px 4px 0px 4px'><img style='max-width:100%;max-height:100%' src='{i1}'><h3 style='margin:0;padding:0;font-weight:normal'></td></tr></table></body></html>{i2}",
-    "about:view-source": "<html tkinterweb-overflow-x=auto><head><style>\
-        html,body{{background-color:{bg};color:{fg};}}\
-        pre::before{{counter-reset:listing}}\
-        code{{counter-increment:listing}}\
-        code::before{{content:counter(listing);display:inline-block;width:{i1}px;margin-left:5px;padding-right:5px;margin-right:5px;text-align:right;border-right:1px solid grey60;color:grey60}}\
-        </style></head><body><pre style='margin:0;padding:0'>{i2}</pre></body></html>",
+    "about:tkinterweb": """<html tkinterweb-overflow-x=auto><head>
+        <style>html,body{{{{background-color:{bg};color:{fg}}}}}
+            code{{{{display:block}}}}
+            span{{{{cursor:gobbler;margin-right:10px;border:1px solid black;width:20px;padding-left:45px}}}}
+            summary{{{{font-weight:bold;cursor:pointer;font-family:monospace;display:inline}}}}
+            details[open]{{{{margin-bottom:25px;}}}}
+            details[open='false'],details[open].bottom{{{{margin-bottom:0px;}}}}
+            .section{{{{margin-left:10px;border-left:1px solid;padding-left:10px}}}}
+            .indented{{{{margin-left:20px}}}}
+            .colourbox{{{{margin-right:75px;display:inline}}}}</style>
+        <title>about:tkinterweb</title></head><body>
+        <code>Welcome to {title}!</code><code>Licenced under the {license} licence</code><code>Copyright {copyright}</code>
+        <code>✉ <a href=https://github.com/Andereoo/TkinterWeb>github.com/Andereoo/TkinterWeb</a></code>
+        <code>✨ <a href=https://tkinterweb.readthedocs.io>tkinterweb.readthedocs.io</a></code>
+        <code>☕ <a href=https://buymeacoffee.com/andereoo>buymeacoffee.com/andereoo</a></code>
+        <details open style='margin-top:25px'><summary>Debugging information</summary><code class='section'>
+            <details open><summary>Versioning</summary>
+            <code>Version: {__version__}</code><code>Tkhtml version: {tkhtml_version}</code><code>TkinterWeb-Tkhtml version: {tkw_tkhtml_version}</code>
+            <code>Python version: {python_version}</code><code>Tcl version: {tcl_version}</code><code>Tk version: {tk_version}</code></details>
+            <details open><summary>Resource loading</summary>
+            <code>Use prebuilt Tkhtml: {use_prebuilt_tkhtml}</code>
+            <code>Available Tkhtml binaries: {tkhtml_binaries}</code>
+            <code>Resource directories: {root}{tkhtml_root}{tkhtml_extras_root}</code><code>Working directory: {working_dir}</code>
+            <code>Tcl paths: {tcl_path}</code>
+            <code>System dependency paths: {path}</code></details>
+            <details open class='bottom'><summary>System specs</summary>
+            <code>Platform: {platform}</code><code>Machine: {machine}</code><code>Processor: {processor}</code>
+        </code></details>
+        <details open><summary>Preferences</summary><code class='section'>
+            <details open><summary>Renderer settings</summary>
+            <code>Parse mode: {parse_mode}</code>
+            <code>Rendering engine mode: {rendering_mode}</code>
+            <code>Zoom: {zoom}</code>
+            <code>Font scale: {font_scale}</code></details>
+            <details open><summary>HTTP settings</summary>
+            <code>Headers: {headers}</code>
+            <code>Insecure HTTPS: {insecure_https}</code>
+            <code>CA file path: {ssl_cafile}</code>
+            <code>Request timeout: {request_timeout}s</code></details>
+            <details open><summary>Threading settings</summary>
+            <code>Threading enabled: {threading_enabled}</code>
+            <code>Tcl allows threading: {allow_threading}</code>
+            <code>Maximum thread count: {maximum_thread_count}</code></details>
+            <details open><summary>Image settings</summary>
+            <code>Images enabled: {images_enabled}</code>
+            <code>Ignore invalid images: {ignore_invalid_images}</code>
+            <code>Image alt text: {image_alternate_text_enabled}</code></details>
+            <details open><summary>Flags</summary>
+            <code>Experimental mode: {experimental}</code>
+            <code>Caret browsing mode: {caret_mode}</code>
+            <code>Stylesheets enabled: {stylesheets_enabled}</code>
+            <code>Javascript enabled: {javascript_enabled}</code>
+            <code>Forms enabled: {forms_enabled}</code>
+            <code>Objects enabled: {objects_enabled}</code>
+            <code>Caches enabled: {caches_enabled}</code>
+            <code>Crash prevention enabled: {crash_prevention_enabled}</code>
+            <code>Debug messages enabled: {messages_enabled}</code>
+            <code>Events enabled: {events_enabled}</code>
+            <code>Selection enabled: {selection_enabled}</code></details>
+            <details open><summary>Colours</summary>
+            <div><span style='background-color:{find_match_highlight_color}'>&nbsp;</span><code class='colourbox'>Found text highlight colour: {find_match_highlight_color}</code><code></code>
+            <span style='background-color:{find_match_text_color}'>&nbsp;</span><code class='colourbox'>Found text colour: {find_match_text_color}</code><code></code>
+            <span style='background-color:{find_current_highlight_color}'>&nbsp;</span><code class='colourbox'>Current found match highlight colour: {find_current_highlight_color}</code><code></code>
+            <span style='background-color:{find_current_text_color}'>&nbsp;</span><code class='colourbox'>Current found match text colour: {find_current_text_color}</code><code></code>
+            <span style='background-color:{selected_text_highlight_color}'>&nbsp;</span><code class='colourbox'>Selected text highlight colour: {selected_text_highlight_color}</code><code></code>
+            <span style='background-color:{selected_text_color}'>&nbsp;</span><code class='colourbox'>Selected text colour: {selected_text_color}</code><code></code>
+            <span style='background-color:{bg}'>&nbsp;</span><code class='colourbox'>About page background colour: {bg}</code><code></code>
+            <span style='background-color:{fg}'>&nbsp;</span><code class='colourbox'>About page foreground colour: {fg}</code><code></code></div></details>
+            <details open class='bottom'><summary>Dark mode settings</summary>
+            <code>Dark mode: {dark_theme_enabled}</code>
+            <code>Image inversion: {image_inversion_enabled}</code>
+            <code>Dark theme general regexes: {general_dark_theme_regexes}</code>
+            <code>Dark theme inline regexes: {inline_dark_theme_regexes}</code>
+            <code>Dark theme style regex: {style_dark_theme_regex}</code>
+            <code>Colour threshold: {dark_theme_limit}</code></details>
+        </code></details>
+        <details open class='bottom'><summary>Site memory</summary>
+            <code class='section'><code>Visited hyperlinks: {visited_links}</code></code></details>
+        </body></html>{i1}{i2}""",
+    "about:error": """<html><head><style>html,body,table,tr,td{{background-color:{bg};color:{fg};width:100%;height:100%;margin:0}}</style><title>Error {i1}</title></head>
+        <body><table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle'>
+        <h2 style='margin:0;padding:0;font-weight:normal'>Oops</h2>
+        <h3 style='margin-top:10px;margin-bottom:25px;font-weight:normal'>The page you've requested could not be found :(</h3>
+        <object handleremoval allowscrolling style='cursor:pointer' data='{i2}'></object>
+        </td></tr></table></body></html>""",
+    "about:loading": """<html><head><style>html,body,table,tr,td{{width:100%;height:100%;margin:0}}</style></head>
+        <body><table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle'>
+        <p>Loading...</p>
+        </td></tr></table></body></html>{bg}{fg}{i1}{i2}""",
+    "about:image": """<html><head><style>html,body,table,tr {{background-color:{bg};color:{fg};width:100%;height:100%;margin:0}}</style></head><body>
+        <table><tr><td tkinterweb-full-page style='text-align:center;vertical-align:middle;padding:4px 4px 0px 4px'><img style='max-width:100%;max-height:100%' src='{i1}'><h3 style='margin:0;padding:0;font-weight:normal'></td></tr></table></body></html>{i2}""",
+    "about:view-source": """<html tkinterweb-overflow-x=auto><head><style>
+        html,body{{background-color:{bg};color:{fg};}}
+        pre::before{{counter-reset:listing}}
+        code{{counter-increment:listing}}
+        code::before{{content:counter(listing);display:inline-block;width:{i1}px;margin-left:5px;padding-right:5px;margin-right:5px;text-align:right;border-right:1px solid grey60;color:grey60}}
+        </style></head><body><pre style='margin:0;padding:0'>{i2}</pre></body></html>""",
 }
     
     def __getitem__(self, key):
@@ -794,70 +793,6 @@ def special_setting(default=None):
             func(self, old, value)
 
         return prop
-    return decorator
-
-def _lru_cache_wrapper(user_function):
-    """This function is a modified version of the one that comes built-in with functools.
-    It only adds to the cache if the data is not None.
-    This means that if a page load is stopped, re-loading the page will not cause the page to be blank."""
-    make_key = _make_key
-    PREV, NEXT, KEY, RESULT = 0, 1, 2, 3
-
-    cache = {}
-    hits = misses = 0
-    maxsize = 128
-    typed = False
-    full = False
-    cache_get = cache.get
-    cache_len = cache.__len__
-    lock = RLock()
-    root = []
-    root[:] = [root, root, None, None]
-
-    def wrapper(*args, **kwds):
-        nonlocal root, hits, misses, full
-        key = make_key(args, kwds, typed)
-        with lock:
-            link = cache_get(key)
-            if link is not None:
-                link_prev, link_next, _key, result = link
-                link_prev[NEXT] = link_next
-                link_next[PREV] = link_prev
-                last = root[PREV]
-                last[NEXT] = root[PREV] = link
-                link[PREV] = last
-                link[NEXT] = root
-                hits += 1
-                return result
-            misses += 1
-        result = user_function(*args, **kwds)
-        if result[0]:
-            with lock:
-                if key in cache:
-                    pass
-                elif full:
-                    oldroot = root
-                    oldroot[KEY] = key
-                    oldroot[RESULT] = result
-                    root = oldroot[NEXT]
-                    oldkey = root[KEY]
-                    oldresult = root[RESULT]
-                    root[KEY] = root[RESULT] = None
-                    del cache[oldkey]
-                    cache[key] = oldroot
-                else:
-                    last = root[PREV]
-                    link = [last, root, key, result]
-                    last[NEXT] = root[PREV] = cache[key] = link
-                    full = (cache_len() >= maxsize)
-        return result
-    return wrapper
-
-
-def lru_cache():
-    def decorator(func):
-        wrapper = _lru_cache_wrapper(func)
-        return update_wrapper(wrapper, func)
     return decorator
 
 

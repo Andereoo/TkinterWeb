@@ -30,7 +30,7 @@ from tkinter import filedialog
 from tkinter import ttk
 
 from tkinterweb import HtmlFrame, Notebook, __version__
-from tkinterweb.utilities import BUILTIN_PAGES, DONE_LOADING_EVENT, URL_CHANGED_EVENT, TITLE_CHANGED_EVENT, DOWNLOADING_RESOURCE_EVENT, download
+from tkinterweb.utilities import BUILTIN_PAGES, DONE_LOADING_EVENT, URL_CHANGED_EVENT, TITLE_CHANGED_EVENT, DOWNLOADING_RESOURCE_EVENT, DOM_CONTENT_LOADED_EVENT
 from tkinterweb.subwidgets import ScrolledTextBox, FormEntry
 
 import os
@@ -125,8 +125,8 @@ class HTMLPlayground(ttk.PanedWindow):
         run_button.javascript.register("update_iframe", self._update_iframe)
         run_button.place(relx=1.0, rely=1.0, anchor="se")
 
-        self.iframe.bind("<<DOMContentLoaded>>", self._on_page_loaded)
-        self.iframe.bind("<<TitleChanged>>", self._on_title_change)
+        self.iframe.bind(DOM_CONTENT_LOADED_EVENT, self._on_page_loaded)
+        self.iframe.bind(TITLE_CHANGED_EVENT, self._on_title_change)
 
         text_frame.grid_rowconfigure(1, weight=1)
         text_frame.grid_columnconfigure(0, weight=1)

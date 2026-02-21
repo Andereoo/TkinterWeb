@@ -110,6 +110,10 @@ Changelog
     * :meth:`.HtmlFrame.get_selection_page_position` - use :meth:`HtmlFrame.get_selection_position(return_elements=False) <.HtmlFrame.get_selection_position>`
     * :meth:`.HtmlFrame.set_selection_page_position` - use :meth:`HtmlFrame.set_selection_position(start_index=, end_index=) <.HtmlFrame.set_selection_position>`
 
+    Version 4.22:
+
+    * :meth:`.HtmlFrame.insert_html` - use :meth:`.HtmlFrame.add_html`
+
 
 .. dropdown:: Renamed
 
@@ -376,7 +380,12 @@ Changelog
     * :meth:`.HTMLElement.removeAttribute`
 
     Version 4.21:
+
     * :meth:`.HtmlFrame.reload`
+
+    Version 4.22:
+    
+    * :meth:`.HtmlFrame.add_html` now accepts the new parameter ``index``.
 
 .. dropdown:: Changed/Fixed
 

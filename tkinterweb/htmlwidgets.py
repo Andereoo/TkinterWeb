@@ -220,8 +220,8 @@ class HtmlFrame(Frame):
             "find_current_text_color": {"default": "#000", "type": str},
             "selected_text_highlight_color": {"default": "#9bc6fa", "type": str},
             "selected_text_color": {"default": "#000", "type": str},
-            "default_style": {"default": utilities.DEFAULT_STYLE, "deprecated": "utilities.DEFAULT_STYLE"},
-            "dark_style": {"default": utilities.DARK_STYLE, "deprecated": "utilities.DARK_STYLE"},
+            "default_style": {"default": utilities.DEFAULT_STYLE, "deprecated": "utilities.DEFAULT_STYLE or defaultstyle"},
+            "dark_style": {"default": utilities.DARK_STYLE, "deprecated": "utilities.DARK_STYLE or defaultstyle"},
             "request_func": {"default": None, "type": "callable"},
             "insecure_https": {"default": False, "type": bool},
             "ssl_cafile": {"default": None, "type": "nonestr"},
@@ -381,16 +381,6 @@ class HtmlFrame(Frame):
         utilities.warn("pack_propagate is being ignored, because since version 4.13 widget geometry is always respected by default. If this is a problem, please file a bug report.")
         pass
 
-    def _check_deprecations(self, **kwargs):
-        if "default_style" in kwargs:
-            utilities.deprecate_param("default_style", "utilities.DEFAULT_STYLE")
-        if "dark_style" in kwargs:
-            utilities.deprecate_param("dark_style", "utilities.DARK_STYLE")
-        if "about_page_background" in kwargs:
-            utilities.deprecate_param("about_page_background", "ttk.Style().configure('TFrame', background=)")
-        if "about_page_foreground" in kwargs:
-            utilities.deprecate_param("about_page_foreground", "ttk.Style().configure('TFrame', foreground=)")
-
     def load_html(self, html_source, base_url=None, fragment=None, _thread_safe=False, _internal=False):
         """Clear the current page and parse the given HTML code.
         
@@ -537,25 +527,32 @@ class HtmlFrame(Frame):
         else:
             self.load_html(self._html_cache, base_url=self._html.base_url)
 
-    def add_html(self, html_source, return_element=False):
+    def add_html(self, html_source, return_element=False, index=-1):
         """Parse HTML and add it to the end of the current document. Unlike :meth:`HtmlFrame.load_html`, :meth:`HtmlFrame.add_html` adds rendered HTML code without clearing the original document.
         
         :param html_source: The HTML code to render.
         :type html_source: str
         :param return_element: If True, return the root element of the added HTML.
         :type return_element: :class:`~tkinterweb.dom.HTMLElement`
+        :param index: The index of the element to insert before. Default -1. New in version 4.22.
+        :type index: int
         :return: :class:`~tkinterweb.dom.HTMLElement` or None"""
 
         self._previous_url = ""
-
-        if return_element:
+        node = None
+        
+        if return_element or index != -1:
             node = self._html.parse_fragment(html_source)
             body = self.document.body.node
-            self._html.insert_node(body, node)
-            node = dom.HTMLElement(self.document, node)
+            if index == -1:
+                self._html.insert_node(body, node)
+            else:
+                child = self._html.get_node_children(body)[index]
+                self._html.insert_node_before(body, node, child)
+            if return_element:
+                node = dom.HTMLElement(self.document, node)
         else:
             self._html.parse(html_source)
-            node = None
 
         self._finish_css()
         self._handle_html_resize(force=True)
@@ -563,32 +560,8 @@ class HtmlFrame(Frame):
         return node
     
     def insert_html(self, html_source, index=0, return_element=False):
-        """Parse HTML and insert it into the current document.
-        
-        :param html_source: The HTML code to render.
-        :type html_source: str
-        :param index: The index of the element to insert before.
-        :type index: int
-        :param return_element: If True, return the root element of the inserted HTML.
-        :type return_element: :class:`~tkinterweb.dom.HTMLElement`
-        :return: :class:`~tkinterweb.dom.HTMLElement` or None
-        
-        New in version 4.4."""
-
-        # TODO: merge with add_html?
-
-        self._previous_url = ""
-
-        node = self._html.parse_fragment(html_source)
-        body = self.document.body.node
-        child = self._html.get_node_children(body)[index]
-        self._html.insert_node_before(body, node, child)
- 
-        self._finish_css()
-        self._handle_html_resize(force=True)
-
-        if return_element:
-            return dom.HTMLElement(self.document, node)
+        utilities.deprecate_param("insert_html", "add_html")
+        self.add_html(html_source, return_element, index)
     
     def add_css(self, css_source, priority="author"):
         """Send CSS stylesheets to the parser. This can be used to alter the appearance of already-loaded documents.
@@ -1375,7 +1348,7 @@ Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certif
     def _check_value(self, key, settings, value):
         """Ensure new configuration option values are a valid type and post deprecation warnings."""
         if "deprecated" in settings:
-            utilities.deprecate_param(key, settings["deprecated"])
+            utilities.deprecate_param(key, settings["deprecated"], 5)
         if "type" in settings:
             expected_type = settings["type"]
             extras = ""

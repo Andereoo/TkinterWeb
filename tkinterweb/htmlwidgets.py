@@ -859,7 +859,7 @@ class HtmlFrame(Frame):
         """Get the position of the caret. This can be used to modify the document's text when the user types. 
 
         :param return_element: Determines whether the index returned should be relative to the start of an element or the document.
-        :type return_element: bool
+        :type return_element: bool, optional
 
         If ``return_element=True``:
 
@@ -950,7 +950,7 @@ class HtmlFrame(Frame):
         """Get the start position, end position, and, optionally, contained elements of selected text.
         
         :param return_elements: Determines whether the indexes returned should be relative to the start of an element or the document.
-        :type return_elements: bool
+        :type return_elements: bool, optional
 
         If ``return_elements=True``:
 
@@ -1325,7 +1325,7 @@ Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certif
         """Return or load a window showing this widget's style report.
 
         :param return_report: If False, a window opens showing the report. If True, the report is simply returned.
-        :type return_report: str
+        :type return_report: str, optional
         
         New in version 4.19."""
         if return_report: return self.html.style_report

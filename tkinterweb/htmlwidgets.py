@@ -542,9 +542,9 @@ class HtmlFrame(Frame):
         :param html_source: The HTML code to render.
         :type html_source: str
         :param return_element: If True, return the root element of the added HTML.
-        :type return_element: :class:`~tkinterweb.dom.HTMLElement`
+        :type return_element: bool, optional
         :param index: The index of the element to insert before. Default -1. New in version 4.22.
-        :type index: int
+        :type index: int, optional
         :return: :class:`~tkinterweb.dom.HTMLElement` or None"""
 
         self._previous_url = ""
@@ -726,12 +726,10 @@ class HtmlFrame(Frame):
     def save_page(self, filename=None):
         """Return the page's HTML code or save the page as an HTML file.
 
-        As of version 4.21, this method returns or saves the page's original HTML. 
+        As of version 4.21, if caching is enabled, this method returns or saves the page's original HTML. 
         Consider using :meth:`HtmlFrame.snapshot_page` or :attr:`HTMLElement.innerHTML` to get the page's HTML in real-time.
 
-        For optimal behaviour, ensure caching is enabled (the default).
-                
-        :param filename: The file path to save the page to. If None, the image is not saved to the disk.
+        :param filename: The file path to save the page to. If None, the page is not saved to the disk.
         :type filename: str or None, optional
         :return: A string containing the page's HTML/CSS code.
         :rtype: str"""
@@ -756,7 +754,7 @@ class HtmlFrame(Frame):
         
         Unlike :py:func:`save_page`, which returns the original document, :py:func:`snapshot_page` returns the page as rendered. ``<link>`` elements are ignored and instead one ``<style>`` element contains all of the necessary CSS information for the document. This can be useful for saving documents for offline use.
                 
-        :param filename: The file path to save the page to. If None, the image is not saved to the disk.
+        :param filename: The file path to save the page to. If None, the page is not saved to the disk.
         :type filename: str or None, optional
         :param allow_agent: If True, CSS properties added by the rendering engine (eg. those affected by the widget's :attr:`default_style` option) are also included.
         :type allow_agent: bool, optional

@@ -167,6 +167,7 @@ class HtmlFrame(Frame):
         
         # State and settings variables
         self._current_url = ""
+        self._current_html = ""
         self._previous_url = ""
         self._accumulated_styles = []
         self._waiting_for_reset = False
@@ -175,7 +176,6 @@ class HtmlFrame(Frame):
         self._prev_configure = ()
         self._button = None
         self._style = None
-        self._html_cache = ""
 
         ### TODO: it would be really nice to better match the parameters, function names, and events used in stock Tkinter widgets
         ### Not really reasonable at this point
@@ -340,7 +340,7 @@ class HtmlFrame(Frame):
         :rtype: str"""
         return self._html.base_url
     
-    # TODO: should I make a property for self._html_cache?
+    # TODO: should I make a property for self._current_html?
     
     @property # could use utilities.lazy_manager(None) and save some work, but then autocomplete fails
     def document(self):
@@ -406,9 +406,12 @@ class HtmlFrame(Frame):
             self._thread_in_progress.stop()
         if fragment: 
             fragment = "".join(char for char in fragment if char.isalnum() or char in ("-", "_", ".")).replace(".", r"\.")
+        if self._html.caches_enabled:
+            self._current_html = html_source
+        else:
+            self._current_html = ""
 
         self._html.reset(_thread_safe)
-        self._html_cache = html_source
         self._html.base_url = base_url
         self._html.fragment = fragment
         self._html.parse(html_source, _thread_safe)
@@ -521,13 +524,17 @@ class HtmlFrame(Frame):
 
     def reload(self):
         """Reload the page.
+
+        For optimal behaviour, ensure caching is enabled (the default).
         
         New in version 4.21"""
         # TODO: consider adding the option to bypass the cache
         if self._current_url:
             self.load_url(self._current_url, force=True)
-        else:
-            self._load_html(self._html_cache, self._html.base_url)
+        elif self._current_html:
+            self._load_html(self._current_html, self._html.base_url)
+        # else, we could snapshot the page and load that
+        # But I think that's completely useless
 
     def add_html(self, html_source, return_element=False, index=-1):
         """Parse HTML and add it to the end of the current document. Unlike :meth:`HtmlFrame.load_html`, :meth:`HtmlFrame.add_html` adds rendered HTML code without clearing the original document.
@@ -721,6 +728,8 @@ class HtmlFrame(Frame):
 
         As of version 4.21, this method returns or saves the page's original HTML. 
         Consider using :meth:`HtmlFrame.snapshot_page` or :attr:`HTMLElement.innerHTML` to get the page's HTML in real-time.
+
+        For optimal behaviour, ensure caching is enabled (the default).
                 
         :param filename: The file path to save the page to. If None, the image is not saved to the disk.
         :type filename: str or None, optional
@@ -728,9 +737,12 @@ class HtmlFrame(Frame):
         :rtype: str"""
         # At the moment <script> and <style> tags don't show in innerHTML
         # So we save the page's html into a variable when loading
-        # TODO: Only add HTML to _html_cache if it's not already cached by the lru_cache
+        # TODO: Only add HTML to _current_html if it's not already cached by the lru_cache
 
-        html = self._html_cache
+        if self._current_html:
+            html = self._current_html
+        else:
+            html = self._html.serialize_node()
 
         if filename:
             self._html.post_message(f"Saving {self._current_url}...")

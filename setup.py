@@ -6,7 +6,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
     name="tkinterweb",
-    version="4.22.0",
+    version="4.22.1",
     python_requires=">=3.2",
     description="HTML/CSS widgets for Tkinter",
     long_description=README,

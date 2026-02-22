@@ -304,6 +304,10 @@ class HTMLElement:
         if self._style_cache is None:  # Lazy loading of style
             self._style_cache = CSSStyleDeclaration(self)
         return self._style_cache
+    
+    @property
+    def outerHTML(self):
+        return self.document._node_to_html(self.node)
 
     @property
     def innerHTML(self):  # Taken from hv3_dom2.tcl line 61

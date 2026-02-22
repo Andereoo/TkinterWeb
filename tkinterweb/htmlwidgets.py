@@ -8,6 +8,7 @@ Copyright (c) 2021-2026 Andrew Clarke
 from . import bindings, dom, js, utilities, subwidgets, imageutils
 
 from urllib.parse import urldefrag, urlparse, urlunparse
+from textwrap import indent
 
 import tkinter as tk
 from tkinter.ttk import Frame, Style
@@ -167,7 +168,6 @@ class HtmlFrame(Frame):
         
         # State and settings variables
         self._current_url = ""
-        self._current_html = ""
         self._previous_url = ""
         self._accumulated_styles = []
         self._waiting_for_reset = False
@@ -339,9 +339,7 @@ class HtmlFrame(Frame):
         
         :rtype: str"""
         return self._html.base_url
-    
-    # TODO: should I make a property for self._current_html?
-    
+        
     @property # could use utilities.lazy_manager(None) and save some work, but then autocomplete fails
     def document(self):
         """The DOM manager. Use this to access :class:`~tkinterweb.dom.HTMLDocument` methods to manupulate the DOM.
@@ -406,10 +404,6 @@ class HtmlFrame(Frame):
             self._thread_in_progress.stop()
         if fragment: 
             fragment = "".join(char for char in fragment if char.isalnum() or char in ("-", "_", ".")).replace(".", r"\.")
-        if self._html.caches_enabled:
-            self._current_html = html_source
-        else:
-            self._current_html = ""
 
         self._html.reset(_thread_safe)
         self._html.base_url = base_url
@@ -523,16 +517,12 @@ class HtmlFrame(Frame):
             self._continue_loading(url, data, method, decode)
 
     def reload(self):
-        """Reload the page.
-
-        For optimal behaviour, ensure caching is enabled (the default).
+        """Reload the page. This only affects pages loaded from a url.
         
         New in version 4.21"""
-        # TODO: consider adding the option to bypass the cache
+
         if self._current_url:
             self.load_url(self._current_url, force=True)
-        elif self._current_html:
-            self._load_html(self._current_html, self._html.base_url)
         # else, we could snapshot the page and load that
         # But I think that's completely useless
 
@@ -726,21 +716,31 @@ class HtmlFrame(Frame):
     def save_page(self, filename=None):
         """Return the page's HTML code or save the page as an HTML file.
 
-        As of version 4.21, if caching is enabled, this method uses the page's original HTML. 
-        Consider using :meth:`HtmlFrame.snapshot_page` or :attr:`.HTMLElement.innerHTML` to get the page's HTML in real-time.
+        As of version 4.23, if caching is enabled and a url is loaded, this method returns the page's original HTML.
+        Otherwise, the returned page will be the output of :meth:`HtmlFrame.snapshot_page`, with the contents of the ``<head>`` tag included if the widget is still loading.
 
         :param filename: The file path to save the page to. If None, the page is not saved to the disk.
         :type filename: str or None, optional
         :return: A string containing the page's HTML/CSS code.
         :rtype: str"""
-        # At the moment <script> and <style> tags don't show in innerHTML
-        # So we save the page's html into a variable when loading
-        # TODO: Only add HTML to _current_html if it's not already cached by the lru_cache
+        ### TODO: consider combining this method with snapshot_page
+        
+        ### TODO: I don't like that snapshot_page is used here, but serialize_node omits BOTH style and scripts
+        ### At least snapshot_page doesn't omit styles
+        ### But I suppose that in the majority of cases, either caching is enabled and a url is loaded, in which case we're good,
+        ### or load_html is used, in which case users don't really need to use this at all
 
-        if self._current_html:
-            html = self._current_html
+        if self._html.active_threads: include_head=True
+        else: include_head=False
+        
+        if self._current_url and self.html.caches_enabled:
+            # We're gonna trust that it's in the cache
+            try:
+                _, html, _, _ = self._html.download_url(self._current_url)
+            except Exception:
+                html = self.snapshot_page(include_head=include_head)
         else:
-            html = self._html.serialize_node()
+            html = self.snapshot_page(include_head=include_head)
 
         if filename:
             self._html.post_message(f"Saving {self._current_url}...")
@@ -749,35 +749,43 @@ class HtmlFrame(Frame):
             self._html.post_message("Saved!")
         return html
     
-    def snapshot_page(self, filename=None, allow_agent=False):
+    def snapshot_page(self, filename=None, allow_agent=False, include_head=False):
         """Save a snapshot of the document. 
         
-        Unlike :py:func:`save_page`, which returns the original document, :py:func:`snapshot_page` returns the page as rendered. ``<link>`` elements are ignored and instead one ``<style>`` element contains all of the necessary CSS information for the document. This can be useful for saving documents for offline use.
+        Unlike :py:func:`save_page`, which returns the original document, :py:func:`snapshot_page` returns the page as rendered. By default ``<link>`` elements are ignored and instead one ``<style>`` element contains all of the necessary CSS information for the document. This can be useful for saving documents for offline use.
                 
         :param filename: The file path to save the page to. If None, the page is not saved to the disk.
         :type filename: str or None, optional
         :param allow_agent: If True, CSS properties added by the rendering engine (eg. those affected by the widget's :attr:`default_style` option) are also included.
         :type allow_agent: bool, optional
+        :param include_head: If True, the contents of the page's ``<head>`` element (i.e. ``<link>`` and ``<meta>`` tags) are included. Default False. New in version 4.23.
+        :type include_head: bool, optional
         :return: A string containing the page's rendered HTML/CSS code.
         :rtype: str"""
+        ### TODO: scripts are omitted
+
         self._html.post_message(f"Snapshotting {self._current_url}...")
         title = ""
         icon = ""
         base = ""
+        other = ""
         style = "\n"
+        tab = "   "
         
         for rule in self._html.get_computed_styles():
             selector, prop, origin = rule
             if origin == "agent" and not allow_agent: continue
-            style += f"\t\t\t{selector} {{{prop.replace('-tkhtml-no-color', 'transparent')}}}\n"
+            style += f"{tab*3}{selector} {{{prop.replace('-tkhtml-no-color', 'transparent')}}}\n"
 
-        if self._html.title: title = f"\n\t\t<title>{self._html.title}</title>"
-        if self._html.icon: icon = f"\n\t\t<link rel=\"icon\" type=\"image/x-icon\" href=\"/{self._html.icon}\">"
-        if self._html.base_url: base = f"\n\t\t<base href=\"{self._html.base_url}\"></base>"
-        if style.strip(): style = f"\n\t\t<style>{style}\t\t</style>"
-        body = self.document.body.innerHTML
+        if self._html.title: title = f"\n{tab*2}<title>{self._html.title}</title>"
+        if self._html.icon: icon = f"\n{tab*2}<link rel=\"icon\" type=\"image/x-icon\" href=\"/{self._html.icon}\">"
+        if self._html.base_url: base = f"\n{tab*2}<base href=\"{self._html.base_url}\"></base>"
+        if style.strip(): style = f"\n{tab*2}<style>{style}{tab*2}</style>"
+        if include_head:
+            try: other = self.document.querySelector("head").innerHTML
+            except tk.TclError: pass
 
-        html = f"""<html>\n\t<head>{title}{icon}{base}{style}\n\t</head>\n\t<body>\n\t{body}\n\t</body>\n</html>"""
+        html = f"""<html>\n{tab}<head>{title}{icon}{base}{other}{style}\n{tab}</head>\n{indent(self.document.body.outerHTML, tab*2)}\n</html>"""
         if filename:
             with open(filename, "w+") as handle:
                 handle.write(html)

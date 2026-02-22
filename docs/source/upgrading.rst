@@ -387,6 +387,10 @@ Changelog
     
     * :meth:`.HtmlFrame.add_html` now accepts the new parameter ``index``.
 
+    Version 4.23:
+
+    * :meth:`.HtmlFrame.snapshot_page` now accepts the new parameter ``include_head``.
+
 .. dropdown:: Changed/Fixed
 
     Version 4.0:
@@ -545,6 +549,17 @@ Changelog
     * Fixed a bug where ``<style>`` and ``<script>`` elements were left out of the output from :meth:`.HtmlFrame.save_page`. The output of this method is now the document's original HTML and is unaffected by JavaScript or DOM changes.
     * Fixed a bug where adding :class:`.HtmlLabel` widgets causes the app to open in the wrong part of the screen.
     * :attr:`.HtmlFrame.current_url` no longer returns the working directory when loading plain HTML code.
+
+    Version 4.23:
+
+    * Whitespace is now automatically stripped from the page's title.
+    * Improved :meth:`.HtmlFrame.snapshot_page` output formatting and accuracy.
+    * In an effort to reduce the widget's memory footprint, all HTML widgets no longer remember the original HTML code they are displaying:
+
+        * The output of :meth:`.HtmlFrame.save_page` is now the document's original HTML only when caching is enabled and a url is loaded. Otherwise, :meth:`.HtmlFrame.snapshot_page` is used, with the contents of the ``<head>`` tag included if the widget is still loading.
+        * :meth:`.HtmlFrame.reload` now only reloads pages loaded from a url.
+        
+        The original intent of both both methods is to be used when a url is loaded, and in an ideal world caching should always be enabled.
 
 -------------------
 

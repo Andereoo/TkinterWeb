@@ -29,7 +29,7 @@ class NodeManager(utilities.BaseManager):
         "Handle <title> elements. We could use a script handler but then the node is no longer visible to the DOM."
         children = self.html.get_node_children(node)
         if children: # Fix for Bug #136, where an empty title tag raises an exception
-            self.html.title = self.html.get_node_text(self.html.get_node_children(node), "-pre")
+            self.html.title = self.html.get_node_text(self.html.get_node_children(node), "-pre").strip()
             self.html.post_event(utilities.TITLE_CHANGED_EVENT)
 
     def _on_base(self, node):

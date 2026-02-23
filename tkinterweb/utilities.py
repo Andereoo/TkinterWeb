@@ -30,7 +30,7 @@ __title__ = "TkinterWeb"
 __author__ = "Andrew Clarke"
 __copyright__ = "(c) 2021-2025 Andrew Clarke"
 __license__ = "MIT"
-__version__ = "4.23.2"
+__version__ = "4.23.3"
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
@@ -886,7 +886,6 @@ class LRUCache:
             self.cache[key] = newurl, data, filetype, code
 
             if len(self.cache) > CACHE_MAXSIZE:
-                print("POP")
                 self.cache.popitem(last=False)
 
             if newurl != url:

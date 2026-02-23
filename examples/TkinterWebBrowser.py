@@ -246,7 +246,7 @@ class Page(ttk.Frame):
         self.view_source_button = view_source_button = ttk.Button(sidebar, text="View page source", command=self.view_source)
         about_button = ttk.Button(sidebar, text="About TkinterWeb", command=lambda: self.open_new_tab("about:tkinterweb"))
         html_button = ttk.Button(sidebar, text="HTML playground", command=lambda: self.open_new_tab("about:html"))
-        style_button = ttk.Button(sidebar, text="Style report", command=self.style_report)
+        style_button = ttk.Button(sidebar, text="Get style report", command=self.style_report)
         
         frame.bind(TITLE_CHANGED_EVENT, self.change_title)
         frame.bind(URL_CHANGED_EVENT, self.url_change)

@@ -30,7 +30,7 @@ __title__ = "TkinterWeb"
 __author__ = "Andrew Clarke"
 __copyright__ = "(c) 2021-2025 Andrew Clarke"
 __license__ = "MIT"
-__version__ = "4.23.0"
+__version__ = "4.23.1"
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
@@ -849,11 +849,29 @@ def download(url, data=None, method="GET", decode=None, insecure=False, cafile=N
 
         return url, data, filetype, code
 
+_redirects = {}
+_redirects_lock = threading.RLock()
 
 @lru_cache()
-def cache_download(*args, **kwargs):
-    "Fetch files and add them to the lru cache"
+def _cache_download(*args, **kwargs):
     return download(*args, **kwargs)
+
+def cache_download(url, *args, **kwargs):
+    """Fetch files and add them to the lru cache.
+    If a url redirects, store the final url.
+    This way, downloading the redirected url (eg. by saving the page or reloading) still points to the cached entry."""
+    global _redirects
+
+    with _redirects_lock:
+        url = _redirects.get(url, url)
+
+    newurl, data, filetype, code = _cache_download(url, *args, **kwargs)
+
+    if newurl != url:
+        with _redirects_lock:
+            _redirects[newurl] = url
+
+    return newurl, data, filetype, code
 
 
 def shorten(string):

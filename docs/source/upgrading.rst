@@ -45,11 +45,11 @@ Changelog
     * ``HtmlFrame.enable_caches()`` - use ``HtmlFrame.configure(caches_enabled=)``
     * ``HtmlFrame.enable_dark_theme()`` - use ``HtmlFrame.configure(dark_theme_enabled=, image_inversion_enabled=)``
     * ``HtmlFrame.on_image_setup()`` - use ``HtmlFrame.configure(on_resource_setup=)``
-    * ``HtmlFrame.on_downloading_resource()`` - bind to ``<<DownloadingResource>>``
-    * ``HtmlFrame.on_done_loading()`` - bind to ``<<DoneLoading>>``
-    * ``HtmlFrame.on_url_change()`` - bind to ``<<UrlChanged>>`` and use :attr:`.HtmlFrame.current_url`
-    * ``HtmlFrame.on_icon_change()`` - bind to ``<<IconChanged>>`` and use :attr:`.HtmlFrame.title`
-    * ``HtmlFrame.on_title_change()`` - bind to ``<<TitleChanged>>`` and use :attr:`.HtmlFrame.title`
+    * ``HtmlFrame.on_downloading_resource()`` - bind to  ``<<DownloadingResource>>``/:py:attr:`utilities.DOWNLOADING_RESOURCE_EVENT`
+    * ``HtmlFrame.on_done_loading()`` - bind to ``<<DoneLoading>>``/:py:attr:`utilities.DONE_LOADING_EVENT`
+    * ``HtmlFrame.on_url_change()`` - bind to ``<<UrlChanged>>``/:py:attr:`utilities.URL_CHANGED_EVENT and use :attr:`.HtmlFrame.current_url`
+    * ``HtmlFrame.on_icon_change()`` - bind to ``<<IconChanged>>``/:py:attr:`utilities.ICON_CHANGED_EVENT` and use :attr:`.HtmlFrame.title`
+    * ``HtmlFrame.on_title_change()`` - bind to ``<<TitleChanged>>``/:py:attr:`utilities.TITLE_CHANGED_EVENT` and use :attr:`.HtmlFrame.title`
     * ``HtmlFrame.on_form_submit()`` - use ``HtmlFrame.configure(on_form_submit=)``
     * ``HtmlFrame.on_link_click()`` - use ``HtmlFrame.configure(on_link_click=)``
     * ``HtmlFrame.yview_toelement()`` - use :meth:`.HTMLElement.scrollIntoView`
@@ -556,10 +556,16 @@ Changelog
     * Improved :meth:`.HtmlFrame.snapshot_page` output formatting and accuracy.
     * In an effort to reduce the widget's memory footprint, all HTML widgets no longer remember the original HTML code they are displaying:
 
-        * The output of :meth:`.HtmlFrame.save_page` is now the document's original HTML only when caching is enabled and a url is loaded. Otherwise, :meth:`.HtmlFrame.snapshot_page` is used, with the contents of the ``<head>`` tag included if the widget is still loading.
+        * The output of :meth:`.HtmlFrame.save_page` is now the document's original HTML only when the page has been cached. This is the case when caching is enabled and a url is loaded. Otherwise, :meth:`.HtmlFrame.snapshot_page` is used, with the contents of the ``<head>`` tag included if the widget is still loading.
         * :meth:`.HtmlFrame.reload` now only reloads pages loaded from a url.
         
         The original intent of both both methods is to be used when a url is loaded, and in an ideal world caching should always be enabled.
+
+    * :meth:`.HtmlFrame.reload` and :meth:`.HtmlFrame.save_page` now fully support pages generated through form submissions.
+    * The ``<<UrlChanged>>``/:py:attr:`utilities.URL_CHANGED_EVENT` event now also fires when a url is navigated to.
+    * The page cache backend was overhauled in this release. Please file a bug report if you notice any issues. 
+    * Loading cached stylesheets, scripts, and images no longer spawns new threads. This fixes some bugs when loading cached documents and improves load times on some pages.
+    * Disabling the cache now also clears it.
 
 -------------------
 

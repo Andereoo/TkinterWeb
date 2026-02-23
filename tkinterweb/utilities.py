@@ -4,7 +4,6 @@ Various constants and utilities used by TkinterWeb
 Copyright (c) 2021-2026 Andrew Clarke
 
 Some of the CSS code in this file is modified from the Tkhtml/Hv3 project. Tkhtml is copyright (c) 2005 Dan Kennedy.
-The lru_cache function in this file is modified from functools. Functools is copyright (c) Python Software Foundation.
 """
 
 import os
@@ -12,7 +11,8 @@ import platform
 import sys
 import threading
 
-from functools import wraps, lru_cache
+from functools import wraps
+from collections import OrderedDict
 
 import ssl, gzip, zlib
 from urllib.request import Request, urlopen
@@ -30,7 +30,7 @@ __title__ = "TkinterWeb"
 __author__ = "Andrew Clarke"
 __copyright__ = "(c) 2021-2025 Andrew Clarke"
 __license__ = "MIT"
-__version__ = "4.23.1"
+__version__ = "4.23.2"
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
@@ -43,6 +43,7 @@ HEADERS = {
     "User-Agent": "Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha",
     "Accept-Encoding": ("gzip, deflate, br" if brotli_installed else "gzip, deflate"),
 }
+CACHE_MAXSIZE = 128
 DEFAULT_PARSE_MODE = "xml"
 DEFAULT_ENGINE_MODE = "standards"
 BROKEN_IMAGE = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x19\x00\x00\x00\x1e\x08\x03\x00\x00\x00\xee2E\xe9\x00\x00\x03\x00PLTE\xc5\xd5\xf4\xcd\xdb\xf4\xdf\xe8\xfc\xd5\xdd\xf4\xa5\xa3\xa5\x85\x83\x85\xfc\xfe\xfc\xf4\xf6\xf9\x95\x93\x95S\xb39\x9d\x9f\x9d\xc5\xd3\xedo\xbbg\xd5\xe3\xf4\xd5\xdf\xfc\xd5\xe3\xfc\xb5\xcf\xd5\x9d\xc7\xb5\xc5\xdf\xe5S\xaf9\x8d\xc7\x8d\x15\x15\x15\x16\x16\x16\x17\x17\x17\x18\x18\x18\x19\x19\x19\x1a\x1a\x1a\x1b\x1b\x1b\x1c\x1c\x1c\x1d\x1d\x1d\x1e\x1e\x1e\x1f\x1f\x1f   !!!"""###$$$%%%&&&\'\'\'((()))***+++,,,---...///000111222333444555666777888999:::;;;<<<===>>>???@@@AAABBBCCCDDDEEEFFFGGGHHHIIIJJJKKKLLLMMMNNNOOOPPPQQQRRRSSSTTTUUUVVVWWWXXXYYYZZZ[[[\\\\\\]]]^^^___```aaabbbcccdddeeefffggghhhiiijjjkkklllmmmnnnooopppqqqrrrssstttuuuvvvwwwxxxyyyzzz{{{|||}}}~~~\x7f\x7f\x7f\x80\x80\x80\x81\x81\x81\x82\x82\x82\x83\x83\x83\x84\x84\x84\x85\x85\x85\x86\x86\x86\x87\x87\x87\x88\x88\x88\x89\x89\x89\x8a\x8a\x8a\x8b\x8b\x8b\x8c\x8c\x8c\x8d\x8d\x8d\x8e\x8e\x8e\x8f\x8f\x8f\x90\x90\x90\x91\x91\x91\x92\x92\x92\x93\x93\x93\x94\x94\x94\x95\x95\x95\x96\x96\x96\x97\x97\x97\x98\x98\x98\x99\x99\x99\x9a\x9a\x9a\x9b\x9b\x9b\x9c\x9c\x9c\x9d\x9d\x9d\x9e\x9e\x9e\x9f\x9f\x9f\xa0\xa0\xa0\xa1\xa1\xa1\xa2\xa2\xa2\xa3\xa3\xa3\xa4\xa4\xa4\xa5\xa5\xa5\xa6\xa6\xa6\xa7\xa7\xa7\xa8\xa8\xa8\xa9\xa9\xa9\xaa\xaa\xaa\xab\xab\xab\xac\xac\xac\xad\xad\xad\xae\xae\xae\xaf\xaf\xaf\xb0\xb0\xb0\xb1\xb1\xb1\xb2\xb2\xb2\xb3\xb3\xb3\xb4\xb4\xb4\xb5\xb5\xb5\xb6\xb6\xb6\xb7\xb7\xb7\xb8\xb8\xb8\xb9\xb9\xb9\xba\xba\xba\xbb\xbb\xbb\xbc\xbc\xbc\xbd\xbd\xbd\xbe\xbe\xbe\xbf\xbf\xbf\xc0\xc0\xc0\xc1\xc1\xc1\xc2\xc2\xc2\xc3\xc3\xc3\xc4\xc4\xc4\xc5\xc5\xc5\xc6\xc6\xc6\xc7\xc7\xc7\xc8\xc8\xc8\xc9\xc9\xc9\xca\xca\xca\xcb\xcb\xcb\xcc\xcc\xcc\xcd\xcd\xcd\xce\xce\xce\xcf\xcf\xcf\xd0\xd0\xd0\xd1\xd1\xd1\xd2\xd2\xd2\xd3\xd3\xd3\xd4\xd4\xd4\xd5\xd5\xd5\xd6\xd6\xd6\xd7\xd7\xd7\xd8\xd8\xd8\xd9\xd9\xd9\xda\xda\xda\xdb\xdb\xdb\xdc\xdc\xdc\xdd\xdd\xdd\xde\xde\xde\xdf\xdf\xdf\xe0\xe0\xe0\xe1\xe1\xe1\xe2\xe2\xe2\xe3\xe3\xe3\xe4\xe4\xe4\xe5\xe5\xe5\xe6\xe6\xe6\xe7\xe7\xe7\xe8\xe8\xe8\xe9\xe9\xe9\xea\xea\xea\xeb\xeb\xeb\xec\xec\xec\xed\xed\xed\xee\xee\xee\xef\xef\xef\xf0\xf0\xf0\xf1\xf1\xf1\xf2\xf2\xf2\xf3\xf3\xf3\xf4\xf4\xf4\xf5\xf5\xf5\xf6\xf6\xf6\xf7\xf7\xf7\xf8\xf8\xf8\xf9\xf9\xf9\xfa\xfa\xfa\xfb\xfb\xfb\xfc\xfc\xfc\xfd\xfd\xfd\xfe\xfe\xfe\xff\xff\xff\x01\xb3\x9a&\x00\x00\x01+IDATx\x9c\x9d\x91\xe9\x92\x84 \x0c\x84s (\x08A\xc6\xf7\x7f\xd6M8\x9c\x9d\xa9\xda?\xdb\x96W\x7f\xb6\xd5\x04\xf0\x7f\t\xdcT\x9c\xf7}\x0f\xf4I\x16U\x12\x16\t\x1f\xdaw\xe7\x16!\xcay\x9cL\xac\xc4\xfb\x18\x06\xc9\x81\x14\xd0\xd4o\xc2\x88\xa5X\x1e\x0b"\x1a\xf1\xd1\x05\x0f1f3\x06\xc9\x85\xb6Nb\x08\xe0\xa2d\x9cK\xd00\xefKF\x16\xf0E\ti?\xb2\x8aJ2\xf9\'\x83\xa8]Fy#\xa8\x1d\x00\x91\xa1\x01d\xad\x9e1h\x11m EM(\xa2vA\xe0\xc2,T,\xe3\x98$\xc1T\xd307 \xda6[)C\xea\x16\x1aK\x8c\rDv#BF\xd4\x03\xb4\x0b\xa4\x02,:\x83\xe8H i\xc2<\xec,%\xa2>\x1d\xc9)\x8dD\xad\xfd\x89a\xce\xad\x10\xdbw\xa0\xa0Z.\xa54v!\x8a@\x85\xeb:^\xaf\xe38\xcfZ\x19\xfc"E\xbf\xbf.\x03F\x1a\xf0 Q\xbbUM\xbc\xd5\xfd\xbeR\xa2\xda\x9d\xb3\x1f\xdd\x97\xbc\xf5Y\xf35\xc9\x93\xd0\x19\xe8\xdc\\k_\x7f\xf2g\xb6\x19\xc4\xf8\x90s\x91\x17\xe5\xbe\x0b\xf7\xf9\x99\xd0\x87\xfbV\xb2\xbd\xd5\xfd\xe7\xed?\xe4\x07\xca\xeb\x13o\x88}\xa9\x12\x00\x00\x00\x00IEND\xaeB`\x82'
@@ -796,7 +797,7 @@ def special_setting(default=None):
     return decorator
 
 
-def download(url, data=None, method="GET", decode=None, insecure=False, cafile=None, headers=(), timeout=15):
+def download(url, data="", method="GET", decode=None, insecure=False, cafile=None, headers=(), timeout=15):
     "Fetch files. Note that headers should be converted from dict to tuple before calling download() as dicts aren't hashable."
     if insecure or cafile:
         context = ssl.create_default_context(cafile=cafile)
@@ -849,29 +850,61 @@ def download(url, data=None, method="GET", decode=None, insecure=False, cafile=N
 
         return url, data, filetype, code
 
-_redirects = {}
-_redirects_lock = threading.RLock()
 
-@lru_cache()
-def _cache_download(*args, **kwargs):
-    return download(*args, **kwargs)
-
-def cache_download(url, *args, **kwargs):
-    """Fetch files and add them to the lru cache.
+class LRUCache:
+    """Fetch files and add them to the LRU cache, or check if they're in the cache already.
     If a url redirects, store the final url.
     This way, downloading the redirected url (eg. by saving the page or reloading) still points to the cached entry."""
-    global _redirects
+    
+    # TODO: consider TTL, LFU, extension to write to disk, etc.
+    def __init__(self):
+        self.cache = OrderedDict()
+        self.redirects = {}
+        self.lock = threading.RLock()
 
-    with _redirects_lock:
-        url = _redirects.get(url, url)
+    def check(self, url, *args):
+        with self.lock:
+            url = self.redirects.get(url, url)
+            key = (url, *args)
 
-    newurl, data, filetype, code = _cache_download(url, *args, **kwargs)
+            if key in self.cache:
+                return True
+            else:
+                return False
 
-    if newurl != url:
-        with _redirects_lock:
-            _redirects[newurl] = url
+    def fetch(self, url, *args):
+        with self.lock:
+            url = self.redirects.get(url, url)
+            key = (url, *args)
 
-    return newurl, data, filetype, code
+            if key in self.cache:
+                return self.cache[key]
+            
+        newurl, data, filetype, code = download(url, *args)
+
+        with self.lock:
+            self.cache[key] = newurl, data, filetype, code
+
+            if len(self.cache) > CACHE_MAXSIZE:
+                print("POP")
+                self.cache.popitem(last=False)
+
+            if newurl != url:
+                self.redirects[newurl] = url
+                
+            return newurl, data, filetype, code
+            
+    def clear(self):
+        with self.lock:
+            self.cache.clear()
+
+lru_cache = LRUCache()
+
+def cache_download(url, data="", method="GET", decode=None, insecure=False, cafile=None, headers=(), timeout=15):
+    return lru_cache.fetch(url, data, method, decode, insecure, cafile, headers, timeout)
+
+def check_download(url, data="", method="GET", decode=None, insecure=False, cafile=None, headers=(), timeout=15):
+    return lru_cache.check(url, data, method, decode, insecure, cafile, headers, timeout)
 
 
 def shorten(string):

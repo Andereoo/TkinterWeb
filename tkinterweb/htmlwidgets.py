@@ -168,6 +168,7 @@ class HtmlFrame(Frame):
         
         # State and settings variables
         self._current_url = ""
+        self._current_data = ""
         self._previous_url = ""
         self._accumulated_styles = []
         self._waiting_for_reset = False
@@ -435,8 +436,6 @@ class HtmlFrame(Frame):
         self._previous_url = self._current_url
         if not file_url.startswith("file://"):
             file_url = "file://" + str(file_url)
-            self._current_url = file_url
-            self._html.post_event(utilities.URL_CHANGED_EVENT)
         self.load_url(file_url, decode, force)
 
     def load_website(self, website_url, decode=None, force=False):
@@ -451,8 +450,6 @@ class HtmlFrame(Frame):
         self._previous_url = self._current_url
         if (not website_url.startswith("https://")) and (not website_url.startswith("http://")) and (not website_url.startswith("about:")):
             website_url = "http://" + str(website_url)
-            self._current_url = website_url
-            self._html.post_event(utilities.URL_CHANGED_EVENT)
         self.load_url(website_url, decode, force)
 
     def load_url(self, url, decode=None, force=False):
@@ -475,7 +472,7 @@ class HtmlFrame(Frame):
             self._previous_url = self._current_url
         if url in utilities.BUILTIN_PAGES:
             utilities.BUILTIN_PAGES._html = self._html
-            self._current_url = url
+            self._update_current_url(url, False)
             return self._load_html(self._get_about_page(url), url)
 
         self._waiting_for_reset = True
@@ -486,13 +483,14 @@ class HtmlFrame(Frame):
         if self._thread_in_progress:
             self._thread_in_progress.stop()
             
-        if self._html.threading_enabled and not url.startswith("file://"):
+        if not self._html.threading_enabled or url.startswith("file://"):
+            #or self._html._check_url_cache_state(url, "", "GET", decode):
+            self._continue_loading(url, decode=decode, force=force)
+        else:
             thread = utilities.StoppableThread(target=self._continue_loading, args=(
                 url,), kwargs={"decode": decode, "force": force, "thread_safe": True})
             self._thread_in_progress = thread
-            thread.start()
-        else:
-            self._continue_loading(url, decode=decode, force=force)
+            thread.start()            
 
     def load_form_data(self, url, data, method="GET", decode=None):
         """Submit form data to a server and load the response.
@@ -522,7 +520,10 @@ class HtmlFrame(Frame):
         New in version 4.21"""
 
         if self._current_url:
-            self.load_url(self._current_url, force=True)
+            if self._current_data:
+                self.load_form_data(self._current_url, self._current_data, "POST")
+            else:
+                self.load_url(self._current_url, force=True)
         # else, we could snapshot the page and load that
         # But I think that's completely useless
 
@@ -588,9 +589,8 @@ class HtmlFrame(Frame):
         """Stop loading this page and abandon all pending requests."""
         if self._thread_in_progress:
             self._thread_in_progress.stop()
-            self._current_url = self._previous_url
+            self._update_current_url(self._previous_url, False)
         self._html.stop()
-        self._html.post_event(utilities.URL_CHANGED_EVENT)
         self._html.post_event(utilities.DONE_LOADING_EVENT)
 
     def find_text(self, text, select=1, ignore_case=True, highlight_all=True, detailed=False):
@@ -732,11 +732,13 @@ class HtmlFrame(Frame):
 
         if self._html.active_threads: include_head=True
         else: include_head=False
+    
+        method = "POST" if self._current_data else "GET"
         
-        if self._current_url and self.html.caches_enabled:
-            # We're gonna trust that it's in the cache
+        if self._current_url and self.html.caches_enabled and \
+            self._html._check_url_cache_state(self.current_url, self._current_data, method):
             try:
-                _, html, _, _ = self._html.download_url(self._current_url)
+                _, html, _, _ = self._html.download_url(self._current_url, self._current_data, method)
             except Exception:
                 html = self.snapshot_page(include_head=include_head)
         else:
@@ -1192,12 +1194,20 @@ class HtmlFrame(Frame):
 
         return utilities.BUILTIN_PAGES[url].format(bg=self.about_page_background, fg=self.about_page_foreground, i1=i1, i2=i2)
 
+    def _update_current_url(self, url, thread_safe=True):
+        if self._current_url != url:
+            self._current_url = url
+            # This way URL_CHANGED_EVENT fires when the user clicks on a link or submits a form after local HTML is parsed
+            self._html.post_event(utilities.URL_CHANGED_EVENT, thread_safe)
+
     def _continue_loading(self, url, data="", method="GET", decode=None, force=False, thread_safe=False):
         "Finish loading urls and handle URI fragments."
         # NOTE: this may run in a thread
 
         code = 404
-        self._current_url = url
+
+        # This way URL_CHANGED_EVENT fires when the user clicks on a link or submits a form after local HTML is parsed
+        self._update_current_url(url)
 
         self._html.post_event(utilities.DOWNLOADING_RESOURCE_EVENT, True)
         
@@ -1207,6 +1217,9 @@ class HtmlFrame(Frame):
 
             if method == "GET":
                 url = str(url) + str(data)
+                data = ""
+            
+            self._current_data = data
 
             fragment = parsed.fragment
 
@@ -1219,8 +1232,7 @@ class HtmlFrame(Frame):
                     url = urlunparse(("file", "/" + netloc, path, "", "", ""))
                 else:
                     url = urlunparse(("file", "", "/" + path, "", "", ""))
-                self._current_url = url
-                self._html.post_event(utilities.URL_CHANGED_EVENT)
+                self._update_current_url(url)
 
             # If url is different than the current one, load the new site
             if force or (method == "POST") or ((urldefrag(url)[0]).replace("/", "") != (urldefrag(self._previous_url)[0]).replace("/", "")):
@@ -1243,9 +1255,7 @@ class HtmlFrame(Frame):
                     newurl = "view-source:"+newurl
 
                 if thread.isrunning():
-                    if self._current_url != newurl:
-                        self._current_url = newurl
-                        self._html.post_event(utilities.URL_CHANGED_EVENT, True)
+                    self._update_current_url(newurl)
 
                     if view_source:
                         data = str(data).replace("<","&lt;").replace(">", "&gt;")

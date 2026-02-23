@@ -59,8 +59,6 @@ def check_url(entry):
             url = f"file://{url}"
         else:
             url = "http://{}".format(url)
-            entry.delete(0, "end")
-            entry.insert(0, url)
     return url
 
 
@@ -722,7 +720,6 @@ class Page(ttk.Frame):
         self.load_url(url)
         if len(self.back_history) <= 1:
             self.backbutton.config(state="disabled", cursor="arrow")
-        self.url_change(url)
 
     def on_downloading(self, event):
         self.reloadbutton.config(text="Stop", command=self.frame.stop)
@@ -744,7 +741,6 @@ class Page(ttk.Frame):
         self.backbutton.config(state="normal", cursor="hand2")
         self.back_history.append(url)
         self.load_url(url)
-        self.url_change(url)
 
     def cut_text(self, text, limit):
         if (len(text) > limit):

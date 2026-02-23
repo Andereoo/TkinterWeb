@@ -460,7 +460,9 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
     @utilities.special_setting(True)
     def caches_enabled(self, prev_enabled, enabled):
         "Disable the Tkhtml image cache when disabling caches."
-        if prev_enabled != enabled: self.imagecache = enabled
+        if prev_enabled != enabled: 
+            self.imagecache = enabled
+            if not enabled: utilities.lru_cache.clear()
 
     @property
     def imagecache(self):
@@ -774,8 +776,11 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         else:
             return utilities.cache_download(url, *args, insecure=self.insecure_https, cafile=self.ssl_cafile, headers=tuple(self.headers.items()), timeout=self.request_timeout)
     
+    def _check_url_cache_state(self, url, *args):
+        return utilities.check_download(url, *args, insecure=self.insecure_https, cafile=self.ssl_cafile, headers=tuple(self.headers.items()), timeout=self.request_timeout)
+    
     def _thread_check(self, callback, url, *args, **kwargs):
-        if not self.threading_enabled or url.startswith("file://"):
+        if not self.threading_enabled or url.startswith("file://") or self._check_url_cache_state(url):
             callback(url, *args, **kwargs)
         else:
             thread = utilities.StoppableThread(target=callback, args=(url, *args,), kwargs=kwargs)

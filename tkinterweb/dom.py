@@ -355,7 +355,7 @@ class HTMLElement:
             set children [parse_fragment $newHtml]
             $node insert $children
 
-            update  ;# This must be done to see changes on-screen
+            if {[winfo ismapped $html]} {update} # This must be done to see changes on-screen
             """ % (self.html, extract_nested(self.node), escape_Tcl(contents))
         )
         self.html.event_manager.send_onload(root=self.node)
@@ -421,7 +421,7 @@ class HTMLElement:
                 }
                 $node insert $textnode
                 
-                update  ;# This must be done to see changes on-screen
+                if {[winfo ismapped $html]} {update} # This must be done to see changes on-screen
                 """ % (extract_nested(self.node), self.document.createTextNode(contents).node)
             )
         else:

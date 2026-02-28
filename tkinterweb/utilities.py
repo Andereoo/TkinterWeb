@@ -30,7 +30,7 @@ __title__ = "TkinterWeb"
 __author__ = "Andrew Clarke"
 __copyright__ = "(c) 2021-2025 Andrew Clarke"
 __license__ = "MIT"
-__version__ = "4.23.3"
+__version__ = "4.24.0"
 
 
 ROOT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "resources")
@@ -43,6 +43,9 @@ HEADERS = {
     "User-Agent": "Mozilla/5.1 (X11; U; Linux i686; en-US; rv:1.8.0.3) Gecko/20060425 SUSE/1.5.0.3-7 Hv3/alpha",
     "Accept-Encoding": ("gzip, deflate, br" if brotli_installed else "gzip, deflate"),
 }
+INSECURE_HTTPS = False
+SSL_CAFILE = None
+REQUEST_TIMEOUT = 15
 CACHE_MAXSIZE = 128
 DEFAULT_PARSE_MODE = "xml"
 DEFAULT_ENGINE_MODE = "standards"

@@ -14,13 +14,14 @@ Changelog
     * Many DOM improvements. The DOM API now more closely mirrors its JavaScript counterpart.
     * Dozens of new configuration options, including access to more settings and the ability to link a JavaScript interpreter
 
-    * Basic JavaScript support (new in version 4.1)
+    * Added basic JavaScript support (new in version 4.1)
     * Improved embedded widget handling (new in version 4.2)
     * Cross-platform SVG and ``border-radius`` support (new in version 4.4)
     * Support for Tcl 9 (new in version 4.5)
     * Caret browsing functionality (new in version 4.8)
     * Improved thread safety (new in version 4.9)
     * Ability to bind to HTML elements (new in version 4.10)
+    * Added an HTML-based text widget (new in version 4.15)
 
 .. dropdown:: Removed
 
@@ -391,6 +392,9 @@ Changelog
 
     * :meth:`.HtmlFrame.snapshot_page` now accepts the new parameter ``include_head``.
 
+    Version 4.24:
+    * :meth:`.HtmlFrame.load_form_data` now accepts the new parameter ``force``.
+
 .. dropdown:: Changed/Fixed
 
     Version 4.0:
@@ -566,6 +570,11 @@ Changelog
     * The page cache backend was overhauled in this release. Please file a bug report if you notice any issues. 
     * Loading cached stylesheets, scripts, and images no longer spawns new threads. This fixes some bugs when loading cached documents and improves load times on some pages.
     * Disabling the cache now also clears it.
+
+    Version 4.24:
+
+    * Stopped windows from teleporting across the galaxy or disappearing altogether when changing :attr:`.HTMLElement.innerHTML` and :attr:`.HTMLElement.textContent` before the app opens.
+    * Fixed a minor threading bug in :meth:`.HtmlFrame.load_form_data`.
 
 -------------------
 

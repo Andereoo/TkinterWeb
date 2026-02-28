@@ -178,8 +178,64 @@ class HtmlFrame(Frame):
         self._button = None
         self._style = None
 
-        ### TODO: it would be really nice to better match the parameters, function names, and events used in stock Tkinter widgets
-        ### Not really reasonable at this point
+        ### TODO: Would be lovely to make it more Tk-ish: i.e.
+        # zoom
+        # fontscale
+        # scrollbars = none | auto | dynamic | (a, b)
+        # shrink
+        # wrap
+        # theme = normal | dark | night
+        # mode = cursor | normal | readonly
+        # defaultstyle
+        # width
+        # height
+
+        # navigationfailcommand
+        # linkclickcommand
+        # submitcommand
+        # scriptcommand
+        # scripteventcommand
+        # resourcecommand
+        # messagecommand
+        # requestcommand
+
+        # visitedsites
+
+        # findbackground
+        # findforeground
+        # findcurrentbackground
+        # findcurrentforeground
+        # selectbackground
+        # selectforeground
+
+        # tkhtmlversion
+        # experimental
+        # bundledtkhtml
+
+        # scripting_configure (or should this be javascript.configure)
+        #     enablescripting
+        #     backend
+
+        # engine_configure (or should this be in html.configure)
+        #     enablemessages (keep default True but remove built-in messagecmd handling)
+        #     enablestylesheets
+        #     enableimages
+        #     enableforms
+        #     enableobjects
+        #     enablecaches
+        #     enablethreading
+        #     enableevents
+        #     enablealttext
+        #     enablealtimage
+        #     mode
+        #     parsemode
+            
+        # session_configure (or should we make this session.configure)
+        #     cafile
+        #     timeout
+        #     headers
+        #     insecure
+        ### or something. It would be nice to better match tk commands as well.
 
         self._htmlframe_options = {
             "on_navigate_fail": {"default": self.show_error_page, "type": "callable"},
@@ -224,9 +280,9 @@ class HtmlFrame(Frame):
             "default_style": {"default": utilities.DEFAULT_STYLE, "deprecated": "utilities.DEFAULT_STYLE or defaultstyle"},
             "dark_style": {"default": utilities.DARK_STYLE, "deprecated": "utilities.DARK_STYLE or defaultstyle"},
             "request_func": {"default": None, "type": "callable"},
-            "insecure_https": {"default": False, "type": bool},
-            "ssl_cafile": {"default": None, "type": "nonestr"},
-            "request_timeout": {"default": 15, "type": int},
+            "insecure_https": {"default": utilities.INSECURE_HTTPS, "type": bool},
+            "ssl_cafile": {"default": utilities.SSL_CAFILE, "type": "nonestr"},
+            "request_timeout": {"default": utilities.REQUEST_TIMEOUT, "type": int},
             "headers": {"default": utilities.HEADERS, "type": dict},
             "experimental": {"default": False, "type": "autobool", "changeable": False},
             "use_prebuilt_tkhtml": {"default": True, "type": bool, "changeable": False},
@@ -492,7 +548,7 @@ class HtmlFrame(Frame):
             self._thread_in_progress = thread
             thread.start()            
 
-    def load_form_data(self, url, data, method="GET", decode=None):
+    def load_form_data(self, url, data, method="GET", decode=None, force=False):
         """Submit form data to a server and load the response.
         
         :param url: The url to load.
@@ -502,13 +558,15 @@ class HtmlFrame(Frame):
         :param method: The form submission method.
         :type method: "GET" or "POST", optional
         :param decode: The decoding to use when loading the file.
-        :type decode: str or None, optional"""
+        :type decode: str or None, optional
+        :param force: Force the page to reload all elements. New in version 4.24.
+        :type force: bool, optional"""
         self._previous_url = self._current_url
         if self._thread_in_progress:
             self._thread_in_progress.stop()
         if self._html.threading_enabled:
             thread = utilities.StoppableThread(
-                target=self._continue_loading, args=(url, data, method, decode, True))
+                target=self._continue_loading, args=(url, data, method, decode, force, True))
             self._thread_in_progress = thread
             thread.start()
         else:
@@ -1154,7 +1212,7 @@ class HtmlFrame(Frame):
         if allow == "auto":
             return 2
         elif allow == "dynamic":
-            if self._html.cget("shrink") == 1:
+            if self._html.cget("shrink"):
                 return 0
             else:
                 return 2

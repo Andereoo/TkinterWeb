@@ -393,6 +393,7 @@ Changelog
     * :meth:`.HtmlFrame.snapshot_page` now accepts the new parameter ``include_head``.
 
     Version 4.24:
+    
     * :meth:`.HtmlFrame.load_form_data` now accepts the new parameter ``force``.
 
 .. dropdown:: Changed/Fixed

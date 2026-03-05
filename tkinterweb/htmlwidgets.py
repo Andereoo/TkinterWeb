@@ -1577,7 +1577,11 @@ class HtmlLabel(HtmlFrame):
 
         self._style = Style()
 
+        # Match the ttk theme
+        self._ttk_style_css(kwargs["style"])
+
         if text: self.load_html(text)
+        
         # I'd like to just make this an else statement to prevent the widget from being a massive white screen when text=""
         elif self.unshrink or (not self._html.using_tkhtml30 and not self._html.cget("textwrap")):
             # A fellow in issue 145 mentioned layout issues when this was used
@@ -1589,9 +1593,6 @@ class HtmlLabel(HtmlFrame):
         # Load the HTML
         super().load_html(*args, **kwargs)
 
-        # Match the ttk theme
-        self.add_css(self._ttk_style_css(self.cget("style")))
-
         # This stops infinite flickering when tables are present
         # My computer was having this bug for a while but now I don't experience it
         # But this doesn't seem to have any major side effects
@@ -1600,23 +1601,22 @@ class HtmlLabel(HtmlFrame):
             self.update_idletasks()
             self._html.relayout()
 
-    @utilities.lru_cache()
     def _ttk_style_css(self, style_type):
-        options = {
-            'background-color': 'background', 'color': 'foreground',
-        }
-        return "BODY {" + ";".join(
-             f"{p}:{self._style.lookup(style_type, v)}" for p, v in options.items()
-        ) + "}"
+        bg = self._style.lookup(style_type, 'background')
+        fg = self._style.lookup(style_type, 'foreground')
+        style = self._html.default_style +\
+            (self._html.dark_style if self._html.dark_theme_enabled else "") +\
+            f"BODY {{ background-color: {bg}; color: {fg}; }}"
+        self._html.configure(defaultstyle=style)
 
     def configure(self, **kwargs):
-        ""
+        "Sets the default value of the specified option(s) in Label/HTML."
         if "text" in kwargs:
             self.load_html(kwargs.pop("text"))
             
         if "style" in kwargs:
             utilities.warn("Since version 4.14 the style keyword no longer sets the HtmlLabel's CSS code. Please use the add_css() method instead.")
-            self.add_css(self._ttk_style_css(kwargs.pop("style")))
+            self._ttk_style_css(kwargs["style"])
 
         if kwargs: super().configure(**kwargs)
 

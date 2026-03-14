@@ -27,13 +27,13 @@ setup(
     include_package_data=True,
     install_requires=["tkinterweb-tkhtml>=2.1.1"],
     extras_require = {
-          "html": ["tkinterweb-tkhtml-extras>=1.3.0"],
+          "html": ["tkinterweb-tkhtml-extras>=1.3.1"],
           "images": ["pillow"],
-          "svg": ["tkinterweb-tkhtml-extras>=1.3.0", "pillow", "cairosvg"],
+          "svg": ["tkinterweb-tkhtml-extras>=1.3.1", "pillow", "cairosvg"],
           "javascript": ["pythonmonkey"],
           "requests": ["brotli"],
 
-          "recommended": ["tkinterweb-tkhtml-extras>=1.3.0", "pillow"],
-          "full": ["tkinterweb-tkhtml-extras>=1.3.0", "pillow", "cairosvg", "pythonmonkey", "brotli"],
+          "recommended": ["tkinterweb-tkhtml-extras>=1.3.1", "pillow"],
+          "full": ["tkinterweb-tkhtml-extras>=1.3.1", "pillow", "cairosvg", "pythonmonkey", "brotli"],
     },
 )

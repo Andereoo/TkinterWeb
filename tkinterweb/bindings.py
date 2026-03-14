@@ -1144,10 +1144,20 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                 data = sub(
                     "font-family:[^;']*(;)?",
                     self._remove_noto_emoji,
-                    data,
-                    flags=IGNORECASE,
+                    data, flags=IGNORECASE,
                 )
-                data = sub(r"rgb\([^0-9](.*?)\)", "inherit", data, flags=IGNORECASE)
+                data = sub(
+                    r"rgb\([^0-9](.*?)\)", 
+                    "inherit", 
+                    data, flags=IGNORECASE)
+
+                # From Bug #150
+                # Not really crash prevention
+                data = sub(
+                    r'style=(["\'])\s+', 
+                    r'style=\1', 
+                    data, flags=IGNORECASE)
+
         return data
 
     def _remove_noto_emoji(self, match):

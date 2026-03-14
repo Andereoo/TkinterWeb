@@ -246,7 +246,7 @@ Changelog
 
     Version 4.5:
 
-    * The new configuration option ``ssl_cafile`` can be used to provide a path to a CA Certificate file. See  `bug #28 <https://github.com/Andereoo/TkinterWeb/issues/28>`_.
+    * The new configuration option ``ssl_cafile`` can be used to provide a path to a CA Certificate file. See `bug #28 <https://github.com/Andereoo/TkinterWeb/issues/28>`_.
 
     Version 4.6:
 
@@ -437,7 +437,7 @@ Changelog
 
     Version 4.5:
 
-    * Periods are now supported in url fragments. See  `bug #143 <https://github.com/Andereoo/TkinterWeb/issues/143>`_ .
+    * Periods are now supported in url fragments. See `bug #143 <https://github.com/Andereoo/TkinterWeb/issues/143>`_ .
     * Tkhtml file loading was updated in version 4.5. Some error messages have also been updated. Please submit a bug report if you notice any issues.
 
     Version 4.6:
@@ -576,6 +576,7 @@ Changelog
 
     * Stopped windows from teleporting across the galaxy or disappearing altogether when changing :attr:`.HTMLElement.innerHTML` and :attr:`.HTMLElement.textContent` before the app opens.
     * Fixed a minor threading bug in :meth:`.HtmlFrame.load_form_data`.
+    * Fixed `bug #150 <https://github.com/Andereoo/TkinterWeb/issues/150>`_ .
 
 -------------------
 

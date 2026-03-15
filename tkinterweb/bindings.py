@@ -257,6 +257,13 @@ If you benefited from using this package, please consider supporting its develop
                 # KP_ bindings don't work on MacOS
                 pass
 
+        # Fix for Bug #151
+        # Externally map .!tkinterweb.document to .!tkinterweb on Windows
+        if utilities.PLATFORM.system == "Windows":
+            widget = tk.Widget(self, None)
+            widget._w = self._w # or is f"{self}.document" better?
+            self.children["document"] = widget
+
     def _add_bindtags(self, widgetid, allowscrolling=True, master=False):
         "Add bindtags to allow scrolling and on_embedded_mouse function calls."
         if allowscrolling:

@@ -1543,11 +1543,10 @@ Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certif
         else:
             self._html.unbind(sequence, *args, **kwargs)
     
-    def __getitem__(self, key):
-        return self.cget(key)
+    def __setitem__(self, k, v): self.configure({k: v})
 
-    def __setitem__(self, key, value):
-        self.configure(**{key: value})
+    __getitem__ = cget
+
 
 
 class HtmlLabel(HtmlFrame):

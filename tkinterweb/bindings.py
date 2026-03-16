@@ -617,7 +617,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         "Post a message."
         # NOTE: when thread_safe=True, this method is thread-safe
         # Amazing stuff, eh?
-        if not self.messages_enabled:
+        if self.message_func is None and not self.messages_enabled:
             return
         
         if thread_safe and self.queue:
@@ -631,6 +631,8 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
             message = "[EMBEDDED DOCUMENT] " + message
         if self.message_func is not None:
             self.message_func(message)
+        elif self.messages_enabled:
+            utilities.notifier(message)
 
     # --- HTML/CSS parsing ----------------------------------------------------
 

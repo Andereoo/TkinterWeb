@@ -17,7 +17,7 @@ To manipulate the Document Object Model, use the :attr:`~tkinterweb.HtmlFrame.do
 
 .. code-block:: python
 
-    yourhtmlframe = tkinterweb.HtmlFrame(root)
+    yourhtmlframe = tkinterweb.HtmlFrame(root, messages_enabled=True)
     yourhtmlframe.load_html("<div id='container'><p>Test</p></div>")
     container = yourhtmlframe.document.getElementById("container")
     new_header = yourhtmlframe.document.createElement("h1")

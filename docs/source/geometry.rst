@@ -18,7 +18,7 @@ To place a Tkinter widget inside an HTML document, add the ``data=[yourwidget]``
 
 .. code-block:: python
 
-    yourframe = tkinterweb.HtmlFrame(root)
+    yourframe = tkinterweb.HtmlFrame(root, messages_enabled=True)
     yourbutton = tkinter.Button(yourframe, text="Hello, world!")
     source_html = f"<i>This is some text</i><br><object data={yourbutton}></object>"
     yourframe.load_html(source_html) # or use add_html to add onto the existing document

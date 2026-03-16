@@ -30,13 +30,13 @@ Simply create your :class:`~tkinterweb.HtmlText` and start editing!
 .. code-block:: python
 
     from tkinterweb import HtmlText
-    yourhtmlframe = HtmlText(root)
+    yourhtmlframe = HtmlText(root, messages_enabled=True)
 
 You can also load html, files, and websites. For instance, to create an editable page with a heading, an orange block, and a list, you could use the following:
 
 .. code-block:: python
 
-    yourhtmlframe = HtmlText(root)
+    yourhtmlframe = HtmlText(root, messages_enabled=True)
     yourhtmlframe.load_html("""<h2>Hello, world!</h2>
     <div style='background: orange; border-radius: 10px; padding: 10px'>
         <div>Tkinter is so cool.</div>

@@ -39,7 +39,7 @@ To change the color and text of a ``<p>`` element when clicked, you could use th
 
 .. code-block:: python
     
-    yourhtmlframe = tkinterweb.HtmlFrame(root, javascript_enabled=True)
+    yourhtmlframe = tkinterweb.HtmlFrame(root, messages_enabled=True, javascript_enabled=True)
     yourhtmlframe.load_html("""
         <script>
         function changeColor(element) {
@@ -53,6 +53,11 @@ To change the color and text of a ``<p>`` element when clicked, you could use th
 Add the ``defer`` attribute to the relevant ``<script>`` element if you want it to run after the page loads. Otherwise, the script will be executed as soon as it is encountered in the document.
 
 The following JavaScript event attributes are supported: ``onchange``, ``onload``, ``onclick``, ``oncontextmenu``, ``ondblclick``, ``onmousedown``, ``onmouseenter``, ``onmouseleave``, ``onmousemove``, ``onmouseout``, ``onmouseover``, and ``onmouseup``.
+
+
+.. tip::
+
+    As of version 4.25, it is highly recommended to enable debug messages (i.e. via `HtmlFrame(root, messages_enabled=True, ...)`) when testing new scripts. Otherwise, if a script fails it will fail silently.
 
 Embedding Python in your document
 ---------------------------------
@@ -70,7 +75,7 @@ To register new objects, use :meth:`.JSEngine.register`. This gives the document
 
 .. code-block:: python
 
-    yourhtmlframe = tkinterweb.HtmlFrame(root, javascript_enabled=True)
+    yourhtmlframe = tkinterweb.HtmlFrame(root, messages_enabled=True, javascript_enabled=True)
     def open_alert_window(text):
         ## Do stuff
     yourhtmlframe.javascript.register("alert", open_alert_window)
@@ -83,7 +88,7 @@ Alternatively, you can register your own callback for ``<script>`` elements usin
 
 .. code-block:: python
 
-    yourhtmlframe = tkinterweb.HtmlFrame(root)
+    yourhtmlframe = tkinterweb.HtmlFrame(root, messages_enabled=True)
     def handle_scripts(attributes, tagcontents):
         ## Do stuff
     yourhtmlframe.configure(javascript_enabled=True, on_script=handle_scripts)

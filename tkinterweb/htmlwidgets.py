@@ -59,9 +59,9 @@ class HtmlFrame(Frame):
     
     Debugging:
 
-    :param messages_enabled: Enable/disable messages. This is enabled by default.
+    :param messages_enabled: Enable/disable messages. Prior to version 4.25 this is enabled by default.
     :type messages_enabled: bool
-    :param message_func: The function to be called when a debug message is issued. This only works if :attr:`messages_enabled` is set to True. The message will be passed as an argument. By default the message is printed.
+    :param message_func: The function to be called when a debug message is issued. Prior to version 4.25 this only works if :attr:`messages_enabled` is set to True. The message will be passed as an argument. By default the message is printed.
     :type message_func: None or function
 
     Features:
@@ -253,8 +253,8 @@ class HtmlFrame(Frame):
             "on_script": {"default": self._on_script, "type": "callable"},
             "on_element_script": {"default": self._on_element_script, "type": "callable"},
             "on_resource_setup": {"default": None, "type": "callable"},
-            "message_func": {"default": utilities.notifier, "type": "callable"},
-            "messages_enabled": {"default": True, "type": bool},
+            "message_func": {"default": None, "type": "callable"},
+            "messages_enabled": {"default": False, "type": bool},
             "caret_browsing_enabled": {"default": False, "type": bool},
             "selection_enabled": {"default": True, "type": bool},
             "stylesheets_enabled": {"default": True, "type": bool},

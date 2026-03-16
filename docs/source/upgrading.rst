@@ -578,6 +578,13 @@ Changelog
     * Fixed a minor threading bug in :meth:`.HtmlFrame.load_form_data`.
     * Fixed `bug #150 <https://github.com/Andereoo/TkinterWeb/issues/150>`_ .
 
+    Version 4.25:
+
+    * In an effort to closer match stock Tk widgets, debug message behaviour has been adjusted:
+       
+        * Debug messages are now disabled by default. Set the configuration option ``messages_enabled=True`` to enable them.
+        * In an effort to keep backwards compatibility, if the configuration option ``message_func`` is set, the value of ``messages_enabled`` is ignored.
+
 -------------------
 
 Please report bugs or request new features on the `issues page <https://github.com/Andereoo/TkinterWeb/issues>`_.

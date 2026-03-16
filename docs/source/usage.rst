@@ -44,7 +44,7 @@ TkinterWeb is very easy to use! Here is an example:
     
     root = tk.Tk() # create the Tkinter window
     
-    yourhtmlframe = HtmlFrame(root) # create the HtmlFrame widget
+    yourhtmlframe = HtmlFrame(root, messages_enabled=True) # create the HtmlFrame widget
     yourhtmlframe.load_html("<h1>Hello, World!</h1>") # load some HTML code
     yourhtmlframe.pack(fill="both", expand=True) # attach the HtmlFrame widget to the window
     

@@ -214,7 +214,7 @@ class Page(ttk.Frame):
 
         self.frame = frame = HtmlFrame(self, message_func=self.add_message, on_link_click=self.link_click, on_form_submit=self.form_submit)
         
-        self.sidebar = sidebar = HtmlFrame(frame, width=250, fontscale=0.8, selection_enabled=False, messages_enabled=False, javascript_enabled=True, javascript_backend="python")
+        self.sidebar = sidebar = HtmlFrame(frame, width=250, fontscale=0.8, selection_enabled=False, javascript_enabled=True, javascript_backend="python")
 
         self.images_var = images_var = tk.IntVar(value=self.frame["images_enabled"])
         images_enabled = ttk.Checkbutton(sidebar, text="Enable images", variable=images_var, command=self.toggle_images)

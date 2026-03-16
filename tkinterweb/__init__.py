@@ -39,7 +39,7 @@ class Demo():
         import tkinter as tk
 
         self.root = root = tk.Tk()
-        self.frame = frame = HtmlFrame(root, on_navigate_fail=self.on_error, on_link_click=self.navigate, selected_text_highlight_color="#e6eee6")
+        self.frame = frame = HtmlFrame(root, messages_enabled=True, on_navigate_fail=self.on_error, on_link_click=self.navigate, selected_text_highlight_color="#e6eee6")
         self.button = tk.Button(root, cursor="hand2")
         
         frame.load_url("https://tkinterweb.readthedocs.io/en/latest/")

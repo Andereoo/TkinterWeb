@@ -56,7 +56,7 @@ The following JavaScript event attributes are supported: ``onchange``, ``onload`
 
 .. tip::
 
-    As of version 4.25, it is highly recommended to enable debug messages (i.e. via ``HtmlFrame(root, messages_enabled=True, ...)s``) when testing new scripts. Otherwise, if a script fails it will fail silently.
+    As of version 4.25, it is highly recommended to enable debug messages (i.e. via ``HtmlFrame(root, messages_enabled=True, ...)``) when testing new scripts. Otherwise, if a script fails it will fail silently.
 
 Embedding Python in your document
 ---------------------------------

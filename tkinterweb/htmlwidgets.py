@@ -54,7 +54,7 @@ class HtmlFrame(Frame):
     :type horizontal_scrollbar: bool, "auto", or "dynamic"
     :param shrink: If False, the widget's width and height are set by the width and height options as per usual. If this option is set to True, the widget's width and height are determined by the current document.
     :type shrink: bool
-    param textwrap: Determines whether text is allowed to wrap. This is similar to the CSS ``text-wrap: normal | nowrap`` property, but more forceful. By default, wrapping will be disabled when shrink is True and will be enabled when shrink is False. Make sure the tkinterweb-tkhtml-extras package is installed; this is only partially supported in Tkhtml version 3.0. New in version 4.17.
+    :param textwrap: Determines whether text is allowed to wrap. This is similar to the CSS ``text-wrap: normal | nowrap`` property, but more forceful. By default, wrapping will be disabled when shrink is True and will be enabled when shrink is False. Make sure the tkinterweb-tkhtml-extras package is installed; this is only partially supported in Tkhtml version 3.0. New in version 4.17.
     :type textwrap: bool or "auto"
     
     Debugging:

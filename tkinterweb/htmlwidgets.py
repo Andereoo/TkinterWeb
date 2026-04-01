@@ -656,7 +656,7 @@ class HtmlFrame(Frame):
         
         :param text: The Regex expression to use to find text. If this is set to a blank string (""), all highlighted text will be cleared.
         :type text: str
-        :param select: The index of the match to select and scroll to.
+        :param select: The index of the match to select and scroll to. Use this to implement find next/find previous functionality.
         :type select: int, optional
         :param ignore_case: If True, uppercase and lowercase letters will be treated as the same character.
         :type ignore_case: bool, optional
@@ -664,8 +664,9 @@ class HtmlFrame(Frame):
         :type highlight_all: bool, optional
         :param detailed: If True, this method will also return information on the nodes that were found. See `bug #93 <https://github.com/Andereoo/TkinterWeb/issues/93#issuecomment-2052516492>`_ for more details.
         :type detailed: bool, optional
-        :return: The number of matches. If `detailed` is True, also returns selected match's Tkhtml3 node and a list of matching Tkhtml3 nodes.
-        :rtype: int | int, Tkhtml3 node, list(Tkhtml3 node)"""
+        :return: The number of matches.
+        :rtype: int"""
+        # TODO: maybe add option to not highlight but return corresponding HTMLElements/indexes?
         nmatches, selected, matches = self._html.search_manager.find_text(text, select, ignore_case, highlight_all)
         if detailed:
             return nmatches, selected, matches
@@ -926,7 +927,7 @@ class HtmlFrame(Frame):
     def get_caret_position(self, return_element=True):
         """Get the position of the caret. This can be used to modify the document's text when the user types. 
 
-        :param return_element: Determines whether the index returned should be relative to the start of an element or the document.
+        :param return_element: If True, this method will also return information on the nodes that were found.
         :type return_element: bool, optional
 
         If ``return_element=True``:
@@ -1017,7 +1018,7 @@ class HtmlFrame(Frame):
     def get_selection_position(self, return_elements=True):
         """Get the start position, end position, and, optionally, contained elements of selected text.
         
-        :param return_elements: Determines whether the indexes returned should be relative to the start of an element or the document.
+        :param return_elements: If True, this method will also return information on the nodes that were found.
         :type return_elements: bool, optional
 
         If ``return_elements=True``:

@@ -585,6 +585,8 @@ Changelog
         * Debug messages are now disabled by default. Set the configuration option ``messages_enabled=True`` to enable them.
         * In an effort to keep backwards compatibility, if the configuration option ``message_func`` is set, the value of ``messages_enabled`` is ignored.
 
+    * Auto-scrolling behaviour when searching the page for text been improved.
+
 -------------------
 
 Please report bugs or request new features on the `issues page <https://github.com/Andereoo/TkinterWeb/issues>`_.

@@ -1061,17 +1061,73 @@ class SearchManager(utilities.BaseManager):
     def __repr__(self):
         return f"{self.html._w}::{self.__class__.__name__.lower()}"
     
-    def find_text(self, searchtext, select, ignore_case, highlight_all):
-        "Search for and highlight specific text in the document."
+    def clear_tags(self):
         self.html.selection_manager.clear_selection()
+
+        self.html.tag("delete", "findtext")
+        self.html.tag("delete", "findtextselected")
+    
+    def update_tags(self, selected, matches):
+        # Highlight other matches
+        for match in matches:
+            node1, index1, node2, index2 = match
+            self.html.tag("add", "findtext", node1, index1, node2, index2)
+            self.html.tag(
+                "configure",
+                "findtext",
+                "-bg",
+                self.html.find_match_highlight_color,
+                "-fg",
+                self.html.find_match_text_color,
+            )
+
+        # Highlight selected match
+        node1, index1, node2, index2 = selected
+        self.html.tag("add", "findtextselected", node1, index1, node2, index2)
+        self.html.tag(
+            "configure",
+            "findtextselected",
+            "-bg",
+            self.html.find_current_highlight_color,
+            "-fg",
+            self.html.find_current_text_color,
+        )
+
+        # Scroll vertically if selected match is not visible
+        nodebox = self.html.text("bbox", node1, index1, node2, index2)
+        docheight = float(self.html.bbox()[3])
+
+        view_top = docheight * self.html.yview()[0]
+        view_bottom = view_top + self.html.winfo_height()
+        node_top = float(nodebox[1])
+        node_bottom = float(nodebox[3])
+
+        if node_top < view_top:
+            self.html.yview("moveto", node_top / docheight)
+        elif node_bottom > view_bottom:
+            self.html.yview("moveto", (node_bottom - self.html.winfo_height()) / docheight)
+
+        # Scroll horizontally if selected match is not visible
+        docwidth = float(self.html.bbox()[2])
+
+        view_left = docwidth * self.html.xview()[0]
+        view_right = view_left + self.html.winfo_width()
+        node_left = float(nodebox[0])
+        node_right = float(nodebox[2])
+
+        if (node_left < view_left):
+            self.html.xview("moveto", node_left / docwidth)
+        elif (node_right > view_right):
+            self.html.xview("moveto", (node_right - self.html.winfo_width()) / docwidth)
+
+    def find_text(self, searchtext, select, ignore_case, highlight_all, test=False):
+        "Search for and highlight specific text in the document."
+        if not test: self.clear_tags()
 
         nmatches = 0
         matches = []
         selected = []
         match_indexes = []
-
-        self.html.tag("delete", "findtext")
-        self.html.tag("delete", "findtextselected")
 
         if len(searchtext) == 0 or select <= 0:
             return nmatches, selected, matches
@@ -1097,7 +1153,6 @@ class SearchManager(utilities.BaseManager):
                 nmatches += 1
 
             if len(match_indexes) > 0:
-                # Highlight matches
                 self.html.post_message(f"{nmatches} results for the search key '{searchtext}' have been found")
                 if highlight_all:
                     for num, match in enumerate(match_indexes):
@@ -1108,40 +1163,8 @@ class SearchManager(utilities.BaseManager):
                 selected = self.html.text("index", match_indexes[select - 1][0])
                 selected += self.html.text("index", match_indexes[select - 1][1])
 
-                for match in matches:
-                    node1, index1, node2, index2 = match
-                    self.html.tag("add", "findtext", node1, index1, node2, index2)
-                    self.html.tag(
-                        "configure",
-                        "findtext",
-                        "-bg",
-                        self.html.find_match_highlight_color,
-                        "-fg",
-                        self.html.find_match_text_color,
-                    )
-
-                node1, index1, node2, index2 = selected
-                self.html.tag("add", "findtextselected", node1, index1, node2, index2)
-                self.html.tag(
-                    "configure",
-                    "findtextselected",
-                    "-bg",
-                    self.html.find_current_highlight_color,
-                    "-fg",
-                    self.html.find_current_text_color,
-                )
-
-                # Scroll to node if selected match is not visible
-                nodebox = self.html.text("bbox", node1, index1, node2, index2)
-                docheight = float(self.html.bbox()[3])
-
-                view_top = docheight * self.html.yview()[0]
-                view_bottom = view_top + self.html.winfo_height()
-                node_top = float(nodebox[1])
-                node_bottom = float(nodebox[3])
-
-                if (node_top < view_top) or (node_bottom > view_bottom):
-                    self.html.yview("moveto", node_top / docheight)
+                # Highlight matches
+                if not test: self.update_tags(selected, matches)
             else:
                 self.html.post_message(f"No results for the search key '{searchtext}' could be found")
             return nmatches, selected, matches

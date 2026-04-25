@@ -411,6 +411,7 @@ class HTMLElement:
                 self.html.widget_manager.set_node_widget(node, None)
 
             self.html.safe_tk_eval("""
+                set html %s
                 set node %s
                 set textnode %s
                 if {$textnode eq ""} {error "$node is empty"}
@@ -422,7 +423,7 @@ class HTMLElement:
                 $node insert $textnode
                 
                 if {[winfo ismapped $html]} {update} ; # This must be done to see changes on-screen
-                """ % (extract_nested(self.node), self.document.createTextNode(contents).node)
+                """ % (self.html, extract_nested(self.node), self.document.createTextNode(contents).node)
             )
         else:
             self.html.set_node_text(self.node, contents)

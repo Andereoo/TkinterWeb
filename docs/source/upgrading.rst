@@ -586,6 +586,7 @@ Changelog
         * In an effort to keep backwards compatibility, if the configuration option ``message_func`` is set, the value of ``messages_enabled`` is ignored.
 
     * Auto-scrolling behaviour when searching the page for text been improved.
+    * Fixed a regression impacting :attr:`.HTMLElement.textContent`.
 
 -------------------
 

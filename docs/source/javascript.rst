@@ -30,6 +30,9 @@ Or when installing TkinterWeb, use:
 
 Then add ``yourhtmlframe.configure(javascript_enabled=True)`` to your script or add the parameter ``javascript_enabled=True`` when creating your :class:`~tkinterweb.HtmlFrame`, :class:`~tkinterweb.HtmlLabel`, or :class:`~tkinterweb.HtmlText` widget.
 
+.. note::
+    If using Windows, ensure you are using an up-to-date Python version. In some Python versions prior to version 3.13, Python will crash when loading PythonMonkey.
+
 **Only enable JavaScript in documents with code you know and trust.**
 
 How-to

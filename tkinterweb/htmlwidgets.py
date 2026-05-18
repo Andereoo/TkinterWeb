@@ -524,7 +524,7 @@ class HtmlFrame(Frame):
         :type force: bool, optional"""
         ### TODO: Maybe consider merging load_url, load_file, and load_website into one
         ### One could use the checker from the sample web browser
-        if url.startswith("mailto") and not self._html.request_func: return  # Don't try to load emails!
+        if url.startswith("mailto") and not self._html.request_func: return  # Don't try to load emails! this happend to me once!
         if not self._current_url == url:
             self._previous_url = self._current_url
         if url in utilities.BUILTIN_PAGES:
@@ -746,32 +746,31 @@ class HtmlFrame(Frame):
         :return: A string containing the PostScript code.
         :rtype: str
         :raise NotImplementedError: If experimental mode is not enabled."""
-        if self._html.experimental:
-            cnf |= kwargs
-            self._html.post_message(f"Printing {self._current_url}...")
-            if filename:
-                cnf["file"] = filename
-            if "pagesize" in cnf:
-                pagesizes = {
-                    "A3": "842x1191", "A4": "595x842", "A5": "420x595",
-                    "Legal": "612x792", "Letter": "612x1008"
-                }
-                try:
-                    cnf["pagesize"] = pagesizes[cnf["pagesize"].upper()]
-                    self._html.post_message(f"Setting printer page size to {cnf['pagesize']} PostScript points.")
-                except KeyError:
-                    raise KeyError("Parameter 'pagesize' must be A3, A4, A5, Legal, or Letter")
-
-            self._html.update() # Update the root window to ensure HTML is rendered
-            file = self._html.postscript(cnf)
-            
-            # No need to save - Tkhtml handles that for us
-            if filename:
-                self._html.post_message("Printed!")
-            if file: return file
-        else:
+        if not self._html.experimental:
             self._html.post_message("ERROR: The page could not be printed because print_page is an experimental feature")
             raise NotImplementedError("the page could not be printed because print_page is an experimental feature")
+
+        cnf |= kwargs
+        self._html.post_message(f"Printing {self._current_url}...")
+        if filename:
+            cnf["file"] = filename
+        if "pagesize" in cnf:
+            pagesizes = {
+                "A3": "842x1191", "A4": "595x842", "A5": "420x595",
+                "Legal": "612x792", "Letter": "612x1008"
+            }
+            try:
+                cnf["pagesize"] = pagesizes[cnf["pagesize"].upper()]
+                self._html.post_message(f"Setting printer page size to {cnf['pagesize']} PostScript points.")
+            except KeyError:
+                self._html.post_message(f"Setting printer page size to custom {cnf['pagesize']}.")
+
+        self._html.update() # Update the root window to ensure HTML is rendered
+        file = self._html.postscript(cnf)
+        
+        # No need to save - Tkhtml handles that for us
+        if filename: self._html.post_message("Printed!")
+        if file: return file
 
     def save_page(self, filename=None):
         """Return the page's HTML code or save the page as an HTML file.

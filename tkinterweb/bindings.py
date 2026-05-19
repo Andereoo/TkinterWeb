@@ -1768,24 +1768,21 @@ class TkHtmlParsedURI:
     def __str__(self):
         return self.get(self.parsed)
 
-    def __del__(self):
-        self.destroy(self.parsed)
-
     def uri(self, uri):
         "Returns name of parsed uri to be used in methods below."
         return self._html.tk.call("::tkhtml::uri", uri)
 
     def decode(self, uri, base64=False):
         "This command is designed to help scripts process data: URIs. It is completely separate from the html widget"
-        return self._html.tkhtml_uri_decode(uri, base64)
+        return self._html.decode_uri(uri, base64)
 
     def encode(self, uri):
         "Encodes the uri."
-        return self._html.tkhtml_uri_encode(uri)
+        return self._html.encode_uri(uri)
 
     def escape(self, uri, query=False):
         "Returns the decoded data."
-        return self._html.tkhtml_uri_escape(uri, query)
+        return self._html.escape_uri(uri, query)
 
     def resolve(self, uri):
         "Resolve a uri."
@@ -1839,3 +1836,5 @@ class TkHtmlParsedURI:
     def destroy(self):
         "Destroy this uri."
         self._html.tk.call(self.parsed, "destroy")
+
+    __del__ = destroy

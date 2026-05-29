@@ -625,7 +625,7 @@ class ScriptManager(utilities.BaseManager):
     def _submit_deferred_scripts(self):
         if self.pending_scripts:
             for index, script in enumerate(self.pending_scripts):
-                self.on_script(*script)
+                self._on_script(*script)
             self.pending_scripts = []
 
 

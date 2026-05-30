@@ -1576,10 +1576,9 @@ class HtmlLabel(HtmlFrame):
         self._style = Style()
 
         # Match the ttk theme
-        self._ttk_style_css(kwargs["style"])
+        self._ttk_style_css(kwargs)
 
         if text: self.load_html(text)
-        
         # I'd like to just make this an else statement to prevent the widget from being a massive white screen when text=""
         elif self.unshrink or (not self._html.using_tkhtml30 and not self._html.cget("textwrap")):
             # A fellow in issue 145 mentioned layout issues when this was used
@@ -1599,13 +1598,17 @@ class HtmlLabel(HtmlFrame):
             self.update_idletasks()
             self._html.relayout()
 
-    def _ttk_style_css(self, style_type):
+    def _ttk_style_css(self, kwargs):
+        style_type = kwargs["style"]
         bg = self._style.lookup(style_type, 'background')
         fg = self._style.lookup(style_type, 'foreground')
+        body_style = f"BODY {{ background-color: {bg}; color: {fg}; }}"
         style = self._html.default_style +\
             (self._html.dark_style if self._html.dark_theme_enabled else "") +\
-            f"BODY {{ background-color: {bg}; color: {fg}; }}"
+            body_style # This could it be done by appending `style`
+
         self._html.configure(defaultstyle=style)
+        self.add_css(body_style)
 
     def configure(self, **kwargs):
         "Sets the default value of the specified option(s) in Label/HTML."
@@ -1614,7 +1617,7 @@ class HtmlLabel(HtmlFrame):
             
         if "style" in kwargs:
             utilities.warn("Since version 4.14 the style keyword no longer sets the HtmlLabel's CSS code. Please use the add_css() method instead.")
-            self._ttk_style_css(kwargs["style"])
+            self._ttk_style_css(kwargs)
 
         if kwargs: super().configure(**kwargs)
 

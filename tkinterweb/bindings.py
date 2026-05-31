@@ -1833,7 +1833,9 @@ class TkHtmlParsedURI:
         return self.defrag, self.fragment
 
     def destroy(self):
-        "Destroy this uri."
-        self._html.tk.call(self.parsed, "destroy")
+        "Destroy this uri and free Tcl resources."
+        if self.parsed:
+            self._html.tk.call(self.parsed, "destroy")
+            self.parsed = None
 
     __del__ = destroy

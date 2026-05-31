@@ -6,7 +6,7 @@ Copyright (c) 2021-2026 Andrew Clarke
 
 from re import IGNORECASE, split, sub
 
-from urllib.parse import urljoin
+from urllib.parse import urljoin, DefragResult
 
 from queue import Queue, Empty
 
@@ -1829,8 +1829,8 @@ class TkHtmlParsedURI:
 
     @property
     def splitfrag(self):
-        "Return namedtuple with uri and fragment"
-        return self.defrag, self.fragment
+        "Return DefragResult/namedtuple with uri and fragment"
+        return DefragResult(self.defrag, self.fragment)
 
     def destroy(self):
         "Destroy this uri and free Tcl resources."

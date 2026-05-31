@@ -1763,35 +1763,34 @@ class TkHtmlParsedURI:
         self.parsed = self.uri(uri)
 
     def __repr__(self):
-        return f"{self._html._w}::{self.__class__.__name__.lower()}"
+        return f"{self._html._w}::{self.__class__.__name__.lower()}{self.parsed}"
 
     def __str__(self):
-        return self.get(self.parsed)
+        return self.get
 
     def uri(self, uri):
         "Returns name of parsed uri to be used in methods below."
         return self._html.tk.call("::tkhtml::uri", uri)
 
-    def decode(self, uri, base64=False):
+    def decode(self, base64=False):
         "This command is designed to help scripts process data: URIs. It is completely separate from the html widget"
-        return self._html.decode_uri(uri, base64)
+        return self._html.decode_uri(self.get, base64)
 
-    def encode(self, uri):
+    def encode(self):
         "Encodes the uri."
-        return self._html.encode_uri(uri)
+        return self._html.encode_uri(self.get)
 
-    def escape(self, uri, query=False):
+    def escape(self, query=False):
         "Returns the decoded data."
-        return self._html.escape_uri(uri, query)
+        return self._html.escape_uri(self.get, query)
 
     def resolve(self, uri):
         "Resolve a uri."
         return self._html.tk.call(self.parsed, "resolve", uri)
 
-    @property
     def load(self, uri):
-        "Load a uri."
-        return self._html.tk.call(self.parsed, "load", uri)
+        "Load a URI, which overrides the previous URI string"
+        self._html.tk.call(self.parsed, "load", uri)
 
     @property
     def get(self):

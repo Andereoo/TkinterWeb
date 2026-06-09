@@ -2187,6 +2187,22 @@ class HtmlParse(HtmlFrame):
     def __str__(self):
         return f"<html>{self.document.documentElement.innerHTML}</html>"
 
+    def webpage(self, url):
+        """HtmlParse needs its own method for loading documents so as not to use threading and load synchronously."""
+        code = 404
+        parsed = urlparse(url)
+        try:
+            newurl, data, filetype, code = self._html.download_url(url)
+            self._html.post_message(f"Successfully connected to {newurl} {filetype}", True)
+
+            self._html.parse(data)
+
+        except Exception as error:
+            self._html.post_message(f"ERROR: could not load {url}: {error}")
+            return error, code
+
+    # NOTE: could add shorthand methods for TkinderWeb handler commands, but may be excessive.
+
     def destroy(self):
         super().destroy()
         self.root.destroy()

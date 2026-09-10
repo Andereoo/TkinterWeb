@@ -646,9 +646,11 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         # By default Tkhtml won't display plain text
         if "<" not in html and ">" not in html:
             html = f"<html><body><div>{html}</div></body></html>"
+        # Otherwise, document.write can be buggy and scripts wont run
         elif "<html>" not in html and "</html>" not in html:
-            # Otherwise, document.write can be buggy
             html = f"<html>{html}</html>"
+        elif "<html>" in html and "</html>" not in html:
+            html += "</html>"
 
         # Send the HTML code to the queue if needed
         # Otherwise, evaluate directly so that the document can be manipulated as soon as parse() returns

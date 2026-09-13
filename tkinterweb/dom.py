@@ -422,8 +422,8 @@ class HTMLElement:
                 }
                 $node insert $textnode
                 
-                if {[winfo ismapped .]} {update} ; # This must be done to see changes on-screen
-                """ % (extract_nested(self.node), self.document.createTextNode(contents).node)
+                if {[winfo ismapped %s]} {update} ; # This must be done to see changes on-screen
+                """ % (extract_nested(self.node), self.document.createTextNode(contents).node, self.html)
             )
         else:
             self.html.set_node_text(self.node, contents)

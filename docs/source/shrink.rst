@@ -29,7 +29,7 @@ By default, word wrapping is disabled when shrink is enabled. This forces text t
 
 .. note::
 
-    Full shrink word wrapping support is currently only rolled out to 64-bit Windows and Linux users. Ensure you installed TkinterWeb via ``pip install tkinterweb[recommended]`` or ``pip install tkinterweb[full]`` to prevent bugs when using shrink.
+    Full shrink word wrapping support is currently rolled out to all Tcl 9  users and 64-bit Windows and Linux Tcl 8 users. Ensure you installed TkinterWeb via ``pip install tkinterweb[recommended]`` or ``pip install tkinterweb[full]`` to prevent bugs when using shrink.
 
     If you are encountering issues on an unsupported platform, either submit a feature request or compile and install Tkhtml 3.1 by visiting and cloning https://github.com/Andereoo/TkinterWeb-Tkhtml. Then run ``python compile.py --install``.
 

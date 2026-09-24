@@ -221,6 +221,10 @@ class SelectionManager(utilities.BaseManager):
         "Return any selected text."
         if self.selection_start_node is None or self.selection_end_node is None:
             return
+        try:
+            self.html.bbox(self.selection_start_node)
+        except TclError as e:
+            if str(e).startswith("no such node: "): return
         if self.selection_type == 1:
             start_offset, end_offset = self._word_in_node(self.selection_start_node, self.selection_start_offset)
             start_offset2, end_offset2 = self._word_in_node(self.selection_end_node, self.selection_end_offset)

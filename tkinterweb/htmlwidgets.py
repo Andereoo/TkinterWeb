@@ -524,6 +524,7 @@ class HtmlFrame(Frame):
         :type force: bool, optional"""
         ### TODO: Maybe consider merging load_url, load_file, and load_website into one
         ### One could use the checker from the sample web browser
+        if url.startswith("mailto") and not self._html.request_func: return  # Don't try to load emails! this happend to me once!
         if not self._current_url == url:
             self._previous_url = self._current_url
         if url in utilities.BUILTIN_PAGES:
@@ -745,32 +746,31 @@ class HtmlFrame(Frame):
         :return: A string containing the PostScript code.
         :rtype: str
         :raise NotImplementedError: If experimental mode is not enabled."""
-        if self._html.experimental:
-            cnf |= kwargs
-            self._html.post_message(f"Printing {self._current_url}...")
-            if filename:
-                cnf["file"] = filename
-            if "pagesize" in cnf:
-                pagesizes = {
-                    "A3": "842x1191", "A4": "595x842", "A5": "420x595",
-                    "Legal": "612x792", "Letter": "612x1008"
-                }
-                try:
-                    cnf["pagesize"] = pagesizes[cnf["pagesize"].upper()]
-                    self._html.post_message(f"Setting printer page size to {cnf['pagesize']} PostScript points.")
-                except KeyError:
-                    raise KeyError("Parameter 'pagesize' must be A3, A4, A5, Legal, or Letter")
-
-            self._html.update() # Update the root window to ensure HTML is rendered
-            file = self._html.postscript(cnf)
-            
-            # No need to save - Tkhtml handles that for us
-            if filename:
-                self._html.post_message("Printed!")
-            if file: return file
-        else:
+        if not self._html.experimental:
             self._html.post_message("ERROR: The page could not be printed because print_page is an experimental feature")
             raise NotImplementedError("the page could not be printed because print_page is an experimental feature")
+
+        cnf |= kwargs
+        self._html.post_message(f"Printing {self._current_url}...")
+        if filename:
+            cnf["file"] = filename
+        if "pagesize" in cnf:
+            pagesizes = {
+                "A3": "842x1191", "A4": "595x842", "A5": "420x595",
+                "Legal": "612x792", "Letter": "612x1008"
+            }
+            try:
+                cnf["pagesize"] = pagesizes[cnf["pagesize"].upper()]
+                self._html.post_message(f"Setting printer page size to {cnf['pagesize']} PostScript points.")
+            except KeyError:
+                self._html.post_message(f"Setting printer page size to custom {cnf['pagesize']}.")
+
+        self._html.update() # Update the root window to ensure HTML is rendered
+        file = self._html.postscript(cnf)
+        
+        # No need to save - Tkhtml handles that for us
+        if filename: self._html.post_message("Printed!")
+        if file: return file
 
     def save_page(self, filename=None):
         """Return the page's HTML code or save the page as an HTML file.
@@ -1542,11 +1542,10 @@ Otherwise, use 'HtmlFrame(master, insecure_https=True)' to ignore website certif
         else:
             self._html.unbind(sequence, *args, **kwargs)
     
-    def __getitem__(self, key):
-        return self.cget(key)
+    def __setitem__(self, k, v): self.configure({k: v})
 
-    def __setitem__(self, key, value):
-        self.configure(**{key: value})
+    __getitem__ = cget
+
 
 
 class HtmlLabel(HtmlFrame):
@@ -1574,7 +1573,10 @@ class HtmlLabel(HtmlFrame):
         tags.remove("Html")
         self._html.bindtags(tags)
 
-        self._style = Style()
+        self._style = Style(self)
+
+        # Match the ttk theme
+        self._ttk_style_css(kwargs, False)
 
         if text: self.load_html(text)
         # I'd like to just make this an else statement to prevent the widget from being a massive white screen when text=""
@@ -1585,15 +1587,6 @@ class HtmlLabel(HtmlFrame):
     
     def load_html(self, *args, _relayout=True, **kwargs):
         ""
-        # Match the ttk theme
-        style_type = self.cget("style")
-        bg = self._style.lookup(style_type, 'background')
-        fg = self._style.lookup(style_type, 'foreground')
-        style = self._html.default_style + \
-            (self._html.dark_style if self._html.dark_theme_enabled else "") +\
-            f"BODY {{ background-color: {bg}; color: {fg}; }}"
-        self._html.configure(defaultstyle=style)
-        
         # Load the HTML
         super().load_html(*args, **kwargs)
 
@@ -1605,13 +1598,26 @@ class HtmlLabel(HtmlFrame):
             self.update_idletasks()
             self._html.relayout()
 
+    def _ttk_style_css(self, kwargs, add_css):
+        style_type = kwargs["style"]
+        bg = self._style.lookup(style_type, 'background')
+        fg = self._style.lookup(style_type, 'foreground')
+        body_style = f"BODY {{ background-color: {bg}; color: {fg}; }}"
+        style = self._html.default_style +\
+            (self._html.dark_style if self._html.dark_theme_enabled else "") +\
+            body_style # This could it be done by appending `style`
+
+        self._html.configure(defaultstyle=style)
+        if add_css: self.add_css(body_style, priority="agent")
+
     def configure(self, **kwargs):
-        ""
+        "Sets the default value of the specified option(s) in Label/HTML."
         if "text" in kwargs:
             self.load_html(kwargs.pop("text"))
             
         if "style" in kwargs:
             utilities.warn("Since version 4.14 the style keyword no longer sets the HtmlLabel's CSS code. Please use the add_css() method instead.")
+            self._ttk_style_css(kwargs, True)
 
         if kwargs: super().configure(**kwargs)
 
@@ -1619,13 +1625,9 @@ class HtmlLabel(HtmlFrame):
         ""
         if "text" == key:
             return "".join(self._html.serialize_node(0).splitlines())
-        elif "style" == key:
-           return "".join(self._html.serialize_node_style(0).splitlines())
         return super().cget(key)
 
-    def config(self, **kwargs):
-        ""
-        self.configure(**kwargs)
+    config = configure
 
 class HtmlText(HtmlFrame):
     """The :class:`HtmlText` widget is a text-like HTML widget. It inherits from the :class:`HtmlFrame` class. 
@@ -2184,6 +2186,31 @@ class HtmlParse(HtmlFrame):
 
     def __str__(self):
         return f"<html>{self.document.documentElement.innerHTML}</html>"
+
+    def webpage(self, url):
+        """HtmlParse needs its own method for loading documents so as not to use threading and load synchronously."""
+        code = 404
+        parsed = urlparse(url)
+
+        fragment = parsed.fragment
+
+        if fragment:
+            fragment = "".join(char for char in fragment if char.isalnum() or char in ("-", "_", ".")).replace(".", r"\.")
+
+        try:
+            newurl, data, filetype, code = self._html.download_url(url)
+            self._html.post_message(f"Successfully connected to {newurl} {filetype}", True)
+
+            self._html.reset()
+            self._html.base_url = newurl
+            self._html.fragment = fragment
+            self._html.parse(data)
+
+        except Exception as error:
+            self._html.post_message(f"ERROR: could not load {url}: {error}")
+            return code, error
+
+    # NOTE: could add shorthand methods for TkinderWeb handler commands, but may be excessive.
 
     def destroy(self):
         super().destroy()

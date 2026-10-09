@@ -93,9 +93,11 @@ DEFAULT_STYLE = r"""
 /* Default stylesheet to be loaded whenever HTML is parsed. */
 /* This is a modified version of the stylesheet that comes bundled with Tkhtml. */
 /* Display types for non-table items. */
-  ADDRESS, BLOCKQUOTE, BODY, DD, DIV, DL, DT, FIELDSET, 
-  FRAME, H1, H2, H3, H4, H5, H6, NOFRAMES, DETAILS, SUMMARY,
-  OL, P, UL, APPLET, CENTER, DIR, HR, MENU, PRE, FORM
+  ADDRESS, APPLET, ARTICLE, ASIDE, BLOCKQUOTE, BODY, CENTER,
+  DETAILS, DD, DIR, DIV, DL, DT, FIGCAPTION, FIGURE, FIELDSET,
+  FOOTER, FORM, FRAME, H1, H2, H3, H4, H5, H6, HGROUP, HEADER,
+  HR, ISINDEX, MAIN, MENU, NAV, NOFRAMES, OL, P, PRE, SECTION,
+  SUMMARY, UL
                 { display: block }
 HEAD, SCRIPT, TITLE { display: none }
 BODY {

@@ -274,7 +274,7 @@ class FormManager(utilities.BaseManager):
                 nodetag = self.html.get_node_tag(formelement)
                 widget = self.form_widgets[formelement]
                 if nodetag == "textarea":
-                    nodevalue = self.html.get_node_text(self.html.get_node_children(formelement), "-pre")
+                    nodevalue = self.html.get_child_text(formelement)
                     widget.set(nodevalue)
                 elif nodetype == "checkbox":
                     if self.html.get_node_attribute(formelement, "checked", "false") != "false": widget.variable.set(1)
@@ -390,24 +390,19 @@ class FormManager(utilities.BaseManager):
         selected = None
         for child in self.html.get_node_children(node):
             if self.html.get_node_tag(child) == "option":
-                try:
-                    child2 = self.html.get_node_children(child)[0]
-                    nodevalue = self.html.get_node_attribute(child, "value")
-                    nodeselected = self.html.get_node_attribute(child, "selected")
-                    values.append(nodevalue)
-                    text.append(self.html.get_node_text(child2))
-                    if nodeselected:
-                        selected = nodevalue
-                except IndexError:
-                    continue
-        if not selected and values:
+                nodevalue = self.html.get_node_attribute(child, "value")
+                # Use a sentinel default so that a bare "selected" attribute (which Tkhtml reports as an empty string) is not mistaken for an absent one
+                if self.html.get_node_attribute(child, "selected", "false") != "false":
+                    selected = nodevalue
+                values.append(nodevalue)
+                text.append(self.html.get_child_text(child))
+        if selected is None and values:
             selected = values[0]
         widgetid = subwidgets.Combobox(self.html)
         widgetid.insert(text, values, selected)
         widgetid.configure(onchangecommand=lambda *_, widgetid=widgetid: self._on_input_change(node, widgetid))
         self.form_widgets[node] = widgetid
-        state = self.html.get_node_attribute(node, "disabled", False) != "0"
-        if state:
+        if self.html.get_node_attribute(node, "disabled", False) != "0":
             widgetid.configure(state="disabled")
         self.html.widget_manager.handle_node_replacement(
             node,
@@ -427,11 +422,10 @@ class FormManager(utilities.BaseManager):
 
     def _on_textarea(self, node):
         "Handle <textarea> elements."
-        widgetid = subwidgets.ScrolledTextBox(self.html, self.html.get_node_text(self.html.get_node_children(node), "-pre"), lambda widgetid, node=node: self._on_input_change(node, widgetid))
+        widgetid = subwidgets.ScrolledTextBox(self.html, self.html.get_child_text(node), lambda widgetid, node=node: self._on_input_change(node, widgetid))
 
         self.form_widgets[node] = widgetid
-        state = self.html.get_node_attribute(node, "disabled", False) != "0"
-        if state:
+        if self.html.get_node_attribute(node, "disabled", False) != "0":
             widgetid.configure(state="disabled")
         self.html.widget_manager.handle_node_replacement(
             node,

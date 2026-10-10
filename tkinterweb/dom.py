@@ -212,7 +212,8 @@ class HTMLDocument:
             proc WidgetNode_ToHtml {node} {
                 set tag [$node tag]
                 if {$tag eq ""} {
-                    append ret [$node text -pre]
+                    set text [$node text -pre]
+                    append ret [string map {< &lt; > &gt;} $text]
                 } else {
                     append ret <$tag
                     foreach {zKey zVal} [$node attribute] {
@@ -358,6 +359,8 @@ class HTMLElement:
             if {[winfo ismapped $html]} {update} ; # This must be done to see changes on-screen
             """ % (self.html, extract_nested(self.node), escape_Tcl(contents))
         )
+        if "select" == self.tagName:
+            self.html.form_manager._on_select(self.node)
         self.html.event_manager.send_onload(root=self.node)
 
     @property
@@ -379,10 +382,6 @@ class HTMLElement:
             return [get_child_text %s]
             """ % extract_nested(self.node)
         )
-
-    @innerText.setter
-    def innerText(self, contents):  # Ditto
-        self.textContent = contents
 
     @property
     def textContent(self):  # Original for this project
@@ -411,9 +410,9 @@ class HTMLElement:
                 self.html.widget_manager.set_node_widget(node, None)
 
             self.html.safe_tk_eval("""
-                set html %s
                 set node %s
                 set textnode %s
+                
                 if {$textnode eq ""} {error "$node is empty"}
                 if {[$node tag] eq "html"} {error "textContent cannot be set on <$tag> elements"}
                 $node remove [$node children]
@@ -422,11 +421,15 @@ class HTMLElement:
                 }
                 $node insert $textnode
                 
-                if {[winfo ismapped $html]} {update} ; # This must be done to see changes on-screen
-                """ % (self.html, extract_nested(self.node), self.document.createTextNode(contents).node)
+                if {[winfo ismapped %s]} {update} ; # This must be done to see changes on-screen
+                """ % (extract_nested(self.node), self.document.createTextNode(contents).node, self.html)
             )
+            if "select" == self.tagName:
+                self.html.form_manager._on_select(self.node)
         else:
             self.html.set_node_text(self.node, contents)
+
+    innerText = textContent  # Ditto
 
     @property
     def id(self):

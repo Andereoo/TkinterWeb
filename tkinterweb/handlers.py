@@ -1,6 +1,24 @@
 """
 Node handlers and associated extensions to Tkhtml3
 
+This was created because TkinterWeb class was getting enormous and difficult to 
+maintain and debug. It was also full of old workarounds and meaningless code. 
+Generally, the Python philosophy is to have a self-explanatory, modular 
+codebase rather than one massive object that does a million things. It's been 
+on my bucket list for years to make the widget more modular, partly for this 
+reason. So, I split it into separate classes that each have a specific 
+function. This also simplified all the flags for extra features a lot: each 
+feature (i.e. images, CSS, etc.) is tied to a subclass that can be enabled or 
+disabled, saving me from having if/else statements everywhere checking if 
+actions are enabled. This also gave me the chance to add lazy loading into the 
+mix. Since less code has to be evaluated at startup, apps tend to start a bit 
+quicker (it's barely noticeable, but hey, I'll take it). Splitting off the node 
+handlers removes roughly 1000 lines from an object that as it is, is still 
+roughly at 1700 lines (which I personally think is still too much). Breaking 
+things into chunks just makes things simpler and easier to maintain. The 
+overhead in Python of creating another class is negligible, but the scalability 
+and ease of maintenance is much, much higher. That's my philosophy anyway!
+
 Copyright (c) 2021-2025 Andrew Clarke
 """
 
@@ -159,7 +177,7 @@ class NodeManager(utilities.BaseManager):
 
     def _set_open(self, node, display):
         self.html.set_node_attribute(node, "open", "" if display else "false")
-        if self.html.using_tkhtml30:
+        if self.html.using_tkhtml30 and not self.html.experimental:
             # In Tkhtml 3.1+ we add an attribute handler, which does this for us
             self._update_details(node, display)
 
@@ -204,7 +222,7 @@ class NodeManager(utilities.BaseManager):
         
         open = not self._is_open(details)
         self._set_open(details, open)
-        if open and self.html.using_tkhtml30:
+        if open and self.html.using_tkhtml30 or not self.html.experimental:
             self._close_other_details(details)
 
     def _on_progress(self, node):
@@ -256,7 +274,7 @@ class FormManager(utilities.BaseManager):
                 nodetag = self.html.get_node_tag(formelement)
                 widget = self.form_widgets[formelement]
                 if nodetag == "textarea":
-                    nodevalue = self.html.get_node_text(self.html.get_node_children(formelement), "-pre")
+                    nodevalue = self.html.get_child_text(formelement)
                     widget.set(nodevalue)
                 elif nodetype == "checkbox":
                     if self.html.get_node_attribute(formelement, "checked", "false") != "false": widget.variable.set(1)
@@ -297,20 +315,14 @@ class FormManager(utilities.BaseManager):
                     continue
                 elif nodetype == "file":
                     for value in nodevalue:
-                        data.append(
-                            (nodeattrname, value),
-                        )
+                        data.append((nodeattrname, value),)
                 else:
-                    data.append(
-                        (nodeattrname, nodevalue),
-                    )
+                    data.append((nodeattrname, nodevalue),)
         if not event:
             nodeattrname = self.html.get_node_attribute(node, "name")
             nodevalue = self.html.get_node_attribute(node, "value")
             if nodeattrname and nodevalue:
-                data.append(
-                    (nodeattrname, nodevalue),
-                )
+                data.append((nodeattrname, nodevalue),)
 
         data = urlencode(data)
 
@@ -378,24 +390,19 @@ class FormManager(utilities.BaseManager):
         selected = None
         for child in self.html.get_node_children(node):
             if self.html.get_node_tag(child) == "option":
-                try:
-                    child2 = self.html.get_node_children(child)[0]
-                    nodevalue = self.html.get_node_attribute(child, "value")
-                    nodeselected = self.html.get_node_attribute(child, "selected")
-                    values.append(nodevalue)
-                    text.append(self.html.get_node_text(child2))
-                    if nodeselected:
-                        selected = nodevalue
-                except IndexError:
-                    continue
-        if not selected and values:
+                nodevalue = self.html.get_node_attribute(child, "value")
+                # Use a sentinel default so that a bare "selected" attribute (which Tkhtml reports as an empty string) is not mistaken for an absent one
+                if self.html.get_node_attribute(child, "selected", "false") != "false":
+                    selected = nodevalue
+                values.append(nodevalue)
+                text.append(self.html.get_child_text(child))
+        if selected is None and values:
             selected = values[0]
         widgetid = subwidgets.Combobox(self.html)
         widgetid.insert(text, values, selected)
         widgetid.configure(onchangecommand=lambda *_, widgetid=widgetid: self._on_input_change(node, widgetid))
         self.form_widgets[node] = widgetid
-        state = self.html.get_node_attribute(node, "disabled", False) != "0"
-        if state:
+        if self.html.get_node_attribute(node, "disabled", False) != "0":
             widgetid.configure(state="disabled")
         self.html.widget_manager.handle_node_replacement(
             node,
@@ -415,11 +422,10 @@ class FormManager(utilities.BaseManager):
 
     def _on_textarea(self, node):
         "Handle <textarea> elements."
-        widgetid = subwidgets.ScrolledTextBox(self.html, self.html.get_node_text(self.html.get_node_children(node), "-pre"), lambda widgetid, node=node: self._on_input_change(node, widgetid))
+        widgetid = subwidgets.ScrolledTextBox(self.html, self.html.get_child_text(node), lambda widgetid, node=node: self._on_input_change(node, widgetid))
 
         self.form_widgets[node] = widgetid
-        state = self.html.get_node_attribute(node, "disabled", False) != "0"
-        if state:
+        if self.html.get_node_attribute(node, "disabled", False) != "0":
             widgetid.configure(state="disabled")
         self.html.widget_manager.handle_node_replacement(
             node,

@@ -212,7 +212,8 @@ class HTMLDocument:
             proc WidgetNode_ToHtml {node} {
                 set tag [$node tag]
                 if {$tag eq ""} {
-                    append ret [$node text -pre]
+                    set text [$node text -pre]
+                    append ret [string map {< &lt; > &gt;} $text]
                 } else {
                     append ret <$tag
                     foreach {zKey zVal} [$node attribute] {

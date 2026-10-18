@@ -267,8 +267,7 @@ class Page(ttk.Frame):
 
         self.sidebar.javascript.register("frame", frame)
 
-        self.sidebar.load_html(f"""<html>
-  <body>
+        self.sidebar.load_html(f"""
     <style>
       body p, span {{ margin-top: 5px; margin-bottom: 5px; cursor: default; }}
       object {{ width: 100%; cursor: pointer; }}
@@ -331,8 +330,7 @@ class Page(ttk.Frame):
       <object allowscrolling data={html_button}></object>
       <object allowscrolling data={about_button}></object>
     </div>
-  </body>
-</html>""")
+    """)
         
         frame.config = self.html_config
 

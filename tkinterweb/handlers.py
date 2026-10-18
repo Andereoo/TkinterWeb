@@ -274,8 +274,7 @@ class FormManager(utilities.BaseManager):
                 nodetag = self.html.get_node_tag(formelement)
                 widget = self.form_widgets[formelement]
                 if nodetag == "textarea":
-                    nodevalue = self.html.get_child_text(formelement)
-                    widget.set(nodevalue)
+                    widget.set(self.html.get_child_text(formelement))
                 elif nodetype == "checkbox":
                     if self.html.get_node_attribute(formelement, "checked", "false") != "false": widget.variable.set(1)
                     else: widget.variable.set(0)
@@ -284,8 +283,7 @@ class FormManager(utilities.BaseManager):
                     if self.html.get_node_attribute(formelement, "checked", "false") != "false": 
                         widget.variable.set(nodevalue)
                 else:
-                    nodevalue = self.html.get_node_attribute(formelement, "value")
-                    widget.set(nodevalue)
+                    widget.set(self.html.get_node_attribute(formelement, "value"))
 
     def _handle_form_submission(self, node, event=None):
         "Submit HTML forms."

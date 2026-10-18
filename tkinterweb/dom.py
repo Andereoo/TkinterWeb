@@ -78,8 +78,8 @@ class HTMLDocument:
     :ivar html: The associated :class:`~tkinterweb.TkinterWeb` instance."""
     def __init__(self, html):
         self.html = html
-        self.html.tk.createcommand("parse_fragment", self.html.parse_fragment)
-        self.html.tk.createcommand("node_to_html", self._node_to_html)
+        html.tk.createcommand("parse_fragment", self.html.parse_fragment)
+        html.tk.createcommand("node_to_html", self._node_to_html)
 
     def __repr__(self):
         return f"{self.html._w}::{self.__class__.__name__.lower()}"
@@ -137,20 +137,19 @@ class HTMLDocument:
         :rtype: :class:`HTMLElement`"""
         return HTMLElement(
             self, self.html.safe_tk_eval("""
-            set tkw %s
             set text "%s"
             if {$text eq ""} {
                 # Special case - The [fragment] API usually parses an empty string
                 # to an empty fragment. So create a text node with text "X", then 
                 # set the text to an empty string.
-                set node [$tkw fragment X]
+                set node [%s fragment X]
                 $node text set ""
             } else {
                 set escaped [string map {< &lt; > &gt;} $text]
                 set node [parse_fragment $escaped]
             }
             return $node
-            """ % (self.html, escape_Tcl(text)))
+            """ % (escape_Tcl(text), self.html))
         )
 
     def getElementById(self, query, _root=None):
@@ -337,7 +336,6 @@ class HTMLElement:
                 self.html.widget_manager.set_node_widget(node, None)
 
         self.html.safe_tk_eval("""
-            set html %s
             set node %s
             set tag [$node tag]
             if {$tag eq ""} {error "$node is a text element"}
@@ -356,8 +354,8 @@ class HTMLElement:
             set children [parse_fragment $newHtml]
             $node insert $children
 
-            if {[winfo ismapped $html]} {update} ; # This must be done to see changes on-screen
-            """ % (self.html, extract_nested(self.node), escape_Tcl(contents))
+            if {[winfo ismapped [$node html]]} {update} ; # This must be done to see changes on-screen
+            """ % (extract_nested(self.node), escape_Tcl(contents))
         )
         if "select" == self.tagName:
             self.html.form_manager._on_select(self.node)
@@ -421,8 +419,8 @@ class HTMLElement:
                 }
                 $node insert $textnode
                 
-                if {[winfo ismapped %s]} {update} ; # This must be done to see changes on-screen
-                """ % (extract_nested(self.node), self.document.createTextNode(contents).node, self.html)
+                if {[winfo ismapped [$node html]]} {update} ; # This must be done to see changes on-screen
+                """ % (extract_nested(self.node), self.document.createTextNode(contents).node)
             )
             if "select" == self.tagName:
                 self.html.form_manager._on_select(self.node)

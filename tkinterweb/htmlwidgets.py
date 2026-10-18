@@ -2081,7 +2081,7 @@ class HtmlText(HtmlFrame):
         if "caret_browsing_enabled" in kwargs:
             raise RuntimeError("caret browsing is always enabled in this widget")
 
-        for key in list(kwargs.keys()):
+        for key in tuple(kwargs.keys()):
             if key == "background":
                 self._background = kwargs.pop(key)
                 self.add_css(f"BODY {{ background-color: {self._background}; }}", "agent")
@@ -2166,7 +2166,7 @@ class HtmlParse(HtmlFrame):
     def __init__(self, **kwargs): #markup=""
         self.root = root = tk.Tk()
 
-        for flag in {"events_enabled", "images_enabled", "forms_enabled", "stylesheets_enabled"}:
+        for flag in {"events_enabled", "images_enabled", "forms_enabled", "stylesheets_enabled", "objects_enabled"}:
             if flag not in kwargs:
                 kwargs[flag] = False
                 

@@ -124,7 +124,7 @@ def data_to_image(data, name, imagetype, data_is_image):
             PhotoImage.__del__ = photoimage_del
 
         return PhotoImage(image=data, name=name)
-    elif imagetype in ("image/png", "image/gif", "image/ppm", "image/pgm",):
+    elif imagetype[6:] in {"gif", "pgm", "png", "ppm"}:
         # tkinter.PhotoImage has less overhead, so use it when possible
         return TkPhotoImage(data=data, name=name)
     else:

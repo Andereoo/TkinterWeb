@@ -16,7 +16,8 @@ from collections import OrderedDict
 
 import ssl, gzip, zlib
 from urllib.request import Request, urlopen
-from urllib.parse import urlunparse, urlparse
+from urllib.parse import urlunparse, urlparse, quote
+from urllib.error import HTTPError
 
 try:
     import brotli
@@ -802,6 +803,11 @@ def special_setting(default=None):
     return decorator
 
 
+# Characters that are allowed to appear literally in a url (see RFC 3986).
+# "%" is included so urls that are already percent-encoded aren't encoded a second time.
+URL_SAFE_CHARS = "%/?:@!$&'()*+,;=-._~[]#"
+
+
 def download(url, data="", method="GET", decode=None, insecure=False, cafile=None, headers=(), timeout=15):
     "Fetch files. Note that headers should be converted from dict to tuple before calling download() as dicts aren't hashable."
     if insecure or cafile:
@@ -817,20 +823,53 @@ def download(url, data="", method="GET", decode=None, insecure=False, cafile=Non
         parsed = urlparse(url)
         url = urlunparse(parsed._replace(query=""))
 
-    url = url.replace(" ", "%20")
+    url = quote(url, safe=URL_SAFE_CHARS)
     if data and (method == "POST"):
         req = Request(url, data, headers=dict(headers))
     else:
         req = Request(url, headers=dict(headers))
-    
-    with urlopen(req, context=context, timeout=timeout) as res:
-        data = res.read()
-        url = res.geturl()
-        info = res.info()
-        code = res.getcode()
+
+    try:
+        with urlopen(req, context=context, timeout=timeout) as res:
+            data = res.read()
+            url = res.geturl()
+            info = res.info()
+            code = res.getcode()
+
+            if not url.startswith("file://") and not url.startswith("data:"):
+                enc = res.getheader("Content-Encoding", "").lower()
+                if enc == "gzip":
+                    data = gzip.decompress(data)
+                elif enc == "deflate":
+                    try:
+                        data = zlib.decompress(data)
+                    except zlib.error:
+                        data = zlib.decompressobj(-zlib.MAX_WBITS).decompress(data)
+                elif enc == "br" and brotli_installed:
+                    data = brotli.decompress(data)
+
+            try:
+                maintype = info.get_content_maintype()
+                filetype = info.get_content_type()
+            except AttributeError:
+                maintype = info.maintype
+                filetype = info.type
+            if (maintype != "image") or ("svg" in filetype):
+                if decode is False:
+                    pass
+                elif decode:
+                    data = data.decode(decode, errors="ignore")
+                else:
+                    data = data.decode(errors="ignore")
+
+    except HTTPError as e:
+        data = e.read()
+        url = e.geturl()
+        info = e.info()
+        code = e.getcode()
 
         if not url.startswith("file://") and not url.startswith("data:"):
-            enc = res.getheader("Content-Encoding", "").lower()
+            enc = e.getheader("Content-Encoding", "").lower()
             if enc == "gzip":
                 data = gzip.decompress(data)
             elif enc == "deflate":
@@ -853,7 +892,7 @@ def download(url, data="", method="GET", decode=None, insecure=False, cafile=Non
             else:
                 data = data.decode(errors="ignore")
 
-        return url, data, filetype, code
+    return url, data, filetype, code
 
 
 class LRUCache:

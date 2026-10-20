@@ -108,6 +108,8 @@ OL[type]         { list-style-type : tcl(::tkhtml::ol_liststyletype) }
 UL>LI { list-style-type : disc }
 UL>UL>LI { list-style-type : circle }
 UL>UL UL>LI { list-style-type : square }
+OL[start] { -tkhtml-ordered-list-start: attr(start); }
+LI[value] { -tkhtml-ordered-list-value: attr(value); }
 UL[type="square"]>LI { list-style-type : square } 
 UL[type="disc"]>LI   { list-style-type : disc   } 
 UL[type="circle"]>LI { list-style-type : circle } 

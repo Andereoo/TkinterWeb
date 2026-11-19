@@ -34,15 +34,12 @@ Love this project?
 
 You can help this project by submitting a `bug report <https://github.com/Andereoo/TkinterWeb/issues/new>`_ to report bugs or suggest new features, or by submitting a `pull request <https://github.com/Andereoo/TkinterWeb/pulls>`_ to offer fixes. Your help makes TkinterWeb become more stable and full-featured!
 
-☕ Or, if you’d like to support ongoing development and maintenance, please consider supporting this project by `buying me a coffee <https://buymeacoffee.com/andereoo>`_. Any amount is hugely appreciated!
+☕ Or, if you’d like to support ongoing development and maintenance, please consider supporting this project by `making a small donation <https://quietjar.com/@andereoo>`_. Any amount is hugely appreciated!
 
 This project is released under the `MIT License <https://github.com/Andereoo/TkinterWeb/blob/main/LICENSE.md>`_ and is free to use, including for commercial purposes.
 
 If you use this project in a commercial product or derive financial benefit from it, please kindly consider supporting its development with a donation. This helps cover maintenance time and ongoing improvements, which in turn will improve your own software!
 
-.. raw:: html
-   
-   <a href="https://quietjar.com/@andereoo"><img src="https://api.quietjar.com/api/widget/image/eyJzaXRlIjoicWpfNGRiZTgyNjFkYjUzMzk1OGQ2MzczZGUzIiwiY3VycmVuY3kiOiJjYWQiLCJsYWJlbHMiOnsiaGVhZGxpbmUiOiJTdXBwb3J0IHRoaXMgcHJvamVjdCIsImJvZHkiOiIiLCJhY3Rpb24iOiJTdXBwb3J0IiwiaWNvbiI6IuKYlSJ9LCJzdHlsZSI6eyJjb2xvciI6IiMwMzY5YTEiLCJmb250Ijoicm91bmRlZCJ9LCJjbG9zZSI6eyJlbmFibGVkIjp0cnVlLCJhZnRlciI6InNlc3Npb24iLCJkYXlzIjo3fSwiZG9uYXRpb24iOnsiaGlkZURheXMiOjMwfSwicG9zaXRpb24iOnsiY29ybmVyIjoiYm90dG9tLXJpZ2h0In0sImltYWdlIjp7InNpemUiOiJzbWFsbCJ9fQ.png" alt="Support this project" width=200px/></a>
 
 Pages
 -----

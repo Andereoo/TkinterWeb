@@ -94,7 +94,7 @@ See [Frequently Asked Questions](https://tkinterweb.readthedocs.io/en/latest/faq
 * In order to load Scalable Vector Graphic images, CairoSVG, both PyCairo and PyGObject, or both PyCairo and Rsvg must also be installed. 
 
 ## Support & Donations
-**☕ If you’d like to support ongoing development and maintenance, please consider supporting this project by [buying me a coffee](https://buymeacoffee.com/andereoo). Any amount is hugely appreciated!**
+**☕ If you’d like to support ongoing development and maintenance, please consider supporting this project by [making a donation](https://quietjar.com/@andereoo). Any amount is hugely appreciated!**
 
 This project is released under the [MIT License](./LICENSE.md) and is free to use, including for commercial purposes.
 

@@ -26,8 +26,9 @@ Webpage compatibility
 
 * TkinterWeb supports HTML 4.01 and CSS 2.1. A full list of supported CSS declarations can be found at `http://tkhtml.tcl.tk/support.html <https://web.archive.org/web/20250325123206/http://tkhtml.tcl.tk/support.html>`_.
 * Most CSS pseudo-elements, such as ``:hover`` and ``:active`` are also supported.
-* The ``border-radius`` CSS property is supported on ARM64 linux and all Macs when using Tcl 9 and on 64-bit Windows and Linux, if the `TkinterWeb-Tkhtml-Extras <https://pypi.org/project/tkinterweb-tkhtml-extras/>`_ package is installed.
-* HTML5 tags and some extra CSS properties (including ``border-radius`` and ``overflow-x``) and cursors are also supported on all supported Tcl 9 platforms and on 64-bit Windows and Linux if the `TkinterWeb-Tkhtml-Extras <https://pypi.org/project/tkinterweb-tkhtml-extras/>`_ package is installed when using Tcl 8. To use these features on all other platforms, you will simply need to compile Tkhtml yourself. Visit and clone https://github.com/Andereoo/TkinterWeb-Tkhtml. Then run ``python compile.py --install``.
+* HTML5 tags, cursors, and some additional CSS properties (such as ``overflow-x``) are supported on 64-bit Windows and Linux, ARM64 Linux running Tcl 9, and all Macs running Tcl 9. On systems using Tcl 8, the `TkinterWeb-Tkhtml-Extras <https://pypi.org/project/tkinterweb-tkhtml-extras/>`_ package must be installed. 
+* The ``border-radius`` CSS property is supported on the platforms listed above if the `TkinterWeb-Tkhtml-Extras <https://pypi.org/project/tkinterweb-tkhtml-extras/>`_ package is installed.
+* To use these platform-specific features on all other platforms, you will need to compile Tkhtml yourself. Visit and clone https://github.com/Andereoo/TkinterWeb-Tkhtml. Then run ``python compile.py --install``.
 
 **JavaScript:**
 

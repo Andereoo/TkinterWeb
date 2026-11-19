@@ -61,7 +61,7 @@ def setup(app):
         '"currency":"cad",'
         '"labels":{"headline":"Support this project","body":"","action":"Support","icon":"☕"},'
         '"style":{"color":"#0369a1","font":"rounded"},'
-        '"close":{"enabled":true,"after":"session","days":7},'
+        '"close":{"enabled":true,"after":"never","days":7},'
         '"donation":{"hideDays":30},'
         '"position":{"corner":"bottom-right"}'
         '};'

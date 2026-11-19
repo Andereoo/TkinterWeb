@@ -3,9 +3,10 @@
 ![Python 3](https://img.shields.io/pypi/pyversions/tkinterweb)
 ![Made in Canada](https://img.shields.io/badge/%F0%9F%87%A8%F0%9F%87%A6%20made%20in%20Canada-grey)
 
-<div style="margin-bottom: 0px"><a href="https://www.buymeacoffee.com/andereoo" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-violet.png" alt="Buy Me A Coffee" style="height: 36px; width: 146px;" ></a></div>
 
-<p align="center"><img src="./docs/source/_static/banner.png" style="width: 425px"/></p>
+<div style="margin-bottom: 0px"><a href="https://quietjar.com/@andereoo"><img src="https://api.quietjar.com/api/widget/image/eyJzaXRlIjoicWpfNGRiZTgyNjFkYjUzMzk1OGQ2MzczZGUzIiwiY3VycmVuY3kiOiJjYWQiLCJsYWJlbHMiOnsiaGVhZGxpbmUiOiJTdXBwb3J0IHRoaXMgcHJvamVjdCIsImJvZHkiOiIiLCJhY3Rpb24iOiJTdXBwb3J0IiwiaWNvbiI6IuKYlSJ9LCJzdHlsZSI6eyJjb2xvciI6IiMwMzY5YTEiLCJmb250Ijoicm91bmRlZCJ9LCJjbG9zZSI6eyJlbmFibGVkIjp0cnVlLCJhZnRlciI6InNlc3Npb24iLCJkYXlzIjo3fSwiZG9uYXRpb24iOnsiaGlkZURheXMiOjMwfSwicG9zaXRpb24iOnsiY29ybmVyIjoiYm90dG9tLXJpZ2h0In0sImltYWdlIjp7InNpemUiOiJzbWFsbCJ9fQ.png" alt="Support this project" width=200px/></a></div>
+
+<p align="center"><img src="./docs/source/_static/banner.png" width=425px/></p>
 
 **<p align="center">Fast and lightweight web browser, rich text, and app design widgets for Tkinter.</p>**
 

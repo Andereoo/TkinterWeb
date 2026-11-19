@@ -42,7 +42,7 @@ If you use this project in a commercial product or derive financial benefit from
 
 .. raw:: html
    
-   <a href="https://www.buymeacoffee.com/andereoo" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-violet.png" alt="Buy Me A Coffee" style="height: 35px !important;width: 140px !important;" ></a>
+   <a href="https://quietjar.com/@andereoo"><img src="https://api.quietjar.com/api/widget/image/eyJzaXRlIjoicWpfNGRiZTgyNjFkYjUzMzk1OGQ2MzczZGUzIiwiY3VycmVuY3kiOiJjYWQiLCJsYWJlbHMiOnsiaGVhZGxpbmUiOiJTdXBwb3J0IHRoaXMgcHJvamVjdCIsImJvZHkiOiIiLCJhY3Rpb24iOiJTdXBwb3J0IiwiaWNvbiI6IuKYlSJ9LCJzdHlsZSI6eyJjb2xvciI6IiMwMzY5YTEiLCJmb250Ijoicm91bmRlZCJ9LCJjbG9zZSI6eyJlbmFibGVkIjp0cnVlLCJhZnRlciI6InNlc3Npb24iLCJkYXlzIjo3fSwiZG9uYXRpb24iOnsiaGlkZURheXMiOjMwfSwicG9zaXRpb24iOnsiY29ybmVyIjoiYm90dG9tLXJpZ2h0In0sImltYWdlIjp7InNpemUiOiJzbWFsbCJ9fQ.png" alt="Support this project" width=200px/></a>
 
 Pages
 -----

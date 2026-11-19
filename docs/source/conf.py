@@ -55,3 +55,16 @@ def skip_member(app, what, name, obj, skip, options):
 
 def setup(app):
     app.connect("autodoc-skip-member", skip_member)
+    quietjar_config = (
+        'window.QuietJar = {'
+        '"site":"qj_4dbe8261db533958d6373de3",'
+        '"currency":"cad",'
+        '"labels":{"headline":"Support this project","body":"","action":"Support","icon":"☕"},'
+        '"style":{"color":"#0369a1","font":"rounded"},'
+        '"close":{"enabled":true,"after":"session","days":7},'
+        '"donation":{"hideDays":30},'
+        '"position":{"corner":"bottom-right"}'
+        '};'
+    )
+    app.add_js_file(None, body=quietjar_config)
+    app.add_js_file("https://quietjar.com/js/latest/quietjar.js", loading_method="async")

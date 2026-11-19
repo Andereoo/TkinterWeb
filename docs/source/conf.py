@@ -59,11 +59,13 @@ def setup(app):
         'window.QuietJar = {'
         '"site":"qj_4dbe8261db533958d6373de3",'
         '"currency":"cad",'
-        '"labels":{"headline":"Support this project","body":"","action":"Support","icon":"☕"},'
+        '"labels":{"headline":"☕ Support this project\'s maintenance for this month","body":"","action":"Support","icon":"☕"},'
         '"style":{"color":"#0369a1","font":"rounded"},'
         '"close":{"enabled":true,"after":"never","days":7},'
         '"donation":{"hideDays":30},'
-        '"position":{"corner":"bottom-right"}'
+        '"position":{"corner":"bottom-right"},'
+        '"goal":"qg_46778bacf4a20624",'
+        '"goalReached":"show"'
         '};'
     )
     app.add_js_file(None, body=quietjar_config)

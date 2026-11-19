@@ -3,14 +3,14 @@
 ![Python 3](https://img.shields.io/pypi/pyversions/tkinterweb)
 ![Made in Canada](https://img.shields.io/badge/%F0%9F%87%A8%F0%9F%87%A6%20made%20in%20Canada-grey)
 
-
-<div style="margin-bottom: 0px"><a href="https://quietjar.com/@andereoo"><img src="https://api.quietjar.com/api/widget/image/eyJzaXRlIjoicWpfNGRiZTgyNjFkYjUzMzk1OGQ2MzczZGUzIiwiY3VycmVuY3kiOiJjYWQiLCJsYWJlbHMiOnsiaGVhZGxpbmUiOiJTdXBwb3J0IHRoaXMgcHJvamVjdCIsImJvZHkiOiIiLCJhY3Rpb24iOiJTdXBwb3J0IiwiaWNvbiI6IuKYlSJ9LCJzdHlsZSI6eyJjb2xvciI6IiMwMzY5YTEiLCJmb250Ijoicm91bmRlZCJ9LCJjbG9zZSI6eyJlbmFibGVkIjp0cnVlLCJhZnRlciI6InNlc3Npb24iLCJkYXlzIjo3fSwiZG9uYXRpb24iOnsiaGlkZURheXMiOjMwfSwicG9zaXRpb24iOnsiY29ybmVyIjoiYm90dG9tLXJpZ2h0In0sImltYWdlIjp7InNpemUiOiJzbWFsbCJ9fQ.png" alt="Support this project" width=200px/></a></div>
-
 <p align="center"><img src="./docs/source/_static/banner.png" width=425px/></p>
 
 **<p align="center">Fast and lightweight web browser, rich text, and app design widgets for Tkinter.</p>**
 
 ## Overview
+
+<div style="margin-bottom: 0px"><a href="https://tkinterweb.readthedocs.io?qj_open=1"><img src="https://api.quietjar.com/api/widget/image/eyJzaXRlIjoicWpfNGRiZTgyNjFkYjUzMzk1OGQ2MzczZGUzIiwiY3VycmVuY3kiOiJjYWQiLCJsYWJlbHMiOnsiaGVhZGxpbmUiOiLimJUgU3VwcG9ydCB0aGlzIHByb2plY3QncyBtYWludGVuYW5jZSBmb3IgdGhpcyBtb250aCIsImJvZHkiOiIiLCJhY3Rpb24iOiJTdXBwb3J0IiwiaWNvbiI6InBpZ2d5In0sInN0eWxlIjp7ImNvbG9yIjoiIzAzNjlhMSIsImZvbnQiOiJyb3VuZGVkIn0sImNsb3NlIjp7ImVuYWJsZWQiOnRydWUsImFmdGVyIjoic2Vzc2lvbiIsImRheXMiOjd9LCJkb25hdGlvbiI6eyJoaWRlRGF5cyI6MzB9LCJwb3NpdGlvbiI6eyJjb3JuZXIiOiJib3R0b20tcmlnaHQifSwiZ29hbCI6InFnXzQ2Nzc4YmFjZjRhMjA2MjQiLCJnb2FsUmVhY2hlZCI6InNob3ciLCJpbWFnZSI6eyJzaXplIjoic21hbGwifX0.png" alt="☕ Support this project's maintenance for this month" width=300px/></a></div>
+
 **TkinterWeb adds HTML and CSS rendering capabilities to Tkinter widgets.**
 
 Common use cases include displaying help files, documentation, and other HTML content, rendering images (including SVG), building rich text editors, designing apps with HTML templates, and creating more modern-looking interfaces, with advanced styling and even round buttons!

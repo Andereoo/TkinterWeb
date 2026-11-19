@@ -81,7 +81,7 @@ See [Frequently Asked Questions](https://tkinterweb.readthedocs.io/en/latest/faq
 **HTML & CSS:**
 * TkinterWeb supports HTML 4.01 and CSS 2.1. A full list of supported CSS declarations can be found at [http://tkhtml.tcl.tk/support.html](https://web.archive.org/web/20250325123206/http://tkhtml.tcl.tk/support.html).
 * Most CSS pseudo-elements, such as `:hover` and `:active` are also supported. 
-* On 64-bit Windows and Linux, if the [TkinterWeb-Tkhtml-Extras](https://pypi.org/project/tkinterweb-tkhtml-extras/) is installed, HTML5 tags and some extra CSS properties (including `border-radius` and `overflow-x`) and cursors are also supported. To use these features on all other platforms, you will simply need to compile Tkhtml yourself. Visit and clone https://github.com/Andereoo/TkinterWeb-Tkhtml. Then run `python compile.py --install`.
+* On most platforms, if the [TkinterWeb-Tkhtml-Extras](https://pypi.org/project/tkinterweb-tkhtml-extras/) package is installed, HTML5 tags, cursors, and some extra CSS properties (including `border-radius` and `overflow-x`) are also supported. To use these features on unsupported platforms, you will simply need to compile Tkhtml yourself. See [System and Webpage Compatibility](https://tkinterweb.readthedocs.io/en/latest/compatibility.html#webpage-compatibility) for details.
 
 **JavaScript:**
 * Javascript only partly supported at the moment.

@@ -6,7 +6,7 @@ Copyright (c) 2021-2026 Andrew Clarke
 
 from re import IGNORECASE, split, sub
 
-from urllib.parse import urljoin
+from urllib.parse import urljoin, DefragResult
 
 from queue import Queue, Empty
 
@@ -297,7 +297,7 @@ If you benefited from using this package, please consider supporting its develop
         self.register_lazy_handler("node", "base", "node_manager")
         self.register_lazy_handler("attribute", "a", "node_manager")
 
-        if not self.using_tkhtml30:
+        if not self.using_tkhtml30 or self.experimental:
             #self.register_lazy_handler("node", "details", "node_manager")
             self.register_lazy_handler("node", "progress", "node_manager")
             self.register_lazy_handler("attribute", "progress", "node_manager")
@@ -678,7 +678,6 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         self.script_manager._submit_deferred_scripts()
         self.event_manager.send_onload()
 
-        #if self.using_tkhtml30: # Handle unsupported tags
         self.node_manager._handle_load_finish()
 
     def _handle_load_finish(self, post_event=True):
@@ -699,7 +698,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         if post_event:
             self.post_event(utilities.DONE_LOADING_EVENT)
 
-    def parse_css(self, sheetid=None, data="", url=None, fallback_priority="author"):
+    def parse_css(self, sheetid=None, data="", url=None, errorvar=None, fallback_priority="author"):
         "Parse CSS code."
         if not url: url = self.base_url
         data = self._crash_prevention(data)
@@ -723,7 +722,9 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
                 self._w, "style",
                 "-id", sheetid,
                 "-importcmd", importcmd,
-                "-urlcmd", urlcmd, data
+                "-urlcmd", urlcmd,
+                *(("-errorvar", errorvar) if errorvar else ""),
+                data
             )
         except tk.TclError:
             # The widget doesn't exist anymore
@@ -1752,8 +1753,7 @@ It is likely that not all dependencies are installed. Make sure Cairo is install
         """Returns the decoded data.
         
         New in version 4.19."""
-        a = "-query" if query else ""
-        return self.tk.call("::tkhtml::escape_uri", a, uri)
+        return self.tk.call("::tkhtml::escape_uri", "-query" if query else "", uri)
 
 class TkHtmlParsedURI:
     """Bindings for the Tkhtml URI parsing system. 
@@ -1767,38 +1767,34 @@ class TkHtmlParsedURI:
         self.parsed = self.uri(uri)
 
     def __repr__(self):
-        return f"{self._html._w}::{self.__class__.__name__.lower()}"
+        return f"{self._html._w}::{self.__class__.__name__.lower()}{self.parsed}"
 
     def __str__(self):
-        return self.get(self.parsed)
-
-    def __del__(self):
-        self.destroy(self.parsed)
+        return self.get
 
     def uri(self, uri):
         "Returns name of parsed uri to be used in methods below."
         return self._html.tk.call("::tkhtml::uri", uri)
 
-    def tkhtml_uri_decode(self, uri, base64=False):
+    def decode(self, base64=False):
         "This command is designed to help scripts process data: URIs. It is completely separate from the html widget"
-        return self._html.tkhtml_uri_decode(uri, base64)
+        return self._html.decode_uri(self.get, base64)
 
-    def tkhtml_uri_encode(self, uri):
+    def encode(self):
         "Encodes the uri."
-        return self._html.tkhtml_uri_encode(uri)
+        return self._html.encode_uri(self.get)
 
-    def tkhtml_uri_escape(self, uri, query=False):
+    def escape(self, query=False):
         "Returns the decoded data."
-        return self._html.tkhtml_uri_escape(uri, query)
+        return self._html.escape_uri(self.get, query)
 
-    def uri_resolve(self, uri):
+    def resolve(self, uri):
         "Resolve a uri."
         return self._html.tk.call(self.parsed, "resolve", uri)
 
-    @property
     def load(self, uri):
-        "Load a uri."
-        return self._html.tk.call(self.parsed, "load", uri)
+        "Load a URI, which overrides the previous URI string"
+        self._html.tk.call(self.parsed, "load", uri)
 
     @property
     def get(self):
@@ -1837,9 +1833,13 @@ class TkHtmlParsedURI:
 
     @property
     def splitfrag(self):
-        "Return namedtuple with uri and fragment"
-        return self.defrag, self.fragment
+        "Return DefragResult/namedtuple with uri and fragment"
+        return DefragResult(self.defrag, self.fragment)
 
     def destroy(self):
-        "Destroy this uri."
-        self._html.tk.call(self.parsed, "destroy")
+        "Destroy this uri and free Tcl resources."
+        if self.parsed:
+            self._html.tk.call(self.parsed, "destroy")
+            self.parsed = None
+
+    __del__ = destroy

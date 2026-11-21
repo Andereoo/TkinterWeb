@@ -323,8 +323,7 @@ class FormEntry(tk.Entry):
 
         super().configure(**kwargs)
     
-    def config(self, **kwargs):
-        self.configure(**kwargs)
+    config = configure
 
 class FormCheckbox(ttk.Checkbutton):
     def __init__(self, parent, value=0, onchangecommand=None, **kwargs):
